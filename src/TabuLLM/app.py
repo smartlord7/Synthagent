@@ -640,15 +640,13 @@ def run_ai_generation(n_clicks, row_data, target_ids, context_ids, full_ctx_togg
                       col_defs, algorithm, param_tone, param_consistency,
                       param_uniqueness, temperature, cp_names, cp_types,
                       cp_texts, cp_mins, cp_maxs):
-    # 1. Validation: Ensure we have targets to fill
-    # FIX: Must return two dash.no_update values to match the two Outputs
     if not n_clicks or not target_ids:
         logger.warning("Generation aborted: No target rows (Red) defined.")
         return dash.no_update, dash.no_update
 
     logger.info(f"Starting AI Generation for {len(target_ids)} target rows.")
 
-    # 2. Build the Instruction Set
+    # 1. Build Instructions
     compiled_instructions = (
         f"Style: {param_tone}\n"
         f"Consistency: {param_consistency}\n"
@@ -659,30 +657,48 @@ def run_ai_generation(n_clicks, row_data, target_ids, context_ids, full_ctx_togg
             detail = cp_texts[i] if cp_types[i] != 'number' else f"Min:{cp_mins[i]}, Max:{cp_maxs[i]}"
             compiled_instructions += f"- Rule [{cp_names[i]}]: {detail}\n"
 
-    # 3. Context Preparation
+    # LOG: Instructions
+    logger.info(f"--- PROMPT COMPONENT: INSTRUCTIONS ---\n{compiled_instructions}")
+
+    # 2. Context Prep
     df_full = pd.DataFrame(row_data)
 
     # A. Manual Context (Blue Rows)
-    manual_ctx_df = df_full[df_full['_row_id'].isin(context_ids or [])].drop(columns=['_row_id'], errors='ignore')
+    manual_ctx_df = df_full[df_full['_row_id'].isin(context_ids or [])].drop(
+        columns=['_row_id', 'is_context', 'is_target'], errors='ignore')
+    manual_ctx_json = manual_ctx_df.to_json(orient='records')
 
-    # B. Global Context (Random Sample if toggled)
+    # LOG: Manual Context
+    logger.info(
+        f"--- PROMPT COMPONENT: MANUAL CONTEXT (Blue Rows) ---\nRows identified: {len(manual_ctx_df)}\nData: {manual_ctx_json}")
+
+    # B. Global Patterns (Full Dataset Toggle)
     global_ctx_sample = []
     if full_ctx_toggle:
+        # Sample up to 15 non-empty rows
         global_ctx_sample = df_full.dropna(how='all').sample(min(15, len(df_full))).to_dict('records')
+        # Clean technical flags from sample
+        for r in global_ctx_sample:
+            for k in ['_row_id', 'is_context', 'is_target']: r.pop(k, None)
+
+    # LOG: Global Sample
+    logger.info(
+        f"--- PROMPT COMPONENT: GLOBAL PATTERNS (Toggle) ---\nSample Size: {len(global_ctx_sample)}\nData: {json.dumps(global_ctx_sample)}")
 
     full_context_str = f"""
-    Manual Reference Examples: {manual_ctx_df.to_json(orient='records')}
+    Manual Reference Examples: {manual_ctx_json}
     General Dataset Patterns: {json.dumps(global_ctx_sample)}
     """
 
-    # 4. Target Mapping
-    # Filter out technical columns so they aren't sent to the LLM
+    # 3. Target Mapping (FIXED INDENTATION STARTS HERE)
     field_to_header = {col['field']: col.get('headerName', col['field']) for col in col_defs
                        if col['field'] not in ['ai_audit', '_row_id'] and not col['field'].startswith('is_ai_')}
     header_to_field = {v: k for k, v in field_to_header.items()}
 
     updated_rows = list(row_data)
     payload, target_indices = [], []
+
+    # This loop ONLY collects the data
     for t_id in target_ids:
         idx = next((i for i, r in enumerate(updated_rows) if r.get('_row_id') == t_id), -1)
         if idx != -1:
@@ -692,9 +708,8 @@ def run_ai_generation(n_clicks, row_data, target_ids, context_ids, full_ctx_togg
             payload.append(semantic_row)
             target_indices.append(idx)
 
-    # 5. Call AI
-    # FIX: Pass the actual variables compiled above
-    filled_data = generate_bulk_data(
+    # 4. Call AI (OUTSIDE the loop)
+    result_bundle = generate_bulk_data(
         payload,
         full_context_str,
         list(field_to_header.values()),
@@ -703,28 +718,31 @@ def run_ai_generation(n_clicks, row_data, target_ids, context_ids, full_ctx_togg
         temperature
     )
 
-    # 6. Unpack, Sanitize, and UNMARK Targets
+    logger.info(
+        f"--- PROMPT COMPONENT: TARGET PAYLOAD (Red Rows) ---\nRows to fill: {len(payload)}\nPayload: {json.dumps(payload)}")
+
     remaining_targets = list(target_ids)
 
-    if filled_data:
-        logger.info("Received AI response. Unpacking data and clearing target highlights.")
+    # 5. Process Results
+    if result_bundle:
+        filled_data = result_bundle["data"]
+        stats = result_bundle["stats"]
+
+        logger.info(f"Input Tokens: {stats['prompt_tokens']} | Output Tokens: {stats['candidates_tokens']}")
         current_time = datetime.now().strftime("%Y-%m-%d %H:%M")
 
         for i, gen_row in enumerate(filled_data):
-            # If the LLM returned more/fewer rows than requested, avoid IndexError
             if i >= len(target_indices): break
-
             master_idx = target_indices[i]
             row_uuid = updated_rows[master_idx]['_row_id']
 
             # Set Audit Info
-            updated_rows[master_idx]['ai_audit'] = f"Gemini 2.0 | {current_time}"
+            updated_rows[master_idx]['ai_audit'] = f"Gemini 1.5 Flash | {stats['total_tokens']} tokens | {current_time}"
 
+            # Process individual columns
             for header, val in gen_row.items():
                 if header in header_to_field:
                     field = header_to_field[header]
-
-                    # Numeric Sanitization
                     sanitized_val = val
                     if isinstance(val, str):
                         clean_str = val.replace('$', '').replace(',', '').strip()
@@ -733,19 +751,17 @@ def run_ai_generation(n_clicks, row_data, target_ids, context_ids, full_ctx_togg
                         except:
                             sanitized_val = val
 
-                    # Only fill if originally empty
                     if str(updated_rows[master_idx].get(field)) in [None, "", "NaN", "None"]:
                         updated_rows[master_idx][field] = sanitized_val
                         updated_rows[master_idx][f"is_ai_{field}"] = True
 
-            # Clear Target Visuals (Remove Red)
+            # Clear Target Visuals
             updated_rows[master_idx]['is_target'] = False
             if row_uuid in remaining_targets:
                 remaining_targets.remove(row_uuid)
     else:
         logger.error("AI Generation failed to return data.")
 
-    # Return both the row data and the updated list of target IDs
     return updated_rows, remaining_targets
 
 
@@ -759,32 +775,46 @@ def run_ai_generation(n_clicks, row_data, target_ids, context_ids, full_ctx_togg
     State("data-grid", "rowData"),
     State("context-row-ids", "data"),
     State("target-row-ids", "data"),
+    State("check-full-context", "value"),  # Added this state
     prevent_initial_call=True
 )
-def manage_selections(btn_ctx, btn_tgt, selected_rows, current_data, ctx_ids, tgt_ids):
+def manage_selections(btn_ctx, btn_tgt, selected_rows, current_data, ctx_ids, tgt_ids, full_ctx_val):
     ctx_ids = set(ctx_ids or [])
     tgt_ids = set(tgt_ids or [])
+    is_full_ctx = len(full_ctx_val or []) > 0
+
     triggered_id = dash.callback_context.triggered[0]["prop_id"].split(".")[0]
     selected_uuids = [r["_row_id"] for r in selected_rows] if selected_rows else []
 
+    # 1. Update the ID stores (Manual selections)
     for uuid in selected_uuids:
         if triggered_id == "btn-mode-context":
             if uuid in ctx_ids:
-                ctx_ids.remove(uuid) # Toggle OFF
+                ctx_ids.remove(uuid)
             else:
-                ctx_ids.add(uuid) # Toggle ON
-                if uuid in tgt_ids: tgt_ids.remove(uuid) # Remove from Red if moving to Blue
+                ctx_ids.add(uuid)
+                if uuid in tgt_ids: tgt_ids.remove(uuid)
         else:
             if uuid in tgt_ids:
-                tgt_ids.remove(uuid) # Toggle OFF
+                tgt_ids.remove(uuid)
             else:
-                tgt_ids.add(uuid) # Toggle ON
-                if uuid in ctx_ids: ctx_ids.remove(uuid) # Remove from Blue if moving to Red
+                tgt_ids.add(uuid)
+                if uuid in ctx_ids: ctx_ids.remove(uuid)
 
-    # Map the sets back to the row data flags
+    # 2. Map visual flags back to rowData
     for row in current_data:
-        row["is_context"] = row["_row_id"] in ctx_ids
-        row["is_target"] = row["_row_id"] in tgt_ids
+        row_id = row["_row_id"]
+
+        # Target logic is always the same (Red)
+        row["is_target"] = row_id in tgt_ids
+
+        # Context logic (Blue) now respects the global switch
+        if is_full_ctx:
+            # If global switch is ON, show blue unless it's a target
+            row["is_context"] = not row["is_target"]
+        else:
+            # If global switch is OFF, only show blue if manually selected
+            row["is_context"] = row_id in ctx_ids
 
     return list(ctx_ids), list(tgt_ids), current_data
 

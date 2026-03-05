@@ -27,9 +27,7 @@ def get_dataset_description(df_sample, provided_metadata=None):
 def generate_bulk_data(rows_payload, context, all_columns, algorithm, instructions, temperature):
     prompt = f"""
     SYSTEM CONTEXT: {context}
-
     USER INSTRUCTIONS: {instructions}
-
     DATA STRUCTURE: The columns are {all_columns}. 
     CRITICAL: For numeric columns, return RAW NUMBERS only (no currency symbols, no commas).
     For empty rows, use the SYSTEM CONTEXT to maintain the distribution and style of the dataset.
@@ -38,8 +36,8 @@ def generate_bulk_data(rows_payload, context, all_columns, algorithm, instructio
     {json.dumps(rows_payload)}
     Return ONLY a valid JSON array.
     """
+
     try:
-        # We pass the temperature into the generation config
         response = model.generate_content(
             prompt,
             generation_config=genai.types.GenerationConfig(
@@ -47,7 +45,19 @@ def generate_bulk_data(rows_payload, context, all_columns, algorithm, instructio
                 temperature=temperature
             )
         )
-        return json.loads(response.text)
+
+        # Extract Token Metadata
+        usage = response.usage_metadata
+        stats = {
+            "prompt_tokens": usage.prompt_token_count,
+            "candidates_tokens": usage.candidates_token_count,
+            "total_tokens": usage.total_token_count
+        }
+
+        return {
+            "data": json.loads(response.text),
+            "stats": stats
+        }
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"Error in Gemini Client: {e}")
         return None
