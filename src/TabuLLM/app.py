@@ -1,11 +1,11 @@
 import uuid
+import json
+import pandas as pd
 
 import dash
-from dash import dcc, html, Input, Output, State, callback
+from dash import dcc, html, Input, Output, State, callback, MATCH, ALL
 import dash_bootstrap_components as dbc
 import dash_ag_grid as dag
-import pandas as pd
-import json
 
 from services.data_manager import parse_uploaded_file, create_empty_dataframe, df_to_aggrid_format
 from services.gemini_client import get_dataset_description, generate_bulk_data
@@ -27,20 +27,18 @@ for i, col in enumerate(initial_df.columns):
     initial_cols.append(col_def)
 
 initial_data = df_to_aggrid_format(initial_df)
-# NEW: Inject hidden IDs into initial rows
 for row in initial_data:
     row['_row_id'] = str(uuid.uuid4())
 
+# --- UI LAYOUT ---
 app.layout = dbc.Container([
     dbc.Row([
-        dbc.Col([
-            html.H2([html.I(className="bi bi-cpu me-2"), "AI Data Workspace"], className="mt-4 mb-3")
-        ], width=8),
+        dbc.Col(html.H2([html.I(className="bi bi-cpu me-2"), "AI Data Workspace"], className="mt-4 mb-3"), width=8),
         dbc.Col(
             dcc.Upload(
                 id='upload-data',
-                children=dbc.Button([html.I(className="bi bi-file-earmark-arrow-up me-2"), "Upload"], color="primary",
-                                    className="mt-4 float-end"),
+                children=dbc.Button([html.I(className="bi bi-file-earmark-arrow-up me-2"), "Upload Dataset"],
+                                    color="primary", className="mt-4 float-end"),
                 multiple=False
             ), width=4
         )
@@ -73,50 +71,72 @@ app.layout = dbc.Container([
         ], width="auto"),
     ], className="mb-3 align-items-center"),
 
-# --- NEW: Generation Parameters Accordion ---
+    # --- NEW: Dynamic Generation Parameters ---
     dbc.Row([
         dbc.Col([
             dbc.Accordion([
                 dbc.AccordionItem([
+                    # 1. Default Parameters (Pre-selected dropdowns)
                     dbc.Row([
-                        # Custom Instructions
                         dbc.Col([
-                            html.Label("Custom Instructions:", className="fw-bold text-muted small"),
-                            dbc.Textarea(
-                                id="user-instruction",
-                                placeholder="e.g., 'Make names sound European', 'Ensure prices are under $100'...",
-                                size="sm",
-                                style={"height": "60px"}
-                            ),
-                        ], width=8),
-                        # Temperature Slider
-                        dbc.Col([
-                            html.Label("Creativity (Temperature):", className="fw-bold text-muted small mb-3"),
-                            dcc.Slider(
-                                id="temperature-slider",
-                                min=0.0, max=1.0, step=0.1, value=0.3,
-                                marks={0: 'Strict', 0.5: 'Balanced', 1: 'Creative'},
-                                tooltip={"placement": "bottom", "always_visible": False}
+                            html.Label("Style & Length:", className="fw-bold text-muted small"),
+                            dcc.Dropdown(
+                                id="param-tone",
+                                options=['Concise / Standard', 'Descriptive', 'Professional', 'Casual'],
+                                value='Concise / Standard',
+                                clearable=False
                             )
-                        ], width=4)
-                    ])
-                ], title="⚙️ Generation Parameters", item_id="params-item")
-            ], start_collapsed=True, className="mb-3")
+                        ], width=4),
+                        dbc.Col([
+                            html.Label("Data Consistency:", className="fw-bold text-muted small"),
+                            dcc.Dropdown(
+                                id="param-consistency",
+                                options=['Strict (Perfectly uniform)', 'Realistic (Natural variations)'],
+                                value='Strict (Perfectly uniform)',
+                                clearable=False
+                            )
+                        ], width=4),
+                        dbc.Col([
+                            html.Label("Value Uniqueness:", className="fw-bold text-muted small"),
+                            dcc.Dropdown(
+                                id="param-uniqueness",
+                                options=['Allow Duplicates (Standard)', 'Prefer Unique Values'],
+                                value='Allow Duplicates (Standard)',
+                                clearable=False
+                            )
+                        ], width=4),
+                        dbc.Col([
+                            html.Label("Creativity (Temperature):", className="fw-bold text-muted small"),
+                            dcc.Slider(id="temperature-slider", min=0.0, max=1.0, step=0.1, value=0.3,
+                                       marks={0: 'Strict', 1: 'Creative'})
+                        ], width=6)
+                    ], className="mb-3"),
+
+                    html.Hr(),
+
+                    # 2. Custom Rule Builder
+                    html.H6([html.I(className="bi bi-sliders me-2"), "Custom Rules & Constraints"],
+                            className="text-muted mb-3"),
+
+                    # Container where dynamic rows will spawn
+                    html.Div(id="custom-params-container", children=[]),
+
+                    # Button to add new rules
+                    dbc.Button([html.I(className="bi bi-plus-circle me-1"), "Add Custom Rule"], id="btn-add-param",
+                               size="sm", color="secondary", outline=True, className="mt-2")
+
+                ], title="⚙️ Generation Parameters & Rules", item_id="params-item")
+            ], start_collapsed=False, className="mb-3")
         ], width=12)
     ]),
 
-    # --- NEW: Live In-Situ Renaming Bar ---
+    # Live In-Situ Renaming Bar
     dbc.Row([
         dbc.Col([
             html.I(className="bi bi-pencil-square me-2 text-muted"),
             html.Span("Quick Rename:", className="text-muted me-2", style={"fontSize": "0.9em"}),
-            dbc.Input(
-                id="quick-rename-input",
-                type="text",
-                placeholder="Click any cell in the grid to rename its column...",
-                size="sm",
-                style={"width": "300px", "display": "inline-block"}
-            )
+            dbc.Input(id="quick-rename-input", type="text", placeholder="Click any cell to rename its column...",
+                      size="sm", style={"width": "300px", "display": "inline-block"})
         ], width=12, className="mb-2 bg-light p-2 rounded border")
     ]),
 
@@ -128,22 +148,81 @@ app.layout = dbc.Container([
                 columnDefs=initial_cols,
                 rowData=initial_data,
                 defaultColDef={"editable": True, "sortable": True, "filter": True, "resizable": True},
-                dashGridOptions={
-                    "rowSelection": "multiple",
-                    "undoRedoCellEditing": True
-                },
+                dashGridOptions={"rowSelection": "multiple", "undoRedoCellEditing": True},
                 style={"height": "500px", "width": "100%"},
             )
         ], width=12)
     ]),
 
-    # Store to remember which column is currently selected for renaming
     dcc.Store(id="active-col-store")
-
 ], fluid=True)
 
 
-# --- Live Column Renaming Logic ---
+# --- DYNAMIC PARAMETER LOGIC (Pattern Matching Callbacks) ---
+
+@app.callback(
+    Output('custom-params-container', 'children'),
+    Input('btn-add-param', 'n_clicks'),
+    State('custom-params-container', 'children'),
+    prevent_initial_call=True
+)
+def add_custom_param_row(n_clicks, children):
+    """Spawns a new constraint row when the user clicks 'Add Custom Rule'"""
+    new_idx = n_clicks
+
+    new_row = dbc.Row([
+        # Name
+        dbc.Col(
+            dbc.Input(id={'type': 'cp-name', 'index': new_idx}, placeholder="Rule Name (e.g. Price Range)", size="sm"),
+            width=3),
+        # Type Selector
+        dbc.Col(dbc.Select(
+            id={'type': 'cp-type', 'index': new_idx},
+            options=[
+                {'label': 'Text Instruction', 'value': 'text'},
+                {'label': 'Specific Options', 'value': 'options'},
+                {'label': 'Number Range', 'value': 'number'}
+            ],
+            value='text', size="sm"
+        ), width=3),
+        # Dynamic Values Container (Shows/Hides based on type)
+        dbc.Col([
+            dbc.Input(id={'type': 'cp-val-text', 'index': new_idx}, type="text", placeholder="e.g. Under 50 words...",
+                      size="sm", style={'display': 'block'}),
+
+            # FIXED: Removed size="sm" from InputGroupText, moved it to the parent InputGroup
+            dbc.InputGroup([
+                dbc.InputGroupText("Min"),
+                dbc.Input(id={'type': 'cp-val-min', 'index': new_idx}, type="number"),
+                dbc.InputGroupText("Max"),
+                dbc.Input(id={'type': 'cp-val-max', 'index': new_idx}, type="number")
+            ], id={'type': 'cp-val-num-group', 'index': new_idx}, size="sm", style={'display': 'none'})
+
+        ], width=6)
+    ], className="mb-2 align-items-center")
+
+    children.append(new_row)
+    return children
+
+
+@app.callback(
+    Output({'type': 'cp-val-text', 'index': MATCH}, 'style'),
+    Output({'type': 'cp-val-text', 'index': MATCH}, 'placeholder'),
+    Output({'type': 'cp-val-num-group', 'index': MATCH}, 'style'),
+    Input({'type': 'cp-type', 'index': MATCH}, 'value'),
+    prevent_initial_call=True
+)
+def toggle_param_inputs(p_type):
+    """Dynamically changes the input field style depending on whether Text, Options, or Number is selected."""
+    if p_type == 'number':
+        return {'display': 'none'}, "", {'display': 'flex'}
+    elif p_type == 'options':
+        return {'display': 'block'}, "e.g., Active, Pending, Closed", {'display': 'none'}
+    else:
+        return {'display': 'block'}, "e.g., Must be under 50 words", {'display': 'none'}
+
+
+# --- IN-SITU RENAMING LOGIC ---
 
 @app.callback(
     Output("quick-rename-input", "value"),
@@ -153,19 +232,9 @@ app.layout = dbc.Container([
     prevent_initial_call=True
 )
 def select_column_to_rename(cell_clicked, col_defs):
-    """When a user clicks ANY cell, grab its column name and put it in the input box."""
-    if not cell_clicked:
-        return dash.no_update, dash.no_update
-
+    if not cell_clicked: return dash.no_update, dash.no_update
     col_id = cell_clicked["colId"]
-
-    # Find the current human-readable header name
-    current_name = col_id
-    for col in col_defs:
-        if col["field"] == col_id:
-            current_name = col.get("headerName", col_id)
-            break
-
+    current_name = next((col.get("headerName", col_id) for col in col_defs if col["field"] == col_id), col_id)
     return current_name, col_id
 
 
@@ -177,21 +246,16 @@ def select_column_to_rename(cell_clicked, col_defs):
     prevent_initial_call=True
 )
 def apply_live_rename(new_name, active_col_id, col_defs):
-    """As the user types in the input box, update the column header live."""
-    if not new_name or not active_col_id:
-        return dash.no_update
-
-    # Create a fresh copy of column definitions to trigger UI update
+    if not new_name or not active_col_id: return dash.no_update
     updated_cols = list(col_defs)
     for col in updated_cols:
         if col["field"] == active_col_id:
             col["headerName"] = new_name
             break
-
     return updated_cols
 
 
-# --- Standard Grid Logic (Upload, Add Row/Col, Bulk AI) ---
+# --- TABLE MECHANICS LOGIC ---
 
 @app.callback(
     Output('data-grid', 'rowData'),
@@ -201,20 +265,12 @@ def apply_live_rename(new_name, active_col_id, col_defs):
     prevent_initial_call=True
 )
 def update_table_from_upload(contents, filename):
-    if contents is None:
-        return dash.no_update, dash.no_update
+    if contents is None: return dash.no_update, dash.no_update
     df = parse_uploaded_file(contents, filename)
-    new_cols = []
-    for i, col in enumerate(df.columns):
-        col_def = {"field": col, "headerName": col}
-        if i == 0: col_def["checkboxSelection"] = True; col_def["headerCheckboxSelection"] = True
-        new_cols.append(col_def)
-
+    new_cols = [{"field": col, "headerName": col, "checkboxSelection": i == 0, "headerCheckboxSelection": i == 0} for
+                i, col in enumerate(df.columns)]
     new_data = df_to_aggrid_format(df)
-    # NEW: Inject hidden IDs into uploaded rows
-    for row in new_data:
-        row['_row_id'] = str(uuid.uuid4())
-
+    for row in new_data: row['_row_id'] = str(uuid.uuid4())
     return new_data, new_cols
 
 
@@ -228,7 +284,6 @@ def update_table_from_upload(contents, filename):
 def add_new_row(n_clicks, current_rows, current_cols):
     if not n_clicks: return dash.no_update
     new_row = {col['field']: None for col in current_cols}
-    # NEW: Give the new row a unique hidden ID
     new_row['_row_id'] = str(uuid.uuid4())
     current_rows.append(new_row)
     return current_rows
@@ -242,57 +297,90 @@ def add_new_row(n_clicks, current_rows, current_cols):
 )
 def add_new_column(n_clicks, current_cols):
     if not n_clicks: return dash.no_update
-    new_field = f"custom_{len(current_cols)}"
-    current_cols.append({"field": new_field, "headerName": "New Column", "editable": True})
+    current_cols.append({"field": f"custom_{len(current_cols)}", "headerName": "New Column", "editable": True})
     return current_cols
 
+
+# --- THE MASTER AI GENERATION ENGINE ---
 
 @app.callback(
     Output('data-grid', 'rowData', allow_duplicate=True),
     Input('btn-generate', 'n_clicks'),
+    # Table States
     State('data-grid', 'rowData'),
     State('data-grid', 'selectedRows'),
     State('data-grid', 'columnDefs'),
     State('algo-selector', 'value'),
-    State('user-instruction', 'value'),     # NEW: Pulls the custom instructions
-    State('temperature-slider', 'value'),   # NEW: Pulls the slider value
+    # Parameter States (The NEW Defaults)
+    State('param-tone', 'value'),
+    State('param-consistency', 'value'),
+    State('param-uniqueness', 'value'),
+    State('temperature-slider', 'value'),
+    # Parameter States (Dynamic ALL matching)
+    State({'type': 'cp-name', 'index': ALL}, 'value'),
+    State({'type': 'cp-type', 'index': ALL}, 'value'),
+    State({'type': 'cp-val-text', 'index': ALL}, 'value'),
+    State({'type': 'cp-val-min', 'index': ALL}, 'value'),
+    State({'type': 'cp-val-max', 'index': ALL}, 'value'),
     prevent_initial_call=True
 )
-def run_ai_generation(n_clicks, row_data, selected_rows, col_defs, algorithm, user_instruction, temperature):
-    if not n_clicks or not selected_rows:
-        return dash.no_update
+def run_ai_generation(n_clicks, row_data, selected_rows, col_defs, algorithm,
+                      param_tone, param_consistency, param_uniqueness, temperature,
+                      cp_names, cp_types, cp_texts, cp_mins, cp_maxs):
+    if not n_clicks or not selected_rows: return dash.no_update
 
+    # 1. Compile all user rules into a single strict prompt block
+    compiled_instructions = (
+        f"- Global Text Style: {param_tone}\n"
+        f"- Data Consistency: {param_consistency}\n"
+        f"- Uniqueness rule: {param_uniqueness}\n"
+    )
+
+    # Append the custom dynamic rules
+    for i in range(len(cp_names)):
+        name = cp_names[i]
+        p_type = cp_types[i]
+        if not name: continue  # Skip if user left the name blank
+
+        if p_type in ['text', 'options']:
+            if cp_texts[i]: compiled_instructions += f"- {name} ({p_type}): {cp_texts[i]}\n"
+        elif p_type == 'number':
+            compiled_instructions += f"- {name} (number limit): Min {cp_mins[i]}, Max {cp_maxs[i]}\n"
+
+    print("\n--- Sending instructions to LLM ---")
+    print(compiled_instructions)
+
+    # 2. Prepare the table mapping
     field_to_header = {col['field']: col.get('headerName', col['field']) for col in col_defs}
     header_to_field = {v: k for k, v in field_to_header.items()}
-
     df = pd.DataFrame(row_data).rename(columns=field_to_header)
     context_summary = get_dataset_description(df.head(5))
 
     updated_rows = list(row_data)
-    payload = []
-    indices = []
+    payload, indices = [], []
 
+    # 3. Extract the exact rows to fill
     for sel_row in selected_rows:
-        # FIXED: Robust row matching using _row_id so multiple empty rows don't overwrite each other
         target_id = sel_row.get('_row_id')
         idx = next((i for i, r in enumerate(updated_rows) if r.get('_row_id') == target_id), -1)
         if idx == -1: continue
 
-        # Create semantic row, safely ignoring the hidden _row_id
-        semantic = {
-            field_to_header[f]: (v if v not in [None, "", "NaN"] else None)
-            for f, v in sel_row.items()
-            if f in field_to_header
-        }
+        semantic = {field_to_header[f]: (v if v not in [None, "", "NaN"] else None) for f, v in sel_row.items() if
+                    f in field_to_header}
         payload.append(semantic)
         indices.append(idx)
 
-    # Pass the new parameters to the backend
+    # 4. Fire the API call
     filled_data = generate_bulk_data(
-        payload, context_summary, list(field_to_header.values()),
-        algorithm, user_instruction, temperature
+        rows_payload=payload,
+        context=context_summary,
+        all_columns=list(field_to_header.values()),
+        algorithm=algorithm,
+        user_instructions=compiled_instructions,
+        temperature=temperature
     )
 
+    # 5. Unpack results into the grid
     if filled_data:
         for i, gen_row in enumerate(filled_data):
             target_idx = indices[i]
@@ -301,6 +389,7 @@ def run_ai_generation(n_clicks, row_data, selected_rows, col_defs, algorithm, us
                     updated_rows[target_idx][header_to_field[header]] = val
 
     return updated_rows
+
 
 if __name__ == '__main__':
     app.run(debug=True)
