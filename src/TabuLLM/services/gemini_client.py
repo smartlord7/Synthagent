@@ -24,20 +24,18 @@ def get_dataset_description(df_sample, provided_metadata=None):
     return response.text
 
 
-def generate_bulk_data(rows_payload, context, all_columns, algorithm, user_instructions=None, temperature=0.3):
-    """
-    Generates bulk data, incorporating user-defined instructions and temperature.
-    """
-    instruction_block = f"\nCRITICAL USER INSTRUCTIONS: {user_instructions}\n" if user_instructions else ""
-
+def generate_bulk_data(rows_payload, context, all_columns, algorithm, instructions, temperature):
     prompt = f"""
-    Context: {context}
-    Columns: {all_columns}
-    {instruction_block}
+    SYSTEM CONTEXT: {context}
 
-    Task: Fill the 'null' values in the following JSON array logically.
-    Input JSON: {json.dumps(rows_payload)}
+    USER INSTRUCTIONS: {instructions}
 
+    DATA STRUCTURE: The columns are {all_columns}. 
+    CRITICAL: For numeric columns, return RAW NUMBERS only (no currency symbols, no commas).
+    For empty rows, use the SYSTEM CONTEXT to maintain the distribution and style of the dataset.
+
+    TARGET ROWS TO FILL (JSON):
+    {json.dumps(rows_payload)}
     Return ONLY a valid JSON array.
     """
     try:

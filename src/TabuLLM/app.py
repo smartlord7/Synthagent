@@ -1,7 +1,8 @@
 import uuid
+from datetime import datetime
+import json
 import pandas as pd
 import plotly.express as px
-import plotly.graph_objects as go
 
 import dash
 from dash import dcc, html, Input, Output, State, MATCH, ALL
@@ -10,6 +11,19 @@ import dash_ag_grid as dag
 
 from services.data_manager import parse_uploaded_file, create_empty_dataframe, df_to_aggrid_format
 from services.gemini_client import get_dataset_description, generate_bulk_data
+
+import logging
+
+# Configure logging to both Console and a File
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s [%(levelname)s] %(message)s',
+    handlers=[
+        logging.FileHandler("debug_ai_workspace.log"),
+        logging.StreamHandler()
+    ]
+)
+logger = logging.getLogger(__name__)
 
 app = dash.Dash(
     __name__,
@@ -27,9 +41,40 @@ for i, col in enumerate(initial_df.columns):
         col_def["headerCheckboxSelection"] = True
     initial_cols.append(col_def)
 
+# Create a reusable style function
+ai_highlight_style = {
+    "styleConditions": [
+        {
+            "condition": "params.data['is_ai_' + params.colDef.field]",
+            "style": {"backgroundColor": "#e8f5e9", "borderLeft": "3px solid #4caf50"}
+        }
+    ]
+}
+# Update initial columns
+initial_cols = []
+for i, col in enumerate(initial_df.columns):
+    col_def = {"field": col, "headerName": col, "cellStyle": ai_highlight_style}
+    if i == 0:
+        col_def["checkboxSelection"] = True
+        col_def["headerCheckboxSelection"] = True
+    initial_cols.append(col_def)
+
+# Add the Audit Column (Read-only)
+initial_cols.append({
+    "field": "ai_audit",
+    "headerName": "Generation Audit",
+    "editable": False,
+    "cellStyle": {"color": "#666", "fontSize": "0.8em", "fontStyle": "italic"}
+})
+
 initial_data = df_to_aggrid_format(initial_df)
 for row in initial_data:
     row['_row_id'] = str(uuid.uuid4())
+
+row_class_rules = {
+    "row-context": "params.data.is_context",
+    "row-target": "params.data.is_target",
+}
 
 # --- UI LAYOUT ---
 app.layout = dbc.Container([
@@ -37,6 +82,9 @@ app.layout = dbc.Container([
     dcc.Store(id="original-data-store", data=initial_data),
     dcc.Store(id="active-col-store"),
     dcc.Download(id="download-dataframe-csv"),
+    dcc.Store(id="context-row-ids", data=[]),
+    dcc.Store(id="target-row-ids", data=[]),
+    dcc.Store(id="selection-mode", data="target"), # Default mode
 
     dbc.Row([
         dbc.Col(html.H2([html.I(className="bi bi-cpu me-2"), "AI Data Workspace"], className="mt-4 mb-3"), width=8),
@@ -74,6 +122,19 @@ app.layout = dbc.Container([
                          {'label': 'Independent Fill', 'value': 'independent'}],
                 value='bulk', style={'width': '200px'}, size="sm"
             )
+        ], width="auto"),
+        dbc.Col([
+            dbc.ButtonGroup([
+                dbc.Button([html.I(className="bi bi-info-circle me-1"), "Set Context"], id="btn-mode-context",
+                           color="info", outline=True, size="sm"),
+                dbc.Button([html.I(className="bi bi-bullseye me-1"), "Set Targets"], id="btn-mode-target",
+                           color="danger", outline=True, size="sm"),
+            ], className="me-2"),
+
+            dbc.Checklist(
+                options=[{"label": "Use entire dataset as context", "value": 1}],
+                value=[], id="check-full-context", switch=True, inline=True, className="small text-muted"
+            ),
         ], width="auto"),
     ], className="mb-3 align-items-center"),
 
@@ -135,6 +196,7 @@ app.layout = dbc.Container([
                 id="data-grid",
                 columnDefs=initial_cols,
                 rowData=initial_data,
+                rowClassRules=row_class_rules, # Add this
                 defaultColDef={"editable": True, "sortable": True, "filter": True, "resizable": True},
                 dashGridOptions={"rowSelection": "multiple", "undoRedoCellEditing": True},
                 style={"height": "400px", "width": "100%"},
@@ -178,8 +240,9 @@ def export_augmented_data(n_clicks, row_data, col_defs):
     # Map internal fields to user-facing headers and drop hidden IDs
     field_to_header = {col['field']: col.get('headerName', col['field']) for col in col_defs}
     df = pd.DataFrame(row_data)
-    if '_row_id' in df.columns:
-        df = df.drop(columns=['_row_id'])
+    # Filter out internal tracking columns (IDs and Highlight flags)
+    cols_to_exclude = [c for c in df.columns if c.startswith('is_ai_') or c == '_row_id']
+    df = df.drop(columns=cols_to_exclude)
 
     # Only keep visible columns and rename them
     df = df[[k for k in field_to_header.keys() if k in df.columns]]
@@ -197,6 +260,15 @@ def export_augmented_data(n_clicks, row_data, col_defs):
     State("data-grid", "columnDefs"),
     prevent_initial_call=True
 )
+# --- EXTENSIVE EDA DASHBOARD LOGIC ---
+@app.callback(
+    Output("eda-dashboard-container", "children", allow_duplicate=True),
+    Input("btn-refresh-eda", "n_clicks"),
+    State("original-data-store", "data"),
+    State("data-grid", "rowData"),
+    State("data-grid", "columnDefs"),
+    prevent_initial_call=True # This is REQUIRED when using allow_duplicate
+)
 def build_eda_dashboard(n_clicks, orig_data, aug_data, col_defs):
     if not n_clicks: return dash.no_update
 
@@ -206,95 +278,174 @@ def build_eda_dashboard(n_clicks, orig_data, aug_data, col_defs):
     df_orig = pd.DataFrame(orig_data)
     df_aug = pd.DataFrame(aug_data)
 
-    # Clean up hidden rows and rename
+    # Clean up hidden rows and map columns
     for df in [df_orig, df_aug]:
         if '_row_id' in df.columns: df.drop(columns=['_row_id'], inplace=True)
-        # Drop columns that don't exist in field_to_header to prevent errors
         cols_to_keep = [c for c in df.columns if c in field_to_header]
         df.drop(columns=[c for c in df.columns if c not in cols_to_keep], inplace=True)
         df.rename(columns=field_to_header, inplace=True)
 
-    # Clean up empty strings to true NaNs for accurate counting
     df_orig.replace(["", "NaN", "None"], pd.NA, inplace=True)
     df_aug.replace(["", "NaN", "None"], pd.NA, inplace=True)
 
+    # Convert columns to numeric where possible
+    for col in df_orig.columns:
+        df_orig[col] = pd.to_numeric(df_orig[col], errors='ignore')
+        df_aug[col] = pd.to_numeric(df_aug[col], errors='ignore')
+
+    # Combined dataset for comparative plotting
+    df_orig_plot = df_orig.copy()
+    df_orig_plot['State'] = 'Original'
+    df_aug_plot = df_aug.copy()
+    df_aug_plot['State'] = 'Augmented'
+    df_combined = pd.concat([df_orig_plot, df_aug_plot], ignore_index=True)
+
+    numeric_cols = df_aug.select_dtypes(include='number').columns.tolist()
     dashboard_elements = []
 
-    # 2. METRICS CARDS (Top Level Insight)
+    # ==========================================
+    # SECTION 1: HIGH-LEVEL KPI METRICS
+    # ==========================================
     orig_nulls = df_orig.isna().sum().sum()
     aug_nulls = df_aug.isna().sum().sum()
     null_reduction = orig_nulls - aug_nulls
+    total_cells = df_aug.shape[0] * df_aug.shape[1]
+    completeness = ((total_cells - aug_nulls) / total_cells) * 100 if total_cells > 0 else 0
 
     metrics_row = dbc.Row([
         dbc.Col(dbc.Card(dbc.CardBody([
-            html.H6("Original Dimensions", className="text-muted"),
-            html.H3(f"{df_orig.shape[0]} Rows x {df_orig.shape[1]} Cols")
-        ])), width=4),
+            html.H6("Data Completeness", className="text-muted"),
+            html.H3(f"{completeness:.1f}%", className="text-primary")
+        ])), width=3),
+        dbc.Col(dbc.Card(dbc.CardBody([
+            html.H6("Missing Values Resolved", className="text-muted"),
+            html.H3(f"{null_reduction} Cells", className="text-success" if null_reduction > 0 else "text-info")
+        ])), width=3),
         dbc.Col(dbc.Card(dbc.CardBody([
             html.H6("Augmented Dimensions", className="text-muted"),
-            html.H3(f"{df_aug.shape[0]} Rows x {df_aug.shape[1]} Cols")
-        ])), width=4),
+            html.H3(f"{df_aug.shape[0]} R x {df_aug.shape[1]} C")
+        ])), width=3),
         dbc.Col(dbc.Card(dbc.CardBody([
-            html.H6("Missing Values Resolved by AI", className="text-muted"),
-            html.H3(f"{null_reduction} Cells Filled", className="text-success" if null_reduction > 0 else "text-info")
-        ])), width=4),
+            html.H6("Numeric Features", className="text-muted"),
+            html.H3(f"{len(numeric_cols)}")
+        ])), width=3),
     ], className="mb-4")
     dashboard_elements.append(metrics_row)
 
-    # 3. MISSING VALUES COMPARISON (Bar Chart)
-    nulls_df = pd.DataFrame({
-        'Column': df_orig.columns,
-        'Original Missing': df_orig.isna().sum().values,
-        'Augmented Missing': df_aug.isna().sum().values
-    }).melt(id_vars='Column', var_name='State', value_name='Missing Count')
+    # ==========================================
+    # SECTION 2: STATISTICAL INFERENCE & SHIFT
+    # ==========================================
+    if numeric_cols:
+        dashboard_elements.append(html.H4([html.I(className="bi bi-calculator me-2"), "Statistical Shifts & Integrity"],
+                                          className="mb-3 text-secondary"))
 
-    fig_nulls = px.bar(nulls_df, x='Column', y='Missing Count', color='State', barmode='group',
-                       title="Missing Values per Column (Original vs Augmented)",
-                       color_discrete_map={"Original Missing": "#e74c3c", "Augmented Missing": "#2ecc71"})
+        # Build a statistical comparison table
+        stats_list = []
+        for col in numeric_cols:
+            orig_desc = df_orig[col].dropna()
+            aug_desc = df_aug[col].dropna()
+            if not orig_desc.empty and not aug_desc.empty:
+                stats_list.append({
+                    "Feature": col,
+                    "Orig Mean": round(orig_desc.mean(), 2),
+                    "Aug Mean": round(aug_desc.mean(), 2),
+                    "Orig Std": round(orig_desc.std(), 2),
+                    "Aug Std": round(aug_desc.std(), 2),
+                    "Orig Skew": round(orig_desc.skew(), 2),
+                    "Aug Skew": round(aug_desc.skew(), 2)
+                })
 
-    dashboard_elements.append(dbc.Row(dbc.Col(dcc.Graph(figure=fig_nulls), width=12), className="mb-4"))
+        if stats_list:
+            stats_df = pd.DataFrame(stats_list)
+            table = dbc.Table.from_dataframe(stats_df, striped=True, bordered=True, hover=True, size="sm",
+                                             className="bg-white rounded shadow-sm mb-4")
+            dashboard_elements.append(dbc.Row(dbc.Col(table, width=12)))
 
-    # 4. COLUMN DISTRIBUTIONS (Dynamic Generation)
+    # ==========================================
+    # SECTION 3: MULTIVARIATE RELATIONSHIPS (Heatmaps & Scatter Matrix)
+    # ==========================================
+    if len(numeric_cols) >= 2:
+        dashboard_elements.append(html.H4([html.I(className="bi bi-diagram-3-fill me-2"), "Multivariate Relationships"],
+                                          className="mt-5 mb-3 text-secondary"))
+
+        # 1. Correlation Heatmap
+        corr_aug = df_aug[numeric_cols].corr()
+        fig_corr = px.imshow(corr_aug, text_auto=".2f", aspect="auto", color_continuous_scale="RdBu_r",
+                             title="Augmented Correlation Matrix (Pearson)")
+
+        # 2. Scatter Matrix (Pairplot)
+        fig_scatter_matrix = px.scatter_matrix(
+            df_combined, dimensions=numeric_cols, color="State",
+            title="Scatter Matrix (Spot AI Hallucinated Outliers)",
+            color_discrete_map={"Original": "rgba(52, 152, 219, 0.6)", "Augmented": "rgba(46, 204, 113, 0.9)"}
+        )
+        fig_scatter_matrix.update_traces(diagonal_visible=False)
+
+        dashboard_elements.append(dbc.Row([
+            dbc.Col(dcc.Graph(figure=fig_corr), width=5),
+            dbc.Col(dcc.Graph(figure=fig_scatter_matrix), width=7)
+        ], className="mb-4"))
+
+    # ==========================================
+    # SECTION 4: UNIVARIATE DISTRIBUTIONS & OUTLIERS
+    # ==========================================
+    dashboard_elements.append(
+        html.H4([html.I(className="bi bi-bar-chart-steps me-2"), "Distributions & Outlier Detection"],
+                className="mt-5 mb-3 text-secondary"))
     dist_row_elements = []
 
     for col in df_aug.columns:
         if col not in df_orig.columns: continue
 
-        # Check if numerical
-        is_num = pd.api.types.is_numeric_dtype(pd.to_numeric(df_aug[col], errors='ignore'))
+        is_num = col in numeric_cols
 
         if is_num:
-            # Numerical Overlay Histogram
-            s_orig = pd.to_numeric(df_orig[col], errors='coerce').dropna()
-            s_aug = pd.to_numeric(df_aug[col], errors='coerce').dropna()
-
-            fig = go.Figure()
-            fig.add_trace(go.Histogram(x=s_orig, name='Original', opacity=0.5, marker_color='blue'))
-            fig.add_trace(go.Histogram(x=s_aug, name='Augmented', opacity=0.5, marker_color='green'))
-            fig.update_layout(barmode='overlay', title=f"Distribution: {col}", margin=dict(l=20, r=20, t=40, b=20))
+            # Box Plot overlayed with Histogram (Violin/Box style)
+            fig = px.box(df_combined, x="State", y=col, color="State", points="all",
+                         title=f"Quartiles & Outliers: {col}",
+                         color_discrete_map={"Original": "#3498db", "Augmented": "#2ecc71"})
             dist_row_elements.append(dbc.Col(dcc.Graph(figure=fig), width=6, className="mb-4"))
-        else:
-            # Categorical Frequency Bar
-            val_counts_orig = df_orig[col].value_counts().head(10).reset_index()
-            val_counts_orig['State'] = 'Original'
-            val_counts_aug = df_aug[col].value_counts().head(10).reset_index()
-            val_counts_aug['State'] = 'Augmented'
 
-            cat_df = pd.concat([val_counts_orig, val_counts_aug])
-            if not cat_df.empty:
-                cat_df.columns = ['Category', 'Count', 'State']
-                fig = px.bar(cat_df, x='Category', y='Count', color='State', barmode='group',
-                             title=f"Top 10 Frequencies: {col}",
-                             color_discrete_map={"Original": "blue", "Augmented": "green"})
-                fig.update_layout(margin=dict(l=20, r=20, t=40, b=20))
+            # Density / Histogram
+            fig_hist = px.histogram(df_combined, x=col, color="State", barmode="overlay", marginal="rug",
+                                    title=f"Density Shift: {col}",
+                                    color_discrete_map={"Original": "#3498db", "Augmented": "#2ecc71"})
+            dist_row_elements.append(dbc.Col(dcc.Graph(figure=fig_hist), width=6, className="mb-4"))
+
+        else:
+            # Categorical inference
+            val_counts = df_combined.groupby(['State', col]).size().reset_index(name='Count')
+            # Get top 10 from augmented to keep chart clean
+            top_cats = df_aug[col].value_counts().head(10).index
+            val_counts = val_counts[val_counts[col].isin(top_cats)]
+
+            if not val_counts.empty:
+                fig = px.bar(val_counts, x=col, y='Count', color='State', barmode='group',
+                             title=f"Categorical Frequency: {col}",
+                             color_discrete_map={"Original": "#3498db", "Augmented": "#2ecc71"})
                 dist_row_elements.append(dbc.Col(dcc.Graph(figure=fig), width=6, className="mb-4"))
 
+    # Group distribution charts in rows of 2
     if dist_row_elements:
-        dashboard_elements.append(
-            html.H5("Feature Distributions & Augmented Variance", className="mb-3 mt-4 text-muted"))
-        # Chunk into rows of 2
         for i in range(0, len(dist_row_elements), 2):
             dashboard_elements.append(dbc.Row(dist_row_elements[i:i + 2]))
+
+    # ==========================================
+    # SECTION 5: MISSINGNESS PROFILE
+    # ==========================================
+    nulls_df = pd.DataFrame({
+        'Feature': df_orig.columns,
+        'Original Nulls': df_orig.isna().sum().values,
+        'Augmented Nulls': df_aug.isna().sum().values
+    }).melt(id_vars='Feature', var_name='State', value_name='Missing Count')
+
+    fig_nulls = px.bar(nulls_df, x='Feature', y='Missing Count', color='State', barmode='group',
+                       title="Missingness Profile",
+                       color_discrete_map={"Original Nulls": "#e74c3c", "Augmented Nulls": "#2ecc71"})
+
+    dashboard_elements.append(html.H4([html.I(className="bi bi-x-circle me-2"), "Data Completeness Profile"],
+                                      className="mt-5 mb-3 text-secondary"))
+    dashboard_elements.append(dbc.Row(dbc.Col(dcc.Graph(figure=fig_nulls), width=12), className="mb-5"))
 
     return dashboard_elements
 
@@ -433,7 +584,9 @@ def add_new_column(n_clicks, current_cols):
     Output('data-grid', 'rowData', allow_duplicate=True),
     Input('btn-generate', 'n_clicks'),
     State('data-grid', 'rowData'),
-    State('data-grid', 'selectedRows'),
+    State('target-row-ids', 'data'),  # Target Row IDs (Red)
+    State('context-row-ids', 'data'),  # Context Row IDs (Blue)
+    State('check-full-context', 'value'),  # Full Dataset Context Toggle
     State('data-grid', 'columnDefs'),
     State('algo-selector', 'value'),
     State('param-tone', 'value'),
@@ -447,51 +600,181 @@ def add_new_column(n_clicks, current_cols):
     State({'type': 'cp-val-max', 'index': ALL}, 'value'),
     prevent_initial_call=True
 )
-def run_ai_generation(n_clicks, row_data, selected_rows, col_defs, algorithm,
-                      param_tone, param_consistency, param_uniqueness, temperature,
-                      cp_names, cp_types, cp_texts, cp_mins, cp_maxs):
-    if not n_clicks or not selected_rows: return dash.no_update
+def run_ai_generation(n_clicks, row_data, target_ids, context_ids, full_ctx_toggle,
+                      col_defs, algorithm, param_tone, param_consistency,
+                      param_uniqueness, temperature, cp_names, cp_types,
+                      cp_texts, cp_mins, cp_maxs):
+    # 1. Validation: Ensure we have targets to fill
+    if not n_clicks or not target_ids:
+        logger.warning("Generation aborted: No target rows (Red) defined.")
+        return dash.no_update
 
-    compiled_instructions = f"- Global Text Style: {param_tone}\n- Data Consistency: {param_consistency}\n- Uniqueness rule: {param_uniqueness}\n"
+    logger.info(f"Starting AI Generation for {len(target_ids)} target rows.")
+
+    # 2. Build the Instruction Set
+    compiled_instructions = (
+        f"Style: {param_tone}\n"
+        f"Consistency: {param_consistency}\n"
+        f"Uniqueness: {param_uniqueness}\n"
+    )
     for i in range(len(cp_names)):
-        if not cp_names[i]: continue
-        if cp_types[i] in ['text', 'options'] and cp_texts[i]:
-            compiled_instructions += f"- {cp_names[i]} ({cp_types[i]}): {cp_texts[i]}\n"
-        elif cp_types[i] == 'number':
-            compiled_instructions += f"- {cp_names[i]} (limit): Min {cp_mins[i]}, Max {cp_maxs[i]}\n"
+        if cp_names[i]:
+            detail = cp_texts[i] if cp_types[i] != 'number' else f"Min:{cp_mins[i]}, Max:{cp_maxs[i]}"
+            compiled_instructions += f"- Rule [{cp_names[i]}]: {detail}\n"
 
-    field_to_header = {col['field']: col.get('headerName', col['field']) for col in col_defs}
+    # 3. Context Preparation (The "Intelligence" Source)
+    df_full = pd.DataFrame(row_data)
+
+    # A. Manual Context (Blue Rows)
+    manual_ctx_df = df_full[df_full['_row_id'].isin(context_ids or [])].drop(columns=['_row_id'], errors='ignore')
+
+    # B. Global Context (Random Sample if toggled)
+    global_ctx_sample = []
+    if full_ctx_toggle:
+        # Sample up to 15 non-empty rows for general pattern recognition
+        global_ctx_sample = df_full.dropna(how='all').sample(min(15, len(df_full))).to_dict('records')
+
+    # Combine context into a string Gemini can digest
+    full_context_str = f"""
+    Manual Reference Examples: {manual_ctx_df.to_json(orient='records')}
+    General Dataset Patterns: {json.dumps(global_ctx_sample)}
+    """
+
+    # 4. Target Mapping (The "Holes" to fill)
+    field_to_header = {col['field']: col.get('headerName', col['field']) for col in col_defs if
+                       col['field'] != 'ai_audit'}
     header_to_field = {v: k for k, v in field_to_header.items()}
-    df = pd.DataFrame(row_data).rename(columns=field_to_header)
-    context_summary = get_dataset_description(df.head(5))
 
     updated_rows = list(row_data)
-    payload, indices = [], []
+    payload, target_indices = [], []
 
-    for sel_row in selected_rows:
-        target_id = sel_row.get('_row_id')
+    for target_id in target_ids:
         idx = next((i for i, r in enumerate(updated_rows) if r.get('_row_id') == target_id), -1)
         if idx == -1: continue
 
-        semantic = {field_to_header[f]: (v if v not in [None, "", "NaN"] else None) for f, v in sel_row.items() if
-                    f in field_to_header}
-        payload.append(semantic)
-        indices.append(idx)
+        # We send the existing row data to ensure the AI preserves context (e.g. city matches state)
+        row_obj = updated_rows[idx]
+        semantic_row = {field_to_header[f]: (v if v not in [None, "", "NaN"] else None)
+                        for f, v in row_obj.items() if f in field_to_header}
 
+        payload.append(semantic_row)
+        target_indices.append(idx)
+
+    logger.info(f"Payload sent with {len(payload)} targets and {len(context_ids or [])} manual context rows.")
+
+    # 5. Call AI
     filled_data = generate_bulk_data(
-        rows_payload=payload, context=context_summary, all_columns=list(field_to_header.values()),
-        algorithm=algorithm, user_instructions=compiled_instructions, temperature=temperature
+        payload,
+        full_context_str,
+        list(field_to_header.values()),
+        algorithm,
+        compiled_instructions,
+        temperature
     )
 
+    # 6. Unpack and Sanitize
     if filled_data:
+        logger.info("Gemini returned data. Processing and sanitizing values...")
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M")
+
         for i, gen_row in enumerate(filled_data):
-            target_idx = indices[i]
+            # Locate the original row in our master list
+            master_idx = target_indices[i]
+            updated_rows[master_idx]['ai_audit'] = f"Gemini 2.0 | {current_time}"
+
             for header, val in gen_row.items():
                 if header in header_to_field:
-                    updated_rows[target_idx][header_to_field[header]] = val
+                    field = header_to_field[header]
+
+                    # Numeric Sanitization
+                    sanitized_val = val
+                    if isinstance(val, str):
+                        clean_str = val.replace('$', '').replace(',', '').replace('%', '').strip()
+                        try:
+                            # Try to convert to float/int if it looks like a number
+                            sanitized_val = float(clean_str) if '.' in clean_str else int(clean_str)
+                        except ValueError:
+                            sanitized_val = val
+
+                    # Only fill the cell if it was empty/null originally
+                    original_val = updated_rows[master_idx].get(field)
+                    if original_val in [None, "", "NaN"]:
+                        updated_rows[master_idx][field] = sanitized_val
+                        updated_rows[master_idx][f"is_ai_{field}"] = True
+
+        logger.info("Successfully augmented target rows.")
+    else:
+        logger.error("AI Generation failed to return any data.")
 
     return updated_rows
 
+
+@app.callback(
+    Output("context-row-ids", "data"),
+    Output("target-row-ids", "data"),
+    Output("data-grid", "rowData", allow_duplicate=True),
+    Input("btn-mode-context", "n_clicks"),
+    Input("btn-mode-target", "n_clicks"),
+    State("data-grid", "selectedRows"),
+    State("data-grid", "rowData"),
+    State("context-row-ids", "data"),
+    State("target-row-ids", "data"),
+    prevent_initial_call=True
+)
+def manage_selections(btn_ctx, btn_tgt, selected_rows, current_data, ctx_ids, tgt_ids):
+    ctx_ids = set(ctx_ids or [])
+    tgt_ids = set(tgt_ids or [])
+    triggered_id = dash.callback_context.triggered[0]["prop_id"].split(".")[0]
+    selected_uuids = [r["_row_id"] for r in selected_rows] if selected_rows else []
+
+    if not selected_uuids:
+        return list(ctx_ids), list(tgt_ids), current_data
+
+    for uuid in selected_uuids:
+        if triggered_id == "btn-mode-context":
+            # Toggle Logic: If already in context, remove it. Else, add it and remove from target.
+            if uuid in ctx_ids:
+                ctx_ids.remove(uuid)
+            else:
+                ctx_ids.add(uuid)
+                if uuid in tgt_ids: tgt_ids.remove(uuid)
+        else:
+            # Toggle Logic: If already in target, remove it. Else, add it and remove from context.
+            if uuid in tgt_ids:
+                tgt_ids.remove(uuid)
+            else:
+                tgt_ids.add(uuid)
+                if uuid in ctx_ids: ctx_ids.remove(uuid)
+
+    # Re-apply flags to row data for CSS rules
+    for row in current_data:
+        row["is_context"] = row["_row_id"] in ctx_ids
+        row["is_target"] = row["_row_id"] in tgt_ids
+
+    return list(ctx_ids), list(tgt_ids), current_data
+
+
+@app.callback(
+    Output("data-grid", "rowData", allow_duplicate=True),
+    Input("check-full-context", "value"),
+    State("data-grid", "rowData"),
+    State("context-row-ids", "data"),
+    State("target-row-ids", "data"),
+    prevent_initial_call=True
+)
+def toggle_full_dataset_visual(full_ctx_value, current_data, ctx_ids, tgt_ids):
+    is_full_ctx = len(full_ctx_value) > 0
+    ctx_ids_set = set(ctx_ids or [])
+
+    for row in current_data:
+        # If full context is ON, everyone is blue unless they are specifically a red target
+        if is_full_ctx:
+            row["is_context"] = not row.get("is_target", False)
+        else:
+            # Revert to only the manually selected IDs
+            row["is_context"] = row["_row_id"] in ctx_ids_set
+
+    return current_data
 
 if __name__ == '__main__':
     app.run(debug=True)
