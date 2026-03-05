@@ -73,6 +73,38 @@ app.layout = dbc.Container([
         ], width="auto"),
     ], className="mb-3 align-items-center"),
 
+# --- NEW: Generation Parameters Accordion ---
+    dbc.Row([
+        dbc.Col([
+            dbc.Accordion([
+                dbc.AccordionItem([
+                    dbc.Row([
+                        # Custom Instructions
+                        dbc.Col([
+                            html.Label("Custom Instructions:", className="fw-bold text-muted small"),
+                            dbc.Textarea(
+                                id="user-instruction",
+                                placeholder="e.g., 'Make names sound European', 'Ensure prices are under $100'...",
+                                size="sm",
+                                style={"height": "60px"}
+                            ),
+                        ], width=8),
+                        # Temperature Slider
+                        dbc.Col([
+                            html.Label("Creativity (Temperature):", className="fw-bold text-muted small mb-3"),
+                            dcc.Slider(
+                                id="temperature-slider",
+                                min=0.0, max=1.0, step=0.1, value=0.3,
+                                marks={0: 'Strict', 0.5: 'Balanced', 1: 'Creative'},
+                                tooltip={"placement": "bottom", "always_visible": False}
+                            )
+                        ], width=4)
+                    ])
+                ], title="⚙️ Generation Parameters", item_id="params-item")
+            ], start_collapsed=True, className="mb-3")
+        ], width=12)
+    ]),
+
     # --- NEW: Live In-Situ Renaming Bar ---
     dbc.Row([
         dbc.Col([
@@ -222,9 +254,11 @@ def add_new_column(n_clicks, current_cols):
     State('data-grid', 'selectedRows'),
     State('data-grid', 'columnDefs'),
     State('algo-selector', 'value'),
+    State('user-instruction', 'value'),     # NEW: Pulls the custom instructions
+    State('temperature-slider', 'value'),   # NEW: Pulls the slider value
     prevent_initial_call=True
 )
-def run_ai_generation(n_clicks, row_data, selected_rows, col_defs, algorithm):
+def run_ai_generation(n_clicks, row_data, selected_rows, col_defs, algorithm, user_instruction, temperature):
     if not n_clicks or not selected_rows:
         return dash.no_update
 
@@ -239,7 +273,9 @@ def run_ai_generation(n_clicks, row_data, selected_rows, col_defs, algorithm):
     indices = []
 
     for sel_row in selected_rows:
-        idx = next((i for i, r in enumerate(updated_rows) if r == sel_row), -1)
+        # FIXED: Robust row matching using _row_id so multiple empty rows don't overwrite each other
+        target_id = sel_row.get('_row_id')
+        idx = next((i for i, r in enumerate(updated_rows) if r.get('_row_id') == target_id), -1)
         if idx == -1: continue
 
         # Create semantic row, safely ignoring the hidden _row_id
@@ -251,7 +287,11 @@ def run_ai_generation(n_clicks, row_data, selected_rows, col_defs, algorithm):
         payload.append(semantic)
         indices.append(idx)
 
-    filled_data = generate_bulk_data(payload, context_summary, list(field_to_header.values()), algorithm)
+    # Pass the new parameters to the backend
+    filled_data = generate_bulk_data(
+        payload, context_summary, list(field_to_header.values()),
+        algorithm, user_instruction, temperature
+    )
 
     if filled_data:
         for i, gen_row in enumerate(filled_data):
@@ -261,7 +301,6 @@ def run_ai_generation(n_clicks, row_data, selected_rows, col_defs, algorithm):
                     updated_rows[target_idx][header_to_field[header]] = val
 
     return updated_rows
-
 
 if __name__ == '__main__':
     app.run(debug=True)
