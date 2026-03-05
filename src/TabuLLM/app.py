@@ -1,6 +1,8 @@
 import uuid
 from datetime import datetime
 import json
+
+import numpy as np
 import pandas as pd
 import plotly.express as px
 
@@ -8,6 +10,9 @@ import dash
 from dash import dcc, html, Input, Output, State, MATCH, ALL
 import dash_bootstrap_components as dbc
 import dash_ag_grid as dag
+from scipy.stats import stats
+from simsimd import jensenshannon
+from sklearn.decomposition import PCA
 
 from services.data_manager import parse_uploaded_file, create_empty_dataframe, df_to_aggrid_format
 from services.gemini_client import get_dataset_description, generate_bulk_data
@@ -253,201 +258,214 @@ def export_augmented_data(n_clicks, row_data, col_defs):
 
 # --- EDA DASHBOARD LOGIC ---
 @app.callback(
-    Output("eda-dashboard-container", "children"),
+    Output("eda-dashboard-container", "children", allow_duplicate=True),
     Input("btn-refresh-eda", "n_clicks"),
     State("original-data-store", "data"),
     State("data-grid", "rowData"),
     State("data-grid", "columnDefs"),
     prevent_initial_call=True
 )
-# --- EXTENSIVE EDA DASHBOARD LOGIC ---
-@app.callback(
-    Output("eda-dashboard-container", "children", allow_duplicate=True),
-    Input("btn-refresh-eda", "n_clicks"),
-    State("original-data-store", "data"),
-    State("data-grid", "rowData"),
-    State("data-grid", "columnDefs"),
-    prevent_initial_call=True # This is REQUIRED when using allow_duplicate
-)
 def build_eda_dashboard(n_clicks, orig_data, aug_data, col_defs):
     if not n_clicks: return dash.no_update
 
-    field_to_header = {col['field']: col.get('headerName', col['field']) for col in col_defs}
+    # --- 1. DATA PREPARATION ---
+    field_to_header = {col['field']: col.get('headerName', col['field'])
+                       for col in col_defs if col['field'] not in ['ai_audit', '_row_id']
+                       and not col['field'].startswith('is_ai_')}
 
-    # 1. Prepare DataFrames
     df_orig = pd.DataFrame(orig_data)
     df_aug = pd.DataFrame(aug_data)
 
-    # Clean up hidden rows and map columns
     for df in [df_orig, df_aug]:
-        if '_row_id' in df.columns: df.drop(columns=['_row_id'], inplace=True)
+        if '_row_id' in df.columns: df.drop(columns=['_row_id'], inplace=True, errors='ignore')
         cols_to_keep = [c for c in df.columns if c in field_to_header]
-        df.drop(columns=[c for c in df.columns if c not in cols_to_keep], inplace=True)
+        df.drop(columns=[c for c in df.columns if c not in cols_to_keep], inplace=True, errors='ignore')
         df.rename(columns=field_to_header, inplace=True)
+        df.replace(["", "NaN", "None", None], pd.NA, inplace=True)
+        for col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors='ignore')
 
-    df_orig.replace(["", "NaN", "None"], pd.NA, inplace=True)
-    df_aug.replace(["", "NaN", "None"], pd.NA, inplace=True)
-
-    # Convert columns to numeric where possible
-    for col in df_orig.columns:
-        df_orig[col] = pd.to_numeric(df_orig[col], errors='ignore')
-        df_aug[col] = pd.to_numeric(df_aug[col], errors='ignore')
-
-    # Combined dataset for comparative plotting
-    df_orig_plot = df_orig.copy()
-    df_orig_plot['State'] = 'Original'
-    df_aug_plot = df_aug.copy()
-    df_aug_plot['State'] = 'Augmented'
-    df_combined = pd.concat([df_orig_plot, df_aug_plot], ignore_index=True)
-
+    df_combined = pd.concat([df_orig.assign(State='Original'), df_aug.assign(State='Augmented')], ignore_index=True)
     numeric_cols = df_aug.select_dtypes(include='number').columns.tolist()
-    dashboard_elements = []
+    cat_cols = [c for c in df_aug.columns if c not in numeric_cols]
 
-    # ==========================================
-    # SECTION 1: HIGH-LEVEL KPI METRICS
-    # ==========================================
+    # --- 2. ADVANCED METRICS CALCULATION ---
+    quality_score = 0
+    mean_relative_error = 0
+    corr_stability = 0
+
+    if numeric_cols:
+        jsd_scores = []
+        mre_list = []
+        for col in numeric_cols:
+            a, b = df_orig[col].dropna(), df_aug[col].dropna()
+            if len(a) > 5 and len(b) > 5:
+                # JSD calculation
+                hist_a, bin_edges = np.histogram(a, bins=20, density=True)
+                hist_b, _ = np.histogram(b, bins=bin_edges, density=True)
+                jsd = jensenshannon(hist_a, hist_b)
+                jsd_scores.append(1 - jsd if not np.isnan(jsd) else 0)
+
+                # Mean Relative Error
+                if abs(a.mean()) > 1e-9:
+                    mre_list.append(abs(b.mean() - a.mean()) / abs(a.mean()))
+
+        quality_score = int(np.mean(jsd_scores) * 100) if jsd_scores else 0
+        mean_relative_error = np.mean(mre_list) * 100 if mre_list else 0
+
+        # Correlation Stability
+        if len(numeric_cols) > 1:
+            c_orig = df_orig[numeric_cols].corr().fillna(0).values
+            c_aug = df_aug[numeric_cols].corr().fillna(0).values
+            corr_stability = (1 - np.mean(np.abs(c_orig - c_aug))) * 100
+
+    # --- 3. SECTION 1: GLOBAL KPI HIGHLIGHTS ---
     orig_nulls = df_orig.isna().sum().sum()
     aug_nulls = df_aug.isna().sum().sum()
     null_reduction = orig_nulls - aug_nulls
-    total_cells = df_aug.shape[0] * df_aug.shape[1]
-    completeness = ((total_cells - aug_nulls) / total_cells) * 100 if total_cells > 0 else 0
+    completeness = ((df_aug.size - aug_nulls) / df_aug.size) * 100 if df_aug.size > 0 else 0
+    score_color = "success" if quality_score > 80 else "warning" if quality_score > 50 else "danger"
 
-    metrics_row = dbc.Row([
-        dbc.Col(dbc.Card(dbc.CardBody([
-            html.H6("Data Completeness", className="text-muted"),
-            html.H3(f"{completeness:.1f}%", className="text-primary")
-        ])), width=3),
-        dbc.Col(dbc.Card(dbc.CardBody([
-            html.H6("Missing Values Resolved", className="text-muted"),
-            html.H3(f"{null_reduction} Cells", className="text-success" if null_reduction > 0 else "text-info")
-        ])), width=3),
-        dbc.Col(dbc.Card(dbc.CardBody([
-            html.H6("Augmented Dimensions", className="text-muted"),
-            html.H3(f"{df_aug.shape[0]} R x {df_aug.shape[1]} C")
-        ])), width=3),
-        dbc.Col(dbc.Card(dbc.CardBody([
-            html.H6("Numeric Features", className="text-muted"),
-            html.H3(f"{len(numeric_cols)}")
-        ])), width=3),
-    ], className="mb-4")
-    dashboard_elements.append(metrics_row)
+    # Row 1: Primary Health
+    kpi_row_1 = dbc.Row([
+        dbc.Col(dbc.Card([
+            dbc.CardHeader([html.I(className="bi bi-shield-check me-2"), "Statistical Fidelity"], className="fw-bold"),
+            dbc.CardBody([
+                html.H2(f"{quality_score}%", className=f"text-{score_color} text-center"),
+                html.P("Probability distribution overlap", className="small text-muted text-center mb-0")
+            ])
+        ], outline=True, color=score_color), width=3),
 
-    # ==========================================
-    # SECTION 2: STATISTICAL INFERENCE & SHIFT
-    # ==========================================
+        dbc.Col(dbc.Card([
+            dbc.CardHeader([html.I(className="bi bi-plus-circle me-2"), "Augmentation Impact"], className="fw-bold"),
+            dbc.CardBody([
+                html.H2(f"+{null_reduction}", className="text-success text-center"),
+                html.P("Cells successfully synthesized", className="small text-muted text-center mb-0")
+            ])
+        ], outline=True, color="success"), width=3),
+
+        dbc.Col(dbc.Card([
+            dbc.CardHeader([html.I(className="bi bi-activity me-2"), "Data Completeness"], className="fw-bold"),
+            dbc.CardBody([
+                html.H2(f"{completeness:.1f}%", className="text-primary text-center"),
+                html.P("Current dataset density", className="small text-muted text-center mb-0")
+            ])
+        ], outline=True, color="primary"), width=3),
+
+        dbc.Col(dbc.Card([
+            dbc.CardHeader([html.I(className="bi bi-diagram-3 me-2"), "Correlation Stability"], className="fw-bold"),
+            dbc.CardBody([
+                html.H2(f"{corr_stability:.1f}%", className="text-info text-center"),
+                html.P("Feature relationship preservation", className="small text-muted text-center mb-0")
+            ])
+        ], outline=True, color="info"), width=3),
+    ], className="g-4 mb-3")
+
+    # Row 2: Secondary Inference
+    kpi_row_2 = dbc.Row([
+        dbc.Col(dbc.Card([
+            dbc.CardBody([
+                html.Small([html.I(className="bi bi-rulers me-2"), "Mean Relative Error"], className="text-muted"),
+                html.H5(f"{mean_relative_error:.2f}%", className="text-dark mb-0")
+            ])
+        ], className="border-start border-4 border-warning"), width=3),
+
+        dbc.Col(dbc.Card([
+            dbc.CardBody([
+                html.Small([html.I(className="bi bi-columns-gap me-2"), "Features Tracked"], className="text-muted"),
+                html.H5(f"{len(df_aug.columns)} Total", className="text-dark mb-0")
+            ])
+        ], className="border-start border-4 border-primary"), width=3),
+
+        dbc.Col(dbc.Card([
+            dbc.CardBody([
+                html.Small([html.I(className="bi bi-layers me-2"), "Rows Augmented"], className="text-muted"),
+                html.H5(f"{len(df_aug)} Sample size", className="text-dark mb-0")
+            ])
+        ], className="border-start border-4 border-success"), width=3),
+
+        dbc.Col(dbc.Card([
+            dbc.CardBody([
+                html.Small([html.I(className="bi bi-hash me-2"), "Categorical Cardinality"], className="text-muted"),
+                html.H5(f"{sum(df_aug[cat_cols].nunique()) if cat_cols else 0} Unique labels",
+                        className="text-dark mb-0")
+            ])
+        ], className="border-start border-4 border-info"), width=3),
+    ], className="g-4 mb-4")
+
+    # --- 4. ACCORDION SECTIONS ---
+    accordion_items = []
+
+    # Section 2: Statistical Inference
     if numeric_cols:
-        dashboard_elements.append(html.H4([html.I(className="bi bi-calculator me-2"), "Statistical Shifts & Integrity"],
-                                          className="mb-3 text-secondary"))
-
-        # Build a statistical comparison table
         stats_list = []
         for col in numeric_cols:
-            orig_desc = df_orig[col].dropna()
-            aug_desc = df_aug[col].dropna()
-            if not orig_desc.empty and not aug_desc.empty:
+            a, b = df_orig[col].dropna(), df_aug[col].dropna()
+            if not a.empty and not b.empty:
+                _, ks_p = stats.ks_2samp(a, b)
                 stats_list.append({
                     "Feature": col,
-                    "Orig Mean": round(orig_desc.mean(), 2),
-                    "Aug Mean": round(aug_desc.mean(), 2),
-                    "Orig Std": round(orig_desc.std(), 2),
-                    "Aug Std": round(aug_desc.std(), 2),
-                    "Orig Skew": round(orig_desc.skew(), 2),
-                    "Aug Skew": round(aug_desc.skew(), 2)
+                    "Orig Mean": round(a.mean(), 2),
+                    "Aug Mean": round(b.mean(), 2),
+                    "Drift": f"{((b.mean() - a.mean()) / a.mean() * 100):.1f}%" if a.mean() != 0 else "N/A",
+                    "P-Value": round(ks_p, 4),
+                    "Status": "Passed" if ks_p > 0.05 else "Drift Detected"
                 })
 
-        if stats_list:
-            stats_df = pd.DataFrame(stats_list)
-            table = dbc.Table.from_dataframe(stats_df, striped=True, bordered=True, hover=True, size="sm",
-                                             className="bg-white rounded shadow-sm mb-4")
-            dashboard_elements.append(dbc.Row(dbc.Col(table, width=12)))
+        table = dbc.Table.from_dataframe(pd.DataFrame(stats_list), striped=True, bordered=True, hover=True, size="sm")
+        accordion_items.append(
+            dbc.AccordionItem(table, title="Statistical Inference & P-Values", item_id="section-stats"))
 
-    # ==========================================
-    # SECTION 3: MULTIVARIATE RELATIONSHIPS (Heatmaps & Scatter Matrix)
-    # ==========================================
+    # Section 3: Multivariate Relationships
     if len(numeric_cols) >= 2:
-        dashboard_elements.append(html.H4([html.I(className="bi bi-diagram-3-fill me-2"), "Multivariate Relationships"],
-                                          className="mt-5 mb-3 text-secondary"))
-
-        # 1. Correlation Heatmap
         corr_aug = df_aug[numeric_cols].corr()
-        fig_corr = px.imshow(corr_aug, text_auto=".2f", aspect="auto", color_continuous_scale="RdBu_r",
-                             title="Augmented Correlation Matrix (Pearson)")
+        fig_corr = px.imshow(corr_aug, text_auto=".2f", color_continuous_scale="RdBu_r",
+                             title="Feature Correlation (AI Generated)")
+        fig_scatter = px.scatter_matrix(df_combined, dimensions=numeric_cols, color="State", opacity=0.3,
+                                        title="Global Structure Comparison")
+        fig_scatter.update_traces(diagonal_visible=False, marker=dict(size=3))
+        accordion_items.append(dbc.AccordionItem(
+            dbc.Row([dbc.Col(dcc.Graph(figure=fig_corr), width=5), dbc.Col(dcc.Graph(figure=fig_scatter), width=7)]),
+            title="Multivariate Relationships & Correlations", item_id="section-corr"))
 
-        # 2. Scatter Matrix (Pairplot)
-        fig_scatter_matrix = px.scatter_matrix(
-            df_combined, dimensions=numeric_cols, color="State",
-            title="Scatter Matrix (Spot AI Hallucinated Outliers)",
-            color_discrete_map={"Original": "rgba(52, 152, 219, 0.6)", "Augmented": "rgba(46, 204, 113, 0.9)"}
-        )
-        fig_scatter_matrix.update_traces(diagonal_visible=False)
-
-        dashboard_elements.append(dbc.Row([
-            dbc.Col(dcc.Graph(figure=fig_corr), width=5),
-            dbc.Col(dcc.Graph(figure=fig_scatter_matrix), width=7)
-        ], className="mb-4"))
-
-    # ==========================================
-    # SECTION 4: UNIVARIATE DISTRIBUTIONS & OUTLIERS
-    # ==========================================
-    dashboard_elements.append(
-        html.H4([html.I(className="bi bi-bar-chart-steps me-2"), "Distributions & Outlier Detection"],
-                className="mt-5 mb-3 text-secondary"))
-    dist_row_elements = []
-
+    # Section 4: Distributions
+    dist_elements = []
     for col in df_aug.columns:
-        if col not in df_orig.columns: continue
+        if col in numeric_cols:
+            fig = px.violin(df_combined, y=col, x="State", color="State", box=True, points="all",
+                            color_discrete_map={"Original": "#3498db", "Augmented": "#2ecc71"})
+            dist_elements.append(dbc.Col(dcc.Graph(figure=fig), width=6))
+            fig_h = px.histogram(df_combined, x=col, color="State", barmode="overlay", marginal="box")
+            dist_elements.append(dbc.Col(dcc.Graph(figure=fig_h), width=6))
+        elif col in cat_cols:
+            fig_c = px.histogram(df_combined, x=col, color="State", barmode="group", title=f"Frequency: {col}")
+            dist_elements.append(dbc.Col(dcc.Graph(figure=fig_c), width=6))
 
-        is_num = col in numeric_cols
+    dist_grid = [dbc.Row(dist_elements[i:i + 2]) for i in range(0, len(dist_elements), 2)]
+    accordion_items.append(
+        dbc.AccordionItem(html.Div(dist_grid), title="Feature-by-Feature Distributions", item_id="section-dist"))
 
-        if is_num:
-            # Box Plot overlayed with Histogram (Violin/Box style)
-            fig = px.box(df_combined, x="State", y=col, color="State", points="all",
-                         title=f"Quartiles & Outliers: {col}",
-                         color_discrete_map={"Original": "#3498db", "Augmented": "#2ecc71"})
-            dist_row_elements.append(dbc.Col(dcc.Graph(figure=fig), width=6, className="mb-4"))
+    # Section 5: Latent Logic
+    insight_elements = []
+    if len(numeric_cols) >= 2:
+        df_pca_clean = df_combined.dropna(subset=numeric_cols)
+        if len(df_pca_clean) > 5:
+            pca = PCA(n_components=2)
+            comps = pca.fit_transform(df_pca_clean[numeric_cols])
+            df_res = pd.DataFrame(comps, columns=['PC1', 'PC2'])
+            df_res['State'] = df_pca_clean['State'].values
+            fig_pca = px.scatter(df_res, x='PC1', y='PC2', color='State',
+                                 title="PCA Structural Drift Analysis (Latent Logic)")
+            insight_elements.append(dbc.Row(dbc.Col(dcc.Graph(figure=fig_pca), width=12)))
 
-            # Density / Histogram
-            fig_hist = px.histogram(df_combined, x=col, color="State", barmode="overlay", marginal="rug",
-                                    title=f"Density Shift: {col}",
-                                    color_discrete_map={"Original": "#3498db", "Augmented": "#2ecc71"})
-            dist_row_elements.append(dbc.Col(dcc.Graph(figure=fig_hist), width=6, className="mb-4"))
+    accordion_items.append(
+        dbc.AccordionItem(html.Div(insight_elements), title="High-Inference Latent Logic", item_id="section-logic"))
 
-        else:
-            # Categorical inference
-            val_counts = df_combined.groupby(['State', col]).size().reset_index(name='Count')
-            # Get top 10 from augmented to keep chart clean
-            top_cats = df_aug[col].value_counts().head(10).index
-            val_counts = val_counts[val_counts[col].isin(top_cats)]
-
-            if not val_counts.empty:
-                fig = px.bar(val_counts, x=col, y='Count', color='State', barmode='group',
-                             title=f"Categorical Frequency: {col}",
-                             color_discrete_map={"Original": "#3498db", "Augmented": "#2ecc71"})
-                dist_row_elements.append(dbc.Col(dcc.Graph(figure=fig), width=6, className="mb-4"))
-
-    # Group distribution charts in rows of 2
-    if dist_row_elements:
-        for i in range(0, len(dist_row_elements), 2):
-            dashboard_elements.append(dbc.Row(dist_row_elements[i:i + 2]))
-
-    # ==========================================
-    # SECTION 5: MISSINGNESS PROFILE
-    # ==========================================
-    nulls_df = pd.DataFrame({
-        'Feature': df_orig.columns,
-        'Original Nulls': df_orig.isna().sum().values,
-        'Augmented Nulls': df_aug.isna().sum().values
-    }).melt(id_vars='Feature', var_name='State', value_name='Missing Count')
-
-    fig_nulls = px.bar(nulls_df, x='Feature', y='Missing Count', color='State', barmode='group',
-                       title="Missingness Profile",
-                       color_discrete_map={"Original Nulls": "#e74c3c", "Augmented Nulls": "#2ecc71"})
-
-    dashboard_elements.append(html.H4([html.I(className="bi bi-x-circle me-2"), "Data Completeness Profile"],
-                                      className="mt-5 mb-3 text-secondary"))
-    dashboard_elements.append(dbc.Row(dbc.Col(dcc.Graph(figure=fig_nulls), width=12), className="mb-5"))
-
-    return dashboard_elements
+    return [
+        kpi_row_1,
+        kpi_row_2,
+        dbc.Accordion(accordion_items, start_collapsed=False, always_open=True, id="eda-accordion")
+    ]
 
 
 # --- DYNAMIC PARAMETER LOGIC ---
