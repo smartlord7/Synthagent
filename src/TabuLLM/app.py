@@ -536,19 +536,54 @@ def apply_live_rename(new_name, active_col_id, col_defs):
 @app.callback(
     Output('data-grid', 'rowData'),
     Output('data-grid', 'columnDefs'),
-    Output('original-data-store', 'data'),  # NEW: Update original state on upload
+    Output('original-data-store', 'data'),
     Input('upload-data', 'contents'),
     State('upload-data', 'filename'),
     prevent_initial_call=True
 )
 def update_table_from_upload(contents, filename):
-    if contents is None: return dash.no_update, dash.no_update, dash.no_update
+    if contents is None:
+        return dash.no_update, dash.no_update, dash.no_update
+
+    logger.info(f"Uploading and parsing file: {filename}")
+
+    # Parse the file using your existing service
     df = parse_uploaded_file(contents, filename)
-    new_cols = [{"field": col, "headerName": col, "checkboxSelection": i == 0, "headerCheckboxSelection": i == 0} for
-                i, col in enumerate(df.columns)]
+
+    # 1. Build Column Definitions with AI styling and Audit column
+    new_cols = []
+    for i, col in enumerate(df.columns):
+        col_def = {
+            "field": col,
+            "headerName": col,
+            "cellStyle": ai_highlight_style,
+            "editable": True
+        }
+        # Add selection checkboxes to the first column only
+        if i == 0:
+            col_def["checkboxSelection"] = True
+            col_def["headerCheckboxSelection"] = True
+        new_cols.append(col_def)
+
+    # 2. Append the Audit Column (the hidden logic Gemini populates)
+    new_cols.append({
+        "field": "ai_audit",
+        "headerName": "Generation Audit",
+        "editable": False,
+        "cellStyle": {"color": "#666", "fontSize": "0.8em", "fontStyle": "italic"}
+    })
+
+    # 3. Format Data and Inject Unique IDs
     new_data = df_to_aggrid_format(df)
-    for row in new_data: row['_row_id'] = str(uuid.uuid4())
-    # The uploaded data becomes the new "Original" baseline
+    for row in new_data:
+        row['_row_id'] = str(uuid.uuid4())
+        row['is_context'] = False
+        row['is_target'] = False
+        row['ai_audit'] = ""  # Initialize empty audit string
+
+    logger.info(f"Successfully loaded {len(new_data)} rows with {len(new_cols)} columns.")
+
+    # Return the same data to both the Grid and the Original Store baseline
     return new_data, new_cols, new_data
 
 
@@ -582,6 +617,7 @@ def add_new_column(n_clicks, current_cols):
 # --- THE MASTER AI GENERATION ENGINE ---
 @app.callback(
     Output('data-grid', 'rowData', allow_duplicate=True),
+    Output('target-row-ids', 'data', allow_duplicate=True),
     Input('btn-generate', 'n_clicks'),
     State('data-grid', 'rowData'),
     State('target-row-ids', 'data'),  # Target Row IDs (Red)
@@ -605,9 +641,10 @@ def run_ai_generation(n_clicks, row_data, target_ids, context_ids, full_ctx_togg
                       param_uniqueness, temperature, cp_names, cp_types,
                       cp_texts, cp_mins, cp_maxs):
     # 1. Validation: Ensure we have targets to fill
+    # FIX: Must return two dash.no_update values to match the two Outputs
     if not n_clicks or not target_ids:
         logger.warning("Generation aborted: No target rows (Red) defined.")
-        return dash.no_update
+        return dash.no_update, dash.no_update
 
     logger.info(f"Starting AI Generation for {len(target_ids)} target rows.")
 
@@ -622,7 +659,7 @@ def run_ai_generation(n_clicks, row_data, target_ids, context_ids, full_ctx_togg
             detail = cp_texts[i] if cp_types[i] != 'number' else f"Min:{cp_mins[i]}, Max:{cp_maxs[i]}"
             compiled_instructions += f"- Rule [{cp_names[i]}]: {detail}\n"
 
-    # 3. Context Preparation (The "Intelligence" Source)
+    # 3. Context Preparation
     df_full = pd.DataFrame(row_data)
 
     # A. Manual Context (Blue Rows)
@@ -631,38 +668,32 @@ def run_ai_generation(n_clicks, row_data, target_ids, context_ids, full_ctx_togg
     # B. Global Context (Random Sample if toggled)
     global_ctx_sample = []
     if full_ctx_toggle:
-        # Sample up to 15 non-empty rows for general pattern recognition
         global_ctx_sample = df_full.dropna(how='all').sample(min(15, len(df_full))).to_dict('records')
 
-    # Combine context into a string Gemini can digest
     full_context_str = f"""
     Manual Reference Examples: {manual_ctx_df.to_json(orient='records')}
     General Dataset Patterns: {json.dumps(global_ctx_sample)}
     """
 
-    # 4. Target Mapping (The "Holes" to fill)
-    field_to_header = {col['field']: col.get('headerName', col['field']) for col in col_defs if
-                       col['field'] != 'ai_audit'}
+    # 4. Target Mapping
+    # Filter out technical columns so they aren't sent to the LLM
+    field_to_header = {col['field']: col.get('headerName', col['field']) for col in col_defs
+                       if col['field'] not in ['ai_audit', '_row_id'] and not col['field'].startswith('is_ai_')}
     header_to_field = {v: k for k, v in field_to_header.items()}
 
     updated_rows = list(row_data)
     payload, target_indices = [], []
-
-    for target_id in target_ids:
-        idx = next((i for i, r in enumerate(updated_rows) if r.get('_row_id') == target_id), -1)
-        if idx == -1: continue
-
-        # We send the existing row data to ensure the AI preserves context (e.g. city matches state)
-        row_obj = updated_rows[idx]
-        semantic_row = {field_to_header[f]: (v if v not in [None, "", "NaN"] else None)
-                        for f, v in row_obj.items() if f in field_to_header}
-
-        payload.append(semantic_row)
-        target_indices.append(idx)
-
-    logger.info(f"Payload sent with {len(payload)} targets and {len(context_ids or [])} manual context rows.")
+    for t_id in target_ids:
+        idx = next((i for i, r in enumerate(updated_rows) if r.get('_row_id') == t_id), -1)
+        if idx != -1:
+            row_obj = updated_rows[idx]
+            semantic_row = {field_to_header[f]: (v if v not in [None, "", "NaN"] else None)
+                            for f, v in row_obj.items() if f in field_to_header}
+            payload.append(semantic_row)
+            target_indices.append(idx)
 
     # 5. Call AI
+    # FIX: Pass the actual variables compiled above
     filled_data = generate_bulk_data(
         payload,
         full_context_str,
@@ -672,14 +703,21 @@ def run_ai_generation(n_clicks, row_data, target_ids, context_ids, full_ctx_togg
         temperature
     )
 
-    # 6. Unpack and Sanitize
+    # 6. Unpack, Sanitize, and UNMARK Targets
+    remaining_targets = list(target_ids)
+
     if filled_data:
-        logger.info("Gemini returned data. Processing and sanitizing values...")
+        logger.info("Received AI response. Unpacking data and clearing target highlights.")
         current_time = datetime.now().strftime("%Y-%m-%d %H:%M")
 
         for i, gen_row in enumerate(filled_data):
-            # Locate the original row in our master list
+            # If the LLM returned more/fewer rows than requested, avoid IndexError
+            if i >= len(target_indices): break
+
             master_idx = target_indices[i]
+            row_uuid = updated_rows[master_idx]['_row_id']
+
+            # Set Audit Info
             updated_rows[master_idx]['ai_audit'] = f"Gemini 2.0 | {current_time}"
 
             for header, val in gen_row.items():
@@ -689,24 +727,26 @@ def run_ai_generation(n_clicks, row_data, target_ids, context_ids, full_ctx_togg
                     # Numeric Sanitization
                     sanitized_val = val
                     if isinstance(val, str):
-                        clean_str = val.replace('$', '').replace(',', '').replace('%', '').strip()
+                        clean_str = val.replace('$', '').replace(',', '').strip()
                         try:
-                            # Try to convert to float/int if it looks like a number
                             sanitized_val = float(clean_str) if '.' in clean_str else int(clean_str)
-                        except ValueError:
+                        except:
                             sanitized_val = val
 
-                    # Only fill the cell if it was empty/null originally
-                    original_val = updated_rows[master_idx].get(field)
-                    if original_val in [None, "", "NaN"]:
+                    # Only fill if originally empty
+                    if str(updated_rows[master_idx].get(field)) in [None, "", "NaN", "None"]:
                         updated_rows[master_idx][field] = sanitized_val
                         updated_rows[master_idx][f"is_ai_{field}"] = True
 
-        logger.info("Successfully augmented target rows.")
+            # Clear Target Visuals (Remove Red)
+            updated_rows[master_idx]['is_target'] = False
+            if row_uuid in remaining_targets:
+                remaining_targets.remove(row_uuid)
     else:
-        logger.error("AI Generation failed to return any data.")
+        logger.error("AI Generation failed to return data.")
 
-    return updated_rows
+    # Return both the row data and the updated list of target IDs
+    return updated_rows, remaining_targets
 
 
 @app.callback(
@@ -727,26 +767,21 @@ def manage_selections(btn_ctx, btn_tgt, selected_rows, current_data, ctx_ids, tg
     triggered_id = dash.callback_context.triggered[0]["prop_id"].split(".")[0]
     selected_uuids = [r["_row_id"] for r in selected_rows] if selected_rows else []
 
-    if not selected_uuids:
-        return list(ctx_ids), list(tgt_ids), current_data
-
     for uuid in selected_uuids:
         if triggered_id == "btn-mode-context":
-            # Toggle Logic: If already in context, remove it. Else, add it and remove from target.
             if uuid in ctx_ids:
-                ctx_ids.remove(uuid)
+                ctx_ids.remove(uuid) # Toggle OFF
             else:
-                ctx_ids.add(uuid)
-                if uuid in tgt_ids: tgt_ids.remove(uuid)
+                ctx_ids.add(uuid) # Toggle ON
+                if uuid in tgt_ids: tgt_ids.remove(uuid) # Remove from Red if moving to Blue
         else:
-            # Toggle Logic: If already in target, remove it. Else, add it and remove from context.
             if uuid in tgt_ids:
-                tgt_ids.remove(uuid)
+                tgt_ids.remove(uuid) # Toggle OFF
             else:
-                tgt_ids.add(uuid)
-                if uuid in ctx_ids: ctx_ids.remove(uuid)
+                tgt_ids.add(uuid) # Toggle ON
+                if uuid in ctx_ids: ctx_ids.remove(uuid) # Remove from Blue if moving to Red
 
-    # Re-apply flags to row data for CSS rules
+    # Map the sets back to the row data flags
     for row in current_data:
         row["is_context"] = row["_row_id"] in ctx_ids
         row["is_target"] = row["_row_id"] in tgt_ids
