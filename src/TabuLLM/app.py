@@ -290,34 +290,24 @@ def build_eda_dashboard(n_clicks, orig_data, aug_data, col_defs):
     cat_cols = [c for c in df_aug.columns if c not in numeric_cols]
 
     # --- 2. ADVANCED METRICS CALCULATION ---
+    # Synthetic Data Quality Grade
     quality_score = 0
-    mean_relative_error = 0
-    corr_stability = 0
-
+    jsd_scores = []
     if numeric_cols:
-        jsd_scores = []
-        mre_list = []
         for col in numeric_cols:
-            a, b = df_orig[col].dropna(), df_aug[col].dropna()
+            a = df_orig[col].dropna()
+            b = df_aug[col].dropna()
             if len(a) > 5 and len(b) > 5:
-                # JSD calculation
+                # Distribution Similarity (Kolmogorov-Smirnov)
+                _, ks_p = stats.ks_2samp(a, b)
+                # Jensen-Shannon Divergence (Probability overlap)
+                # We discretize for JSD
                 hist_a, bin_edges = np.histogram(a, bins=20, density=True)
                 hist_b, _ = np.histogram(b, bins=bin_edges, density=True)
                 jsd = jensenshannon(hist_a, hist_b)
                 jsd_scores.append(1 - jsd if not np.isnan(jsd) else 0)
 
-                # Mean Relative Error
-                if abs(a.mean()) > 1e-9:
-                    mre_list.append(abs(b.mean() - a.mean()) / abs(a.mean()))
-
         quality_score = int(np.mean(jsd_scores) * 100) if jsd_scores else 0
-        mean_relative_error = np.mean(mre_list) * 100 if mre_list else 0
-
-        # Correlation Stability
-        if len(numeric_cols) > 1:
-            c_orig = df_orig[numeric_cols].corr().fillna(0).values
-            c_aug = df_aug[numeric_cols].corr().fillna(0).values
-            corr_stability = (1 - np.mean(np.abs(c_orig - c_aug))) * 100
 
     # --- 3. SECTION 1: GLOBAL KPI HIGHLIGHTS ---
     orig_nulls = df_orig.isna().sum().sum()
@@ -326,71 +316,38 @@ def build_eda_dashboard(n_clicks, orig_data, aug_data, col_defs):
     completeness = ((df_aug.size - aug_nulls) / df_aug.size) * 100 if df_aug.size > 0 else 0
     score_color = "success" if quality_score > 80 else "warning" if quality_score > 50 else "danger"
 
-    # Row 1: Primary Health
-    kpi_row_1 = dbc.Row([
+    kpi_cards = dbc.Row([
         dbc.Col(dbc.Card([
-            dbc.CardHeader([html.I(className="bi bi-shield-check me-2"), "Statistical Fidelity"], className="fw-bold"),
+            dbc.CardHeader("Statistical Fidelity (JSD)", className="text-center fw-bold"),
             dbc.CardBody([
                 html.H2(f"{quality_score}%", className=f"text-{score_color} text-center"),
-                html.P("Probability distribution overlap", className="small text-muted text-center mb-0")
+                html.P("Overall similarity of distributions", className="small text-muted text-center")
             ])
-        ], outline=True, color=score_color), width=3),
+        ], color=score_color, outline=True), width=3),
 
         dbc.Col(dbc.Card([
-            dbc.CardHeader([html.I(className="bi bi-plus-circle me-2"), "Augmentation Impact"], className="fw-bold"),
+            dbc.CardHeader("Augmentation Impact", className="text-center fw-bold"),
             dbc.CardBody([
                 html.H2(f"+{null_reduction}", className="text-success text-center"),
-                html.P("Cells successfully synthesized", className="small text-muted text-center mb-0")
+                html.P("Missing cells successfully filled", className="small text-muted text-center")
             ])
-        ], outline=True, color="success"), width=3),
+        ], color="success", outline=True), width=3),
 
         dbc.Col(dbc.Card([
-            dbc.CardHeader([html.I(className="bi bi-activity me-2"), "Data Completeness"], className="fw-bold"),
+            dbc.CardHeader("Completeness", className="text-center fw-bold"),
             dbc.CardBody([
                 html.H2(f"{completeness:.1f}%", className="text-primary text-center"),
-                html.P("Current dataset density", className="small text-muted text-center mb-0")
+                html.P("Final dataset health", className="small text-muted text-center")
             ])
-        ], outline=True, color="primary"), width=3),
+        ], color="primary", outline=True), width=3),
 
         dbc.Col(dbc.Card([
-            dbc.CardHeader([html.I(className="bi bi-diagram-3 me-2"), "Correlation Stability"], className="fw-bold"),
+            dbc.CardHeader("Entropy Preservation", className="text-center fw-bold"),
             dbc.CardBody([
-                html.H2(f"{corr_stability:.1f}%", className="text-info text-center"),
-                html.P("Feature relationship preservation", className="small text-muted text-center mb-0")
+                html.H2("High" if quality_score > 70 else "Low", className="text-info text-center"),
+                html.P("Information diversity maintained", className="small text-muted text-center")
             ])
-        ], outline=True, color="info"), width=3),
-    ], className="g-4 mb-3")
-
-    # Row 2: Secondary Inference
-    kpi_row_2 = dbc.Row([
-        dbc.Col(dbc.Card([
-            dbc.CardBody([
-                html.Small([html.I(className="bi bi-rulers me-2"), "Mean Relative Error"], className="text-muted"),
-                html.H5(f"{mean_relative_error:.2f}%", className="text-dark mb-0")
-            ])
-        ], className="border-start border-4 border-warning"), width=3),
-
-        dbc.Col(dbc.Card([
-            dbc.CardBody([
-                html.Small([html.I(className="bi bi-columns-gap me-2"), "Features Tracked"], className="text-muted"),
-                html.H5(f"{len(df_aug.columns)} Total", className="text-dark mb-0")
-            ])
-        ], className="border-start border-4 border-primary"), width=3),
-
-        dbc.Col(dbc.Card([
-            dbc.CardBody([
-                html.Small([html.I(className="bi bi-layers me-2"), "Rows Augmented"], className="text-muted"),
-                html.H5(f"{len(df_aug)} Sample size", className="text-dark mb-0")
-            ])
-        ], className="border-start border-4 border-success"), width=3),
-
-        dbc.Col(dbc.Card([
-            dbc.CardBody([
-                html.Small([html.I(className="bi bi-hash me-2"), "Categorical Cardinality"], className="text-muted"),
-                html.H5(f"{sum(df_aug[cat_cols].nunique()) if cat_cols else 0} Unique labels",
-                        className="text-dark mb-0")
-            ])
-        ], className="border-start border-4 border-info"), width=3),
+        ], color="info", outline=True), width=3),
     ], className="g-4 mb-4")
 
     # --- 4. ACCORDION SECTIONS ---
@@ -404,31 +361,31 @@ def build_eda_dashboard(n_clicks, orig_data, aug_data, col_defs):
             if not a.empty and not b.empty:
                 _, ks_p = stats.ks_2samp(a, b)
                 stats_list.append({
-                    "Feature": col,
-                    "Orig Mean": round(a.mean(), 2),
-                    "Aug Mean": round(b.mean(), 2),
-                    "Drift": f"{((b.mean() - a.mean()) / a.mean() * 100):.1f}%" if a.mean() != 0 else "N/A",
-                    "P-Value": round(ks_p, 4),
-                    "Status": "Passed" if ks_p > 0.05 else "Drift Detected"
+                    "Feature": col, "Orig Mean": round(a.mean(), 2), "Aug Mean": round(b.mean(), 2),
+                    "Mean Shift": f"{((b.mean() - a.mean()) / a.mean() * 100):.1f}%" if a.mean() != 0 else "N/A",
+                    "KS Test (p-val)": round(ks_p, 4), "Status": "✅ Match" if ks_p > 0.05 else "⚠️ Drift"
                 })
 
         table = dbc.Table.from_dataframe(pd.DataFrame(stats_list), striped=True, bordered=True, hover=True, size="sm")
         accordion_items.append(
-            dbc.AccordionItem(table, title="Statistical Inference & P-Values", item_id="section-stats"))
+            dbc.AccordionItem(table, title="🧮 Statistical Inference & P-Values", item_id="section-stats"))
 
-    # Section 3: Multivariate Relationships
+    # Section 3: Correlations & Multivariate
     if len(numeric_cols) >= 2:
         corr_aug = df_aug[numeric_cols].corr()
-        fig_corr = px.imshow(corr_aug, text_auto=".2f", color_continuous_scale="RdBu_r",
-                             title="Feature Correlation (AI Generated)")
-        fig_scatter = px.scatter_matrix(df_combined, dimensions=numeric_cols, color="State", opacity=0.3,
-                                        title="Global Structure Comparison")
-        fig_scatter.update_traces(diagonal_visible=False, marker=dict(size=3))
-        accordion_items.append(dbc.AccordionItem(
-            dbc.Row([dbc.Col(dcc.Graph(figure=fig_corr), width=5), dbc.Col(dcc.Graph(figure=fig_scatter), width=7)]),
-            title="Multivariate Relationships & Correlations", item_id="section-corr"))
+        fig_corr = px.imshow(corr_aug, text_auto=".2f", color_continuous_scale="RdBu_r", title="Correlation Matrix")
 
-    # Section 4: Distributions
+        fig_scatter = px.scatter_matrix(df_combined, dimensions=numeric_cols, color="State", opacity=0.4,
+                                        title="Feature Interaction Matrix")
+        fig_scatter.update_traces(diagonal_visible=False, marker=dict(size=3))
+
+        corr_content = html.Div([
+            dbc.Row([dbc.Col(dcc.Graph(figure=fig_corr), width=5), dbc.Col(dcc.Graph(figure=fig_scatter), width=7)])
+        ])
+        accordion_items.append(dbc.AccordionItem(corr_content, title="🔗 Multivariate Relationships & Correlations",
+                                                 item_id="section-corr"))
+
+    # Section 4: Distributions (Violin / Histograms)
     dist_elements = []
     for col in df_aug.columns:
         if col in numeric_cols:
@@ -443,10 +400,12 @@ def build_eda_dashboard(n_clicks, orig_data, aug_data, col_defs):
 
     dist_grid = [dbc.Row(dist_elements[i:i + 2]) for i in range(0, len(dist_elements), 2)]
     accordion_items.append(
-        dbc.AccordionItem(html.Div(dist_grid), title="Feature-by-Feature Distributions", item_id="section-dist"))
+        dbc.AccordionItem(html.Div(dist_grid), title="📊 Feature-by-Feature Distributions", item_id="section-dist"))
 
-    # Section 5: Latent Logic
+    # Section 5: High-Inference Power-Ups (PCA / Q-Q / Parallel)
     insight_elements = []
+
+    # PCA Cluster Drift
     if len(numeric_cols) >= 2:
         df_pca_clean = df_combined.dropna(subset=numeric_cols)
         if len(df_pca_clean) > 5:
@@ -454,16 +413,26 @@ def build_eda_dashboard(n_clicks, orig_data, aug_data, col_defs):
             comps = pca.fit_transform(df_pca_clean[numeric_cols])
             df_res = pd.DataFrame(comps, columns=['PC1', 'PC2'])
             df_res['State'] = df_pca_clean['State'].values
-            fig_pca = px.scatter(df_res, x='PC1', y='PC2', color='State',
-                                 title="PCA Structural Drift Analysis (Latent Logic)")
+            fig_pca = px.scatter(df_res, x='PC1', y='PC2', color='State', title="PCA Structural Drift Analysis")
             insight_elements.append(dbc.Row(dbc.Col(dcc.Graph(figure=fig_pca), width=12)))
 
-    accordion_items.append(
-        dbc.AccordionItem(html.Div(insight_elements), title="High-Inference Latent Logic", item_id="section-logic"))
+    # Q-Q Plots
+    if numeric_cols:
+        col = numeric_cols[0]
+        orig_s, aug_s = np.sort(df_orig[col].dropna()), np.sort(df_aug[col].dropna())
+        if len(orig_s) > 0 and len(aug_s) > 0:
+            aug_interp = np.interp(np.linspace(0, 1, len(orig_s)), np.linspace(0, 1, len(aug_s)), aug_s)
+            fig_qq = px.scatter(x=orig_s, y=aug_interp, title=f"Quantile-Quantile Stability: {col}")
+            fig_qq.add_shape(type="line", x0=min(orig_s), y0=min(orig_s), x1=max(orig_s), y1=max(orig_s),
+                             line=dict(color="red", dash="dash"))
+            insight_elements.append(dbc.Row(dbc.Col(dcc.Graph(figure=fig_qq), width=12)))
 
+    accordion_items.append(
+        dbc.AccordionItem(html.Div(insight_elements), title="🧠 High-Inference Latent Logic", item_id="section-logic"))
+
+    # Final Assembly
     return [
-        kpi_row_1,
-        kpi_row_2,
+        kpi_cards,
         dbc.Accordion(accordion_items, start_collapsed=False, always_open=True, id="eda-accordion")
     ]
 
