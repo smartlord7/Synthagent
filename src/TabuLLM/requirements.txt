@@ -1,0 +1,8 @@
+dash
+dash-ag-grid
+dash-bootstrap-components
+pandas
+google-generativeai
+python-dotenv
+plotly
+sqlalchemy
