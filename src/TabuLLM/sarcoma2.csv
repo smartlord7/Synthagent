@@ -1,0 +1,11 @@
+﻿patient_id,age,sex,sarcoma_type,tumor_size_cm,stage,metastasis,treatment,follow_up_months,status
+S001,45,Female,Osteosarcoma,7.2,II,No,Surgery+Chemotherapy,24,Alive
+S002,62,Male,Liposarcoma,5.1,I,No,Surgery,36,Alive
+S003,29,Male,Ewing Sarcoma,8.5,III,Yes,Chemotherapy+Radiation,18,Alive
+S004,53,Female,Leiomyosarcoma,6.0,II,No,Surgery+Radiation,30,Alive
+S005,67,Male,Undifferentiated Pleomorphic Sarcoma,9.3,IV,Yes,Chemotherapy,12,Deceased
+S006,38,Female,Synovial Sarcoma,4.8,II,No,Surgery+Chemotherapy,28,Alive
+S007,50,Male,Chondrosarcoma,7.7,III,No,Surgery,22,Alive
+S008,41,Female,Angiosarcoma,6.5,III,Yes,Chemotherapy+Radiation,16,Alive
+S009,58,Male,Liposarcoma,5.9,II,No,Surgery+Radiation,26,Alive
+S010,34,Female,Ewing Sarcoma,7.0,III,Yes,Chemotherapy+Surgery,20,Alive
