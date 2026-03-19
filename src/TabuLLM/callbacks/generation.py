@@ -4,7 +4,7 @@ import pandas as pd
 import dash
 from dash import Input, Output, State, ALL
 from core import app, logger
-from services.gemini_client import generate_bulk_data
+from services.llm_client import generate_bulk_data
 
 # --- THE MASTER AI GENERATION ENGINE ---
 @app.callback(

@@ -4,7 +4,7 @@ import dash
 from dash import Input, Output, State, html
 import dash_bootstrap_components as dbc
 from core import app, logger
-from services.gemini_client import generate_bulk_data
+from services.llm_client import generate_bulk_data
 from utils.metrics import calculate_metrics
 
 @app.callback(
@@ -49,77 +49,74 @@ def run_benchmark_fold(state, orig_data, col_defs, algorithm, param_tone, param_
         return dash.no_update, dash.no_update, dash.no_update
     
     try:
-        current_fold = int(state.get("k_current", 0))
+        current_fold_idx = int(state.get("k_current", 0))
         total_folds = int(state.get("k_total", 3))
         fraction = float(state.get("fraction", 0.2))
     except (ValueError, TypeError):
-        current_fold = 0
+        current_fold_idx = 0
         total_folds = 3
         fraction = 0.2
-    
-    logger.info(f"Running Benchmark Fold {current_fold + 1}/{total_folds}")
-    
-    df_orig = pd.DataFrame(orig_data)
-    if '_row_id' in df_orig.columns:
-        df_orig.drop(columns=['_row_id'], inplace=True, errors='ignore')
+
+    # WE ITERATE ALL REMAINING FOLDS IN MEMORY 
+    # This prevents brittle Circular Callbacks that Dash 2.0+ drops for slow REST requests
+    for fold_num in range(current_fold_idx + 1, total_folds + 1):
+        logger.info(f"--- Running Benchmark Fold {fold_num}/{total_folds} ---")
         
-    field_to_header = {
-        col['field']: col.get('headerName', col['field'])
-        for col in col_defs
-        if col['field'] not in ['ai_audit', '_row_id']
-           and not col['field'].startswith('is_ai_')
-    }
-    header_to_field = {v: k for k, v in field_to_header.items()}
-    
-    # Clean df_orig to only have real columns
-    cols_to_keep = [c for c in df_orig.columns if c in field_to_header]
-    df_orig = df_orig[cols_to_keep].rename(columns=field_to_header)
-    
-    # Sample fraction Context
-    context_df = df_orig.sample(frac=fraction)
-    
-    # Calculate how many rows to generate
-    num_empty = len(df_orig) - len(context_df)
-    
-    # Build Context String
-    context_str = f"General Dataset Patterns: {context_df.to_json(orient='records')}"
-    
-    # Build instructions
-    instructions = f"Style: {param_tone}\nConsistency: {param_consistency}\nUniqueness: {param_uniqueness}"
-    
-    # Generate Data
-    result_bundle = generate_bulk_data(
-        [], # Empty partial payload
-        context_str,
-        list(field_to_header.values()),
-        algorithm,
-        instructions,
-        temperature,
-        num_empty=num_empty
-    )
-    
-    if result_bundle:
-        filled_data = result_bundle["data"]
-        
-        # Build augmented dataset = Context + Generated
-        generated_df = pd.DataFrame(filled_data)
-        aug_df = pd.concat([context_df, generated_df], ignore_index=True)
-        
-        # Calculate Metrics using util function
-        m = calculate_metrics(df_orig, aug_df)
-        state["results"].append(m)
-    else:
-        logger.error("Fold generation failed.")
-        
-    state["k_current"] = current_fold + 1
-    
-    if state["k_current"] == state["k_total"]:
-        state["active"] = False
-        
-    progress_val = int((state["k_current"] / total_folds) * 100)
-    progress_label = f"{state['k_current']} / {total_folds} Folds"
+        try:
+            df_orig = pd.DataFrame(orig_data)
+            if '_row_id' in df_orig.columns:
+                df_orig.drop(columns=['_row_id'], inplace=True, errors='ignore')
+                
+            field_to_header = {
+                col['field']: col.get('headerName', col['field'])
+                for col in col_defs
+                if col['field'] not in ['ai_audit', '_row_id']
+                   and not col['field'].startswith('is_ai_')
+            }
+            
+            cols_to_keep = [c for c in df_orig.columns if c in field_to_header]
+            df_orig = df_orig[cols_to_keep].rename(columns=field_to_header)
+            
+            context_df = df_orig.sample(frac=fraction)
+            num_empty = len(df_orig) - len(context_df)
+            
+            context_str = f"General Dataset Patterns: {context_df.to_json(orient='records')}"
+            instructions = f"Style: {param_tone}\nConsistency: {param_consistency}\nUniqueness: {param_uniqueness}"
+            
+            result_bundle = generate_bulk_data(
+                [], context_str, list(field_to_header.values()),
+                algorithm, instructions, temperature, num_empty=num_empty
+            )
+            
+            if result_bundle:
+                filled_data = result_bundle["data"]
+                generated_df = pd.DataFrame(filled_data)
+                aug_df = pd.concat([context_df, generated_df], ignore_index=True)
+                
+                logger.info(f"Fold {fold_num} Augmented Size: {len(aug_df)}. Calculating metrics...")
+                m = calculate_metrics(df_orig, aug_df)
+                state["results"].append(m)
+            else:
+                logger.error(f"Fold {fold_num} generation failed.")
+                
+            state["k_current"] = fold_num
+            logger.info(f"Fold {fold_num} completed.")
+
+        except Exception as e:
+            import traceback
+            logger.error(f"CRITICAL BENCHMARK CRASH ON FOLD {fold_num}: {e}\n{traceback.format_exc()}")
+            break # Exit loop on hard crash
+
+    # After iterating all folds or breaking
+    state["active"] = False
+    progress_val = 100
+    progress_label = f"{state['k_current']} / {total_folds} Folds Complete"
     
     return state, progress_val, progress_label
+
+
+
+
 
 
 @app.callback(
