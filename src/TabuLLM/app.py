@@ -35,7 +35,7 @@ app = dash.Dash(
     __name__,
     external_stylesheets=[dbc.themes.FLATLY, dbc.icons.BOOTSTRAP]
 )
-app.title = "AI Data Workspace"
+app.title = "TabuLLM"
 
 # Initial Data Setup
 initial_df = create_empty_dataframe(10, 5)
@@ -93,7 +93,7 @@ app.layout = dbc.Container([
     dcc.Store(id="selection-mode", data="target"), # Default mode
 
     dbc.Row([
-        dbc.Col(html.H2([html.I(className="bi bi-cpu me-2"), "AI Data Workspace"], className="mt-4 mb-3"), width=8),
+        dbc.Col(html.H2([html.I(className="bi bi-cpu me-2"), "TabuLLM"], className="mt-4 mb-3"), width=8),
         dbc.Col([
             dcc.Upload(
                 id='upload-data',
@@ -927,30 +927,39 @@ def run_ai_generation(n_clicks, row_data, target_ids, context_ids, full_ctx_togg
     header_to_field = {v: k for k, v in field_to_header.items()}
 
     updated_rows = list(row_data)
-    payload, target_indices = [], []
+    partial_payload = []  # Rows that have some guidance
+    empty_row_count = 0  # Just a counter for the rest
+    target_indices = []
 
     # This loop ONLY collects the data
     for t_id in target_ids:
         idx = next((i for i, r in enumerate(updated_rows) if r.get('_row_id') == t_id), -1)
         if idx != -1:
             row_obj = updated_rows[idx]
-            semantic_row = {field_to_header[f]: (v if v not in [None, "", "NaN"] else None)
-                            for f, v in row_obj.items() if f in field_to_header}
-            payload.append(semantic_row)
+            # Create a dict of existing data (filtering out technical/audit fields)
+            guidance = {field_to_header[f]: v for f, v in row_obj.items()
+                        if f in field_to_header and v not in [None, "", "NaN"]}
+
             target_indices.append(idx)
 
-    # 4. Call AI (OUTSIDE the loop)
+            if len(guidance) > 0:
+                partial_payload.append(guidance)
+            else:
+                empty_row_count += 1
+
+    # 4. Call AI with the new optimization
     result_bundle = generate_bulk_data(
-        payload,
+        partial_payload,
         full_context_str,
         list(field_to_header.values()),
         algorithm,
         compiled_instructions,
-        temperature
+        temperature,
+        num_empty=empty_row_count
     )
 
     logger.info(
-        f"--- PROMPT COMPONENT: TARGET PAYLOAD (Red Rows) ---\nRows to fill: {len(payload)}\nPayload: {json.dumps(payload)}")
+        f"--- PROMPT COMPONENT: TARGET PAYLOAD (Red Rows) ---\nRows to fill: {len(partial_payload)}\nPayload: {json.dumps(partial_payload)} + {empty_row_count} empty rows")
 
     remaining_targets = list(target_ids)
 

@@ -24,19 +24,22 @@ def get_dataset_description(df_sample, provided_metadata=None):
     return response.text
 
 
-def generate_bulk_data(rows_payload, context, all_columns, algorithm, instructions, temperature):
+def generate_bulk_data(rows_payload, context, all_columns, algorithm, instructions, temperature, num_empty=0):
     prompt = f"""
     SYSTEM CONTEXT: {context}
     USER INSTRUCTIONS: {instructions}
     DATA STRUCTURE: The columns are {all_columns}. 
     CRITICAL: For numeric columns, return RAW NUMBERS only (no currency symbols, no commas).
-    For empty rows, use the SYSTEM CONTEXT to maintain the distribution and style of the dataset.
 
-    TARGET ROWS TO FILL (JSON):
+    TASK:
+    1. Complete the data for these specific PARTIAL TARGET ROWS:
     {json.dumps(rows_payload)}
-    Return ONLY a valid JSON array.
-    """
 
+    2. Additionally, generate {num_empty} entirely NEW rows from scratch that follow the patterns, 
+       style, and distributions found in the SYSTEM CONTEXT.
+
+    Return a single valid JSON array containing both the completed partial rows and the new rows.
+    """
     try:
         response = model.generate_content(
             prompt,
@@ -45,19 +48,15 @@ def generate_bulk_data(rows_payload, context, all_columns, algorithm, instructio
                 temperature=temperature
             )
         )
-
-        # Extract Token Metadata
         usage = response.usage_metadata
-        stats = {
-            "prompt_tokens": usage.prompt_token_count,
-            "candidates_tokens": usage.candidates_token_count,
-            "total_tokens": usage.total_token_count
-        }
-
         return {
             "data": json.loads(response.text),
-            "stats": stats
+            "stats": {
+                "prompt_tokens": usage.prompt_token_count,
+                "candidates_tokens": usage.candidates_token_count,
+                "total_tokens": usage.total_token_count
+            }
         }
     except Exception as e:
-        print(f"Error in Gemini Client: {e}")
+        logger.error(f"Error in Gemini Client: {e}")
         return None
