@@ -9,7 +9,7 @@ ai_highlight_style = {
     "styleConditions": [
         {
             "condition": "params.data['is_ai_' + params.colDef.field]",
-            "style": {"backgroundColor": "#e8f5e9", "borderLeft": "3px solid #4caf50"}
+            "style": {"backgroundColor": "rgba(46, 125, 50, 0.3)", "borderLeft": "3px solid #00e676"}
         }
     ]
 }
@@ -28,7 +28,7 @@ initial_cols.append({
     "field": "ai_audit",
     "headerName": "Generation Audit",
     "editable": False,
-    "cellStyle": {"color": "#666", "fontSize": "0.8em", "fontStyle": "italic"}
+    "cellStyle": {"color": "#a0a0a0", "fontSize": "0.8em", "fontStyle": "italic"}
 })
 
 initial_data = df_to_aggrid_format(initial_df)

@@ -15,6 +15,6 @@ logger = logging.getLogger(__name__)
 
 app = dash.Dash(
     __name__,
-    external_stylesheets=[dbc.themes.FLATLY, dbc.icons.BOOTSTRAP]
+    external_stylesheets=[dbc.themes.DARKLY, dbc.icons.BOOTSTRAP]
 )
 app.title = "TabuLLM"

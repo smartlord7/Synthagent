@@ -1,8 +1,10 @@
 import os
+import time
 import json
 import google.generativeai as genai
 from dotenv import load_dotenv
 from services.logger import log_interaction
+from core import logger
 
 load_dotenv()
 # Keep your key in the .env file instead of hardcoding it!
@@ -41,22 +43,36 @@ def generate_bulk_data(rows_payload, context, all_columns, algorithm, instructio
     Return a single valid JSON array containing both the completed partial rows and the new rows.
     """
     try:
-        response = model.generate_content(
-            prompt,
-            generation_config=genai.types.GenerationConfig(
-                response_mime_type="application/json",
-                temperature=temperature
-            )
-        )
-        usage = response.usage_metadata
-        return {
-            "data": json.loads(response.text),
-            "stats": {
-                "prompt_tokens": usage.prompt_token_count,
-                "candidates_tokens": usage.candidates_token_count,
-                "total_tokens": usage.total_token_count
-            }
-        }
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                if attempt > 0:
+                    time.sleep((attempt + 1) * 5)
+                else:
+                    time.sleep(1.5)  # Pace standard requests slightly
+
+                response = model.generate_content(
+                    prompt,
+                    generation_config=genai.types.GenerationConfig(
+                        response_mime_type="application/json",
+                        temperature=temperature
+                    )
+                )
+                usage = response.usage_metadata
+                return {
+                    "data": json.loads(response.text),
+                    "stats": {
+                        "prompt_tokens": usage.prompt_token_count,
+                        "candidates_tokens": usage.candidates_token_count,
+                        "total_tokens": usage.total_token_count
+                    }
+                }
+            except Exception as e:
+                if "429" in str(e) and attempt < max_retries - 1:
+                    logger.warning(f"Rate limit exceeded (429). Retrying in {(attempt + 1) * 5}s... ({attempt + 1}/{max_retries})")
+                    continue
+                else:
+                    raise e
     except Exception as e:
         logger.error(f"Error in Gemini Client: {e}")
         return None
