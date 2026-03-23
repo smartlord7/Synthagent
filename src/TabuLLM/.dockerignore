@@ -1,0 +1,8 @@
+.venv
+__pycache__
+*.pyc
+.idea
+.git
+cache/*
+debug_ai_workspace.log
+.env

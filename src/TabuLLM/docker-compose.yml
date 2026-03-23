@@ -1,0 +1,13 @@
+services:
+
+  tabullm:
+    build: .
+    container_name: tabullm_app
+    ports:
+      - "8050:8050"
+    volumes:
+      - ./cache:/app/cache
+      - ./data:/app/data
+    env_file:
+      - .env
+    restart: unless-stopped

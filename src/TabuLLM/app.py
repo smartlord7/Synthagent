@@ -8,7 +8,11 @@ import callbacks
 
 # Assign layout to the app
 app.layout = create_layout()
+server = app.server  # Expose for Gunicorn
 
 if __name__ == '__main__':
     logger.info("Starting TabuLLM Application...")
-    app.run(debug=True)
+    # Bind to 0.0.0.0 and disable debug in prod/docker generally or use env variables
+    host = os.environ.get("HOST", "0.0.0.0")
+    port = int(os.environ.get("PORT", 8050))
+    app.run(host=host, port=port, debug=False)

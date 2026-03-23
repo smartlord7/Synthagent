@@ -1,6 +1,9 @@
 import uuid
 import dash
-from dash import Input, Output, State
+from dash import Input, Output, State, html, dcc
+
+import dash_bootstrap_components as dbc
+
 from core import app, logger
 from services.data_manager import parse_uploaded_file, df_to_aggrid_format
 from utils.constants import ai_highlight_style
@@ -10,54 +13,93 @@ from utils.constants import ai_highlight_style
     Output('data-grid', 'rowData'),
     Output('data-grid', 'columnDefs'),
     Output('original-data-store', 'data'),
+    Output('upload-file-info', 'children'),
+    Output('dataset-description-store', 'data', allow_duplicate=True),
+    Output('dataset-stats-grid', 'children'),
+    Output('dataset-meta-accordion', 'active_item'),
+    Output('dataset-description-output', 'children', allow_duplicate=True),
     Input('upload-data', 'contents'),
     State('upload-data', 'filename'),
     prevent_initial_call=True
 )
 def update_table_from_upload(contents, filename):
     if contents is None:
-        return dash.no_update, dash.no_update, dash.no_update
+        return dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update
 
     logger.info(f"Uploading and parsing file: {filename}")
-
-    # Parse the file using your existing service
+    import pandas as pd
     df = parse_uploaded_file(contents, filename)
 
-    # 1. Build Column Definitions with AI styling and Audit column
+    # 1. Build Column Definitions
     new_cols = []
     for i, col in enumerate(df.columns):
-        col_def = {
-            "field": col,
-            "headerName": col,
-            "cellStyle": ai_highlight_style,
-            "editable": True
-        }
-        # Add selection checkboxes to the first column only
+        col_def = {"field": col, "headerName": col, "cellStyle": ai_highlight_style, "editable": True}
         if i == 0:
             col_def["checkboxSelection"] = True
             col_def["headerCheckboxSelection"] = True
         new_cols.append(col_def)
 
-    # 2. Append the Audit Column (the hidden logic Gemini populates)
     new_cols.append({
-        "field": "ai_audit",
-        "headerName": "Generation Audit",
-        "editable": False,
+        "field": "ai_audit", "headerName": "Generation Audit", "editable": False,
         "cellStyle": {"color": "#666", "fontSize": "0.8em", "fontStyle": "italic"}
     })
 
-    # 3. Format Data and Inject Unique IDs
     new_data = df_to_aggrid_format(df)
     for row in new_data:
         row['_row_id'] = str(uuid.uuid4())
         row['is_context'] = False
         row['is_target'] = False
-        row['ai_audit'] = ""  # Initialize empty audit string
+        row['ai_audit'] = ""
 
-    logger.info(f"Successfully loaded {len(new_data)} rows with {len(new_cols)} columns.")
+    file_info = html.Div([
+        html.Span(f"📄 {filename}", className="fw-bold text-success me-2"),
+        html.Span(f"({df.shape[0]} rows x {df.shape[1]} cols)", className="badge bg-secondary")
+    ])
 
-    # Return the same data to both the Grid and the Original Store baseline
-    return new_data, new_cols, new_data
+    # Calculate Quick Stats
+    missing_count = int(df.isnull().sum().sum())
+    memory_use = df.memory_usage(deep=True).sum() / 1024 # KB
+    
+    stats_grid = dbc.Row([
+        dbc.Col([html.H4(f"{df.shape[0]}", className="text-info fw-bold mb-0"), html.Small("Rows", className="text-muted")], width=6, className="text-center mb-3"),
+        dbc.Col([html.H4(f"{df.shape[1]}", className="text-info fw-bold mb-0"), html.Small("Columns", className="text-muted")], width=6, className="text-center mb-3"),
+        dbc.Col([html.H4(f"{missing_count}", className="text-warning mb-0"), html.Small("Missing Vals", className="text-muted")], width=6, className="text-center"),
+        dbc.Col([html.H4(f"{memory_use:.1f} KB", className="text-success mb-0", style={"fontSize": "1.1rem" if memory_use > 1000 else "1.2rem"}), html.Small("Memory", className="text-muted")], width=6, className="text-center")
+    ], className="g-2")
+
+    return new_data, new_cols, new_data, file_info, "", stats_grid, "meta-item", ""
+
+
+@app.callback(
+    Output("dataset-description-output", "children"),
+    Output("dataset-description-store", "data"),
+    Input("btn-gen-desc", "n_clicks"),
+    State("original-data-store", "data"),
+    prevent_initial_call=True
+)
+def fetch_description_metadata(n_clicks, orig_data):
+    if not n_clicks or not orig_data: return dash.no_update, dash.no_update
+    import pandas as pd
+    from services.llm_client import get_dataset_description
+    
+    df = pd.DataFrame(orig_data)
+    df = df[[c for c in df.columns if c not in ['ai_audit', '_row_id', 'is_context', 'is_target', 'is_ai_']]]
+    
+    sample_df = df.sample(min(15, len(df)))
+    description = get_dataset_description(sample_df)
+    
+
+    return dcc.Markdown(description), description
+
+
+
+# Deprecated toggle_meta_frame removed because dbc.Accordion handles toggle natively.
+
+
+
+
+
+
 
 
 @app.callback(

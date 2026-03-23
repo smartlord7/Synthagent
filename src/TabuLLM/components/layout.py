@@ -29,45 +29,102 @@ def create_layout():
                     children=dbc.Button([html.I(className="bi bi-file-earmark-arrow-up me-2"), "Upload Dataset"],
                                         color="primary", className="btn-sm rounded-pill px-3 shadow-sm"),
                     multiple=False
-                )
+                ),
+                html.Div(id="upload-file-info", className="ms-3 d-inline-block text-muted small")
             ]
         ),
 
         dbc.Container([
-            # Control Panel & Live Rename Card
+            # Control Panel Ribbon
             dbc.Card([
                 dbc.CardBody([
                     dbc.Row([
+                        # Left Actions: Structure & Mode
                         dbc.Col([
-                            dbc.Button([html.I(className="bi bi-plus-square me-1"), "Row"], id="btn-add-row", color="secondary", className="me-2", size="sm"),
-                            dbc.Button([html.I(className="bi bi-layout-three-columns me-1"), "Column"], id="btn-add-col", color="secondary", className="me-2", size="sm"),
-                            html.Span(" | ", className="mx-2 text-muted"),
-                            dbc.Button([html.I(className="bi bi-magic me-1"), "Generate"], id="btn-generate", color="success", className="me-2", size="sm", style={"fontWeight": "600"}),
-                            html.Span(" | ", className="mx-2 text-muted"),
-                            dbc.Button([html.I(className="bi bi-download me-1"), "Export CSV"], id="btn-export", color="light", outline=True, size="sm"),
-                        ], width="auto"),
-                        dbc.Col([
-                            dbc.Select(
-                                id='algo-selector',
-                                options=[{'label': 'Contextual Bulk', 'value': 'bulk'},
-                                         {'label': 'Independent Fill', 'value': 'independent'}],
-                                value='bulk', style={'width': '200px'}, size="sm"
-                            )
-                        ], width="auto"),
-                        dbc.Col([
+                            dbc.ButtonGroup([
+                                dbc.Button([html.I(className="bi bi-plus-square me-1"), "Row"], id="btn-add-row", color="secondary", size="sm"),
+                                dbc.Button([html.I(className="bi bi-layout-three-columns me-1"), "Column"], id="btn-add-col", color="secondary", size="sm"),
+                            ], className="me-3"),
+                            
+                            html.Span("|", className="mx-2 text-muted fw-light d-none d-md-inline"),
+
                             dbc.ButtonGroup([
                                 dbc.Button([html.I(className="bi bi-info-circle me-1"), "Set Context"], id="btn-mode-context", color="info", outline=True, size="sm"),
                                 dbc.Button([html.I(className="bi bi-bullseye me-1"), "Set Targets"], id="btn-mode-target", color="danger", outline=True, size="sm"),
-                            ], className="me-3"),
+                            ], className="me-2"),
                             
                             dbc.Checklist(
-                                options=[{"label": "Use entire dataset as context", "value": 1}],
-                                value=[], id="check-full-context", switch=True, inline=True, className="small text-muted align-middle"
+                                options=[{"label": "Entire Dataset Context", "value": 1}],
+                                value=[], id="check-full-context", switch=True, inline=True, className="small text-muted ms-1 align-middle"
                             ),
-                        ], width="auto", className="d-flex align-items-center"),
-                    ], className="align-items-center mb-0"),
-                ])
-            ], className="tabu-card mb-4 shadow-sm"),
+                        ], md=7, className="d-flex align-items-center mb-2 mb-md-0"),
+
+                        # Right Actions: Strategy & Big Action
+                        dbc.Col([
+                            dbc.Select(
+                                id='algo-selector',
+                                options=[{'label': 'Bulk (Contextual)', 'value': 'bulk'},
+                                         {'label': 'Independent Fill', 'value': 'independent'}],
+                                value='bulk', style={'maxWidth': '180px'}, size="sm", className="me-3"
+                            ),
+                            
+                            dbc.Button([html.I(className="bi bi-lightning-charge-fill me-2"), "Generate"], 
+                                       id="btn-generate", color="success", className="px-4 fw-bold shadow", size="md",
+                                       style={"borderRadius": "20px", "transition": "all 0.3s ease"}),
+                            
+                            html.Span("|", className="mx-2 text-muted fw-light"),
+                            
+                            dbc.Button([html.I(className="bi bi-file-earmark-pdf-fill me-1"), "Report"], 
+                                       id="btn-export-pdf", color="danger", outline=True, size="sm", className="me-1"),
+
+                            html.Span("|", className="mx-2 text-muted fw-light"),
+                            
+                            dbc.Button([html.I(className="bi bi-download")], id="btn-export", color="light", outline=True, size="sm", className="rounded-circle"),
+                            dcc.Download(id="download-pdf-report")
+                        ], md=5, className="d-flex align-items-center justify-content-md-end"),
+                    ]),
+
+                    
+                    dbc.Collapse(
+                        dbc.Progress(id="bench-progress-bar", value=0, striped=True, animated=True, style={"height": "12px", "borderRadius": "6px"}, color="success"),
+                        id="bench-progress-collapse", is_open=False, className="mt-3"
+                    ),
+                    
+                    dcc.Store(id="bench-state-store", data={"active": False, "k_total": 0, "k_current": 0, "fraction": 0.2, "results": []}),
+                    dcc.Store(id="bench-rows-store", data=[]),
+                    dcc.Store(id="dataset-description-store", data=""),
+
+                ], className="p-3")
+            ], className="tabu-card mb-4 shadow border-secondary"),
+
+            # Dataset Metadata & Description Section
+            dbc.Accordion([
+                dbc.AccordionItem([
+                    dbc.Row([
+                        # Statistics Column
+                        dbc.Col([
+                            html.H6([html.I(className="bi bi-grid-fill me-2 text-info"), "Quick Statistics"], className="text-muted small fw-bold mb-3 d-flex align-items-center"),
+                            html.Div(id="dataset-stats-grid", children=[
+                                dbc.Alert("Upload a file to view statistics.", color="secondary", className="small")
+                            ])
+                        ], width=4, className="border-end border-secondary"),
+                        
+                        # Description Column
+                        dbc.Col([
+                            html.H6([html.I(className="bi bi-cpu-fill me-2 text-info"), "Structured Description"], className="text-muted small fw-bold mb-3 d-flex align-items-center"),
+                            dbc.Button([html.I(className="bi bi-magic me-1"), "Generate Insights"], 
+                                       id="btn-gen-desc", color="info", size="sm", outline=True, className="mb-2 rounded-pill"),
+                            dbc.Spinner(
+                                html.Div(id="dataset-description-output", className="text-light small mt-2", style={"maxHeight": "200px", "overflowY": "auto"}),
+                                size="sm", color="info"
+                            )
+                        ], width=8)
+                    ])
+                ], title=[html.I(className="bi bi-bar-chart-fill me-2 text-info"), "Dataset Metadata & LLM Analysis"], item_id="meta-item")
+            ], id="dataset-meta-accordion", className="mb-4 shadow-sm"),
+
+
+
 
             # Generation Parameters Accordion
             dbc.Accordion([
@@ -111,17 +168,20 @@ def create_layout():
                 ], title="⚙️ Generation Parameters & Rules", item_id="params-item", class_name="bg-dark text-light border-secondary")
             ], start_collapsed=True, className="mb-4 shadow-sm tabu-card"),
 
-            # Quick Rename inline with Grid
+            # Quick Rename & Manage Columns inline with Grid
             dbc.Row([
                 dbc.Col([
                     html.Div([
                         html.I(className="bi bi-pencil-square me-2 text-info"),
                         html.Span("Quick Rename:", className="text-muted me-2 fw-bold text-uppercase", style={"fontSize": "0.75rem", "letterSpacing": "1px"}),
-                        dbc.Input(id="quick-rename-input", type="text", placeholder="Click any cell to rename its column...",
-                                  size="sm", className="bg-dark text-light border-secondary", style={"width": "300px", "display": "inline-block"})
+                        dbc.Input(id="quick-rename-input", type="text", placeholder="Click cell to select column & type to rename...",
+                                  size="sm", className="bg-dark text-light border-secondary", style={"width": "280px", "display": "inline-block"}),
+                        dbc.Button([html.I(className="bi bi-trash-fill me-1"), "Remove Column"], 
+                                   id="btn-remove-col", color="danger", size="sm", outline=True, className="ms-3 rounded-pill")
                     ], className="d-flex align-items-center mb-3")
                 ], width=12)
             ]),
+
 
             # The Grid
             dbc.Card([
@@ -171,8 +231,9 @@ def create_layout():
                         id="bench-progress-collapse", is_open=False, className="mb-4"
                     ),
                     
-                    html.Div(id="bench-results-container"),
                     dcc.Store(id="bench-state-store", data={"active": False, "k_total": 0, "k_current": 0, "fraction": 0.2, "results": []}),
+                    dcc.Store(id="bench-rows-store", data=[]),
+
                 ], className="p-4")
             ], className="tabu-card mb-5 shadow border-secondary"),
 

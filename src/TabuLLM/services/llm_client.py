@@ -53,13 +53,17 @@ class LocalOpenAIProvider(BaseLLMProvider):
 
     def get_dataset_description(self, df_sample, provided_metadata=None):
         prompt = f"""
-        Analyze this dataset sample and provide a concise summary of what this data represents.
-        Metadata Provided: {provided_metadata if provided_metadata else "None"}
+        Analyze this dataset sample.
+        Metadata: {provided_metadata if provided_metadata else "None"}
+        
         Data Sample:
         {df_sample.to_string(index=False)}
 
-        Return a 2-sentence description of the dataset context and the relationship between columns.
+        Return a short, concise markdown summary:
+        **Summary**: [1 sentence overview]
+        **Insight**: [1 sentence about context or columns correlations]
         """
+
         try:
             response = self._call_local_llm(prompt, temperature=0.3)
             content = response["choices"][0]["message"]["content"]
@@ -157,13 +161,17 @@ class GeminiProvider(BaseLLMProvider):
 
     def get_dataset_description(self, df_sample, provided_metadata=None):
         prompt = f"""
-        Analyze this dataset sample and provide a concise summary of what this data represents.
-        Metadata Provided: {provided_metadata if provided_metadata else "None"}
+        Analyze this dataset sample.
+        Metadata: {provided_metadata if provided_metadata else "None"}
+        
         Data Sample:
         {df_sample.to_string(index=False)}
 
-        Return a 2-sentence description of the dataset context and the relationship between columns.
+        Return a short, concise markdown summary:
+        **Summary**: [1 sentence overview]
+        **Insight**: [1 sentence about context or columns correlations]
         """
+
         try:
             response = self.model.generate_content(prompt)
             log_interaction("Metadata Analysis", prompt, response.text)

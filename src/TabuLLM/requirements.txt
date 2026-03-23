@@ -4,6 +4,10 @@ dash-bootstrap-components
 pandas
 google-generativeai
 python-dotenv
+diskcache
+multiprocess
 plotly
 sqlalchemy
 scipy
+fpdf2
+kaleido

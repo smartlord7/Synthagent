@@ -26,12 +26,14 @@ from services.llm_client import generate_bulk_data
     State({'type': 'cp-val-text', 'index': ALL}, 'value'),
     State({'type': 'cp-val-min', 'index': ALL}, 'value'),
     State({'type': 'cp-val-max', 'index': ALL}, 'value'),
+    State('dataset-description-store', 'data'),
     prevent_initial_call=True
 )
 def run_ai_generation(n_clicks, row_data, target_ids, context_ids, full_ctx_toggle,
                       col_defs, algorithm, param_tone, param_consistency,
                       param_uniqueness, temperature, cp_names, cp_types,
-                      cp_texts, cp_mins, cp_maxs):
+                      cp_texts, cp_mins, cp_maxs, desc_metadata):
+
     if not n_clicks or not target_ids:
         logger.warning("Generation aborted: No target rows (Red) defined.")
         return dash.no_update, dash.no_update
@@ -78,9 +80,13 @@ def run_ai_generation(n_clicks, row_data, target_ids, context_ids, full_ctx_togg
         f"--- PROMPT COMPONENT: GLOBAL PATTERNS (Toggle) ---\nSample Size: {len(global_ctx_sample)}\nData: {json.dumps(global_ctx_sample)}")
 
     full_context_str = f"""
+    Dataset Context and Structured Summary:
+    {desc_metadata if desc_metadata else "Not provided"}
+
     Manual Reference Examples: {manual_ctx_json}
     General Dataset Patterns: {json.dumps(global_ctx_sample)}
     """
+
 
     # 3. Target Mapping
     field_to_header = {col['field']: col.get('headerName', col['field']) for col in col_defs
