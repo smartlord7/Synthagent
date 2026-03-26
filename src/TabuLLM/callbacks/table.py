@@ -16,13 +16,14 @@ from utils.constants import ai_highlight_style
     Output('upload-file-info', 'children'),
     Output('dataset-description-store', 'data', allow_duplicate=True),
     Output('dataset-stats-grid', 'children'),
-    Output('dataset-meta-accordion', 'active_item'),
     Output('dataset-description-output', 'children', allow_duplicate=True),
+    Output('data-grid', 'dashGridOptions'),
     Input('upload-data', 'contents'),
     State('upload-data', 'filename'),
+    State('data-grid', 'dashGridOptions'),
     prevent_initial_call=True
 )
-def update_table_from_upload(contents, filename):
+def update_table_from_upload(contents, filename, current_options):
     if contents is None:
         return dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update
 
@@ -66,8 +67,14 @@ def update_table_from_upload(contents, filename):
         dbc.Col([html.H4(f"{missing_count}", className="text-warning mb-0"), html.Small("Missing Vals", className="text-muted")], width=6, className="text-center"),
         dbc.Col([html.H4(f"{memory_use:.1f} KB", className="text-success mb-0", style={"fontSize": "1.1rem" if memory_use > 1000 else "1.2rem"}), html.Small("Memory", className="text-muted")], width=6, className="text-center")
     ], className="g-2")
+    
+    # Clear leftover pinned row options if any from previous cache streams
+    updated_options = dict(current_options) if current_options else {}
+    if "pinnedBottomRowData" in updated_options:
+        del updated_options["pinnedBottomRowData"]
 
-    return new_data, new_cols, new_data, file_info, "", stats_grid, "meta-item", ""
+
+    return new_data, new_cols, new_data, file_info, "", stats_grid, "", updated_options
 
 
 @app.callback(
@@ -110,8 +117,9 @@ def fetch_description_metadata(n_clicks, orig_data):
     prevent_initial_call=True
 )
 def add_new_row(n_clicks, current_rows, current_cols):
+    # Standard n_clicks check
     if not n_clicks: return dash.no_update
-    new_row = {col['field']: None for col in current_cols}
+    new_row = {col['field']: None for col in current_cols if col['field'] not in ['_row_id', 'is_context', 'is_target', 'ai_audit']}
     new_row['_row_id'] = str(uuid.uuid4())
     current_rows.append(new_row)
     return current_rows
@@ -125,5 +133,9 @@ def add_new_row(n_clicks, current_rows, current_cols):
 )
 def add_new_column(n_clicks, current_cols):
     if not n_clicks: return dash.no_update
-    current_cols.append({"field": f"custom_{len(current_cols)}", "headerName": "New Column", "editable": True})
+    import random
+    new_field = f"custom_{random.randint(1000, 9999)}"
+    current_cols.append({"field": new_field, "headerName": "New Col", "editable": True})
     return current_cols
+
+

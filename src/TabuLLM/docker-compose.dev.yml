@@ -1,0 +1,16 @@
+services:
+  tabullm:
+    build: .
+    container_name: tabullm_app_dev
+    ports:
+      - "8050:8050"
+    volumes:
+      - .:/app
+      - ./cache:/app/cache
+      - ./data:/app/data
+    env_file:
+      - .env
+    environment:
+      - DEBUG=true
+    command: ["python", "app.py"]
+    restart: unless-stopped

@@ -196,34 +196,50 @@ def get_eda_layout(df_orig, df_aug):
     # -----------------------------
     row_1 = dbc.Row([
         dbc.Col(dbc.Card([
-            dbc.CardHeader("Synthetic Fidelity (JSD)", className="fw-bold"),
+            dbc.CardHeader([
+                "Synthetic Fidelity (JSD) ",
+                html.I(className="bi bi-info-circle ms-2", id="tooltip-jsd", style={"cursor": "pointer"})
+            ], className="fw-bold d-flex align-items-center justify-content-between"),
             dbc.CardBody([
                 html.H2(f"{fidelity_score}%", className=f"text-{score_color} text-center"),
-                html.P("Overall distribution similarity", className="small text-muted text-center")
+                html.P("Overall distribution similarity", className="small text-muted text-center"),
+                dbc.Tooltip("Examines how closely the synthetic data distribution matches the original using Jensen-Shannon Divergence. Higher is better (100% is identical).", target="tooltip-jsd", placement="top")
             ])
         ], outline=True, color=score_color), width=3),
 
         dbc.Col(dbc.Card([
-            dbc.CardHeader("Correlation Stability", className="fw-bold"),
+            dbc.CardHeader([
+                "Correlation Stability ",
+                html.I(className="bi bi-info-circle ms-2", id="tooltip-corr", style={"cursor": "pointer"})
+            ], className="fw-bold d-flex align-items-center justify-content-between"),
             dbc.CardBody([
                 html.H2(f"{corr_stability:.1f}%", className="text-info text-center"),
-                html.P("Multivariate relationships preserved", className="small text-muted text-center")
+                html.P("Multivariate relationships preserved", className="small text-muted text-center"),
+                dbc.Tooltip("Measures how well the mathematical correlations between numeric features are preserved. Higher is better.", target="tooltip-corr", placement="top")
             ])
         ], outline=True, color="info"), width=3),
 
         dbc.Col(dbc.Card([
-            dbc.CardHeader("Distribution Consistency", className="fw-bold"),
+            dbc.CardHeader([
+                "Distribution Consistency ",
+                html.I(className="bi bi-info-circle ms-2", id="tooltip-dist-cons", style={"cursor": "pointer"})
+            ], className="fw-bold d-flex align-items-center justify-content-between"),
             dbc.CardBody([
                 html.H2(f"{distribution_consistency}%", className="text-secondary text-center"),
-                html.P("Median feature similarity", className="small text-muted text-center")
+                html.P("Median feature similarity", className="small text-muted text-center"),
+                dbc.Tooltip("The median similarity score across all features, providing a robust overall measure of adherence to original patterns. Higher is better.", target="tooltip-dist-cons", placement="top")
             ])
         ], outline=True, color="secondary"), width=3),
 
         dbc.Col(dbc.Card([
-            dbc.CardHeader("Entropy Preservation", className="fw-bold"),
+            dbc.CardHeader([
+                "Entropy Preservation ",
+                html.I(className="bi bi-info-circle ms-2", id="tooltip-entropy", style={"cursor": "pointer"})
+            ], className="fw-bold d-flex align-items-center justify-content-between"),
             dbc.CardBody([
                 html.H2("High" if fidelity_score > 75 else "Low", className="text-info text-center"),
-                html.P("Information diversity maintained", className="small text-muted text-center")
+                html.P("Information diversity maintained", className="small text-muted text-center"),
+                dbc.Tooltip("Assesses whether the information complexity and variety of values in the original data are maintained. 'High' is preferred.", target="tooltip-entropy", placement="top")
             ])
         ], outline=True, color="info"), width=3)
     ], className="g-4 mb-4")
@@ -233,34 +249,50 @@ def get_eda_layout(df_orig, df_aug):
     # -----------------------------
     row_2 = dbc.Row([
         dbc.Col(dbc.Card([
-            dbc.CardHeader("Mean Z-Score Drift", className="fw-bold"),
+            dbc.CardHeader([
+                "Mean Z-Score Drift ",
+                html.I(className="bi bi-info-circle ms-2", id="tooltip-z-drift", style={"cursor": "pointer"})
+            ], className="fw-bold d-flex align-items-center justify-content-between"),
             dbc.CardBody([
                 html.H2(f"{avg_z_drift:.2f}", className="text-warning text-center"),
-                html.P("Standardized distribution shift", className="small text-muted text-center")
+                html.P("Standardized distribution shift", className="small text-muted text-center"),
+                dbc.Tooltip("The average standardized difference in means across all features. Lower is better (closest to 0.00).", target="tooltip-z-drift", placement="top")
             ])
         ], outline=True, color="warning"), width=3),
 
         dbc.Col(dbc.Card([
-            dbc.CardHeader("Categorical Fidelity", className="fw-bold"),
+            dbc.CardHeader([
+                "Categorical Fidelity ",
+                html.I(className="bi bi-info-circle ms-2", id="tooltip-cat-fid", style={"cursor": "pointer"})
+            ], className="fw-bold d-flex align-items-center justify-content-between"),
             dbc.CardBody([
                 html.H2(f"{cat_fidelity}%", className="text-primary text-center"),
-                html.P("Category distribution similarity", className="small text-muted text-center")
+                html.P("Category distribution similarity", className="small text-muted text-center"),
+                dbc.Tooltip("Measures how well the category frequencies match the original data. Higher is better.", target="tooltip-cat-fid", placement="top")
             ])
         ], outline=True, color="primary"), width=3),
 
         dbc.Col(dbc.Card([
-            dbc.CardHeader("Privacy Risk", className="fw-bold"),
+            dbc.CardHeader([
+                "Privacy Risk ",
+                html.I(className="bi bi-info-circle ms-2", id="tooltip-privacy", style={"cursor": "pointer"})
+            ], className="fw-bold d-flex align-items-center justify-content-between"),
             dbc.CardBody([
                 html.H2(f"{privacy_risk}%", className="text-danger text-center"),
-                html.P("Synthetic rows too close to originals", className="small text-muted text-center")
+                html.P("Synthetic rows too close to originals", className="small text-muted text-center"),
+                dbc.Tooltip("The percentage of synthetic rows that are too similar to real original rows. Lower is better to prevent data leakage.", target="tooltip-privacy", placement="top")
             ])
         ], outline=True, color="danger"), width=3),
 
         dbc.Col(dbc.Card([
-            dbc.CardHeader("Data Density", className="fw-bold"),
+            dbc.CardHeader([
+                "Data Density ",
+                html.I(className="bi bi-info-circle ms-2", id="tooltip-density", style={"cursor": "pointer"})
+            ], className="fw-bold d-flex align-items-center justify-content-between"),
             dbc.CardBody([
                 html.H2(f"{completeness:.1f}%", className="text-info text-center"),
-                html.P("Non-missing cells in augmented data", className="small text-muted text-center")
+                html.P("Non-missing cells in augmented data", className="small text-muted text-center"),
+                dbc.Tooltip("The percentage of cells that contain valid data (not null). Should generally be similar to the original dataset.", target="tooltip-density", placement="top")
             ])
         ], outline=True, color="info"), width=3)
     ], className="g-4 mb-4")
@@ -270,26 +302,38 @@ def get_eda_layout(df_orig, df_aug):
     # -----------------------------
     row_3 = dbc.Row([
         dbc.Col(dbc.Card([
-            dbc.CardHeader("Coverage Score", className="fw-bold"),
+            dbc.CardHeader([
+                "Coverage Score ",
+                html.I(className="bi bi-info-circle ms-2", id="tooltip-coverage", style={"cursor": "pointer"})
+            ], className="fw-bold d-flex align-items-center justify-content-between"),
             dbc.CardBody([
                 html.H2(f"{coverage_score}%", className="text-success text-center"),
-                html.P("Synthetic coverage of original space", className="small text-muted text-center")
+                html.P("Synthetic coverage of original space", className="small text-muted text-center"),
+                dbc.Tooltip("Measures what percentage of the original data multi-dimensional volume is represented in the synthetic data. Higher is better.", target="tooltip-coverage", placement="top")
             ])
         ], outline=True, color="success"), width=4),
 
         dbc.Col(dbc.Card([
-            dbc.CardHeader("Feature Accuracy", className="fw-bold"),
+            dbc.CardHeader([
+                "Feature Accuracy ",
+                html.I(className="bi bi-info-circle ms-2", id="tooltip-accuracy", style={"pointer": "cursor"})
+            ], className="fw-bold d-flex align-items-center justify-content-between"),
             dbc.CardBody([
                 html.H2(f"{mean_feature_error}%", className="text-primary text-center"),
-                html.P("Mean feature similarity", className="small text-muted text-center")
+                html.P("Mean feature similarity", className="small text-muted text-center"),
+                dbc.Tooltip("A composite score based on Mean Relative Error of averages across all numerical features. Higher is better.", target="tooltip-accuracy", placement="top")
             ])
         ], outline=True, color="primary"), width=4),
 
         dbc.Col(dbc.Card([
-            dbc.CardHeader("Novelty Score (NNDR)", className="fw-bold"),
+            dbc.CardHeader([
+                "Novelty Score ",
+                html.I(className="bi bi-info-circle ms-2", id="tooltip-novelty", style={"cursor": "pointer"})
+            ], className="fw-bold d-flex align-items-center justify-content-between"),
             dbc.CardBody([
                 html.H2(f"{nndr:.2f}", className="text-secondary text-center"),
-                html.P("Memorization vs novelty indicator", className="small text-muted text-center")
+                html.P("Memorization vs novelty indicator", className="small text-muted text-center"),
+                dbc.Tooltip("Nearest Neighbor Distance Ratio. Compares synthetic distance to original vs internal synthetic distance. Values near 1.0 are ideal.", target="tooltip-novelty", placement="top")
             ])
         ], outline=True, color="secondary"), width=4)
     ], className="g-4 mb-4")
@@ -313,7 +357,22 @@ def get_eda_layout(df_orig, df_aug):
                     "KS Test (p-val)": round(ks_p, 4), "Status": status_icon
                 })
 
-        table_header = [html.Thead(html.Tr([html.Th("Feature"), html.Th("Orig Mean"), html.Th("Aug Mean"), html.Th("Mean Shift"), html.Th("KS Test (p-val)"), html.Th("Status")]))]
+        table_header = [html.Thead(html.Tr([
+            html.Th("Feature"),
+            html.Th("Orig Mean"),
+            html.Th("Aug Mean"),
+            html.Th("Mean Shift"),
+            html.Th([
+                "KS Test (p-val) ",
+                html.I(className="bi bi-info-circle ms-1", id="tooltip-ks-pval", style={"cursor": "pointer"}),
+                dbc.Tooltip("Kolmogorov-Smirnov test p-value. A value > 0.05 suggests the distributions are likely from the same source (Fail to reject Null Hypothesis).", target="tooltip-ks-pval")
+            ]),
+            html.Th([
+                "Status ",
+                html.I(className="bi bi-info-circle ms-1", id="tooltip-ks-status", style={"cursor": "pointer"}),
+                dbc.Tooltip("Success icon indicates the distribution shift is not statistically significant (p > 0.05).", target="tooltip-ks-status")
+            ])
+        ]))]
         table_body = [html.Tbody([html.Tr([html.Td(row["Feature"]), html.Td(row["Orig Mean"]), html.Td(row["Aug Mean"]), html.Td(row["Mean Shift"]), html.Td(row["KS Test (p-val)"]), row["Status"]]) for row in stats_list])]
         table = dbc.Table(table_header + table_body, striped=True, bordered=True, hover=True, size="sm")
 

@@ -11,12 +11,12 @@ from utils.metrics import calculate_metrics
     Output("bench-state-store", "data"),
     Output("bench-progress-collapse", "is_open"),
     Input("btn-run-benchmark", "n_clicks"),
-    State("bench-fraction", "value"),
+    State("gen-max-context", "value"),
     State("bench-folds", "value"),
     prevent_initial_call=True
 )
-def start_benchmark(n_clicks, fraction, folds):
-    logger.info(f"BENCHMARK START: n_clicks={n_clicks}, frac={fraction}, folds={folds}")
+def start_benchmark(n_clicks, max_context, folds):
+    logger.info(f"BENCHMARK START: n_clicks={n_clicks}, max_context={max_context}, folds={folds}")
     if not n_clicks:
         return dash.no_update, dash.no_update
     
@@ -24,7 +24,7 @@ def start_benchmark(n_clicks, fraction, folds):
         "active": True,
         "k_total": int(folds) if folds is not None else 3,
         "k_current": 0,
-        "fraction": float(fraction) if fraction is not None else 0.2,
+        "max_context": int(max_context) if max_context is not None else 60,
         "results": []
     }, True
 
@@ -46,33 +46,39 @@ def start_benchmark(n_clicks, fraction, folds):
     State('param-uniqueness', 'value'),
     State('temperature-slider', 'value'),
     State('dataset-description-store', 'data'),
+    State('gen-chunk-size', 'value'),
+    State('gen-max-context', 'value'),
+    State('gen-context-strategy', 'value'),
     background=True,
     progress=[Output("bench-progress-bar", "value"), Output("bench-progress-bar", "label")],
     prevent_initial_call=True
 )
-def run_benchmark_fold(set_progress, state, orig_data, col_defs, algorithm, param_tone, param_consistency, param_uniqueness, temperature, desc_metadata):
+def run_benchmark_fold(set_progress, state, orig_data, col_defs, algorithm, 
+                       param_tone, param_consistency, param_uniqueness, temperature, 
+                       desc_metadata, chunk_size, max_context, strategy):
 
     print(f"DEBUG: run_benchmark_fold triggered. state={state}", flush=True)
     if not state or not state.get("active") or state.get("k_total") is None or state.get("k_current", 0) >= state.get("k_total"):
-
         return dash.no_update, dash.no_update
     
     try:
         current_fold_idx = int(state.get("k_current", 0))
         total_folds = int(state.get("k_total", 3))
-        fraction = float(state.get("fraction", 0.2))
+        # Derive fraction from max_context and dataset size
+        # Cap at 0.8 to ensure at least 20% is reserved for generation in Benchmark
+        max_context_val = int(state.get("max_context", 60))
+        df_orig = pd.DataFrame(orig_data)
+        fraction = min(0.8, max_context_val / len(df_orig)) if not df_orig.empty else 0.2
     except (ValueError, TypeError):
         current_fold_idx = 0
         total_folds = 3
         fraction = 0.2
 
-    # Aggregate synthetic rows container for full bundle
     all_synthetic_rows = []
     df_orig = pd.DataFrame(orig_data)
 
-    # WE ITERATE ALL REMAINING FOLDS IN MEMORY
     for fold_num in range(current_fold_idx + 1, total_folds + 1):
-        logger.info(f"--- Running Benchmark Fold {fold_num}/{total_folds} ---")
+        logger.info(f"--- Running Benchmark Fold {fold_num}/{total_folds} (Strategy: {strategy}) ---")
         set_progress((int(((fold_num - 1) / total_folds) * 100), f"Running Fold {fold_num}/{total_folds}..."))
         
         try:
@@ -89,17 +95,31 @@ def run_benchmark_fold(set_progress, state, orig_data, col_defs, algorithm, para
             cols_to_keep = [c for c in df_orig_c.columns if c in field_to_header]
             df_orig_c = df_orig_c[cols_to_keep].rename(columns=field_to_header)
             
-            context_df = df_orig_c.sample(frac=fraction)
+            # --- CONTEXT STRATEGY APPLICATION ---
+            from services.data_manager import select_context_rows
+            n_target = int(len(df_orig_c) * fraction)
+            n_context_rows = min(n_target, max_context if max_context else n_target)
+            
+            context_data_list = select_context_rows(df_orig_c, strategy=strategy, n_rows=n_context_rows)
+            context_df = pd.DataFrame(context_data_list)
+            
             num_empty = len(df_orig_c) - len(context_df)
             
-            context_str = f"Dataset Structured Summary: {desc_metadata if desc_metadata else 'Not provided'}\nGeneral Dataset Patterns: {context_df.to_json(orient='records')}"
+            # Pack context as dictionary structure for bulk downstreams
+            context_dict = {
+                "metadata": desc_metadata if desc_metadata else "Not provided",
+                "manual_ctx": "[]",
+                "global_ctx": context_data_list
+            }
 
             instructions = f"Style: {param_tone}\nConsistency: {param_consistency}\nUniqueness: {param_uniqueness}"
             
             result_bundle = generate_bulk_data(
-                [], context_str, list(field_to_header.values()),
-                algorithm, instructions, temperature, num_empty=num_empty
+                [], context_dict, list(field_to_header.values()),
+                algorithm, instructions, temperature, num_empty=num_empty,
+                chunk_size=chunk_size
             )
+
             
             if result_bundle:
                 filled_data = result_bundle["data"]
