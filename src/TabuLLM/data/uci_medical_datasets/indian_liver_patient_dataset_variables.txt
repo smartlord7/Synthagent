@@ -1,0 +1,14 @@
+         name     role  ...  units missing_values
+0         Age  Feature  ...  years             no
+1      Gender  Feature  ...    NaN             no
+2          TB  Feature  ...    NaN             no
+3          DB  Feature  ...    NaN             no
+4     Alkphos  Feature  ...    NaN             no
+5        Sgpt  Feature  ...    NaN             no
+6        Sgot  Feature  ...    NaN             no
+7          TP  Feature  ...    NaN             no
+8         ALB  Feature  ...    NaN             no
+9   A/G Ratio  Feature  ...    NaN             no
+10   Selector   Target  ...    NaN             no
+
+[11 rows x 7 columns]

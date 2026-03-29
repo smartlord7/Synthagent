@@ -1,0 +1,27 @@
+            name     role         type  ... description units missing_values
+0           name       ID  Categorical  ...        None   NaN             no
+1        MDVP:Fo  Feature   Continuous  ...        None    Hz             no
+2       MDVP:Fhi  Feature   Continuous  ...        None    Hz             no
+3       MDVP:Flo  Feature   Continuous  ...        None    Hz             no
+4    MDVP:Jitter  Feature   Continuous  ...        None     %             no
+5    MDVP:Jitter  Feature   Continuous  ...        None   Abs             no
+6       MDVP:RAP  Feature   Continuous  ...        None   NaN             no
+7       MDVP:PPQ  Feature   Continuous  ...        None   NaN             no
+8     Jitter:DDP  Feature   Continuous  ...        None   NaN             no
+9   MDVP:Shimmer  Feature   Continuous  ...        None   NaN             no
+10  MDVP:Shimmer  Feature   Continuous  ...        None    dB             no
+11  Shimmer:APQ3  Feature   Continuous  ...        None   NaN             no
+12  Shimmer:APQ5  Feature   Continuous  ...        None   NaN             no
+13      MDVP:APQ  Feature   Continuous  ...        None   NaN             no
+14   Shimmer:DDA  Feature   Continuous  ...        None   NaN             no
+15           NHR  Feature   Continuous  ...        None   NaN             no
+16           HNR  Feature   Continuous  ...        None   NaN             no
+17        status   Target      Integer  ...        None   NaN             no
+18          RPDE  Feature   Continuous  ...        None   NaN             no
+19           DFA  Feature   Continuous  ...        None   NaN             no
+20       spread1  Feature   Continuous  ...        None   NaN             no
+21       spread2  Feature   Continuous  ...        None   NaN             no
+22            D2  Feature   Continuous  ...        None   NaN             no
+23           PPE  Feature   Continuous  ...        None   NaN             no
+
+[24 rows x 7 columns]

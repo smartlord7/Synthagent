@@ -19,6 +19,10 @@ class BaseLLMProvider(ABC):
     def generate_bulk_data(self, rows_payload, context, all_columns, algorithm, instructions, temperature, num_empty=0, chunk_size=30):
         pass
 
+    @abstractmethod
+    def detect_target_columns(self, df_sample):
+        pass
+
 
 
 class LocalOpenAIProvider(BaseLLMProvider):
@@ -383,6 +387,9 @@ provider = LocalOpenAIProvider()
 def get_dataset_description(df_sample, provided_metadata=None):
     return provider.get_dataset_description(df_sample, provided_metadata)
 
-def generate_bulk_data(rows_payload, context, all_columns, algorithm, instructions, temperature, num_empty=0, chunk_size=30):
+def generate_bulk_data(self, rows_payload, context, all_columns, algorithm, instructions, temperature, num_empty=0, chunk_size=30):
     return provider.generate_bulk_data(rows_payload, context, all_columns, algorithm, instructions, temperature, num_empty, chunk_size)
+
+def detect_target_columns(df_sample):
+    return provider.detect_target_columns(df_sample)
 

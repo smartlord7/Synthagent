@@ -1,0 +1,17 @@
+        name     role  ...  units missing_values
+0        age  Feature  ...  years             no
+1        sex  Feature  ...    NaN             no
+2         cp  Feature  ...    NaN             no
+3   trestbps  Feature  ...  mm Hg             no
+4       chol  Feature  ...  mg/dl             no
+5        fbs  Feature  ...    NaN             no
+6    restecg  Feature  ...    NaN             no
+7    thalach  Feature  ...    NaN             no
+8      exang  Feature  ...    NaN             no
+9    oldpeak  Feature  ...    NaN             no
+10     slope  Feature  ...    NaN             no
+11        ca  Feature  ...    NaN            yes
+12      thal  Feature  ...    NaN            yes
+13       num   Target  ...    NaN             no
+
+[14 rows x 7 columns]

@@ -43,8 +43,26 @@ def create_dataset_tab(dataset_id, filename, df=None):
         new_cols = initial_cols
         stats_grid = dbc.Alert("Upload file to view stats.", color="secondary", className="small py-2")
 
+    # Tab Label with Inline Delete Button (Workbench cannot be deleted)
+    delete_btn = None
+    if dataset_id != "default-dataset":
+        delete_btn = dbc.Button(
+            html.I(className="bi bi-x ms-2"),
+            id={"type": "btn-delete-dataset", "index": dataset_id},
+            color="link",
+            size="sm",
+            className="p-0 text-danger opacity-75 delete-tab-btn",
+            style={"lineHeight": "1", "fontSize": "1.1rem", "verticalAlign": "middle", "border": "none", "background": "transparent"}
+        )
+
+    tab_label = html.Span([
+        html.I(className="bi bi-table me-2"),
+        html.Span(filename, className="truncate-text", style={"maxWidth": "120px"}),
+        delete_btn
+    ], className="d-flex align-items-center")
+
     return dcc.Tab(
-        label=html.Span([html.I(className="bi bi-table me-2"), filename]),
+        label=tab_label,
         value=dataset_id,
         className="custom-tab",
         selected_className="custom-tab--selected",
@@ -57,6 +75,8 @@ def create_dataset_tab(dataset_id, filename, df=None):
                 dcc.Store(id={"type": "target-row-ids", "index": dataset_id}, data=[]),
                 dcc.Store(id={"type": "selection-mode", "index": dataset_id}, data="target"),
                 dcc.Store(id={"type": "dataset-description-store", "index": dataset_id}, data=""),
+                dcc.Store(id={"type": "column-roles-store", "index": dataset_id}, data={"targets": []}),
+                dcc.Store(id={"type": "ml-config-store", "index": dataset_id}, data={}),
                 dcc.Store(id={"type": "bench-state-store", "index": dataset_id}, data={"active": False, "k_total": 0, "k_current": 0, "fraction": 0.2, "results": []}),
                 
                 dcc.Download(id={"type": "download-csv", "index": dataset_id}),
@@ -69,7 +89,7 @@ def create_dataset_tab(dataset_id, filename, df=None):
                             dbc.CardHeader([
                                 html.Div([
                                     html.I(className="bi bi-bar-chart-fill me-2 text-info"), "Metadata & AI Analysis"
-                                ], className="fw-bold text-light d-flex align-items-center")
+                                ], className="fw-bold text-light d-flex align-items-center w-100")
                             ], className="bg-dark border-secondary"),
                             dbc.CardBody([
                                 html.H6([html.I(className="bi bi-grid-fill me-2 text-info"), "Quick Statistics"], className="text-muted small fw-bold mb-2 d-flex align-items-center"),
@@ -83,9 +103,22 @@ def create_dataset_tab(dataset_id, filename, df=None):
                                 ], className="d-flex align-items-center mb-2"),
                                 
                                 dbc.Spinner(
-                                    html.Div(id={"type": "dataset-description-output", "index": dataset_id}, className="text-light small mt-1", style={"maxHeight": "160px", "overflowY": "auto"}),
+                                    html.Div(id={"type": "dataset-description-output", "index": dataset_id}, className="text-light small mt-1", style={"maxHeight": "100px", "overflowY": "auto"}),
                                     size="sm", color="info"
-                                )
+                                ),
+                                
+                                html.Hr(className="border-secondary my-2"),
+                                html.Div([
+                                    html.H6([html.I(className="bi bi-bullseye me-2 text-danger"), "Target Variables"], className="text-muted small fw-bold mb-0 d-inline-block"),
+                                    dbc.Button([html.I(className="bi bi-magic me-1"), "Auto-Suggest"], id={"type": "btn-auto-suggest-targets", "index": dataset_id}, color="danger", size="sm", outline=True, className="ms-2 py-0 px-2 rounded-pill"),
+                                ], className="d-flex align-items-center mb-2"),
+                                dcc.Dropdown(
+                                    id={"type": "target-cols-dropdown", "index": dataset_id},
+                                    options=[{"label": c, "value": c} for c in (df.columns if df is not None else [])],
+                                    multi=True, placeholder="Select Target(s)...",
+                                    className="bg-dark text-light small-dropdown mb-2"
+                                ),
+                                html.Small("Override global target if desired.", className="text-muted x-small d-block")
                             ], className="p-3 bg-dark text-light")
                         ], className="tabu-card shadow border-secondary h-100")
                     ], md=5, className="mb-3 mb-md-0 d-flex flex-column"),
@@ -106,7 +139,7 @@ def create_dataset_tab(dataset_id, filename, df=None):
                                                    options=[{"label": "Concise", "value": "Concise / Standard"},
                                                             {"label": "Descriptive", "value": "Descriptive"},
                                                             {"label": "Professional", "value": "Professional"}],
-                                                   value='Concise / Standard', size="sm")
+                                                    value='Concise / Standard', size="sm")
                                     ], width=4),
                                     dbc.Col([
                                         html.Label("Consistency:", className="fw-bold text-muted small"),
@@ -233,7 +266,17 @@ def create_dataset_tab(dataset_id, filename, df=None):
                         dbc.Button("Refresh Dashboard", id={"type": "btn-refresh-eda", "index": dataset_id}, color="warning", outline=True, className="mb-3"),
                         html.Div(id={"type": "eda-dashboard-container", "index": dataset_id})
                     ], className="p-4")
-                ], className="tabu-card mb-5 shadow border-secondary")
+                ], className="tabu-card mb-5 shadow border-secondary"),
+
+                # Downstream ML Evaluation Results
+                dbc.Card([
+                    dbc.CardBody([
+                        html.Div([
+                            html.H4([html.I(className="bi bi-cpu-fill me-2 text-primary"), "Downstream ML Evaluation Results"], className="mb-0"),
+                        ], className="d-flex align-items-center mb-3"),
+                        html.Div(id={"type": "ml-evaluation-results-dashboard", "index": dataset_id})
+                    ], className="p-4")
+                ], id={"type": "ml-evaluation-card", "index": dataset_id}, className="tabu-card mb-5 shadow border-secondary")
             ], className="px-4 py-3")
         ]
     )

@@ -51,7 +51,22 @@ def create_layout():
                 dbc.ModalFooter(
                     dbc.Button("Close", id="btn-close-pipeline", className="ms-auto", n_clicks=0)
                 ),
-            ], id="pipeline-modal", size="sm", centered=True, scrollable=True, backdrop="static", is_open=False, style={"width": "500px"}, className="bg-dark text-light border-secondary shadow-lg"),
+            ], id="pipeline-modal", size="lg", centered=True, scrollable=True, backdrop="static", is_open=False, className="bg-dark text-light border-secondary shadow-lg"),
+            
+            # Delete Confirmation Modal
+            dbc.Modal([
+                dbc.ModalHeader(dbc.ModalTitle([html.I(className="bi bi-exclamation-triangle-fill me-2 text-danger"), "Confirm Removal"])),
+                dbc.ModalBody([
+                    html.P("Are you sure you want to remove this dataset?", className="mb-1"),
+                    html.P(id="delete-dataset-name", className="fw-bold text-info small"),
+                    html.P("All associated configurations, synthetic data, and metrics will be permanently cleared.", className="text-muted small"),
+                    dcc.Store(id="pending-delete-id-store")
+                ]),
+                dbc.ModalFooter([
+                    dbc.Button("Cancel", id="btn-cancel-delete", color="secondary", outline=True, size="sm"),
+                    dbc.Button("Remove", id="btn-confirm-delete", color="danger", size="sm", className="ms-2")
+                ]),
+            ], id="delete-dataset-modal", centered=True, backdrop="static"),
 
             dcc.Tabs(id="tabs-datasets", value=default_id, children=[
                 default_tab,

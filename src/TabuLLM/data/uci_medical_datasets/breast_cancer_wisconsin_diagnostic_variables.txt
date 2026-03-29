@@ -1,0 +1,35 @@
+                  name     role         type  ... description units missing_values
+0                   ID       ID  Categorical  ...        None  None             no
+1            Diagnosis   Target  Categorical  ...        None  None             no
+2              radius1  Feature   Continuous  ...        None  None             no
+3             texture1  Feature   Continuous  ...        None  None             no
+4           perimeter1  Feature   Continuous  ...        None  None             no
+5                area1  Feature   Continuous  ...        None  None             no
+6          smoothness1  Feature   Continuous  ...        None  None             no
+7         compactness1  Feature   Continuous  ...        None  None             no
+8           concavity1  Feature   Continuous  ...        None  None             no
+9      concave_points1  Feature   Continuous  ...        None  None             no
+10           symmetry1  Feature   Continuous  ...        None  None             no
+11  fractal_dimension1  Feature   Continuous  ...        None  None             no
+12             radius2  Feature   Continuous  ...        None  None             no
+13            texture2  Feature   Continuous  ...        None  None             no
+14          perimeter2  Feature   Continuous  ...        None  None             no
+15               area2  Feature   Continuous  ...        None  None             no
+16         smoothness2  Feature   Continuous  ...        None  None             no
+17        compactness2  Feature   Continuous  ...        None  None             no
+18          concavity2  Feature   Continuous  ...        None  None             no
+19     concave_points2  Feature   Continuous  ...        None  None             no
+20           symmetry2  Feature   Continuous  ...        None  None             no
+21  fractal_dimension2  Feature   Continuous  ...        None  None             no
+22             radius3  Feature   Continuous  ...        None  None             no
+23            texture3  Feature   Continuous  ...        None  None             no
+24          perimeter3  Feature   Continuous  ...        None  None             no
+25               area3  Feature   Continuous  ...        None  None             no
+26         smoothness3  Feature   Continuous  ...        None  None             no
+27        compactness3  Feature   Continuous  ...        None  None             no
+28          concavity3  Feature   Continuous  ...        None  None             no
+29     concave_points3  Feature   Continuous  ...        None  None             no
+30           symmetry3  Feature   Continuous  ...        None  None             no
+31  fractal_dimension3  Feature   Continuous  ...        None  None             no
+
+[32 rows x 7 columns]

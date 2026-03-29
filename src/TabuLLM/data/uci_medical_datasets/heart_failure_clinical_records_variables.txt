@@ -1,0 +1,16 @@
+                        name     role  ...             units missing_values
+0                        age  Feature  ...             years             no
+1                    anaemia  Feature  ...               NaN             no
+2   creatinine_phosphokinase  Feature  ...             mcg/L             no
+3                   diabetes  Feature  ...               NaN             no
+4          ejection_fraction  Feature  ...                 %             no
+5        high_blood_pressure  Feature  ...               NaN             no
+6                  platelets  Feature  ...  kiloplatelets/mL             no
+7           serum_creatinine  Feature  ...             mg/dL             no
+8               serum_sodium  Feature  ...             mEq/L             no
+9                        sex  Feature  ...               NaN             no
+10                   smoking  Feature  ...               NaN             no
+11                      time  Feature  ...              days             no
+12               death_event   Target  ...               NaN             no
+
+[13 rows x 7 columns]
