@@ -1,141 +1,70 @@
 import uuid
 import dash
-from dash import Input, Output, State, html, dcc
-
-import dash_bootstrap_components as dbc
-
-from core import app, logger
+from dash import Input, Output, State, MATCH
+from core import app
+from utils.logging_config import logger
+from components.dataset_tab import create_dataset_tab
 from services.data_manager import parse_uploaded_file, df_to_aggrid_format
 from utils.constants import ai_highlight_style
 
-# --- TABLE MECHANICS (Including tracking original state) ---
 @app.callback(
-    Output('data-grid', 'rowData'),
-    Output('data-grid', 'columnDefs'),
-    Output('original-data-store', 'data'),
-    Output('upload-file-info', 'children'),
-    Output('dataset-description-store', 'data', allow_duplicate=True),
-    Output('dataset-stats-grid', 'children'),
-    Output('dataset-description-output', 'children', allow_duplicate=True),
-    Output('data-grid', 'dashGridOptions'),
-    Input('upload-data', 'contents'),
-    State('upload-data', 'filename'),
-    State('data-grid', 'dashGridOptions'),
+    Output("tabs-datasets", "children"),
+    Output("datasets-metadata-store", "data"),
+    Input("upload-data", "contents"),
+    State("upload-data", "filename"),
+    State("tabs-datasets", "children"),
+    State("datasets-metadata-store", "data"),
     prevent_initial_call=True
 )
-def update_table_from_upload(contents, filename, current_options):
-    if contents is None:
-        return dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update
+def handle_multiple_uploads_pm(list_of_contents, list_of_filenames, current_tabs, metadata):
+    if not list_of_contents:
+        return dash.no_update, dash.no_update
 
-    logger.info(f"Uploading and parsing file: {filename}")
-    import pandas as pd
-    df = parse_uploaded_file(contents, filename)
-
-    # 1. Build Column Definitions
-    new_cols = []
-    for i, col in enumerate(df.columns):
-        col_def = {"field": col, "headerName": col, "cellStyle": ai_highlight_style, "editable": True}
-        if i == 0:
-            col_def["checkboxSelection"] = True
-            col_def["headerCheckboxSelection"] = True
-        new_cols.append(col_def)
-
-    new_cols.append({
-        "field": "ai_audit", "headerName": "Generation Audit", "editable": False,
-        "cellStyle": {"color": "#666", "fontSize": "0.8em", "fontStyle": "italic"}
-    })
-
-    new_data = df_to_aggrid_format(df)
-    for row in new_data:
-        row['_row_id'] = str(uuid.uuid4())
-        row['is_context'] = False
-        row['is_target'] = False
-        row['ai_audit'] = ""
-
-    file_info = html.Div([
-        html.Span(f"📄 {filename}", className="fw-bold text-success me-2"),
-        html.Span(f"({df.shape[0]} rows x {df.shape[1]} cols)", className="badge bg-secondary")
-    ])
-
-    # Calculate Quick Stats
-    missing_count = int(df.isnull().sum().sum())
-    memory_use = df.memory_usage(deep=True).sum() / 1024 # KB
+    metadata = metadata or {}
+    new_tabs = list(current_tabs or [])
     
-    stats_grid = dbc.Row([
-        dbc.Col([html.H4(f"{df.shape[0]}", className="text-info fw-bold mb-0"), html.Small("Rows", className="text-muted")], width=6, className="text-center mb-3"),
-        dbc.Col([html.H4(f"{df.shape[1]}", className="text-info fw-bold mb-0"), html.Small("Columns", className="text-muted")], width=6, className="text-center mb-3"),
-        dbc.Col([html.H4(f"{missing_count}", className="text-warning mb-0"), html.Small("Missing Vals", className="text-muted")], width=6, className="text-center"),
-        dbc.Col([html.H4(f"{memory_use:.1f} KB", className="text-success mb-0", style={"fontSize": "1.1rem" if memory_use > 1000 else "1.2rem"}), html.Small("Memory", className="text-muted")], width=6, className="text-center")
-    ], className="g-2")
-    
-    # Clear leftover pinned row options if any from previous cache streams
-    updated_options = dict(current_options) if current_options else {}
-    if "pinnedBottomRowData" in updated_options:
-        del updated_options["pinnedBottomRowData"]
+    for contents, filename in zip(list_of_contents, list_of_filenames):
+        dataset_id = str(uuid.uuid4())
+        try:
+            df = parse_uploaded_file(contents, filename)
+            if df is not None and not df.empty:
+                new_tab = create_dataset_tab(dataset_id, filename, df=df)
+                new_tabs.append(new_tab)
+                
+                metadata[dataset_id] = {
+                    "filename": filename,
+                    "status": "Ready",
+                    "rows": df.shape[0],
+                    "cols": df.shape[1]
+                }
+            else:
+                logger.error(f"Failed to parse {filename}: Empty or invalid.")
+        except Exception as e:
+            logger.error(f"Error processing {filename}: {e}")
 
-
-    return new_data, new_cols, new_data, file_info, "", stats_grid, "", updated_options
+    return new_tabs, metadata
 
 
 @app.callback(
-    Output("dataset-description-output", "children"),
-    Output("dataset-description-store", "data"),
-    Input("btn-gen-desc", "n_clicks"),
-    State("original-data-store", "data"),
+    Output({"type": "data-grid", "index": MATCH}, "rowData", allow_duplicate=True),
+    Input({"type": "btn-add-row", "index": MATCH}, "n_clicks"),
+    State({"type": "data-grid", "index": MATCH}, "rowData"),
     prevent_initial_call=True
 )
-def fetch_description_metadata(n_clicks, orig_data):
-    if not n_clicks or not orig_data: return dash.no_update, dash.no_update
-    import pandas as pd
-    from services.llm_client import get_dataset_description
-    
-    df = pd.DataFrame(orig_data)
-    df = df[[c for c in df.columns if c not in ['ai_audit', '_row_id', 'is_context', 'is_target', 'is_ai_']]]
-    
-    sample_df = df.sample(min(15, len(df)))
-    description = get_dataset_description(sample_df)
-    
-
-    return dcc.Markdown(description), description
-
-
-
-# Deprecated toggle_meta_frame removed because dbc.Accordion handles toggle natively.
-
-
-
-
-
-
-
-
-@app.callback(
-    Output('data-grid', 'rowData', allow_duplicate=True),
-    Input('btn-add-row', 'n_clicks'),
-    State('data-grid', 'rowData'),
-    State('data-grid', 'columnDefs'),
-    prevent_initial_call=True
-)
-def add_new_row(n_clicks, current_rows, current_cols):
-    # Standard n_clicks check
+def add_row_pm(n_clicks, row_data):
     if not n_clicks: return dash.no_update
-    new_row = {col['field']: None for col in current_cols if col['field'] not in ['_row_id', 'is_context', 'is_target', 'ai_audit']}
-    new_row['_row_id'] = str(uuid.uuid4())
-    current_rows.append(new_row)
-    return current_rows
+    new_row = {"_row_id": str(uuid.uuid4()), "is_context": False, "is_target": False, "ai_audit": ""}
+    return row_data + [new_row]
 
 
 @app.callback(
-    Output('data-grid', 'columnDefs', allow_duplicate=True),
-    Input('btn-add-col', 'n_clicks'),
-    State('data-grid', 'columnDefs'),
+    Output({"type": "data-grid", "index": MATCH}, "columnDefs", allow_duplicate=True),
+    Input({"type": "btn-add-col", "index": MATCH}, "n_clicks"),
+    State({"type": "data-grid", "index": MATCH}, "columnDefs"),
     prevent_initial_call=True
 )
-def add_new_column(n_clicks, current_cols):
+def add_column_pm(n_clicks, col_defs):
     if not n_clicks: return dash.no_update
-    import random
-    new_field = f"custom_{random.randint(1000, 9999)}"
-    current_cols.append({"field": new_field, "headerName": "New Col", "editable": True})
-    return current_cols
-
-
+    new_col_id = f"new_col_{len(col_defs)}"
+    new_col = {"field": new_col_id, "headerName": "New Column", "editable": True, "cellStyle": ai_highlight_style}
+    return col_defs + [new_col]

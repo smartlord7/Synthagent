@@ -10,4 +10,7 @@ plotly
 sqlalchemy
 scipy
 fpdf2
-kaleido
+kaleido
+simsimd
+scikit-learn
+numpy

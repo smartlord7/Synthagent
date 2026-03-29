@@ -5,7 +5,7 @@ import urllib.request
 from abc import ABC, abstractmethod
 from dotenv import load_dotenv
 from services.logger import log_interaction
-from core import logger
+from utils.logging_config import logger
 from utils.json_utils import robust_json_loads, RobustJSONError, to_compact_json, from_compact_json
 
 class BaseLLMProvider(ABC):

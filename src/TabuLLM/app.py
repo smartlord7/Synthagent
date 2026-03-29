@@ -2,7 +2,8 @@ import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from core import app, logger
+from core import app
+from utils.logging_config import logger
 from components.layout import create_layout
 import callbacks
 

@@ -1,6 +1,6 @@
 import json
 import re
-from core import logger
+from utils.logging_config import logger
 
 def robust_json_loads(text: str):
     """

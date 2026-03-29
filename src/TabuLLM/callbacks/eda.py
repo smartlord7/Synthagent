@@ -1,9 +1,9 @@
 import pandas as pd
 import numpy as np
 import dash
-from dash import Input, Output, State, dcc, html
+from dash import Input, Output, State, dcc, html, MATCH
 import dash_bootstrap_components as dbc
-from scipy.stats import stats
+from scipy import stats
 from simsimd import jensenshannon
 from sklearn.decomposition import PCA
 import plotly.express as px
@@ -11,23 +11,23 @@ from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics.pairwise import euclidean_distances
 
 from core import app
+from utils.logging_config import logger
 
 # --- EDA DASHBOARD LOGIC ---
 @app.callback(
-    Output("eda-dashboard-container", "children", allow_duplicate=True),
-    Input("btn-refresh-eda", "n_clicks"),
-    State("original-data-store", "data"),
-    State("data-grid", "rowData"),
-    State("data-grid", "columnDefs"),
+    Output({"type": "eda-dashboard-container", "index": MATCH}, "children", allow_duplicate=True),
+    Input({"type": "btn-refresh-eda", "index": MATCH}, "n_clicks"),
+    State({"type": "original-data-store", "index": MATCH}, "data"),
+    State({"type": "data-grid", "index": MATCH}, "rowData"),
+    State({"type": "data-grid", "index": MATCH}, "columnDefs"),
+    State({"type": "btn-refresh-eda", "index": MATCH}, "id"),
     prevent_initial_call=True
 )
-def build_eda_dashboard(n_clicks, orig_data, aug_data, col_defs):
+def build_eda_dashboard_pm(n_clicks, orig_data, aug_data, col_defs, btn_id):
     if not n_clicks:
         return dash.no_update
+    dataset_id = btn_id["index"]
 
-    # -----------------------------
-    # DATA PREPARATION
-    # -----------------------------
     field_to_header = {
         col['field']: col.get('headerName', col['field'])
         for col in col_defs
@@ -39,44 +39,27 @@ def build_eda_dashboard(n_clicks, orig_data, aug_data, col_defs):
     df_aug = pd.DataFrame(aug_data)
 
     for df in [df_orig, df_aug]:
-
         if '_row_id' in df.columns:
-            df.drop(columns=['_row_id'], inplace=True, errors='ignore')
-
+            df.drop(columns=['_row_id', 'is_context', 'is_target', 'ai_audit'], inplace=True, errors='ignore')
         cols_to_keep = [c for c in df.columns if c in field_to_header]
-
-        df.drop(columns=[c for c in df.columns if c not in cols_to_keep],
-                inplace=True,
-                errors='ignore')
-
+        df.drop(columns=[c for c in df.columns if c not in cols_to_keep], inplace=True, errors='ignore')
         df.rename(columns=field_to_header, inplace=True)
-
         df.replace(["", "NaN", "None", None], pd.NA, inplace=True)
-
         for col in df.columns:
-            df[col] = pd.to_numeric(df[col], errors='ignore')
+            df[col] = pd.to_numeric(df[col], errors='coerce').fillna(df[col])
 
-    # -----------------------------
-    # CALL LAYOUT GENERATOR
-    # -----------------------------
-    return get_eda_layout(df_orig, df_aug)
+    return get_eda_layout(df_orig, df_aug, dataset_id)
 
-def get_eda_layout(df_orig, df_aug):
-    """
-    Generates the fully computed row & accordion layout comparing 
-    an Original dataframe vs an Augmented dataframe.
-    Shared by both Standard EDA and aggregate Benchmark displays.
-    """
+def get_eda_layout(df_orig, df_aug, dataset_id="base"):
     if df_orig.empty or df_aug.empty:
         return [dbc.Alert("Missing data to build dashboard layouts.", color="warning")]
 
     df_orig_c = df_orig.copy()
     df_aug_c = df_aug.copy()
 
-    # Cast to numeric where possible safely
     for df in [df_orig_c, df_aug_c]:
         for col in df.columns:
-             df[col] = pd.to_numeric(df[col], errors='ignore')
+             df[col] = pd.to_numeric(df[col], errors='coerce').fillna(df[col])
 
     df_combined = pd.concat(
         [df_orig_c.assign(State='Original'), df_aug_c.assign(State='Augmented')],
@@ -86,339 +69,157 @@ def get_eda_layout(df_orig, df_aug):
     numeric_cols = df_aug_c.select_dtypes(include='number').columns.tolist()
     cat_cols = [c for c in df_aug_c.columns if c not in numeric_cols]
 
-    # -----------------------------
-    # METRIC ACCUMULATORS
-    # -----------------------------
-    jsd_scores = []
-    mre_list = []
-    hellinger_cats = []
-    z_drift_list = []
+    jsd_scores, m_drift_list, mre_list, hellinger_cats, z_drift_list = [], [], [], [], []
+    corr_stability, privacy_risk, coverage_score, nndr = 0, 0, 0, 0
+    entropy_preservation = 0 # Placeholder for simplicity
 
-    corr_stability = 0
-    privacy_risk = 0
-    coverage_score = 0
-    nndr = 0
-
-    # -----------------------------
-    # NUMERIC ANALYSIS
-    # -----------------------------
     if numeric_cols:
         for col in numeric_cols:
-            a = df_orig_c[col].dropna()
-            b = df_aug_c[col].dropna()
-
+            a, b = df_orig_c[col].dropna(), df_aug_c[col].dropna()
             if len(a) > 5 and len(b) > 5:
                 hist_a, bin_edges = np.histogram(a, bins=20, density=True)
                 hist_b, _ = np.histogram(b, bins=bin_edges, density=True)
                 jsd = jensenshannon(hist_a, hist_b)
                 jsd_scores.append(1 - jsd if not np.isnan(jsd) else 0)
-
-                # Z drift
                 z_drift = abs(a.mean() - b.mean()) / (a.std() if a.std() > 0 else 1)
                 z_drift_list.append(z_drift)
-
-                # mean relative error
                 if a.mean() != 0:
-                    mre = abs(a.mean() - b.mean()) / abs(a.mean())
-                    mre_list.append(mre)
+                    mre_list.append(abs(a.mean() - b.mean()) / abs(a.mean()))
 
-        # Correlation stability
         if len(numeric_cols) > 1:
             c_orig = df_orig_c[numeric_cols].corr().fillna(0).values
             c_aug = df_aug_c[numeric_cols].corr().fillna(0).values
             corr_stability = (1 - np.mean(np.abs(c_orig - c_aug))) * 100
 
-        # -----------------------------
-        # PRIVACY / DISTANCE METRICS
-        # -----------------------------
         scaler = MinMaxScaler()
         combined_numeric = pd.concat([df_orig_c[numeric_cols], df_aug_c[numeric_cols]]).fillna(0)
         scaler.fit(combined_numeric)
-
-        orig_scaled = scaler.transform(df_orig_c[numeric_cols].fillna(0))
-        aug_scaled = scaler.transform(df_aug_c[numeric_cols].fillna(0))
-
-        sample_size = min(200, len(aug_scaled))
-        aug_sample = aug_scaled[:sample_size]
-
-        dist_matrix = euclidean_distances(aug_sample, orig_scaled)
-        min_distances = np.min(dist_matrix, axis=1)
-
-        privacy_risk = int((min_distances < 0.05).mean() * 100)
-        coverage_score = int((min_distances > 0.1).mean() * 100)
-
-        # NN distance ratio
-        if len(orig_scaled) > 1 and len(aug_sample) > 1:
+        orig_norm = scaler.transform(df_orig_c[numeric_cols].fillna(0))
+        aug_norm = scaler.transform(df_aug_c[numeric_cols].fillna(0))
+        sample_sz = min(200, len(aug_norm))
+        aug_sample = aug_norm[:sample_sz]
+        dist_matrix = euclidean_distances(aug_sample, orig_norm)
+        min_dists = np.min(dist_matrix, axis=1)
+        privacy_risk = int((min_dists < 0.05).mean() * 100)
+        coverage_score = int((min_dists > 0.1).mean() * 100)
+        if len(orig_norm) > 1 and len(aug_sample) > 1:
             aug_to_aug = euclidean_distances(aug_sample, aug_sample)
             np.fill_diagonal(aug_to_aug, np.inf)
             nn_aug = np.min(aug_to_aug, axis=1)
-            nn_orig = min_distances
-            nndr = np.mean(nn_orig / (nn_aug + 1e-6))
+            nndr = np.mean(min_dists / (nn_aug + 1e-6))
 
-    # -----------------------------
-    # CATEGORICAL ANALYSIS
-    # -----------------------------
     if cat_cols:
         for col in cat_cols:
             p = df_orig_c[col].value_counts(normalize=True)
             q = df_aug_c[col].value_counts(normalize=True)
-
             all_cats = p.index.union(q.index)
             p = p.reindex(all_cats, fill_value=0).values
             q = q.reindex(all_cats, fill_value=0).values
-
             h_dist = np.sqrt(np.sum((np.sqrt(p) - np.sqrt(q)) ** 2)) / np.sqrt(2)
             hellinger_cats.append(1 - h_dist)
 
-    # -----------------------------
-    # FINAL METRICS
-    # -----------------------------
     fidelity_score = int(np.mean(jsd_scores) * 100) if jsd_scores else 0
+    dist_consistency = int(np.median(jsd_scores) * 100) if jsd_scores else 0
     avg_z_drift = np.mean(z_drift_list) if z_drift_list else 0
-    mean_feature_error = int((1 - np.mean(mre_list)) * 100) if mre_list else 0
+    mean_feature_accuracy = int((1 - np.mean(mre_list)) * 100) if mre_list else 0
     cat_fidelity = int(np.mean(hellinger_cats) * 100) if hellinger_cats else 0
-    distribution_consistency = int(np.median(jsd_scores) * 100) if jsd_scores else 0
+    data_density = 100 - (df_aug_c.isna().sum().sum() / (df_aug_c.size + 1e-6) * 100)
+    
+    # Simple Entropy Preservation (based on coverage + fidelity)
+    ent_pres = "High" if coverage_score > 60 and fidelity_score > 70 else "Moderate" if coverage_score > 30 else "Low"
+    ent_color = "success" if ent_pres == "High" else "warning" if ent_pres == "Moderate" else "danger"
 
-    # -----------------------------
-    # COMPLETENESS
-    # -----------------------------
-    orig_nulls = df_orig_c.isna().sum().sum()
-    aug_nulls = df_aug_c.isna().sum().sum()
-    null_reduction = max(0, int(orig_nulls - aug_nulls))
+    # Helper for unique IDs
+    def uid(base): return f"{base}-{dataset_id}"
 
-    total_cells_aug = df_aug_c.shape[0] * df_aug_c.shape[1]
-    completeness = ((total_cells_aug - aug_nulls) / total_cells_aug * 100) if total_cells_aug > 0 else 0
-
-    score_color = "success" if fidelity_score > 80 else "warning" if fidelity_score > 50 else "danger"
-
-    # -----------------------------
-    # LAYOUT CARDS ROW 1
-    # -----------------------------
-    row_1 = dbc.Row([
-        dbc.Col(dbc.Card([
+    # --- RICH METRIC CARD HELPER ---
+    def create_metric_card(title, value, subtitle, icon, color_class, tooltip):
+        tid = uid(f"t-{icon}")
+        return dbc.Card([
             dbc.CardHeader([
-                "Synthetic Fidelity (JSD) ",
-                html.I(className="bi bi-info-circle ms-2", id="tooltip-jsd", style={"cursor": "pointer"})
-            ], className="fw-bold d-flex align-items-center justify-content-between"),
+                html.Span(title, className="small fw-bold text-uppercase opacity-75"),
+                html.I(className=f"bi bi-{icon} ms-2 small", id=tid)
+            ], className="d-flex justify-content-between py-1 bg-transparent border-0"),
             dbc.CardBody([
-                html.H2(f"{fidelity_score}%", className=f"text-{score_color} text-center"),
-                html.P("Overall distribution similarity", className="small text-muted text-center"),
-                dbc.Tooltip("Examines how closely the synthetic data distribution matches the original using Jensen-Shannon Divergence. Higher is better (100% is identical).", target="tooltip-jsd", placement="top")
-            ])
-        ], outline=True, color=score_color), width=3),
+                html.H3(value, className=f"text-{color_class} text-center mb-0 fw-bold"),
+                html.Small(subtitle, className="text-muted text-center d-block x-small"),
+                dbc.Tooltip(tooltip, target=tid)
+            ], className="pt-0 pb-2")
+        ], className="h-100 bg-dark border-secondary shadow-sm")
 
-        dbc.Col(dbc.Card([
-            dbc.CardHeader([
-                "Correlation Stability ",
-                html.I(className="bi bi-info-circle ms-2", id="tooltip-corr", style={"cursor": "pointer"})
-            ], className="fw-bold d-flex align-items-center justify-content-between"),
-            dbc.CardBody([
-                html.H2(f"{corr_stability:.1f}%", className="text-info text-center"),
-                html.P("Multivariate relationships preserved", className="small text-muted text-center"),
-                dbc.Tooltip("Measures how well the mathematical correlations between numeric features are preserved. Higher is better.", target="tooltip-corr", placement="top")
-            ])
-        ], outline=True, color="info"), width=3),
+    m_jsd = create_metric_card("Synthetic Fidelity (JSD)", f"{fidelity_score}%", "Overall distribution similarity", "bullseye", "success" if fidelity_score > 80 else "warning", "Average distribution similarity via JSD.")
+    m_corr = create_metric_card("Correlation Stability", f"{corr_stability:.1f}%", "Multivariate relationships preserved", "diagram-3", "info", "Similarity between original and augmented correlation matrices.")
+    m_dist = create_metric_card("Distribution Consistency", f"{dist_consistency}%", "Median feature similarity", "graph-up-arrow", "info", "Median JSD score across all individual features.")
+    m_ent = create_metric_card("Entropy Preservation", ent_pres, "Information diversity maintained", "lightning-charge", ent_color, "Indicates if diversity and information depth were preserved.")
+    
+    m_zdr = create_metric_card("Mean Z Score Drift", f"{avg_z_drift:.2f}", "Standardized distribution shift", "arrows-move", "warning", "Average standardized difference in means (Z-drift).")
+    m_cat = create_metric_card("Categorical Fidelity", f"{cat_fidelity}%", "Category distribution similarity", "tags", "info", "Stability of categorical proportions (Hellinger).")
+    m_priv = create_metric_card("Privacy Risk", f"{privacy_risk}%", "Synthetic rows too close to originals", "shield-lock", "danger" if privacy_risk > 20 else "success", "Risk of data leakage via near-neighbor memorization.")
+    m_dens = create_metric_card("Data Density", f"{data_density:.1f}%", "Non-missing cells in augmented data", "stack", "info", "Percentage of valid, non-null values generated.")
+    
+    m_cov = create_metric_card("Coverage Score", f"{coverage_score}%", "Synthetic coverage of original space", "bounding-box", "success" if coverage_score > 5 else "danger", "Percent of original high-probability regions covered by synthesis.")
+    m_acc = create_metric_card("Feature Accuracy", f"{mean_feature_accuracy}%", "Mean feature similarity", "check-circle", "info", "Inverse of Mean Relative Error (MRE) of average values.")
+    m_nov = create_metric_card("Novelty Score", f"{nndr:.2f}", "Memorization vs novelty indicator", "stars", "info", "NNDR: Closer to 1 means balanced memorization and novelty.")
 
-        dbc.Col(dbc.Card([
-            dbc.CardHeader([
-                "Distribution Consistency ",
-                html.I(className="bi bi-info-circle ms-2", id="tooltip-dist-cons", style={"cursor": "pointer"})
-            ], className="fw-bold d-flex align-items-center justify-content-between"),
-            dbc.CardBody([
-                html.H2(f"{distribution_consistency}%", className="text-secondary text-center"),
-                html.P("Median feature similarity", className="small text-muted text-center"),
-                dbc.Tooltip("The median similarity score across all features, providing a robust overall measure of adherence to original patterns. Higher is better.", target="tooltip-dist-cons", placement="top")
-            ])
-        ], outline=True, color="secondary"), width=3),
+    metrics_grid = html.Div([
+        dbc.Row([
+            dbc.Col(m_jsd, width=3), dbc.Col(m_corr, width=3), dbc.Col(m_dist, width=3), dbc.Col(m_ent, width=3)
+        ], className="g-3 mb-3"),
+        dbc.Row([
+            dbc.Col(m_zdr, width=3), dbc.Col(m_cat, width=3), dbc.Col(m_priv, width=3), dbc.Col(m_dens, width=3)
+        ], className="g-3 mb-3"),
+        dbc.Row([
+            dbc.Col(m_cov, width=4), dbc.Col(m_acc, width=4), dbc.Col(m_nov, width=4)
+        ], className="g-3 mb-4")
+    ])
 
-        dbc.Col(dbc.Card([
-            dbc.CardHeader([
-                "Entropy Preservation ",
-                html.I(className="bi bi-info-circle ms-2", id="tooltip-entropy", style={"cursor": "pointer"})
-            ], className="fw-bold d-flex align-items-center justify-content-between"),
-            dbc.CardBody([
-                html.H2("High" if fidelity_score > 75 else "Low", className="text-info text-center"),
-                html.P("Information diversity maintained", className="small text-muted text-center"),
-                dbc.Tooltip("Assesses whether the information complexity and variety of values in the original data are maintained. 'High' is preferred.", target="tooltip-entropy", placement="top")
-            ])
-        ], outline=True, color="info"), width=3)
-    ], className="g-4 mb-4")
-
-    # -----------------------------
-    # LAYOUT CARDS ROW 2
-    # -----------------------------
-    row_2 = dbc.Row([
-        dbc.Col(dbc.Card([
-            dbc.CardHeader([
-                "Mean Z-Score Drift ",
-                html.I(className="bi bi-info-circle ms-2", id="tooltip-z-drift", style={"cursor": "pointer"})
-            ], className="fw-bold d-flex align-items-center justify-content-between"),
-            dbc.CardBody([
-                html.H2(f"{avg_z_drift:.2f}", className="text-warning text-center"),
-                html.P("Standardized distribution shift", className="small text-muted text-center"),
-                dbc.Tooltip("The average standardized difference in means across all features. Lower is better (closest to 0.00).", target="tooltip-z-drift", placement="top")
-            ])
-        ], outline=True, color="warning"), width=3),
-
-        dbc.Col(dbc.Card([
-            dbc.CardHeader([
-                "Categorical Fidelity ",
-                html.I(className="bi bi-info-circle ms-2", id="tooltip-cat-fid", style={"cursor": "pointer"})
-            ], className="fw-bold d-flex align-items-center justify-content-between"),
-            dbc.CardBody([
-                html.H2(f"{cat_fidelity}%", className="text-primary text-center"),
-                html.P("Category distribution similarity", className="small text-muted text-center"),
-                dbc.Tooltip("Measures how well the category frequencies match the original data. Higher is better.", target="tooltip-cat-fid", placement="top")
-            ])
-        ], outline=True, color="primary"), width=3),
-
-        dbc.Col(dbc.Card([
-            dbc.CardHeader([
-                "Privacy Risk ",
-                html.I(className="bi bi-info-circle ms-2", id="tooltip-privacy", style={"cursor": "pointer"})
-            ], className="fw-bold d-flex align-items-center justify-content-between"),
-            dbc.CardBody([
-                html.H2(f"{privacy_risk}%", className="text-danger text-center"),
-                html.P("Synthetic rows too close to originals", className="small text-muted text-center"),
-                dbc.Tooltip("The percentage of synthetic rows that are too similar to real original rows. Lower is better to prevent data leakage.", target="tooltip-privacy", placement="top")
-            ])
-        ], outline=True, color="danger"), width=3),
-
-        dbc.Col(dbc.Card([
-            dbc.CardHeader([
-                "Data Density ",
-                html.I(className="bi bi-info-circle ms-2", id="tooltip-density", style={"cursor": "pointer"})
-            ], className="fw-bold d-flex align-items-center justify-content-between"),
-            dbc.CardBody([
-                html.H2(f"{completeness:.1f}%", className="text-info text-center"),
-                html.P("Non-missing cells in augmented data", className="small text-muted text-center"),
-                dbc.Tooltip("The percentage of cells that contain valid data (not null). Should generally be similar to the original dataset.", target="tooltip-density", placement="top")
-            ])
-        ], outline=True, color="info"), width=3)
-    ], className="g-4 mb-4")
-
-    # -----------------------------
-    # LAYOUT CARDS ROW 3
-    # -----------------------------
-    row_3 = dbc.Row([
-        dbc.Col(dbc.Card([
-            dbc.CardHeader([
-                "Coverage Score ",
-                html.I(className="bi bi-info-circle ms-2", id="tooltip-coverage", style={"cursor": "pointer"})
-            ], className="fw-bold d-flex align-items-center justify-content-between"),
-            dbc.CardBody([
-                html.H2(f"{coverage_score}%", className="text-success text-center"),
-                html.P("Synthetic coverage of original space", className="small text-muted text-center"),
-                dbc.Tooltip("Measures what percentage of the original data multi-dimensional volume is represented in the synthetic data. Higher is better.", target="tooltip-coverage", placement="top")
-            ])
-        ], outline=True, color="success"), width=4),
-
-        dbc.Col(dbc.Card([
-            dbc.CardHeader([
-                "Feature Accuracy ",
-                html.I(className="bi bi-info-circle ms-2", id="tooltip-accuracy", style={"pointer": "cursor"})
-            ], className="fw-bold d-flex align-items-center justify-content-between"),
-            dbc.CardBody([
-                html.H2(f"{mean_feature_error}%", className="text-primary text-center"),
-                html.P("Mean feature similarity", className="small text-muted text-center"),
-                dbc.Tooltip("A composite score based on Mean Relative Error of averages across all numerical features. Higher is better.", target="tooltip-accuracy", placement="top")
-            ])
-        ], outline=True, color="primary"), width=4),
-
-        dbc.Col(dbc.Card([
-            dbc.CardHeader([
-                "Novelty Score ",
-                html.I(className="bi bi-info-circle ms-2", id="tooltip-novelty", style={"cursor": "pointer"})
-            ], className="fw-bold d-flex align-items-center justify-content-between"),
-            dbc.CardBody([
-                html.H2(f"{nndr:.2f}", className="text-secondary text-center"),
-                html.P("Memorization vs novelty indicator", className="small text-muted text-center"),
-                dbc.Tooltip("Nearest Neighbor Distance Ratio. Compares synthetic distance to original vs internal synthetic distance. Values near 1.0 are ideal.", target="tooltip-novelty", placement="top")
-            ])
-        ], outline=True, color="secondary"), width=4)
-    ], className="g-4 mb-4")
-
-    # --- ACCORDION SECTIONS ---
-    accordion_items = []
-
-    # Section: Statistical Inference
+    # Accordion items
+    items = []
     if numeric_cols:
         stats_list = []
         for col in numeric_cols:
             a, b = df_orig_c[col].dropna(), df_aug_c[col].dropna()
             if not a.empty and not b.empty:
                 _, ks_p = stats.ks_2samp(a, b)
-                status_icon = html.I(className="bi bi-check-circle-fill text-success") if ks_p > 0.05 else html.I(className="bi bi-exclamation-triangle-fill text-warning")
+                shift = ( (b.mean() - a.mean()) / (abs(a.mean()) + 1e-9) ) * 100
+                stats_list.append(html.Tr([
+                    html.Td(col, className="fw-bold x-small"), 
+                    html.Td(f"{a.mean():.2f}", className="x-small"), 
+                    html.Td(f"{b.mean():.2f}", className="x-small"), 
+                    html.Td(f"{shift:+.1f}%", className=f"x-small {'text-danger' if abs(shift) > 10 else 'text-success'}"),
+                    html.Td(f"{ks_p:.4f}", className="x-small"), 
+                    html.Td(html.I(className="bi bi-check-circle-fill text-success" if ks_p > 0.05 else "bi bi-exclamation-triangle-fill text-warning"))
+                ]))
+        
+        table_ui = dbc.Table([
+            html.Thead(html.Tr([
+                html.Th("Feature", className="small"), html.Th("Orig Mean", className="small"), 
+                html.Th("Aug Mean", className="small"), html.Th("Mean Shift", className="small"), 
+                html.Th("KS Test (p val)", className="small"), html.Th("Status", className="small")
+            ])), 
+            html.Tbody(stats_list)
+        ], striped=True, size="sm", className="bg-dark text-light border-secondary", bordered=True)
+        
+        items.append(dbc.AccordionItem(table_ui, title="📊 Statistical Inference & P-Values", item_id="ai-inference"))
 
-                stats_list.append({
-                    "Feature": col,
-                    "Orig Mean": round(a.mean(), 2), "Aug Mean": round(b.mean(), 2),
-                    "Mean Shift": f"{((b.mean() - a.mean()) / a.mean() * 100):.1f}%" if a.mean() != 0 else "N/A",
-                    "KS Test (p-val)": round(ks_p, 4), "Status": status_icon
-                })
-
-        table_header = [html.Thead(html.Tr([
-            html.Th("Feature"),
-            html.Th("Orig Mean"),
-            html.Th("Aug Mean"),
-            html.Th("Mean Shift"),
-            html.Th([
-                "KS Test (p-val) ",
-                html.I(className="bi bi-info-circle ms-1", id="tooltip-ks-pval", style={"cursor": "pointer"}),
-                dbc.Tooltip("Kolmogorov-Smirnov test p-value. A value > 0.05 suggests the distributions are likely from the same source (Fail to reject Null Hypothesis).", target="tooltip-ks-pval")
-            ]),
-            html.Th([
-                "Status ",
-                html.I(className="bi bi-info-circle ms-1", id="tooltip-ks-status", style={"cursor": "pointer"}),
-                dbc.Tooltip("Success icon indicates the distribution shift is not statistically significant (p > 0.05).", target="tooltip-ks-status")
-            ])
-        ]))]
-        table_body = [html.Tbody([html.Tr([html.Td(row["Feature"]), html.Td(row["Orig Mean"]), html.Td(row["Aug Mean"]), html.Td(row["Mean Shift"]), html.Td(row["KS Test (p-val)"]), row["Status"]]) for row in stats_list])]
-        table = dbc.Table(table_header + table_body, striped=True, bordered=True, hover=True, size="sm")
-
-        accordion_items.append(dbc.AccordionItem(table, title=[html.I(className="bi bi-calculator me-2"), "Statistical Inference & P-Values"], item_id="section-stats"))
-
-    # Section: Correlations
     if len(numeric_cols) >= 2:
-        corr_aug = df_aug_c[numeric_cols].corr()
-        fig_corr = px.imshow(corr_aug, text_auto=".2f", color_continuous_scale="RdBu_r", title="Correlation Matrix")
-        fig_scatter = px.scatter_matrix(df_combined, dimensions=numeric_cols, color="State", opacity=0.4, title="Feature Interaction Matrix")
-        fig_scatter.update_traces(diagonal_visible=False, marker=dict(size=3))
+        try:
+            fig_corr = px.imshow(df_aug_c[numeric_cols].corr(), text_auto=".2f", color_continuous_scale="RdBu_r", 
+                                title="Feature Correlation (Augmented)", template="plotly_dark")
+            items.append(dbc.AccordionItem(dcc.Graph(figure=fig_corr), title="🔗 Correlations Heatmap", item_id="ai-corr"))
+        except: pass
 
-        corr_content = html.Div([dbc.Row([dbc.Col(dcc.Graph(figure=fig_corr), width=5), dbc.Col(dcc.Graph(figure=fig_scatter), width=7)])])
-        accordion_items.append(dbc.AccordionItem(corr_content, title=[html.I(className="bi bi-diagram-3 me-2"), "Multivariate Relationships & Correlations"], item_id="section-corr"))
-
-    # Section: Distributions
     dist_elements = []
-    for col in df_aug_c.columns:
+    for col in df_aug_c.columns[:10]: # Limit to first 10 for performance
         if col in numeric_cols:
-            fig = px.violin(df_combined, y=col, x="State", color="State", box=True, points="all", color_discrete_map={"Original": "#3498db", "Augmented": "#2ecc71"})
+            fig = px.histogram(df_combined, x=col, color="State", barmode="overlay", marginal="box", 
+                               template="plotly_dark", opacity=0.7)
             dist_elements.append(dbc.Col(dcc.Graph(figure=fig), width=6))
-            fig_h = px.histogram(df_combined, x=col, color="State", barmode="overlay", marginal="box")
-            dist_elements.append(dbc.Col(dcc.Graph(figure=fig_h), width=6))
         elif col in cat_cols:
-            fig_c = px.histogram(df_combined, x=col, color="State", barmode="group", title=f"Frequency: {col}")
-            dist_elements.append(dbc.Col(dcc.Graph(figure=fig_c), width=6))
+            fig = px.histogram(df_combined, x=col, color="State", barmode="group", 
+                               template="plotly_dark", opacity=0.7)
+            dist_elements.append(dbc.Col(dcc.Graph(figure=fig), width=6))
+            
+    items.append(dbc.AccordionItem(dbc.Row(dist_elements, className="g-2"), title="📈 Distributions (Top 10 Feature Samples)", item_id="ai-dists"))
 
-    dist_grid = [dbc.Row(dist_elements[i:i + 2]) for i in range(0, len(dist_elements), 2)]
-    accordion_items.append(dbc.AccordionItem(html.Div(dist_grid), title=[html.I(className="bi bi-bar-chart me-2"), "Feature-by-Feature Distributions"], item_id="section-dist"))
-
-    # Section: High-Inference (PCA)
-    insight_elements = []
-    if len(numeric_cols) >= 2:
-        df_pca_clean = df_combined.dropna(subset=numeric_cols)
-        if len(df_pca_clean) > 5:
-            pca = PCA(n_components=2)
-            comps = pca.fit_transform(df_pca_clean[numeric_cols])
-            df_res = pd.DataFrame(comps, columns=['PC1', 'PC2'])
-            df_res['State'] = df_pca_clean['State'].values
-            fig_pca = px.scatter(df_res, x='PC1', y='PC2', color='State', title="PCA Structural Drift Analysis")
-            insight_elements.append(dbc.Row(dbc.Col(dcc.Graph(figure=fig_pca), width=12)))
-
-    accordion_items.append(dbc.AccordionItem(html.Div(insight_elements), title=[html.I(className="bi bi-brain me-2"), "High-Inference Latent Logic"], item_id="section-logic"))
-
-    # Final Assembly INCLUDES row_3
-    return [
-        row_1, row_2, row_3,
-        dbc.Accordion(accordion_items, start_collapsed=False, always_open=True, id="eda-accordion")
-    ]
+    return [metrics_grid, dbc.Accordion(items, start_collapsed=False, always_open=True, active_item=["ai-inference"])]
