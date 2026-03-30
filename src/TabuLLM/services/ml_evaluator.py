@@ -30,20 +30,33 @@ class MLEvaluator:
             logger.warning(f"Target column '{target}' not found in training data.")
             return None
             
-        def preprocess(df_in):
-            df_out = df_in.copy()
-            for col in df_out.columns:
-                if df_out[col].dtype == 'object':
-                    df_out[col] = pd.factorize(df_out[col])[0]
+        target = targets[0]
+        if target not in train_df.columns:
+            logger.warning(f"Target column '{target}' not found in training data.")
+            return None
+            
+        def apply_encoding(df_fit, df_transform, cols):
+            df_out = df_transform.copy()
+            for col in cols:
+                if col in df_fit.columns:
+                    # Capture unique values from fit set
+                    codes, uniques = pd.factorize(df_fit[col])
+                    mapping = {val: i for i, val in enumerate(uniques)}
+                    # Apply to transform set
+                    df_out[col] = df_transform[col].map(mapping).fillna(-1)
+            # Fill numeric NaNs
             df_out.fillna(0, inplace=True)
             return df_out
 
-        train_proc = preprocess(train_df)
+        # Identify categorical columns (non-numeric)
+        cat_cols = train_df.select_dtypes(exclude=['number']).columns.tolist()
+        
+        train_proc = apply_encoding(train_df, train_df, cat_cols)
         X_train = train_proc.drop(columns=targets, errors='ignore')
         y_train = train_proc[target]
         
         if test_df is not None and not test_df.empty:
-            test_proc = preprocess(test_df)
+            test_proc = apply_encoding(train_df, test_df, cat_cols)
             # Ensure test set has same columns as train set
             for col in X_train.columns:
                 if col not in test_proc.columns:
@@ -96,7 +109,7 @@ class MLEvaluator:
             if model_type == "xgb": return XGBClassifier(**clean_p)
             if model_type == "mlp": return MLPClassifier(**clean_p)
         else:
-            if model_type == "linear": return Ridge(**clean_p)
+            if model_type == "linear" or model_type == "logistic": return Ridge(**clean_p)
             if model_type == "rf": return RandomForestRegressor(**clean_p)
             if model_type == "xgb": return XGBRegressor(**clean_p)
             if model_type == "mlp": return MLPRegressor(**clean_p)

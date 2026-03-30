@@ -2,6 +2,7 @@ import dash
 from dash import Input, Output, State, ALL, html, dcc
 import dash_bootstrap_components as dbc
 import pandas as pd
+import numpy as np
 from core import app
 from utils.logging_config import logger
 from services.pipeline_manager import PipelineManager
@@ -262,86 +263,155 @@ def execute_pipeline_pm(n_clicks, global_folds, global_targets, global_ml_models
 
     for res in pipeline_results:
         d_id = res['dataset_id']
-        fidelity = res.get('avg_fidelity', 0)
-        color = "success" if fidelity > 80 else "warning" if fidelity > 50 else "danger"
+        results_list_m = res.get('results', [])
+        if not results_list_m: continue
         
-        # summary card
+        # --- 1. AGGREGATE ALL METRICS (Fidelity & ML) ---
+        agg_metrics = {
+            "fidelity": [r.get("fidelity_score", 0) for r in results_list_m],
+            "correlation": [r.get("corr_stability", 0) for r in results_list_m],
+            "privacy": [r.get("privacy_risk", 0) for r in results_list_m],
+            "coverage": [r.get("coverage_score", 0) for r in results_list_m]
+        }
+        
+        ml_agg = {} # {model_type: {metric_name: {"orig": [], "aug": [], "delta": []}}}
+        task_type = "classification"
+        
+        for r in results_list_m:
+            ml_eval = r.get("ml_eval", {})
+            for m_type, m_perf in ml_eval.items():
+                if not m_perf: continue
+                task_type = m_perf.get("task_type", "classification")
+                if m_type not in ml_agg:
+                    ml_agg[m_type] = {}
+                
+                # Iterate over all metrics returned
+                for m_name in ["accuracy", "f1", "rmse", "r2"]:
+                    v_orig = (m_perf.get("original") or {}).get(m_name)
+                    v_aug = (m_perf.get("augmented") or {}).get(m_name)
+                    
+                    if v_orig is not None and v_aug is not None:
+                        if m_name not in ml_agg[m_type]:
+                            ml_agg[m_type][m_name] = {"orig": [], "aug": [], "delta": []}
+                        ml_agg[m_type][m_name]["orig"].append(float(v_orig))
+                        ml_agg[m_type][m_name]["aug"].append(float(v_aug))
+                        ml_agg[m_type][m_name]["delta"].append(float(v_aug - v_orig))
+
+        # Helper for Mean ± Std
+        def get_stats(vals):
+            if not vals: return 0.0, 0.0
+            return float(np.mean(vals)), float(np.std(vals))
+
+        f_mean, f_std = get_stats(agg_metrics["fidelity"])
+        color = "success" if f_mean > 80 else "warning" if f_mean > 50 else "danger"
+        
+        # --- 2. PIPELINE MODAL SUMMARY CARD ---
+        best_ml_str = "N/A"
+        if ml_agg:
+            # Pick the model with highest augmented accuracy or R2
+            m_best = "None"
+            best_val = -float('inf')
+            primary = "accuracy" if task_type == "classification" else "r2"
+            for m_type, m_metrics in ml_agg.items():
+                if primary in m_metrics:
+                    m_mean = np.mean(m_metrics[primary]["aug"])
+                    if m_mean > best_val:
+                        best_val = m_mean
+                        m_best = m_type
+            if m_best != "None":
+                best_ml_str = f"{m_best.upper()} ({best_val:.2f})"
+
         card = dbc.Card([
             dbc.CardBody([
-                html.Div([
-                    html.Small(res['filename'], className="fw-bold truncate-text", style={"maxWidth": "120px"}),
-                    html.Small(f"{fidelity:.1f}%", className=f"fw-bold text-{color} ms-auto")
-                ], className="d-flex align-items-center mb-1"),
-                dbc.Progress(value=fidelity, color=color, style={"height": "4px"})
-            ], className="p-2")
-        ], className="mb-2 border-secondary bg-dark text-light shadow-sm")
+                dbc.Row([
+                    dbc.Col([
+                        html.Div(res['filename'], className="fw-bold truncate-text text-info small", style={"maxWidth": "150px"}),
+                        html.Small(f"Fidelity: {f_mean:.1f} ± {f_std:.1f}", className="text-muted d-block", style={"fontSize": "0.7rem"})
+                    ], width=5),
+                    dbc.Col([
+                        dbc.Progress(value=f_mean, color=color, style={"height": "6px", "marginTop": "8px"}),
+                        html.Small(f"Best ML: {best_ml_str}", className="text-light x-small d-block mt-1")
+                    ], width=7)
+                ], align="center")
+            ], className="py-2 px-3")
+        ], className="mb-2 border-secondary bg-dark shadow-sm")
         result_cards.append(card)
         
-        # EDA update
+        # --- 3. EDA REFRESH ---
         if d_id in eda_index_map:
             try:
                 df_orig = pd.DataFrame(orig_map.get(d_id, []))
                 df_aug = pd.DataFrame(res.get('synthetic_data', []))
-                if '_row_id' in df_orig.columns:
-                    df_orig.drop(columns=['_row_id', 'is_context', 'is_target', 'ai_audit'], inplace=True, errors='ignore')
-                c_defs = col_map.get(d_id, [])
-                field_map = {c['field']: c.get('headerName', c['field']) for c in c_defs if c['field'] not in ['ai_audit', '_row_id']}
-                df_orig = df_orig.rename(columns=field_map)
                 if not df_aug.empty:
-                    eda_updates[eda_index_map[d_id]] = get_eda_layout(df_orig, df_aug, d_id)
-            except Exception as e:
-                logger.error(f"EDA Refresh failed: {e}")
+                    base_eda = get_eda_layout(df_orig, df_aug, d_id)
+                    
+                    # Statistical Summary Component
+                    stats_items = []
+                    for name, key in [("Distribution Fidelity", "fidelity"), ("Correlation Stability", "correlation"), ("Privacy (Risk %)", "privacy"), ("Diversity (Coverage)", "coverage")]:
+                        m_mean, m_std = get_stats(agg_metrics[key])
+                        stats_items.append(dbc.Col([
+                            html.Div([
+                                html.Small(name, className="text-muted d-block x-small uppercase fw-bold"),
+                                html.Span(f"{m_mean:.1f}", className="h5 mb-0 text-light fw-bold"),
+                                html.Small(f" ±{m_std:.1f}", className="text-muted ms-1 small")
+                            ], className="p-2 border border-secondary rounded bg-dark shadow-inset mb-2")
+                        ], width=3))
+                    
+                    stat_summary_ui = html.Div([
+                        html.H6([html.I(className="bi bi-graph-up me-2 text-primary"), "Cross-Validation Statistical Summary"], className="text-light mb-3 small fw-bold"),
+                        dbc.Row(stats_items, className="g-2 mb-3"),
+                        html.Hr(className="border-secondary mb-4")
+                    ], className="mb-4 p-3 border border-secondary rounded bg-dark shadow-sm")
+                    
+                    eda_updates[eda_index_map[d_id]] = html.Div([stat_summary_ui, base_eda])
+            except: pass
 
-        # ML Results update
+        # --- 4. DETAILED ML DASHBOARD (In Tab) ---
         if d_id in ml_index_map:
-            results_list = res.get('results', [])
-            if results_list and "ml_eval" in results_list[0]:
-                # Aggregate metrics across folds
-                ml_summary = {}
-                for fold in results_list:
-                    eval_data = fold.get("ml_eval", {})
-                    for m_type, m_perf in eval_data.items():
-                        if m_type not in ml_summary:
-                            ml_summary[m_type] = {"orig": [], "aug": [], "task": m_perf["task_type"]}
-                        # Assuming 'accuracy' for classification, 'r2' for regression as primary
-                        primary_m = "accuracy" if m_perf["task_type"] == "classification" else "r2"
-                        if m_perf["original"]: ml_summary[m_type]["orig"].append(m_perf["original"].get(primary_m, 0))
-                        if m_perf["augmented"]: ml_summary[m_type]["aug"].append(m_perf["augmented"].get(primary_m, 0))
+            # B. ML Performance Section
+            ml_cards = []
+            for m_type, metrics in ml_agg.items():
+                metric_rows = []
+                for m_name, data in metrics.items():
+                    orig_m, orig_s = get_stats(data["orig"])
+                    aug_m, aug_s = get_stats(data["aug"])
+                    d_m, d_s = get_stats(data["delta"])
+                    
+                    if m_name in ["rmse"]:
+                        diff_color = "success" if d_m <= 0.05 else "warning" if d_m <= 0.15 else "danger"
+                    else:
+                        diff_color = "success" if d_m >= -0.05 else "warning" if d_m >= -0.15 else "danger"
+                    
+                    metric_rows.append(dbc.Row([
+                        dbc.Col(html.Small(m_name.upper(), className="x-small text-info fw-bold"), width=3),
+                        dbc.Col(html.Span(f"{orig_m:.3f}±{orig_s:.2f}", className="x-small text-muted"), width=3),
+                        dbc.Col(html.Span(f"{aug_m:.3f}±{aug_s:.2f}", className="x-small text-light fw-bold"), width=3),
+                        dbc.Col(html.Span(f"{d_m:+.3f}±{d_s:.2f}", className=f"text-{diff_color} x-small fw-bold"), width=3),
+                    ], className="g-0 border-bottom border-secondary-subtle py-1 align-items-center"))
 
-                # Build result UI
-                ml_cards = []
-                for m_type, data in ml_summary.items():
-                    avg_orig = sum(data["orig"])/len(data["orig"]) if data["orig"] else 0
-                    avg_aug = sum(data["aug"])/len(data["aug"]) if data["aug"] else 0
-                    diff = avg_aug - avg_orig
-                    diff_color = "success" if diff >= -0.05 else "warning" if diff >= -0.15 else "danger"
-                    
-                    metric_name = "Accuracy" if data["task"] == "classification" else "R² Score"
-                    
-                    ml_cards.append(dbc.Card([
-                        dbc.CardBody([
-                            html.H6(m_type.upper(), className="text-info mb-2 small fw-bold"),
+                ml_cards.append(dbc.Card([
+                    dbc.CardBody([
+                        html.Div([
+                            html.I(className="bi bi-cpu me-2 text-info"),
+                            html.Span(m_type.upper(), className="fw-bold small")
+                        ], className="d-flex align-items-center mb-2 border-bottom border-secondary pb-1"),
+                        html.Div([
                             dbc.Row([
-                                dbc.Col([
-                                    html.Small("Original", className="text-muted d-block"),
-                                    html.Span(f"{avg_orig:.3f}", className="text-light fw-bold")
-                                ], width=4),
-                                dbc.Col([
-                                    html.Small("Augmented", className="text-muted d-block"),
-                                    html.Span(f"{avg_aug:.3f}", className="text-light fw-bold")
-                                ], width=4),
-                                dbc.Col([
-                                    html.Small("Delta", className="text-muted d-block"),
-                                    html.Span(f"{diff:+.3f}", className=f"text-{diff_color} fw-bold")
-                                ], width=4)
-                            ])
-                        ], className="p-2")
-                    ], className="mb-2 border-secondary bg-dark shadow-sm"))
-                
+                                dbc.Col(html.Small("Metric", className="xx-small text-muted"), width=3),
+                                dbc.Col(html.Small("Real", className="xx-small text-muted"), width=3),
+                                dbc.Col(html.Small("Syn", className="xx-small text-muted"), width=3),
+                                dbc.Col(html.Small("Delta", className="xx-small text-muted"), width=3),
+                            ], className="g-0 opacity-75 mb-1"),
+                            html.Div(metric_rows)
+                        ])
+                    ], className="p-2")
+                ], className="mb-2 border-secondary bg-dark shadow-sm", style={"minWidth": "280px", "flex": "1"}))
+
+            if ml_cards:
                 ml_updates[ml_index_map[d_id]] = html.Div([
-                    html.H5("Downstream Performance Comparison", className="text-light mb-3"),
+                    html.H6([html.I(className="bi bi-cpu-fill me-2 text-warning"), "Downstream Utility Performance"], className="text-light mb-3 small fw-bold"),
                     html.Div(ml_cards, className="d-flex flex-wrap gap-2")
-                ])
+                ], className="mt-2")
 
     summary_ui = html.Div(result_cards, style={"maxHeight": "200px", "overflowY": "auto"})
     status_msg = f"Completed {len(pipeline_results)} datasets."

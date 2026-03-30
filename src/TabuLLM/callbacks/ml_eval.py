@@ -3,7 +3,35 @@ from dash import Input, Output, State, ALL, MATCH, html
 from core import app
 from components.ml_components import get_model_config_ui
 from services.ml_evaluator import MLEvaluator
+from services.llm_client import detect_target_columns
 import pandas as pd
+
+@app.callback(
+    Output({"type": "target-cols-dropdown", "index": MATCH}, "value"),
+    Input({"type": "btn-auto-suggest-targets", "index": MATCH}, "n_clicks"),
+    State({"type": "original-data-store", "index": MATCH}, "data"),
+    State({"type": "check-single-target", "index": MATCH}, "value"),
+    prevent_initial_call=True
+)
+def auto_suggest_targets(n_clicks, orig_data, single_target):
+    if not n_clicks: return dash.no_update
+    df = pd.DataFrame(orig_data)
+    
+    # Filter out internal and ID columns before sending to LLM
+    cols_to_drop = [c for c in df.columns if c.lower() == 'id' or c.lower().endswith('_id') or c.lower().endswith('id')]
+    cols_to_drop.extend(['_row_id', 'is_context', 'is_target', 'ai_audit'])
+    
+    df_filtered = df.drop(columns=cols_to_drop, errors='ignore')
+    
+    suggested = detect_target_columns(df_filtered, single_target=single_target)
+    # Filter to only include valid columns (double check against original df)
+    valid_suggested = [c for c in suggested if c in df.columns]
+    
+    # Defensive enforcement for single target
+    if single_target and len(valid_suggested) > 1:
+        valid_suggested = valid_suggested[:1]
+        
+    return valid_suggested
 
 @app.callback(
     Output({"type": "column-roles-store", "index": MATCH}, "data"),
@@ -41,7 +69,7 @@ def render_ml_configs(selected_models, orig_data, roles, id_obj):
 def render_global_ml_configs(selected_models):
     if not selected_models:
         return html.Div("Select models to configure them.", className="text-muted small italic")
-    
+        
     configs = []
     for model in selected_models:
         # Use a dummy dataframe or assume classification for UI defaults in the modal

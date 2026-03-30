@@ -1,7 +1,8 @@
-import dash
-from dash import Input, Output, State, MATCH, ALL
+from dash import Input, Output, State, MATCH, ALL, dcc, html
 import dash_bootstrap_components as dbc
 from core import app
+from services.llm_client import get_dataset_description
+import pandas as pd
 
 # --- DYNAMIC PARAMETER LOGIC ---
 @app.callback(
@@ -59,3 +60,33 @@ def toggle_param_inputs_pm(p_type_list):
         return [{'display': 'block'}] * len(p_type_list), ["e.g., Active, Pending, Closed"] * len(p_type_list), [{'display': 'none'}] * len(p_type_list)
     else:
         return [{'display': 'block'}] * len(p_type_list), ["e.g., Must be under 50 words"] * len(p_type_list), [{'display': 'none'}] * len(p_type_list)
+
+
+# --- DATASET DESCRIPTION / INSIGHTS LOGIC ---
+@app.callback(
+    Output({"type": "dataset-description-store", "index": MATCH}, "data"),
+    Input({"type": "btn-gen-desc", "index": MATCH}, "n_clicks"),
+    State({"type": "original-data-store", "index": MATCH}, "data"),
+    prevent_initial_call=True
+)
+def generate_dataset_insights_pm(n_clicks, orig_data):
+    if not n_clicks or not orig_data:
+        return dash.no_update
+    
+    df = pd.DataFrame(orig_data)
+    if '_row_id' in df.columns:
+        df = df.drop(columns=['_row_id', 'is_context', 'is_target', 'ai_audit'], errors='ignore')
+    
+    # Take a sample for the LLM
+    df_sample = df.head(10)
+    description = get_dataset_description(df_sample)
+    return description
+
+@app.callback(
+    Output({"type": "dataset-description-output", "index": MATCH}, "children"),
+    Input({"type": "dataset-description-store", "index": MATCH}, "data")
+)
+def update_description_ui_pm(description):
+    if not description:
+        return html.Div("No insights generated yet. Click 'Insights' to analyze.", className="text-muted italic small")
+    return dcc.Markdown(description)

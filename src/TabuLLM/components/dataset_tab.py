@@ -111,7 +111,14 @@ def create_dataset_tab(dataset_id, filename, df=None):
                                 html.Div([
                                     html.H6([html.I(className="bi bi-bullseye me-2 text-danger"), "Target Variables"], className="text-muted small fw-bold mb-0 d-inline-block"),
                                     dbc.Button([html.I(className="bi bi-magic me-1"), "Auto-Suggest"], id={"type": "btn-auto-suggest-targets", "index": dataset_id}, color="danger", size="sm", outline=True, className="ms-2 py-0 px-2 rounded-pill"),
-                                ], className="d-flex align-items-center mb-2"),
+                                ], className="d-flex align-items-center mb-1"),
+                                dbc.Checkbox(
+                                    id={"type": "check-single-target", "index": dataset_id},
+                                    label="Force Single Target",
+                                    value=True,
+                                    labelClassName="text-muted x-small ms-1",
+                                    className="mb-2"
+                                ),
                                 dcc.Dropdown(
                                     id={"type": "target-cols-dropdown", "index": dataset_id},
                                     options=[{"label": c, "value": c} for c in (df.columns if df is not None else [])],
