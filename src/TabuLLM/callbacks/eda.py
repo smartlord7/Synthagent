@@ -58,8 +58,11 @@ def get_eda_layout(df_orig, df_aug, dataset_id="base", results_list=None):
     df_aug_c = df_aug.copy()
 
     for df in [df_orig_c, df_aug_c]:
+        cols_to_drop = [c for c in df.columns if c.startswith('is_ai_') or c in ['_row_id', 'is_context', 'is_target', 'ai_audit']]
+        df.drop(columns=cols_to_drop, inplace=True, errors='ignore')
         for col in df.columns:
-             df[col] = pd.to_numeric(df[col], errors='coerce').fillna(df[col])
+             if col != '_fold_id':
+                 df[col] = pd.to_numeric(df[col], errors='coerce').fillna(df[col])
 
     df_combined = pd.concat(
         [df_orig_c.assign(State='Original'), df_aug_c.assign(State='Augmented')],

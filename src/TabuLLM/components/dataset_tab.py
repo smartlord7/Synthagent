@@ -19,9 +19,7 @@ def create_dataset_tab(dataset_id, filename, df=None, saved_state=None, pipeline
             df_aug = pd.DataFrame(saved_state.get("data-grid", []))
             eda_content = get_eda_layout(df_orig, df_aug, dataset_id, results_list=pipeline_res.get("results", []))
         except Exception as e:
-            import traceback
             print(f"Failed to restore EDA for {dataset_id}: {e}")
-            traceback.print_exc()
             
         try:
             import numpy as np
@@ -76,9 +74,7 @@ def create_dataset_tab(dataset_id, filename, df=None, saved_state=None, pipeline
                     html.Div(ml_cards, className="d-flex flex-wrap gap-2")
                 ], className="mt-2")
         except Exception as e:
-            import traceback
             print(f"Failed to restore ML Eval for {dataset_id}: {e}")
-            traceback.print_exc()
 
     # 1. Base Data Loading priority: 1. saved_state, 2. provided df, 3. default empty
     if "original-data-store" in saved_state:
@@ -108,11 +104,7 @@ def create_dataset_tab(dataset_id, filename, df=None, saved_state=None, pipeline
                 col_def["headerCheckboxSelection"] = True
             new_cols.append(col_def)
 
-        new_cols.append({
-            "field": "ai_audit", "headerName": "Generation Audit", "editable": False,
-            "cellStyle": {"color": "#666", "fontSize": "0.8em", "fontStyle": "italic"}
-        })
-        
+        # `ai_audit` column removed per user request        
         missing_count = int(df_stat.isnull().sum().sum())
         memory_use = df_stat.memory_usage(deep=True).sum() / 1024 # KB
         
@@ -307,6 +299,7 @@ def create_dataset_tab(dataset_id, filename, df=None, saved_state=None, pipeline
                                     html.I(className="bi bi-pencil-square me-1 text-info"),
                                     dbc.Input(id={"type": "quick-rename-input", "index": dataset_id}, type="text", placeholder="Rename...", size="sm", className="bg-dark text-light border-secondary", style={"width": "160px", "display": "inline-block"}),
                                     dbc.Button([html.I(className="bi bi-trash")], id={"type": "btn-remove-col", "index": dataset_id}, color="danger", size="sm", outline=True, className="ms-1 py-1 px-2"),
+                                    dbc.Button([html.I(className="bi bi-search")], id={"type": "btn-inspect-row", "index": dataset_id}, color="warning", size="sm", outline=True, className="ms-2 py-1 px-2"),
                                     dbc.Button([html.I(className="bi bi-plus-square")], id={"type": "btn-add-row", "index": dataset_id}, color="success", size="sm", outline=True, className="ms-2 py-1 px-2"),
                                     dbc.Button([html.I(className="bi bi-layout-three-columns")], id={"type": "btn-add-col", "index": dataset_id}, color="info", size="sm", outline=True, className="ms-1 py-1 px-2"),
                                 ], className="d-flex align-items-center")
@@ -378,9 +371,16 @@ def create_dataset_tab(dataset_id, filename, df=None, saved_state=None, pipeline
                 dbc.Tooltip("Mark selected rows as Context (Blue)", target={"type": "btn-mode-context", "index": dataset_id}),
                 dbc.Tooltip("Mark selected rows as Targets (Red)", target={"type": "btn-mode-target", "index": dataset_id}),
                 dbc.Tooltip("Detect target columns automatically via LLM", target={"type": "btn-auto-suggest-targets", "index": dataset_id}),
+                dbc.Tooltip("Inspect selected rows generation details", target={"type": "btn-inspect-row", "index": dataset_id}),
                 dbc.Tooltip("Add new empty Row at the end", target={"type": "btn-add-row", "index": dataset_id}),
                 dbc.Tooltip("Add new Column to the current view", target={"type": "btn-add-col", "index": dataset_id}),
                 dbc.Tooltip("Remove the currently selected/active column", target={"type": "btn-remove-col", "index": dataset_id}),
+                
+                # Inspect Modal
+                dbc.Modal([
+                    dbc.ModalHeader(dbc.ModalTitle([html.I(className="bi bi-search me-2"), "Inspect Generation Details"])),
+                    dbc.ModalBody(id={"type": "inspect-modal-body", "index": dataset_id}),
+                ], id={"type": "inspect-modal", "index": dataset_id}, size="lg", is_open=False),
             ], className="py-3 text-light w-100")
         ]
     )

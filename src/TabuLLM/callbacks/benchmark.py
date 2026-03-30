@@ -40,7 +40,6 @@ def start_benchmark_pm(n_clicks, max_context, folds):
     State({"type": "algo-selector", "index": MATCH}, "value"),
     State({"type": "param-tone", "index": MATCH}, "value"),
     State({"type": "param-consistency", "index": MATCH}, "value"),
-    State({"type": "param-uniqueness", "index": MATCH}, "value"),
     State({"type": "temperature-slider", "index": MATCH}, "value"),
     State({"type": "dataset-description-store", "index": MATCH}, "data"),
     State({"type": "gen-chunk-size", "index": MATCH}, "value"),
@@ -49,7 +48,7 @@ def start_benchmark_pm(n_clicks, max_context, folds):
     prevent_initial_call=True
 )
 def run_benchmark_fold_pm(state, orig_data, col_defs, algorithm, 
-                           param_tone, param_consistency, param_uniqueness, temperature, 
+                           param_tone, param_consistency, temperature, 
                            desc_metadata, chunk_size, max_context, strategy):
 
     if not state or not state.get("active") or state.get("k_current", 0) >= state.get("k_total"):
@@ -102,7 +101,7 @@ def run_benchmark_fold_pm(state, orig_data, col_defs, algorithm,
                 "global_ctx": context_data_list
             }
 
-            instructions = f"Style: {param_tone}\nConsistency: {param_consistency}\nUniqueness: {param_uniqueness}"
+            instructions = f"Style: {param_tone}\nConsistency: {param_consistency}"
             
             result_bundle = generate_bulk_data(
                 [], context_dict, list(field_to_header.values()),

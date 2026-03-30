@@ -20,7 +20,6 @@ from services.llm_client import generate_bulk_data
     State({'type': 'algo-selector', 'index': MATCH}, 'value'),
     State({'type': 'param-tone', 'index': MATCH}, 'value'),
     State({'type': 'param-consistency', 'index': MATCH}, 'value'),
-    State({'type': 'param-uniqueness', 'index': MATCH}, 'value'),
     State({'type': 'temperature-slider', 'index': MATCH}, 'value'),
     State({'type': 'cp-name', 'index': MATCH, 'row': ALL}, 'value'),
     State({'type': 'cp-type', 'index': MATCH, 'row': ALL}, 'value'),
@@ -35,7 +34,7 @@ from services.llm_client import generate_bulk_data
 )
 def run_ai_generation_pm(n_clicks, row_data, target_ids, context_ids, full_ctx_toggle,
                          col_defs, algorithm, param_tone, param_consistency,
-                         param_uniqueness, temperature, cp_names, cp_types,
+                         temperature, cp_names, cp_types,
                          cp_texts, cp_mins, cp_maxs, desc_metadata, chunk_size, max_context, strategy):
 
     if not n_clicks or not target_ids:
@@ -48,7 +47,6 @@ def run_ai_generation_pm(n_clicks, row_data, target_ids, context_ids, full_ctx_t
     compiled_instructions = (
         f"Style: {param_tone}\n"
         f"Consistency: {param_consistency}\n"
-        f"Uniqueness: {param_uniqueness}\n"
     )
     for i in range(len(cp_names)):
         if cp_names[i]:
@@ -143,7 +141,7 @@ def run_ai_generation_pm(n_clicks, row_data, target_ids, context_ids, full_ctx_t
             if i >= len(target_indices): break
             master_idx = target_indices[i]
             row_uuid = updated_rows[master_idx]['_row_id']
-            updated_rows[master_idx]['ai_audit'] = f"Gen AI | {stats['total_tokens']} tokens | {current_time}"
+            updated_rows[master_idx]['ai_audit'] = f"Gen AI | {algorithm} | {stats['total_tokens']} tokens | {current_time}"
 
             for header, val in gen_row.items():
                 if header in header_to_field:

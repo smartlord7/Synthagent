@@ -68,18 +68,18 @@ def render_pipeline_ui_in_modal(n_clicks, metadata, roles_vals, roles_ids):
     ui = html.Div([
         html.P("Execute parallel validation for selected datasets (Lower priority runs first).", className="text-muted small mb-3"),
         
-        dbc.Checkbox(id="pipeline-auto-detect-targets", label="Auto-detect missing targets via LLM", value=True, className="mb-3 text-info small"),
-
-        dbc.ListGroup(rows, className="mb-3 border-secondary"),
-        
-        dbc.Row([
-            dbc.Col(html.Label("K-Folds (Global):", className="small text-muted fw-bold"), width=3),
-            dbc.Col(dbc.Input(id="pipeline-global-folds", type="number", value=3, min=1, max=10, size="sm", className="bg-dark text-light border-secondary"), width=3),
-        ], className="mb-3 align-items-center g-2"),
-
-        html.Hr(className="border-secondary"),
-        
         dbc.Accordion([
+            dbc.AccordionItem([
+                dbc.Checkbox(id="pipeline-auto-detect-targets", label="detect targets automatically", value=True, className="mb-3 text-info small"),
+                
+                dbc.ListGroup(rows, className="mb-3 border-secondary"),
+                
+                dbc.Row([
+                    dbc.Col(html.Label("K-Folds (Global):", className="small text-muted fw-bold"), width=3),
+                    dbc.Col(dbc.Input(id="pipeline-global-folds", type="number", value=3, min=1, max=10, size="sm", className="bg-dark text-light border-secondary"), width=3),
+                ], className="mb-3 align-items-center g-2"),
+            ], title=[html.I(className="bi bi-database-fill me-2"), "Datasets Configurations"], item_id="datasets-settings", className="bg-transparent border-0"),
+        
             dbc.AccordionItem([
                 dbc.Row([
                     dbc.Col([
@@ -155,8 +155,6 @@ def render_pipeline_ui_in_modal(n_clicks, metadata, roles_vals, roles_ids):
     State({"type": "param-tone", "index": ALL}, "id"),
     State({"type": "param-consistency", "index": ALL}, "value"),
     State({"type": "param-consistency", "index": ALL}, "id"),
-    State({"type": "param-uniqueness", "index": ALL}, "value"),
-    State({"type": "param-uniqueness", "index": ALL}, "id"),
     State({"type": "temperature-slider", "index": ALL}, "value"),
     State({"type": "temperature-slider", "index": ALL}, "id"),
     State({"type": "gen-chunk-size", "index": ALL}, "value"),
@@ -192,7 +190,6 @@ def execute_pipeline_pm(set_progress, n_clicks, global_folds, global_ml_models, 
                         algo_list, algo_ids,
                         tone_list, tone_ids,
                         consist_list, consist_ids,
-                        uniq_list, uniq_ids,
                         temp_list, temp_ids,
                         chunk_list, chunk_ids,
                         desc_list, desc_ids,
@@ -219,7 +216,6 @@ def execute_pipeline_pm(set_progress, n_clicks, global_folds, global_ml_models, 
     algo_map = map_states(algo_list, algo_ids)
     tone_map = map_states(tone_list, tone_ids)
     consist_map = map_states(consist_list, consist_ids)
-    uniq_map = map_states(uniq_list, uniq_ids)
     temp_map = map_states(temp_list, temp_ids)
     chunk_map = map_states(chunk_list, chunk_ids)
     desc_map = map_states(desc_list, desc_ids)
@@ -284,7 +280,7 @@ def execute_pipeline_pm(set_progress, n_clicks, global_folds, global_ml_models, 
             "algorithm": algo_map.get(d_id, "bulk"),
             "temperature": temp_map.get(d_id, 0.3),
             "chunk_size": chunk_map.get(d_id, 30),
-            "instructions": f"Style: {tone_map.get(d_id, 'Concise')}\nConsistency: {consist_map.get(d_id, 'Strict')}\nUniqueness: {uniq_map.get(d_id, 'Allow Duplicates')}",
+            "instructions": f"Style: {tone_map.get(d_id, 'Standard')}\nConsistency: {consist_map.get(d_id, 'Standard')}",
             "desc_metadata": desc_map.get(d_id, ""),
             "ml_config": global_ml_config,
             "targets": target_cols

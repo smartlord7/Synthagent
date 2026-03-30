@@ -1,7 +1,8 @@
 import uuid
 import json
 import dash
-from dash import Input, Output, State, ALL, MATCH
+from dash import Input, Output, State, ALL, MATCH, html
+import dash_bootstrap_components as dbc
 from core import app
 from utils.logging_config import logger
 from components.dataset_tab import create_dataset_tab
@@ -155,3 +156,66 @@ def add_column_pm(n_clicks, col_defs):
     new_col_id = f"new_col_{len(col_defs)}"
     new_col = {"field": new_col_id, "headerName": "New Column", "editable": True, "cellStyle": ai_highlight_style}
     return col_defs + [new_col]
+
+
+@app.callback(
+    Output({"type": "inspect-modal", "index": MATCH}, "is_open"),
+    Output({"type": "inspect-modal-body", "index": MATCH}, "children"),
+    Input({"type": "btn-inspect-row", "index": MATCH}, "n_clicks"),
+    State({"type": "data-grid", "index": MATCH}, "selectedRows"),
+    State({"type": "algo-selector", "index": MATCH}, "value"),
+    prevent_initial_call=True
+)
+def inspect_selected_rows_pm(n_clicks, selected_rows, algo):
+    if not n_clicks or not selected_rows:
+        return dash.no_update, dash.no_update
+    
+    batches = {}
+    for row in selected_rows:
+        audit = row.get('ai_audit', '')
+        if not audit: 
+            continue
+        if audit not in batches:
+            batches[audit] = []
+        batches[audit].append(row)
+        
+    if not batches:
+        return True, dbc.Alert("Selected rows are original (real) data and have no generative audit.", color="info", className="m-0")
+        
+    children = []
+    
+    for audit_str, rows in batches.items():
+        parts = audit_str.split(" | ")
+        
+        # Determine contents based on legacy format or new format
+        if len(parts) >= 4:
+            model = parts[1]
+            tokens = parts[2]
+            ts = parts[3]
+        elif len(parts) == 3:
+            model = algo or "Unknown"
+            tokens = parts[1]
+            ts = parts[2]
+        else:
+            model = algo or "Unknown"
+            tokens = "N/A"
+            ts = audit_str.replace("Gen AI", "").strip(" |") if audit_str != "Gen AI" else "N/A"
+            
+        details = [
+            html.Div([
+                html.Strong("Timestamp: ", className="text-muted"), html.Span(ts, className="ms-1"), html.Br(),
+                html.Strong("Tokens Used: ", className="text-muted"), html.Span(tokens, className="ms-1"), html.Br(),
+                html.Strong("Model: ", className="text-muted"), html.Span(model, className="ms-1"), html.Br(),
+                html.Strong("Rows count: ", className="text-muted"), html.Span(str(len(rows)), className="ms-1 fw-bold text-info"),
+            ], className="small mb-3"),
+            html.Pre(json.dumps([r for r in rows], indent=2), 
+                     className="bg-dark text-light p-2 rounded border border-secondary",
+                     style={"maxHeight": "250px", "overflowY": "auto", "fontSize": "0.75rem"})
+        ]
+        
+        children.append(dbc.Card([
+            dbc.CardHeader([html.I(className="bi bi-box me-2"), f"Batch: {ts}"], className="bg-transparent border-secondary fw-bold small"),
+            dbc.CardBody(details, className="p-3")
+        ], className="mb-3 bg-transparent border-secondary shadow-sm"))
+        
+    return True, html.Div(children)

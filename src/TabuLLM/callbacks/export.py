@@ -133,6 +133,17 @@ def generate_global_report_pm(n_clicks, meta_store, pipeline_results, all_orig, 
         df_orig = pd.DataFrame(all_orig[idx]) if all_orig[idx] else pd.DataFrame()
         df_aug = pd.DataFrame(all_aug_rows[idx]) if all_aug_rows[idx] else pd.DataFrame()
         
+        df_orig_enc = df_orig.copy()
+        df_aug_enc = df_aug.copy()
+        num_cols_t = df_orig.select_dtypes(include='number').columns.tolist()
+        cat_cols_t = [c for c in df_orig.columns if c not in num_cols_t]
+        for col in cat_cols_t:
+            if col in df_aug_enc.columns:
+                combined = pd.concat([df_orig_enc[col], df_aug_enc[col]])
+                codes, _ = pd.factorize(combined)
+                df_orig_enc[col] = codes[:len(df_orig)]
+                df_aug_enc[col] = codes[len(df_orig):]
+        
         if pipeline_results and d_id in pipeline_results:
             results_list = pipeline_results[d_id].get("results", [])
             # --- AGGREGATE METRICS (Mean ± Std) ---
@@ -169,13 +180,7 @@ def generate_global_report_pm(n_clicks, meta_store, pipeline_results, all_orig, 
             all_features = num_cols + cat_cols
             
             # Encode for universal feature coverage (numeric + categorical)
-            df_orig_enc = df_orig.copy()
-            df_aug_enc = df_aug.copy()
-            for col in cat_cols:
-                combined = pd.concat([df_orig_enc[col], df_aug_enc[col]])
-                codes, _ = pd.factorize(combined)
-                df_orig_enc[col] = codes[:len(df_orig_enc)]
-                df_aug_enc[col] = codes[len(df_orig_enc):]
+            # Already precomputed before the pipeline block.
             
             # Map features to their fold-level stats
             feature_stats = {col: {"shifts": [], "ps": [], "aug_vals": [], "enc_vals": []} for col in all_features}
