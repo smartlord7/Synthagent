@@ -21,7 +21,7 @@ class BaseLLMProvider(ABC):
         pass
 
     @abstractmethod
-    def detect_target_columns(self, df_sample):
+    def detect_target_columns(self, df_sample, single_target=False):
         pass
 
 
@@ -71,10 +71,11 @@ class LocalOpenAIProvider(BaseLLMProvider):
             logger.error(f"Error calling local LLM for description: {e}")
             return "Could not generate description from local model."
 
-    def detect_target_columns(self, df_sample):
+    def detect_target_columns(self, df_sample, single_target=False):
         prompt = prompt_manager.get_prompt(
             "target_detection",
-            df_sample_str=df_sample.to_string(index=False)
+            df_sample_str=df_sample.to_string(index=False),
+            single_target=single_target
         )
         messages = [{"role": "user", "content": prompt}]
 
@@ -87,6 +88,14 @@ class LocalOpenAIProvider(BaseLLMProvider):
             targets = robust_json_loads(content)
             if isinstance(targets, list):
                 return targets
+            if isinstance(targets, dict):
+                # If LLM returns {"target": "name"} or {"targets": ["a", "b"]}
+                if "targets" in targets and isinstance(targets["targets"], list):
+                    return targets["targets"]
+                if "target" in targets:
+                    return [targets["target"]] if isinstance(targets["target"], str) else targets["target"]
+                # Fallback: return all values if it's a simple dict
+                return [str(v) for v in targets.values() if isinstance(v, (str, int))]
             return []
         except Exception as e:
             logger.error(f"Error calling local LLM for target detection: {e}")
@@ -268,10 +277,11 @@ class GeminiProvider(BaseLLMProvider):
             logger.error(f"Error calling Gemini: {e}")
             return "Could not generate description from Gemini model."
 
-    def detect_target_columns(self, df_sample):
+    def detect_target_columns(self, df_sample, single_target=False):
         prompt = prompt_manager.get_prompt(
             "target_detection",
-            df_sample_str=df_sample.to_string(index=False)
+            df_sample_str=df_sample.to_string(index=False),
+            single_target=single_target
         )
 
         try:
@@ -287,6 +297,12 @@ class GeminiProvider(BaseLLMProvider):
             targets = robust_json_loads(response.text)
             if isinstance(targets, list):
                 return targets
+            if isinstance(targets, dict):
+                if "targets" in targets and isinstance(targets["targets"], list):
+                    return targets["targets"]
+                if "target" in targets:
+                    return [targets["target"]] if isinstance(targets["target"], str) else targets["target"]
+                return [str(v) for v in targets.values() if isinstance(v, (str, int))]
             return []
         except Exception as e:
             logger.error(f"Error calling Gemini for target detection: {e}")
@@ -400,6 +416,6 @@ def get_dataset_description(df_sample, provided_metadata=None):
 def generate_bulk_data(rows_payload, context, all_columns, algorithm, instructions, temperature, num_empty=0, chunk_size=30):
     return provider.generate_bulk_data(rows_payload, context, all_columns, algorithm, instructions, temperature, num_empty, chunk_size)
 
-def detect_target_columns(df_sample):
-    return provider.detect_target_columns(df_sample)
+def detect_target_columns(df_sample, single_target=False):
+    return provider.detect_target_columns(df_sample, single_target=single_target)
 

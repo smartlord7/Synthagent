@@ -1,5 +1,6 @@
 import multiprocessing
 import pandas as pd
+import numpy as np
 from sklearn.model_selection import train_test_split
 from services.llm_client import generate_bulk_data
 from services.data_manager import select_context_rows
@@ -25,6 +26,9 @@ def run_single_dataset_benchmark(args):
     desc_metadata = config.get("desc_metadata", "")
     ml_config = config.get("ml_config", {})
     targets = config.get("targets", [])
+    
+    progress_dict = config.get("_progress_dict")
+    dataset_id_key = config.get("_dataset_id")
 
     df_orig_all = pd.DataFrame(orig_data)
     if '_row_id' in df_orig_all.columns:
@@ -37,6 +41,11 @@ def run_single_dataset_benchmark(args):
     all_synthetic_data = []
 
     for fold_num in range(1, folds + 1):
+        if progress_dict is not None:
+             p = progress_dict[dataset_id_key]
+             p["status"] = f"Fold {fold_num}/{folds}"
+             progress_dict[dataset_id_key] = p
+
         try:
             # 1. Split Original into Train/Test (80/20) for this fold
             # This ensures we always test on "Real" data
@@ -58,6 +67,9 @@ def run_single_dataset_benchmark(args):
 
             if result_bundle:
                 generated_rows = result_bundle["data"]
+                # Add fold ID for grouping in EDA aggregation
+                for row in generated_rows:
+                    row["_fold_id"] = fold_num
                 all_synthetic_data.extend(generated_rows)
                 
                 generated_df = pd.DataFrame(generated_rows)
@@ -86,17 +98,51 @@ def run_single_dataset_benchmark(args):
                         }
                 
                 m["ml_eval"] = ml_fold_results
+                m["synthetic_data"] = generated_rows
                 results.append(m)
+                
+                if progress_dict is not None:
+                    p = progress_dict[dataset_id_key]
+                    p["done"] = fold_num
+                    progress_dict[dataset_id_key] = p
         except Exception as e:
             logger.error(f"Pipeline error in {filename} fold {fold_num}: {e}")
             continue
+
+    # --- AGGREGATE ML RESULTS FOR STORE ---
+    overall_ml = {}
+    if results:
+        # Collect all models across folds
+        all_models = set()
+        for r in results:
+            all_models.update(r.get("ml_eval", {}).keys())
+            
+        for m_type in all_models:
+            overall_ml[m_type] = {}
+            for m_name in ["accuracy", "f1", "rmse", "r2"]:
+                f_orig = [r["ml_eval"][m_type]["original"][m_name] for r in results if m_type in r.get("ml_eval", {}) and m_name in r["ml_eval"][m_type]["original"]]
+                f_aug = [r["ml_eval"][m_type]["augmented"][m_name] for r in results if m_type in r.get("ml_eval", {}) and m_name in r["ml_eval"][m_type]["augmented"]]
+                
+                if f_orig and f_aug:
+                    m_o, s_o = np.mean(f_orig), np.std(f_orig)
+                    m_a, s_a = np.mean(f_aug), np.std(f_aug)
+                    
+                    deltas = [a - o for a, o in zip(f_aug, f_orig)]
+                    m_d, s_d = np.mean(deltas), np.std(deltas)
+                    
+                    overall_ml[m_type][m_name] = {
+                        "real": f"{m_o:.3f} ± {s_o:.2f}",
+                        "aug": f"{m_a:.3f} ± {s_a:.2f}",
+                        "delta": f"{m_d:+.3f} ± {s_d:.2f}"
+                    }
 
     return {
         "dataset_id": dataset_id,
         "filename": filename,
         "results": results,
         "synthetic_data": all_synthetic_data,
-        "avg_fidelity": sum(r["fidelity_score"] for r in results) / len(results) if results else 0
+        "overall_ml": overall_ml,
+        "avg_fidelity": sum(r.get("Synthetic Fidelity (JSD)", 0) for r in results) / len(results) if results else 0
     }
 
 class PipelineManager:

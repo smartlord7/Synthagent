@@ -52,7 +52,9 @@ class MLEvaluator:
         cat_cols = train_df.select_dtypes(exclude=['number']).columns.tolist()
         
         train_proc = apply_encoding(train_df, train_df, cat_cols)
-        X_train = train_proc.drop(columns=targets, errors='ignore')
+        # Dropping target and any internal tracking columns
+        internal_cols = ['_fold_id', '_row_id', 'is_context', 'is_target', 'ai_audit']
+        X_train = train_proc.drop(columns=targets + internal_cols, errors='ignore')
         y_train = train_proc[target]
         
         if test_df is not None and not test_df.empty:
@@ -109,7 +111,11 @@ class MLEvaluator:
             if model_type == "xgb": return XGBClassifier(**clean_p)
             if model_type == "mlp": return MLPClassifier(**clean_p)
         else:
-            if model_type == "linear" or model_type == "logistic": return Ridge(**clean_p)
+            if model_type == "linear" or model_type == "logistic":
+                # Remove classification-specific params if switching to Ridge
+                for k in ["penalty", "dual", "solver", "C", "multi_class", "l1_ratio"]:
+                    clean_p.pop(k, None)
+                return Ridge(**clean_p)
             if model_type == "rf": return RandomForestRegressor(**clean_p)
             if model_type == "xgb": return XGBRegressor(**clean_p)
             if model_type == "mlp": return MLPRegressor(**clean_p)

@@ -153,14 +153,15 @@ def create_dataset_tab(dataset_id, filename, df=None):
                                         dbc.Select(id={"type": "param-consistency", "index": dataset_id},
                                                    options=[{"label": "Strict", "value": "Strict (Perfectly uniform)"},
                                                             {"label": "Realistic", "value": "Realistic (Natural variations)"}],
-                                                   value='Strict (Perfectly uniform)', size="sm")
+                                                    value='Strict (Perfectly uniform)', size="sm")
                                     ], width=4),
                                     dbc.Col([
-                                        html.Label("Uniqueness:", className="fw-bold text-muted small"),
-                                        dbc.Select(id={"type": "param-uniqueness", "index": dataset_id},
-                                                   options=[{"label": "Allow Duplicates", "value": "Allow Duplicates (Standard)"},
-                                                            {"label": "Prefer Unique", "value": "Prefer Unique Values"}],
-                                                   value='Allow Duplicates (Standard)', size="sm")
+                                        html.Label("AI Model:", className="fw-bold text-muted small"),
+                                        dbc.Select(id={"type": "algo-selector", "index": dataset_id},
+                                                   options=[{"label": "Gemma-3-4b", "value": "google/gemma-3-4b"},
+                                                            {"label": "Llama-3.1-8b", "value": "meta/llama-3.1-8b"},
+                                                            {"label": "Gemma-2-9b", "value": "google/gemma-2-9b"}],
+                                                   value='google/gemma-3-4b', size="sm")
                                     ], width=4),
                                 ], className="mb-2"),
                                 
@@ -283,7 +284,14 @@ def create_dataset_tab(dataset_id, filename, df=None):
                         ], className="d-flex align-items-center mb-3"),
                         html.Div(id={"type": "ml-evaluation-results-dashboard", "index": dataset_id})
                     ], className="p-4")
-                ], id={"type": "ml-evaluation-card", "index": dataset_id}, className="tabu-card mb-5 shadow border-secondary")
-            ], className="px-4 py-3")
+                ], id={"type": "ml-evaluation-card", "index": dataset_id}, className="tabu-card mb-5 shadow border-secondary"),
+
+                # Tooltips for Workbench Actions
+                dbc.Tooltip("Export augmented rows to CSV", target={"type": "btn-export", "index": dataset_id}),
+                dbc.Tooltip("Generate detailed Dataset Report (PDF)", target={"type": "btn-export-pdf", "index": dataset_id}),
+                dbc.Tooltip("Mark selected rows as Context (Blue)", target={"type": "btn-mode-context", "index": dataset_id}),
+                dbc.Tooltip("Mark selected rows as Targets (Red)", target={"type": "btn-mode-target", "index": dataset_id}),
+                dbc.Tooltip("Detect target columns automatically via LLM", target={"type": "btn-auto-suggest-targets", "index": dataset_id}),
+            ], className="px-4 py-3 text-light")
         ]
     )

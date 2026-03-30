@@ -13,6 +13,7 @@ def create_layout():
             default_id: {"filename": "Workbench", "status": "Ready", "rows": 10, "cols": 5}
         }),
         dcc.Store(id="active-tab-store"),
+        dcc.Store(id="pipeline-results-store", data={}),
 
         # Navbar
         dbc.Navbar(
@@ -27,6 +28,11 @@ def create_layout():
                 html.Div([
                     html.Span(id="upload-file-info", className="me-3 text-muted small align-middle"),
                     
+                    # New Global Report Button
+                    dbc.Button([html.I(className="bi bi-file-earmark-pdf me-2"), "Global Report"],
+                               id="btn-global-report", color="warning", outline=True,
+                               className="btn-sm rounded-pill px-3 shadow-sm me-2"),
+                               
                     # New Pipeline Toggle Button
                     dbc.Button([html.I(className="bi bi-diagram-3 me-2"), "Pipeline"],
                                id="btn-open-pipeline", color="primary", outline=True,
@@ -37,7 +43,14 @@ def create_layout():
                         children=dbc.Button([html.I(className="bi bi-file-earmark-arrow-up me-2"), "Upload Datasets"],
                                             color="info", className="btn-sm rounded-pill px-3 shadow-sm"),
                         multiple=True, className="d-inline-block"
-                    )
+                    ),
+                    
+                    # Tooltips for Navbar Buttons
+                    dbc.Tooltip("Download Comprehensive Pipeline Report (All Datasets & Metrics)", target="btn-global-report"),
+                    dbc.Tooltip("Configure and run parallel data augmentation pipeline", target="btn-open-pipeline"),
+                    dbc.Tooltip("Upload new CSV/Excel datasets to the workbench", target="upload-data"),
+                    
+                    dcc.Download(id="global-download-pdf"),
                 ], className="d-flex align-items-center")
             ], fluid=True),
             color="dark", dark=True, className="mb-0 shadow hover-shadow border-bottom border-secondary py-2"

@@ -168,6 +168,20 @@ def compute_hellinger_fidelity(a: pd.Series, b: pd.Series) -> float:
     h_dist = np.sqrt(np.sum((np.sqrt(p) - np.sqrt(q)) ** 2)) / np.sqrt(2)
     return float(1.0 - h_dist)
 
+def compute_entropy_preservation(a: pd.Series, b: pd.Series) -> float:
+    """
+    Computes how well the Shannon entropy is preserved between two numerical series.
+    """
+    def shannon_entropy(s):
+        counts = s.value_counts(normalize=True)
+        return -np.sum(counts * np.log2(counts + 1e-12))
+    
+    e_a = shannon_entropy(a.dropna())
+    e_b = shannon_entropy(b.dropna())
+    
+    if e_a == 0: return 1.0 if e_b == 0 else 0.0
+    return float(1.0 - abs(e_a - e_b) / e_a)
+
 def compute_completeness(df: pd.DataFrame) -> float:
     """
     Computes the completeness (non-null percentage) of a dataset.
@@ -207,12 +221,13 @@ def calculate_metrics(df_orig: pd.DataFrame, df_aug: pd.DataFrame) -> dict:
             - mean_feature_error: (int) 0-100 inverse average mean relative error.
             - nndr: (float) Nearest Neighbor Distance Ratio.
     """
-    numeric_cols = df_aug.select_dtypes(include='number').columns.tolist()
-    cat_cols = [c for c in df_aug.columns if c not in numeric_cols]
+    numeric_cols = [c for c in df_aug.select_dtypes(include='number').columns if c != '_fold_id']
+    cat_cols = [c for c in df_aug.columns if c not in numeric_cols and c != '_fold_id']
 
     jsd_scores = []
     mre_list = []
     z_drift_list = []
+    entropy_scores = []
     
     # Evaluate Numerical Columns Extensively
     if numeric_cols:
@@ -221,13 +236,14 @@ def calculate_metrics(df_orig: pd.DataFrame, df_aug: pd.DataFrame) -> dict:
             b = df_aug[col]
 
             jsd = compute_jensenshannon_fidelity(a, b)
-            if jsd > 0: # Only count if valid (sub-func returns 0 if size <= 5 or nan)
+            if jsd > 0:
                 jsd_scores.append(jsd)
             
             z_drift_list.append(compute_z_drift(a, b))
+            entropy_scores.append(compute_entropy_preservation(a, b))
             
             mre = compute_mean_relative_error(a, b)
-            if mre > 0: # Excludes valid 0s but safe assuming variance. In actual, we could append all.
+            if mre > 0:
                 mre_list.append(mre)
 
     # Calculate Aggregate Numerical Correlation and Privacy structural distances
@@ -242,15 +258,15 @@ def calculate_metrics(df_orig: pd.DataFrame, df_aug: pd.DataFrame) -> dict:
 
     # Compile Final Metric Dictionary
     return {
-        "fidelity_score": int(np.mean(jsd_scores) * 100) if jsd_scores else 0,
-        "corr_stability": int(corr_stability),
-        "distribution_consistency": int(np.median(jsd_scores) * 100) if jsd_scores else 0,
-        "avg_z_drift": float(np.mean(z_drift_list)) if z_drift_list else 0.0,
-        "cat_fidelity": int(np.mean(hellinger_cats) * 100) if hellinger_cats else 0,
-        "privacy_risk": privacy_results["privacy_risk"],
-        "coverage_score": privacy_results["coverage_score"],
-        "completeness": compute_completeness(df_aug),
-        "mean_feature_error": int((1 - np.mean(mre_list)) * 100) if mre_list else 0,
-        "nndr": privacy_results["nndr"]
+        "Synthetic Fidelity (JSD)": int(np.mean(jsd_scores) * 100) if jsd_scores else 0,
+        "Correlation Stability": int(corr_stability),
+        "Distribution Consistency": int(np.median(jsd_scores) * 100) if jsd_scores else 0,
+        "Entropy Preservation": int(np.mean(entropy_scores) * 100) if entropy_scores else 0,
+        "Mean Z Score Drift": float(np.mean(z_drift_list)) if z_drift_list else 0.0,
+        "Categorical Fidelity": int(np.mean(hellinger_cats) * 100) if hellinger_cats else 0,
+        "Privacy Risk": privacy_results["privacy_risk"],
+        "Data Density": compute_completeness(df_aug),
+        "Coverage Score": privacy_results["coverage_score"],
+        "Feature Accuracy": int((1 - np.mean(mre_list)) * 100) if mre_list else 0,
+        "Novelty Score": privacy_results["nndr"]
     }
-

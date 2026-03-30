@@ -5,7 +5,8 @@ import pandas as pd
 import numpy as np
 from core import app
 from utils.logging_config import logger
-from services.pipeline_manager import PipelineManager
+from services.pipeline_manager import PipelineManager, run_single_dataset_benchmark
+from services.llm_client import detect_target_columns
 from callbacks.eda import get_eda_layout
 
 @app.callback(
@@ -24,11 +25,16 @@ def toggle_pipeline_modal(n_open, n_close, is_open):
     Output("pipeline-modal-body", "children"),
     Input("btn-open-pipeline", "n_clicks"),
     State("datasets-metadata-store", "data"),
+    State({"type": "column-roles-store", "index": ALL}, "data"),
+    State({"type": "column-roles-store", "index": ALL}, "id"),
     prevent_initial_call=True
 )
-def render_pipeline_ui_in_modal(n_clicks, metadata):
+def render_pipeline_ui_in_modal(n_clicks, metadata, roles_vals, roles_ids):
     if not metadata:
         return dbc.Alert("No datasets uploaded. Upload files to start a pipeline.", color="info", className="m-0")
+    
+    # Map roles by dataset_id
+    roles_map = {id_obj["index"]: val for id_obj, val in zip(roles_ids, roles_vals)}
     
     rows = []
     # Sort by filename or ID for stable display
@@ -40,16 +46,21 @@ def render_pipeline_ui_in_modal(n_clicks, metadata):
 
         size_str = f"{info.get('rows', 0)}R × {info.get('cols', 0)}C"
         
+        # Pre-fill target from roles_map
+        existing_targets = roles_map.get(dataset_id, {}).get("targets", [])
+        target_val = ",".join(existing_targets) if existing_targets else ""
+
         rows.append(dbc.ListGroupItem([
             dbc.Row([
-                dbc.Col(html.Span(info["filename"], className="fw-bold text-info small"), width=5),
-                dbc.Col(html.Small(size_str, className="text-muted d-block", style={"fontSize": "0.75rem"}), width=3),
+                dbc.Col(html.Span(info["filename"], className="fw-bold text-info small truncate-text", style={"maxWidth": "120px"}), width=3),
+                dbc.Col(html.Small(size_str, className="text-muted d-block", style={"fontSize": "0.7rem"}), width=2),
+                dbc.Col(dbc.Input(id={"type": "pipeline-target", "index": dataset_id}, placeholder="Target", value=target_val, size="sm", className="bg-dark text-light border-secondary"), width=4),
                 dbc.Col([
-                    dbc.Input(id={"type": "pipeline-priority", "index": dataset_id}, type="number", value=1, size="sm", style={"width": "45px", "textAlign": "center"}),
+                    dbc.Input(id={"type": "pipeline-priority", "index": dataset_id}, type="number", value=1, size="sm", style={"width": "40px"}),
                     dbc.Checkbox(id={"type": "pipeline-include", "index": dataset_id}, value=True, className="ms-2")
-                ], width=4, className="d-flex align-items-center justify-content-end"),
-            ], align="center", className="gx-2")
-        ], className="bg-dark border-secondary text-light py-2"))
+                ], width=3, className="d-flex align-items-center justify-content-end"),
+            ], align="center", className="gx-1")
+        ], className="bg-dark border-secondary text-light py-1 px-2"))
 
     if not rows:
         return dbc.Alert("No valid datasets found for pipeline.", color="warning", className="m-0")
@@ -57,13 +68,13 @@ def render_pipeline_ui_in_modal(n_clicks, metadata):
     ui = html.Div([
         html.P("Execute parallel validation for selected datasets (Lower priority runs first).", className="text-muted small mb-3"),
         
+        dbc.Checkbox(id="pipeline-auto-detect-targets", label="Auto-detect missing targets via LLM", value=True, className="mb-3 text-info small"),
+
         dbc.ListGroup(rows, className="mb-3 border-secondary"),
         
         dbc.Row([
-            dbc.Col(html.Label("K-Folds:", className="small text-muted fw-bold"), width=3),
+            dbc.Col(html.Label("K-Folds (Global):", className="small text-muted fw-bold"), width=3),
             dbc.Col(dbc.Input(id="pipeline-global-folds", type="number", value=3, min=1, max=10, size="sm", className="bg-dark text-light border-secondary"), width=3),
-            dbc.Col(html.Label("Target(s):", className="small text-muted fw-bold ps-2"), width=2),
-            dbc.Col(dbc.Input(id="pipeline-global-targets", type="text", placeholder="class, target...", size="sm", className="bg-dark text-light border-secondary"), width=4),
         ], className="mb-3 align-items-center g-2"),
 
         html.Hr(className="border-secondary"),
@@ -107,14 +118,17 @@ def render_pipeline_ui_in_modal(n_clicks, metadata):
 
 
 @app.callback(
-    Output("pipeline-results-container", "children"),
     Output("pipeline-status", "children"),
+    Output("pipeline-results-container", "children"),
     Output({"type": "eda-dashboard-container", "index": ALL}, "children"),
     Output({"type": "ml-evaluation-results-dashboard", "index": ALL}, "children"),
+    Output({"type": "pipeline-target", "index": ALL}, "value"),
+    Output({"type": "column-roles-store", "index": ALL}, "data", allow_duplicate=True),
+    Output("pipeline-results-store", "data"),
     Input("btn-run-pipeline", "n_clicks"),
     State("pipeline-global-folds", "value"),
-    State("pipeline-global-targets", "value"),
     State("pipeline-ml-model-checklist", "value"),
+    State("pipeline-auto-detect-targets", "value"),
     # Access to the model configuration inputs in the modal
     State({"type": "ml-param", "index": ALL}, "value"),
     State({"type": "ml-param", "index": ALL}, "id"),
@@ -156,9 +170,16 @@ def render_pipeline_ui_in_modal(n_clicks, metadata):
     # Containers for ALL tabs (must match Output ALL order)
     State({"type": "eda-dashboard-container", "index": ALL}, "id"),
     State({"type": "ml-evaluation-results-dashboard", "index": ALL}, "id"),
+    State({"type": "pipeline-target", "index": ALL}, "value"),
+    State({"type": "pipeline-target", "index": ALL}, "id"),
+    background=True,
+    progress=[
+        Output("pipeline-status", "children"),
+        Output("pipeline-results-container", "children")
+    ],
     prevent_initial_call=True
 )
-def execute_pipeline_pm(n_clicks, global_folds, global_targets, global_ml_models, 
+def execute_pipeline_pm(set_progress, n_clicks, global_folds, global_ml_models, auto_detect,
                         all_ml_param_values, all_ml_param_ids, metadata, 
                         inc_vals, inc_ids, prios,
                         orig_data_list, orig_ids,
@@ -175,10 +196,13 @@ def execute_pipeline_pm(n_clicks, global_folds, global_targets, global_ml_models
                         desc_list, desc_ids,
                         ml_config_list, ml_ids,
                         roles_list, roles_ids,
-                        eda_ids, ml_res_ids):
+                        eda_ids, ml_res_ids,
+                        dataset_targets_vals, dataset_targets_ids):
     
     if not n_clicks: 
-        return dash.no_update, dash.no_update, [dash.no_update]*len(eda_ids), [dash.no_update]*len(ml_res_ids)
+        return (dash.no_update, dash.no_update, [dash.no_update]*len(eda_ids), 
+                [dash.no_update]*len(ml_res_ids), [dash.no_update]*len(dataset_targets_ids), 
+                [dash.no_update]*len(roles_ids), dash.no_update)
     
     # helper to map ALL states back to dataset_id
     def map_states(values, ids):
@@ -198,7 +222,7 @@ def execute_pipeline_pm(n_clicks, global_folds, global_targets, global_ml_models
     desc_map = map_states(desc_list, desc_ids)
     ml_map = map_states(ml_config_list, ml_ids)
     roles_map = map_states(roles_list, roles_ids)
-
+    
     # 1. Parse Global ML Config from Modal
     global_ml_config = {"selected_models": global_ml_models or [], "params": {}}
     for val, pid in zip(all_ml_param_values, all_ml_param_ids):
@@ -211,16 +235,44 @@ def execute_pipeline_pm(n_clicks, global_folds, global_targets, global_ml_models
                     global_ml_config["params"][model] = {}
                 global_ml_config["params"][model][param] = val
 
-    global_target_list = [t.strip() for t in global_targets.split(",")] if global_targets else []
 
     # 2. Build Task list from Modal selections
     tasks_raw = []
+    
+    # Map for target variables per dataset
+    target_map = map_states(dataset_targets_vals, dataset_targets_ids)
+    
     for i, id_obj in enumerate(inc_ids):
         d_id = id_obj["index"]
         if not inc_vals[i]: continue
         
         priority = prios[i] if prios[i] is not None else 100
         filename = metadata.get(d_id, {}).get("filename", "Unknown")
+        
+        # Determine target(s) for this dataset
+        raw_target = target_map.get(d_id, "")
+        target_cols = [t.strip() for t in raw_target.split(",")] if raw_target else roles_map.get(d_id, {}).get("targets", [])
+        
+        # LLM Auto-detection if requested and input is empty
+        if auto_detect and not raw_target:
+            set_progress((f"Detecting target for {filename}...", html.Div(dbc.Spinner(size="sm"))))
+            logger.info(f"Triggering auto-detection for {filename} (current input empty)")
+            try:
+                df_temp = pd.DataFrame(orig_map.get(d_id, []))
+                if not df_temp.empty:
+                    detected = detect_target_columns(df_temp, single_target=True)
+                    logger.info(f"Detected targets for {filename}: {detected}")
+                    if detected:
+                        roles_map[d_id] = {"targets": detected}
+                        target_cols = detected
+                        # Update maps for UI feedback
+                        target_map[d_id] = ",".join(detected)
+                        if d_id in roles_map:
+                            roles_map[d_id] = {"targets": detected}
+                        else:
+                            roles_map[d_id] = {"targets": detected}
+            except Exception as e:
+                logger.error(f"Auto-detection failed for {filename}: {e}")
         
         config = {
             "folds": int(global_folds) if global_folds else 3,
@@ -232,7 +284,7 @@ def execute_pipeline_pm(n_clicks, global_folds, global_targets, global_ml_models
             "instructions": f"Style: {tone_map.get(d_id, 'Concise')}\nConsistency: {consist_map.get(d_id, 'Strict')}\nUniqueness: {uniq_map.get(d_id, 'Allow Duplicates')}",
             "desc_metadata": desc_map.get(d_id, ""),
             "ml_config": global_ml_config,
-            "targets": global_target_list if global_target_list else roles_map.get(d_id, {}).get("targets", [])
+            "targets": target_cols
         }
         
         tasks_raw.append({
@@ -241,20 +293,70 @@ def execute_pipeline_pm(n_clicks, global_folds, global_targets, global_ml_models
         })
 
     if not tasks_raw:
-        return dbc.Alert("No datasets selected.", color="warning", className="m-0"), "", [dash.no_update]*len(eda_ids), [dash.no_update]*len(ml_res_ids)
+        return dbc.Alert("No datasets selected.", color="warning", className="m-0"), "", [dash.no_update]*len(eda_ids), [dash.no_update]*len(ml_res_ids), [dash.no_update]*len(dataset_targets_ids), [dash.no_update]*len(roles_ids)
 
     tasks_raw.sort(key=lambda x: x["priority"])
     tasks = [t["payload"] for t in tasks_raw]
     
-    # 2. Run parallel execution
+    # 2. Run parallel execution with progress tracking
     try:
-        pipeline_results = PipelineManager.run_pipeline(tasks)
+        import multiprocessing
+        import time
+        from multiprocessing import Manager
+        
+        manager = Manager()
+        progress_dict = manager.dict() # key: dataset_id, value: {filename, folds_done, total_folds}
+        
+        # Add progress_dict to each task's config
+        tasks_with_progress = []
+        for t in tasks:
+            d_id, filename, d, c, cfg = t
+            cfg["_progress_dict"] = progress_dict
+            cfg["_dataset_id"] = d_id # for worker to know where to write
+            tasks_with_progress.append((d_id, filename, d, c, cfg))
+            progress_dict[d_id] = {"filename": filename, "done": 0, "total": cfg.get("folds", 3), "status": "Queued"}
+
+        cpus = min(len(tasks), multiprocessing.cpu_count())
+        pipeline_results = []
+        
+        with multiprocessing.Pool(processes=cpus) as pool:
+            async_results = [pool.apply_async(run_single_dataset_benchmark, (t,)) for t in tasks_with_progress]
+            
+            while any(not r.ready() for r in async_results):
+                # Build Progress UI
+                prog_bars = []
+                for d_id, p_info in progress_dict.items():
+                    pct = (p_info["done"] / p_info["total"]) * 100 if p_info["total"] > 0 else 0
+                    color = "info" if pct < 100 else "success"
+                    
+                    prog_bars.append(html.Div([
+                        dbc.Row([
+                            dbc.Col(html.Small(p_info["filename"], className="fw-bold text-info truncate-text", style={"maxWidth": "150px"}), width=4),
+                            dbc.Col(dbc.Progress(value=pct, color=color, striped=True, animated=True, style={"height": "8px"}), width=6),
+                            dbc.Col(html.Small(f"{int(pct)}%", className="text-light x-small"), width=2),
+                        ], align="center", className="mb-2")
+                    ]))
+                
+                set_progress((
+                    f"Processing {sum(1 for r in async_results if r.ready())}/{len(tasks)} datasets...",
+                    html.Div(prog_bars, className="mt-3 border-top border-secondary pt-3")
+                ))
+                time.sleep(1)
+            
+            pipeline_results = [r.get() for r in async_results]
+            
+            # Explicit cleanup for Windows/multiprocessing
+            pool.close()
+            pool.join()
+
     except Exception as e:
         logger.error(f"High-level pipeline failure: {e}")
-        return dbc.Alert(f"Pipeline failed: {e}", color="danger"), "", [dash.no_update]*len(eda_ids), [dash.no_update]*len(ml_res_ids)
+        return (dbc.Alert(f"Pipeline failed: {e}", color="danger"), dash.no_update, 
+                [dash.no_update]*len(eda_ids), [dash.no_update]*len(ml_res_ids),
+                [dash.no_update]*len(dataset_targets_ids), [dash.no_update]*len(roles_ids), dash.no_update)
     
     # 3. Process Results & Prepare Updates
-    result_cards = []
+    result_cards = [html.H5("Results", className="text-light fw-bold mb-3 border-bottom border-secondary pb-2")]
     eda_updates = [dash.no_update] * len(eda_ids)
     ml_updates = [dash.no_update] * len(ml_res_ids)
     
@@ -266,13 +368,17 @@ def execute_pipeline_pm(n_clicks, global_folds, global_targets, global_ml_models
         results_list_m = res.get('results', [])
         if not results_list_m: continue
         
-        # --- 1. AGGREGATE ALL METRICS (Fidelity & ML) ---
+        # --- AGGREGATE ALL METRICS (Fidelity & ML) ---
         agg_metrics = {
-            "fidelity": [r.get("fidelity_score", 0) for r in results_list_m],
-            "correlation": [r.get("corr_stability", 0) for r in results_list_m],
-            "privacy": [r.get("privacy_risk", 0) for r in results_list_m],
-            "coverage": [r.get("coverage_score", 0) for r in results_list_m]
+            "fidelity": [], "correlation": [], "privacy": [], "coverage": [],
+            "jsd": [], "z_drift": [], "entropy": [], "density": [], "accuracy": [], "novelty": []
         }
+        
+        for r in results_list_m:
+            agg_metrics["fidelity"].append(r.get("Synthetic Fidelity (JSD)", 0))
+            agg_metrics["correlation"].append(r.get("Correlation Stability", 0))
+            agg_metrics["privacy"].append(r.get("Privacy Risk", 0))
+            agg_metrics["coverage"].append(r.get("Coverage Score", 0))
         
         ml_agg = {} # {model_type: {metric_name: {"orig": [], "aug": [], "delta": []}}}
         task_type = "classification"
@@ -297,78 +403,126 @@ def execute_pipeline_pm(n_clicks, global_folds, global_targets, global_ml_models
                         ml_agg[m_type][m_name]["aug"].append(float(v_aug))
                         ml_agg[m_type][m_name]["delta"].append(float(v_aug - v_orig))
 
-        # Helper for Mean ± Std
+        # --- 1. SYNTHETIC DATA QUALITY COLUMN ---
         def get_stats(vals):
             if not vals: return 0.0, 0.0
-            return float(np.mean(vals)), float(np.std(vals))
+            m, s = float(np.mean(vals)), float(np.std(vals))
+            return (m if np.isfinite(m) else 0.0), (s if np.isfinite(s) else 0.0)
 
-        f_mean, f_std = get_stats(agg_metrics["fidelity"])
-        color = "success" if f_mean > 80 else "warning" if f_mean > 50 else "danger"
+        f_m, f_s = get_stats(agg_metrics["fidelity"])
+        c_m, c_s = get_stats(agg_metrics["correlation"])
+        p_m, p_s = get_stats(agg_metrics["privacy"])
+        cov_m, cov_s = get_stats(agg_metrics["coverage"])
         
-        # --- 2. PIPELINE MODAL SUMMARY CARD ---
-        best_ml_str = "N/A"
-        if ml_agg:
-            # Pick the model with highest augmented accuracy or R2
-            m_best = "None"
-            best_val = -float('inf')
-            primary = "accuracy" if task_type == "classification" else "r2"
-            for m_type, m_metrics in ml_agg.items():
-                if primary in m_metrics:
-                    m_mean = np.mean(m_metrics[primary]["aug"])
-                    if m_mean > best_val:
-                        best_val = m_mean
-                        m_best = m_type
-            if m_best != "None":
-                best_ml_str = f"{m_best.upper()} ({best_val:.2f})"
+        # Helper for color mapping
+        def get_color(val, reverse=False):
+            if reverse: # Lower is better (Risk)
+                return "success" if val < 20 else "warning" if val < 50 else "danger"
+            return "success" if val > 80 else "warning" if val > 50 else "danger"
 
+        f_color = get_color(f_m)
+        c_color = get_color(c_m)
+        p_color = get_color(p_m, reverse=True)
+        cov_color = get_color(cov_m)
+
+        syn_col = html.Div([
+            html.Small("SYNTHETIC DATA QUALITY", className="text-muted xx-small fw-bold border-bottom border-secondary d-block mb-2"),
+            html.Div([
+                # Fidelity
+                dbc.Row([
+                    dbc.Col(html.Small("Fidelity", className="x-small text-light"), width=4),
+                    dbc.Col(html.Small(f"{f_m:.1f}±{f_s:.1f}", className=f"x-small text-{f_color} fw-bold"), width=3),
+                    dbc.Col(dbc.Progress(value=f_m, color=f_color, style={"height": "4px", "marginTop": "6px"}), width=5),
+                ], align="center", className="g-0 mb-1"),
+                # Correlation
+                dbc.Row([
+                    dbc.Col(html.Small("Correlation", className="x-small text-muted"), width=4),
+                    dbc.Col(html.Small(f"{c_m:.1f}±{c_s:.1f}", className=f"x-small text-{c_color}"), width=3),
+                    dbc.Col(dbc.Progress(value=c_m, color=c_color, style={"height": "4px", "marginTop": "6px"}), width=5),
+                ], align="center", className="g-0 mb-1"),
+                # Privacy (Risk)
+                dbc.Row([
+                    dbc.Col(html.Small("Privacy (Risk)", className="x-small text-muted"), width=4),
+                    dbc.Col(html.Small(f"{p_m:.1f}±{p_s:.1f}", className=f"x-small text-{p_color}"), width=3),
+                    dbc.Col(dbc.Progress(value=p_m, color=p_color, style={"height": "4px", "marginTop": "6px"}), width=5),
+                ], align="center", className="g-0 mb-1"),
+                # Coverage
+                dbc.Row([
+                    dbc.Col(html.Small("Coverage", className="x-small text-muted"), width=4),
+                    dbc.Col(html.Small(f"{cov_m:.1f}±{cov_s:.1f}", className=f"x-small text-{cov_color}"), width=3),
+                    dbc.Col(dbc.Progress(value=cov_m, color=cov_color, style={"height": "4px", "marginTop": "6px"}), width=5),
+                ], align="center", className="g-0"),
+            ])
+        ])
+        
+        # --- 2. PREDICTIVE UTILITY COLUMN (ALL MODELS) ---
+        ml_rows = []
+        primary_metric = "accuracy" if task_type == "classification" else "r2"
+        
+        for m_type, metrics in ml_agg.items():
+            if primary_metric in metrics:
+                m_data = metrics[primary_metric]
+                orig_m, orig_s = get_stats(m_data["orig"])
+                aug_m, aug_s = get_stats(m_data["aug"])
+                delta = aug_m - orig_m
+                d_color = "success" if (delta >= -0.05 if primary_metric != "rmse" else delta <= 0.05) else "danger"
+                
+                ml_rows.append(html.Div([
+                    dbc.Row([
+                        dbc.Col(html.Small(m_type.upper(), className="x-small text-info fw-bold"), width=3),
+                        dbc.Col(html.Small(f"{aug_m:.3f}±{aug_s:.2f}", className="x-small text-light"), width=4),
+                        dbc.Col(html.Small(f"{orig_m:.3f}", className="x-small text-muted italic"), width=2),
+                        dbc.Col(html.Small(f"{delta:+.3f}", className=f"x-small text-{d_color} fw-bold"), width=3),
+                    ], className="g-0 border-bottom border-secondary-subtle py-1 align-items-center")
+                ]))
+
+        pred_col = html.Div([
+            html.Small("PREDICTIVE UTILITY (ALL MODELS)", className="text-muted xx-small fw-bold border-bottom border-secondary d-block mb-2"),
+            html.Div([
+                dbc.Row([
+                    dbc.Col(html.Small("Model", className="xx-small text-muted"), width=3),
+                    dbc.Col([
+                        html.Small("Aug Score", className="xx-small text-muted", id=f"head-aug-{d_id}"),
+                        dbc.Tooltip("Score on Augmented Data (Real Context + Synthetic)", target=f"head-aug-{d_id}")
+                    ], width=4),
+                    dbc.Col([
+                        html.Small("Real", className="xx-small text-muted", id=f"head-real-{d_id}"),
+                        dbc.Tooltip("Baseline score on original Real data", target=f"head-real-{d_id}")
+                    ], width=2),
+                    dbc.Col(html.Small("Delta", className="xx-small text-muted"), width=3),
+                ], className="g-0 opacity-75 mb-1"),
+                html.Div(ml_rows if ml_rows else html.Small("No models evaluated", className="text-muted italic x-small"))
+            ])
+        ], className="ps-3 border-start border-secondary")
+
+        # --- COMBINE INTO CARD ---
         card = dbc.Card([
             dbc.CardBody([
+                html.Div(res['filename'], className="fw-bold text-info small mb-3"),
                 dbc.Row([
-                    dbc.Col([
-                        html.Div(res['filename'], className="fw-bold truncate-text text-info small", style={"maxWidth": "150px"}),
-                        html.Small(f"Fidelity: {f_mean:.1f} ± {f_std:.1f}", className="text-muted d-block", style={"fontSize": "0.7rem"})
-                    ], width=5),
-                    dbc.Col([
-                        dbc.Progress(value=f_mean, color=color, style={"height": "6px", "marginTop": "8px"}),
-                        html.Small(f"Best ML: {best_ml_str}", className="text-light x-small d-block mt-1")
-                    ], width=7)
-                ], align="center")
-            ], className="py-2 px-3")
-        ], className="mb-2 border-secondary bg-dark shadow-sm")
+                    dbc.Col(syn_col, width=5),
+                    dbc.Col(pred_col, width=7)
+                ])
+            ], className="py-3 px-3")
+        ], className="mb-3 border-secondary bg-dark shadow-sm")
         result_cards.append(card)
         
-        # --- 3. EDA REFRESH ---
+        # --- EDA & ML TABS REFRESH (Keep existing logic) ---
         if d_id in eda_index_map:
             try:
                 df_orig = pd.DataFrame(orig_map.get(d_id, []))
+                # Ensure df_orig columns match the Header Names used in df_aug
+                field_to_header = {c['field']: c.get('headerName', c['field']) for c in col_defs_list[eda_index_map[d_id]] if c['field'] not in ['ai_audit', '_row_id']}
+                df_orig.rename(columns=field_to_header, inplace=True)
+                
                 df_aug = pd.DataFrame(res.get('synthetic_data', []))
                 if not df_aug.empty:
-                    base_eda = get_eda_layout(df_orig, df_aug, d_id)
-                    
-                    # Statistical Summary Component
-                    stats_items = []
-                    for name, key in [("Distribution Fidelity", "fidelity"), ("Correlation Stability", "correlation"), ("Privacy (Risk %)", "privacy"), ("Diversity (Coverage)", "coverage")]:
-                        m_mean, m_std = get_stats(agg_metrics[key])
-                        stats_items.append(dbc.Col([
-                            html.Div([
-                                html.Small(name, className="text-muted d-block x-small uppercase fw-bold"),
-                                html.Span(f"{m_mean:.1f}", className="h5 mb-0 text-light fw-bold"),
-                                html.Small(f" ±{m_std:.1f}", className="text-muted ms-1 small")
-                            ], className="p-2 border border-secondary rounded bg-dark shadow-inset mb-2")
-                        ], width=3))
-                    
-                    stat_summary_ui = html.Div([
-                        html.H6([html.I(className="bi bi-graph-up me-2 text-primary"), "Cross-Validation Statistical Summary"], className="text-light mb-3 small fw-bold"),
-                        dbc.Row(stats_items, className="g-2 mb-3"),
-                        html.Hr(className="border-secondary mb-4")
-                    ], className="mb-4 p-3 border border-secondary rounded bg-dark shadow-sm")
-                    
-                    eda_updates[eda_index_map[d_id]] = html.Div([stat_summary_ui, base_eda])
-            except: pass
+                    # 3. Build Detailed EDA Dashboard for this dataset (includes aggregation if results_list provided)
+                    eda_updates[eda_index_map[d_id]] = get_eda_layout(df_orig, df_aug, d_id, results_list=results_list_m)
+            except Exception as e:
+                logger.error(f"Failed to build EDA results for {d_id}: {e}")
 
-        # --- 4. DETAILED ML DASHBOARD (In Tab) ---
         if d_id in ml_index_map:
-            # B. ML Performance Section
             ml_cards = []
             for m_type, metrics in ml_agg.items():
                 metric_rows = []
@@ -376,44 +530,43 @@ def execute_pipeline_pm(n_clicks, global_folds, global_targets, global_ml_models
                     orig_m, orig_s = get_stats(data["orig"])
                     aug_m, aug_s = get_stats(data["aug"])
                     d_m, d_s = get_stats(data["delta"])
-                    
-                    if m_name in ["rmse"]:
-                        diff_color = "success" if d_m <= 0.05 else "warning" if d_m <= 0.15 else "danger"
-                    else:
-                        diff_color = "success" if d_m >= -0.05 else "warning" if d_m >= -0.15 else "danger"
-                    
+                    diff_color = "success" if (d_m >= -0.05 if m_name != "rmse" else d_m <= 0.05) else "danger"
                     metric_rows.append(dbc.Row([
                         dbc.Col(html.Small(m_name.upper(), className="x-small text-info fw-bold"), width=3),
                         dbc.Col(html.Span(f"{orig_m:.3f}±{orig_s:.2f}", className="x-small text-muted"), width=3),
                         dbc.Col(html.Span(f"{aug_m:.3f}±{aug_s:.2f}", className="x-small text-light fw-bold"), width=3),
                         dbc.Col(html.Span(f"{d_m:+.3f}±{d_s:.2f}", className=f"text-{diff_color} x-small fw-bold"), width=3),
                     ], className="g-0 border-bottom border-secondary-subtle py-1 align-items-center"))
-
                 ml_cards.append(dbc.Card([
                     dbc.CardBody([
+                        html.Div([html.I(className="bi bi-cpu me-2 text-info"), html.Span(m_type.upper(), className="fw-bold small")], className="d-flex align-items-center mb-2 border-bottom border-secondary pb-1"),
                         html.Div([
-                            html.I(className="bi bi-cpu me-2 text-info"),
-                            html.Span(m_type.upper(), className="fw-bold small")
-                        ], className="d-flex align-items-center mb-2 border-bottom border-secondary pb-1"),
-                        html.Div([
-                            dbc.Row([
-                                dbc.Col(html.Small("Metric", className="xx-small text-muted"), width=3),
-                                dbc.Col(html.Small("Real", className="xx-small text-muted"), width=3),
-                                dbc.Col(html.Small("Syn", className="xx-small text-muted"), width=3),
-                                dbc.Col(html.Small("Delta", className="xx-small text-muted"), width=3),
-                            ], className="g-0 opacity-75 mb-1"),
+                            dbc.Row([dbc.Col(html.Small("Metric", className="xx-small text-muted"), width=3), dbc.Col(html.Small("Real", className="xx-small text-muted"), width=3), dbc.Col(html.Small("Syn", className="xx-small text-muted"), width=3), dbc.Col(html.Small("Delta", className="xx-small text-muted"), width=3)], className="g-0 opacity-75 mb-1"),
                             html.Div(metric_rows)
                         ])
                     ], className="p-2")
                 ], className="mb-2 border-secondary bg-dark shadow-sm", style={"minWidth": "280px", "flex": "1"}))
-
             if ml_cards:
                 ml_updates[ml_index_map[d_id]] = html.Div([
                     html.H6([html.I(className="bi bi-cpu-fill me-2 text-warning"), "Downstream Utility Performance"], className="text-light mb-3 small fw-bold"),
                     html.Div(ml_cards, className="d-flex flex-wrap gap-2")
                 ], className="mt-2")
 
-    summary_ui = html.Div(result_cards, style={"maxHeight": "200px", "overflowY": "auto"})
+    summary_ui = html.Div(result_cards, style={"maxHeight": "400px", "overflowY": "auto"})
     status_msg = f"Completed {len(pipeline_results)} datasets."
     
-    return summary_ui, status_msg, eda_updates, ml_updates
+    # Prepare sync updates for UI (avoid dash.no_update inside list if possible)
+    target_updates = []
+    for i, id_obj in enumerate(dataset_targets_ids):
+        d_id = id_obj["index"]
+        target_updates.append(target_map.get(d_id, dataset_targets_vals[i]))
+        
+    roles_updates = []
+    for i, id_obj in enumerate(roles_ids):
+        d_id = id_obj["index"]
+        roles_updates.append(roles_map.get(d_id, roles_list[i]))
+
+    # 4. Prepare Global Results Store
+    results_dict = {res['dataset_id']: res for res in pipeline_results}
+
+    return status_msg, summary_ui, eda_updates, ml_updates, target_updates, roles_updates, results_dict

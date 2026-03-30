@@ -34,8 +34,9 @@ def auto_suggest_targets(n_clicks, orig_data, single_target):
     return valid_suggested
 
 @app.callback(
-    Output({"type": "column-roles-store", "index": MATCH}, "data"),
+    Output({"type": "column-roles-store", "index": MATCH}, "data", allow_duplicate=True),
     Input({"type": "target-cols-dropdown", "index": MATCH}, "value"),
+    prevent_initial_call=True
 )
 def sync_target_roles(targets):
     return {"targets": targets or []}

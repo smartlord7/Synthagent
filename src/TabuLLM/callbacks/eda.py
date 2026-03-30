@@ -50,7 +50,7 @@ def build_eda_dashboard_pm(n_clicks, orig_data, aug_data, col_defs, btn_id):
 
     return get_eda_layout(df_orig, df_aug, dataset_id)
 
-def get_eda_layout(df_orig, df_aug, dataset_id="base"):
+def get_eda_layout(df_orig, df_aug, dataset_id="base", results_list=None):
     if df_orig.empty or df_aug.empty:
         return [dbc.Alert("Missing data to build dashboard layouts.", color="warning")]
 
@@ -66,8 +66,12 @@ def get_eda_layout(df_orig, df_aug, dataset_id="base"):
         ignore_index=True
     )
 
-    numeric_cols = df_aug_c.select_dtypes(include='number').columns.tolist()
-    cat_cols = [c for c in df_aug_c.columns if c not in numeric_cols]
+    internal_cols = ['_fold_id', '_row_id', 'is_context', 'is_target', 'ai_audit']
+    numeric_cols = [c for c in df_aug_c.select_dtypes(include='number').columns if c not in internal_cols]
+    cat_cols = [c for c in df_aug_c.columns if c not in numeric_cols and c not in internal_cols]
+    
+    # Store _fold_id separately if present for aggregation
+    fold_id_col = '_fold_id' if '_fold_id' in df_aug_c.columns else None
 
     jsd_scores, m_drift_list, mre_list, hellinger_cats, z_drift_list = [], [], [], [], []
     corr_stability, privacy_risk, coverage_score, nndr = 0, 0, 0, 0
@@ -132,8 +136,35 @@ def get_eda_layout(df_orig, df_aug, dataset_id="base"):
     # Helper for unique IDs
     def uid(base): return f"{base}-{dataset_id}"
 
+    # --- AGGREGATION LOGIC ---
+    agg_stats = {}
+    cv_summary = None
+    if results_list:
+        keys = [
+            "Synthetic Fidelity (JSD)", "Correlation Stability", "Distribution Consistency",
+            "Entropy Preservation", "Mean Z Score Drift", "Categorical Fidelity", 
+            "Privacy Risk", "Data Density", "Coverage Score", "Feature Accuracy", "Novelty Score"
+        ]
+        for k in keys:
+            vals = [r.get(k, 0) for r in results_list if k in r]
+            if vals:
+                agg_stats[k] = {"mean": np.mean(vals), "std": np.std(vals)}
+            else:
+                agg_stats[k] = {"mean": 0, "std": 0}
+        
+    def get_val_std(key, fallback_val):
+        if key in agg_stats:
+            m = agg_stats[key]["mean"]
+            s = agg_stats[key]["std"]
+            # Formatting logic
+            if key in ["Mean Z Score Drift", "Novelty Score"]:
+                return f"{m:.2f}", f"{s:.2f}"
+            else:
+                return f"{m:.1f}%", f"{s:.1f}"
+        return str(fallback_val), None
+
     # --- RICH METRIC CARD HELPER ---
-    def create_metric_card(title, value, subtitle, icon, color_class, tooltip):
+    def create_metric_card(title, value, subtitle, icon, color_class, tooltip, std=None):
         tid = uid(f"t-{icon}")
         return dbc.Card([
             dbc.CardHeader([
@@ -141,25 +172,46 @@ def get_eda_layout(df_orig, df_aug, dataset_id="base"):
                 html.I(className=f"bi bi-{icon} ms-2 small", id=tid)
             ], className="d-flex justify-content-between py-1 bg-transparent border-0"),
             dbc.CardBody([
-                html.H3(value, className=f"text-{color_class} text-center mb-0 fw-bold"),
+                html.Div([
+                    html.H3(value, className=f"text-{color_class} mb-0 fw-bold d-inline-block"),
+                    html.Span(f" ±{std}", className="text-muted ms-2 small") if std else None
+                ], className="d-flex align-items-baseline justify-content-center"),
                 html.Small(subtitle, className="text-muted text-center d-block x-small"),
                 dbc.Tooltip(tooltip, target=tid)
             ], className="pt-0 pb-2")
         ], className="h-100 bg-dark border-secondary shadow-sm")
 
-    m_jsd = create_metric_card("Synthetic Fidelity (JSD)", f"{fidelity_score}%", "Overall distribution similarity", "bullseye", "success" if fidelity_score > 80 else "warning", "Average distribution similarity via JSD.")
-    m_corr = create_metric_card("Correlation Stability", f"{corr_stability:.1f}%", "Multivariate relationships preserved", "diagram-3", "info", "Similarity between original and augmented correlation matrices.")
-    m_dist = create_metric_card("Distribution Consistency", f"{dist_consistency}%", "Median feature similarity", "graph-up-arrow", "info", "Median JSD score across all individual features.")
-    m_ent = create_metric_card("Entropy Preservation", ent_pres, "Information diversity maintained", "lightning-charge", ent_color, "Indicates if diversity and information depth were preserved.")
+    v_jsd, s_jsd = get_val_std("Synthetic Fidelity (JSD)", f"{fidelity_score}%")
+    v_corr, s_corr = get_val_std("Correlation Stability", f"{corr_stability:.1f}%")
+    v_dist, s_dist = get_val_std("Distribution Consistency", f"{dist_consistency}%")
     
-    m_zdr = create_metric_card("Mean Z Score Drift", f"{avg_z_drift:.2f}", "Standardized distribution shift", "arrows-move", "warning", "Average standardized difference in means (Z-drift).")
-    m_cat = create_metric_card("Categorical Fidelity", f"{cat_fidelity}%", "Category distribution similarity", "tags", "info", "Stability of categorical proportions (Hellinger).")
-    m_priv = create_metric_card("Privacy Risk", f"{privacy_risk}%", "Synthetic rows too close to originals", "shield-lock", "danger" if privacy_risk > 20 else "success", "Risk of data leakage via near-neighbor memorization.")
-    m_dens = create_metric_card("Data Density", f"{data_density:.1f}%", "Non-missing cells in augmented data", "stack", "info", "Percentage of valid, non-null values generated.")
+    v_zdr, s_zdr = get_val_std("Mean Z Score Drift", f"{avg_z_drift:.2f}")
+    v_cat, s_cat = get_val_std("Categorical Fidelity", f"{cat_fidelity}%")
+    v_priv, s_priv = get_val_std("Privacy Risk", f"{privacy_risk}%")
+    v_dens, s_dens = get_val_std("Data Density", f"{data_density:.1f}%")
     
-    m_cov = create_metric_card("Coverage Score", f"{coverage_score}%", "Synthetic coverage of original space", "bounding-box", "success" if coverage_score > 5 else "danger", "Percent of original high-probability regions covered by synthesis.")
-    m_acc = create_metric_card("Feature Accuracy", f"{mean_feature_accuracy}%", "Mean feature similarity", "check-circle", "info", "Inverse of Mean Relative Error (MRE) of average values.")
-    m_nov = create_metric_card("Novelty Score", f"{nndr:.2f}", "Memorization vs novelty indicator", "stars", "info", "NNDR: Closer to 1 means balanced memorization and novelty.")
+    v_cov, s_cov = get_val_std("Coverage Score", f"{coverage_score}%")
+    v_acc, s_acc = get_val_std("Feature Accuracy", f"{mean_feature_accuracy}%")
+    v_nov, s_nov = get_val_std("Novelty Score", f"{nndr:.2f}")
+    
+    v_ent, s_ent = get_val_std("Entropy Preservation", ent_pres)
+    if s_ent is not None:
+        ent_pres = v_ent
+        ent_color = "success" if float(v_ent.strip('%')) > 80 else "warning" if float(v_ent.strip('%')) > 50 else "danger"
+
+    m_jsd = create_metric_card("Synthetic Fidelity (JSD)", v_jsd, "Overall distribution similarity", "bullseye", "success" if fidelity_score > 80 else "warning", "Average distribution similarity via JSD.", std=s_jsd)
+    m_corr = create_metric_card("Correlation Stability", v_corr, "Multivariate relationships preserved", "diagram-3", "info", "Similarity between original and augmented correlation matrices.", std=s_corr)
+    m_dist = create_metric_card("Distribution Consistency", v_dist, "Median feature similarity", "graph-up-arrow", "info", "Median JSD score across all individual features.", std=s_dist)
+    m_ent = create_metric_card("Entropy Preservation", v_ent, "Information diversity maintained", "lightning-charge", ent_color, "Indicates if diversity and information depth were preserved.", std=s_ent)
+    
+    m_zdr = create_metric_card("Mean Z Score Drift", v_zdr, "Standardized distribution shift", "arrows-move", "warning", "Average standardized difference in means (Z-drift).", std=s_zdr)
+    m_cat = create_metric_card("Categorical Fidelity", v_cat, "Category distribution similarity", "tags", "info", "Stability of categorical proportions (Hellinger).", std=s_cat)
+    m_priv = create_metric_card("Privacy Risk", v_priv, "Synthetic rows too close to originals", "shield-lock", "danger" if privacy_risk > 20 else "success", "Risk of data leakage via near-neighbor memorization.", std=s_priv)
+    m_dens = create_metric_card("Data Density", v_dens, "Non-missing cells in augmented data", "stack", "info", "Percentage of valid, non-null values generated.", std=s_dens)
+    
+    m_cov = create_metric_card("Coverage Score", v_cov, "Synthetic coverage of original space", "bounding-box", "success" if coverage_score > 5 else "danger", "Percent of original high-probability regions covered by synthesis.", std=s_cov)
+    m_acc = create_metric_card("Feature Accuracy", v_acc, "Mean feature similarity", "check-circle", "info", "Inverse of Mean Relative Error (MRE) of average values.", std=s_acc)
+    m_nov = create_metric_card("Novelty Score", v_nov, "Memorization vs novelty indicator", "stars", "info", "NNDR: Closer to 1 means balanced memorization and novelty.", std=s_nov)
 
     metrics_grid = html.Div([
         dbc.Row([
@@ -177,15 +229,49 @@ def get_eda_layout(df_orig, df_aug, dataset_id="base"):
     items = []
     if numeric_cols:
         stats_list = []
+        # Check if we have fold info for feature-level aggregation
+        has_folds = '_fold_id' in df_aug_c.columns
+        fold_groups = None
+        if has_folds:
+            try:
+                fold_groups = df_aug_c.groupby('_fold_id')
+            except Exception as ge:
+                logger.warning(f"Grouping by fold failed: {ge}")
+                has_folds = False
+
         for col in numeric_cols:
-            a, b = df_orig_c[col].dropna(), df_aug_c[col].dropna()
-            if not a.empty and not b.empty:
-                _, ks_p = stats.ks_2samp(a, b)
-                shift = ( (b.mean() - a.mean()) / (abs(a.mean()) + 1e-9) ) * 100
+            # Skip if column missing in either (especially orig which lacks _fold_id)
+            if col not in df_orig_c.columns or col not in df_aug_c.columns:
+                continue
+                
+            a = df_orig_c[col].dropna()
+            b_full = df_aug_c[col].dropna()
+            
+            if not a.empty and not b_full.empty:
+                # 1. High-level Mean Shift (on pooled data)
+                shift = ( (b_full.mean() - a.mean()) / (abs(a.mean()) + 1e-9) ) * 100
+                
+                # 2. Per-fold aggregation for mean/std if available
+                if has_folds and fold_groups is not None:
+                    try:
+                        fold_means = fold_groups[col].mean()
+                        b_mean = fold_means.mean()
+                        b_std = fold_means.std()
+                        val_str = f"{b_mean:.2f} ±{b_std:.2f}"
+                    except:
+                        b_mean = b_full.mean()
+                        val_str = f"{b_mean:.2f}"
+                else:
+                    b_mean = b_full.mean()
+                    val_str = f"{b_mean:.2f}"
+
+                # 3. KS Test (on pooled data for significance)
+                _, ks_p = stats.ks_2samp(a, b_full)
+                
                 stats_list.append(html.Tr([
                     html.Td(col, className="fw-bold x-small"), 
                     html.Td(f"{a.mean():.2f}", className="x-small"), 
-                    html.Td(f"{b.mean():.2f}", className="x-small"), 
+                    html.Td(val_str, className="x-small"), 
                     html.Td(f"{shift:+.1f}%", className=f"x-small {'text-danger' if abs(shift) > 10 else 'text-success'}"),
                     html.Td(f"{ks_p:.4f}", className="x-small"), 
                     html.Td(html.I(className="bi bi-check-circle-fill text-success" if ks_p > 0.05 else "bi bi-exclamation-triangle-fill text-warning"))
@@ -194,20 +280,81 @@ def get_eda_layout(df_orig, df_aug, dataset_id="base"):
         table_ui = dbc.Table([
             html.Thead(html.Tr([
                 html.Th("Feature", className="small"), html.Th("Orig Mean", className="small"), 
-                html.Th("Aug Mean", className="small"), html.Th("Mean Shift", className="small"), 
+                html.Th("Aug Mean ± Std", className="small"), html.Th("Mean Shift", className="small"), 
                 html.Th("KS Test (p val)", className="small"), html.Th("Status", className="small")
             ])), 
             html.Tbody(stats_list)
         ], striped=True, size="sm", className="bg-dark text-light border-secondary", bordered=True)
         
-        items.append(dbc.AccordionItem(table_ui, title="📊 Statistical Inference & P-Values", item_id="ai-inference"))
+        items.append(dbc.AccordionItem(
+            table_ui, 
+            title=html.Div([html.I(className="bi bi-calculator me-2"), "Statistical Inference & P-Values"]), 
+            item_id="ai-inference"
+        ))
 
     if len(numeric_cols) >= 2:
         try:
-            fig_corr = px.imshow(df_aug_c[numeric_cols].corr(), text_auto=".2f", color_continuous_scale="RdBu_r", 
-                                title="Feature Correlation (Augmented)", template="plotly_dark")
-            items.append(dbc.AccordionItem(dcc.Graph(figure=fig_corr), title="🔗 Correlations Heatmap", item_id="ai-corr"))
-        except: pass
+            # 1. Original Correlation Matrix
+            c_orig = df_orig_c[numeric_cols].corr()
+            
+            # 2. Augmented Correlation Matrix (Averaged over folds if present)
+            if has_folds and fold_groups is not None:
+                fold_corrs = []
+                # Ensure we don't iterate on None
+                for _, g_df in fold_groups:
+                    if g_df.empty: continue
+                    fold_corrs.append(g_df[numeric_cols].corr().fillna(0))
+                if fold_corrs:
+                    c_aug_avg = sum(fold_corrs) / len(fold_corrs)
+                else:
+                    c_aug_avg = df_aug_c[numeric_cols].corr().fillna(0)
+            else:
+                c_aug_avg = df_aug_c[numeric_cols].corr().fillna(0)
+            
+            fig_orig = px.imshow(c_orig, text_auto=".1f", color_continuous_scale="RdBu_r", zmin=-1, zmax=1,
+                                 title="Relational Structure: Original baseline", template="plotly_dark")
+            fig_aug = px.imshow(c_aug_avg, text_auto=".1f", color_continuous_scale="RdBu_r", zmin=-1, zmax=1,
+                                title=f"Relational Stability: Augmented average ({'Fold-Aggregated' if has_folds else 'Pooled'})", template="plotly_dark")
+            
+            items.append(dbc.AccordionItem(
+                dbc.Row([
+                    dbc.Col(dcc.Graph(figure=fig_orig), width=6),
+                    dbc.Col(dcc.Graph(figure=fig_aug), width=6)
+                ]), 
+                title=html.Div([html.I(className="bi bi-link-45deg me-2"), "Multivariate Correlation Stability Audit"]), 
+                item_id="ai-corr"
+            ))
+        except Exception as e:
+            logger.warning(f"Correlation plot failed: {e}")
+
+    # --- PCA GEOMETRIC COVERAGE ---
+    if len(numeric_cols) >= 2:
+        try:
+            pca = PCA(n_components=2)
+            scaler = MinMaxScaler()
+            df_full = pd.concat([df_orig_c[numeric_cols], df_aug_c[numeric_cols]]).fillna(0)
+            scaler.fit(df_full)
+            
+            z_orig = pca.fit_transform(scaler.transform(df_orig_c[numeric_cols].fillna(0)))
+            z_aug = pca.transform(scaler.transform(df_aug_c[numeric_cols].fillna(0)))
+            
+            df_pca = pd.concat([
+                pd.DataFrame(z_orig, columns=['PC1', 'PC2']).assign(State='Original'),
+                pd.DataFrame(z_aug, columns=['PC1', 'PC2']).assign(State='Augmented')
+            ])
+            
+            fig_pca = px.scatter(df_pca, x='PC1', y='PC2', color='State', 
+                                title="Geometric Space Coverage (PCA)",
+                                template="plotly_dark", opacity=0.6,
+                                labels={"PC1": "Principal Component 1", "PC2": "Principal Component 2"})
+            
+            items.append(dbc.AccordionItem(
+                dcc.Graph(figure=fig_pca),
+                title=html.Div([html.I(className="bi bi-bounding-box-circles me-2"), "Dimension Reduction (PCA Cluster Analysis)"]),
+                item_id="ai-pca"
+            ))
+        except Exception as e:
+            logger.warning(f"PCA generation failed: {e}")
 
     dist_elements = []
     for col in df_aug_c.columns[:10]: # Limit to first 10 for performance
@@ -220,6 +367,13 @@ def get_eda_layout(df_orig, df_aug, dataset_id="base"):
                                template="plotly_dark", opacity=0.7)
             dist_elements.append(dbc.Col(dcc.Graph(figure=fig), width=6))
             
-    items.append(dbc.AccordionItem(dbc.Row(dist_elements, className="g-2"), title="📈 Distributions (Top 10 Feature Samples)", item_id="ai-dists"))
+    items.append(dbc.AccordionItem(
+        dbc.Row(dist_elements, className="g-2"), 
+        title=html.Div([html.I(className="bi bi-graph-up me-2"), "Distributions (Top 10 Feature Samples)"]), 
+        item_id="ai-dists"
+    ))
 
-    return [metrics_grid, dbc.Accordion(items, start_collapsed=False, always_open=True, active_item=["ai-inference"])]
+    layout = [metrics_grid, dbc.Accordion(items, start_collapsed=False, always_open=True, active_item=["ai-inference"])]
+    if cv_summary:
+        layout = [cv_summary] + layout
+    return layout

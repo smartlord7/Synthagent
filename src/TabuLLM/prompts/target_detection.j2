@@ -9,7 +9,11 @@ Think step-by-step:
 2. Look at the data values: categorical values with few classes often indicate classification targets, while a single numeric column standing apart might be a regression target.
 3. Consider which columns are 'known' only after an event occurs (e.g., 'survived', 'churn', 'default').
 
-Return a JSON array of strings containing ONLY the detected column names.
+{% if single_target %}
+Return a JSON array of strings containing EXACTLY ONE detected column name (the most likely target).
+{% else %}
+Return a JSON array of strings containing detected column names.
+{% endif %}
 Example: ["target_col1"]
 If no obvious target is found, return an empty array [].
 Return ONLY the JSON, nothing else.
