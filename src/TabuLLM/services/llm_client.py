@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 from services.logger import log_interaction
 from utils.logging_config import logger
 from utils.json_utils import robust_json_loads, RobustJSONError, to_compact_json, from_compact_json
+from services.prompt_manager import prompt_manager
 
 class BaseLLMProvider(ABC):
     """Abstract base class for all LLM providers."""
@@ -54,17 +55,11 @@ class LocalOpenAIProvider(BaseLLMProvider):
             return result
 
     def get_dataset_description(self, df_sample, provided_metadata=None):
-        prompt = f"""
-        Analyze this dataset sample.
-        Metadata: {provided_metadata if provided_metadata else "None"}
-        
-        Data Sample:
-        {df_sample.to_string(index=False)}
-
-        Return a short, concise markdown summary:
-        **Summary**: [1 sentence overview]
-        **Insight**: [1 sentence about context or columns correlations]
-        """
+        prompt = prompt_manager.get_prompt(
+            "dataset_description",
+            provided_metadata=provided_metadata,
+            df_sample_str=df_sample.to_string(index=False)
+        )
         messages = [{"role": "user", "content": prompt}]
 
         try:
@@ -75,6 +70,27 @@ class LocalOpenAIProvider(BaseLLMProvider):
         except Exception as e:
             logger.error(f"Error calling local LLM for description: {e}")
             return "Could not generate description from local model."
+
+    def detect_target_columns(self, df_sample):
+        prompt = prompt_manager.get_prompt(
+            "target_detection",
+            df_sample_str=df_sample.to_string(index=False)
+        )
+        messages = [{"role": "user", "content": prompt}]
+
+        try:
+            response = self._call_local_llm(messages, temperature=0.1, json_mode=True)
+            content = response["choices"][0]["message"]["content"]
+            log_interaction("Target Detection", prompt, content)
+            
+            # Robust JSON parsing
+            targets = robust_json_loads(content)
+            if isinstance(targets, list):
+                return targets
+            return []
+        except Exception as e:
+            logger.error(f"Error calling local LLM for target detection: {e}")
+            return []
 
     def generate_bulk_data(self, rows_payload, context, all_columns, algorithm, instructions, temperature, num_empty=0, chunk_size=30):
         # 1. Parse dictionary context securely
@@ -94,16 +110,23 @@ class LocalOpenAIProvider(BaseLLMProvider):
         
         compact_manual = to_compact_json(manual_ctx_data, all_columns)
         
-        init_content = f"BACKGROUND CONTEXT:\nMetadata Analysis: {meta}\n\nManual/Reference Examples (Compact Format):\n{json.dumps(compact_manual)}"
+        init_content = prompt_manager.get_prompt(
+            "generation_init",
+            meta=meta,
+            compact_manual_json=json.dumps(compact_manual)
+        )
         base_messages.append({"role": "user", "content": init_content})
         base_messages.append({"role": "assistant", "content": "I understand the dataset background context. Please feed global pattern subsets next."})
 
         # 3. Stream Global Context In compact frame
         if global_ctx and len(global_ctx) > 0:
             compact_global = to_compact_json(global_ctx, all_columns)
-            base_messages.append({"role": "user", "content": f"DATASET DISTRIBUTION PATTERNS (Reference - Compact Format):\n{json.dumps(compact_global)}"})
+            global_content = prompt_manager.get_prompt(
+                "generation_global_ctx",
+                compact_global_json=json.dumps(compact_global)
+            )
+            base_messages.append({"role": "user", "content": global_content})
             base_messages.append({"role": "assistant", "content": "Received global context references."})
-
 
         # --- CHUNKED TARGET PROCESSING ---
         chunk_sz = chunk_size if chunk_size else 30
@@ -129,23 +152,12 @@ class LocalOpenAIProvider(BaseLLMProvider):
             
             task_str = "\n".join(tasks)
 
-            final_prompt = f"""
-            INSTRUCTIONS:
-            {instructions}
-
-            DATA STRUCTURE: Use compact JSON format to save tokens.
-            Headers/Columns: {all_columns}
-            
-            OUTPUT REQUIREMENT:
-            Return a JSON object with:
-            "cols": {all_columns}
-            "data": [[val1, val2, ...], [val3, val4, ...]] (List of rows)
-            
-            CRITICAL: For numeric columns, return raw numbers ONLY (no symbols/commas).
-            
-            TASKS:
-            {task_str}
-            """
+            final_prompt = prompt_manager.get_prompt(
+                "generation_final",
+                instructions=instructions,
+                all_columns=all_columns,
+                task_str=task_str
+            )
             messages.append({"role": "user", "content": final_prompt})
 
             try:
@@ -170,17 +182,13 @@ class LocalOpenAIProvider(BaseLLMProvider):
                             parsed_content = robust_json_loads(content)
                         except RobustJSONError as re:
                             logger.info(f"Initial JSON parsing failed. Attempting focused repair... Error: {re.error_data['error']}")
-                            repair_prompt = f"""
-                            The following JSON fragment is malformed:
-                            Line {re.error_data['line']}, Column {re.error_data['column']}
-                            Error: {re.error_data['error']}
-                            
-                            Fragment context:
-                            {re.error_data['context']}
-                            
-                            Please fix ONLY the malformed part and return the complete, valid JSON structure.
-                            Return ONLY the JSON, nothing else.
-                            """
+                            repair_prompt = prompt_manager.get_prompt(
+                                "json_repair",
+                                line=re.error_data['line'],
+                                column=re.error_data['column'],
+                                error=re.error_data['error'],
+                                context=re.error_data['context']
+                            )
                             messages_repair = list(messages)
                             messages_repair.append({"role": "assistant", "content": content})
                             messages_repair.append({"role": "user", "content": repair_prompt})
@@ -246,17 +254,11 @@ class GeminiProvider(BaseLLMProvider):
         self.genai = genai
 
     def get_dataset_description(self, df_sample, provided_metadata=None):
-        prompt = f"""
-        Analyze this dataset sample.
-        Metadata: {provided_metadata if provided_metadata else "None"}
-        
-        Data Sample:
-        {df_sample.to_string(index=False)}
-
-        Return a short, concise markdown summary:
-        **Summary**: [1 sentence overview]
-        **Insight**: [1 sentence about context or columns correlations]
-        """
+        prompt = prompt_manager.get_prompt(
+            "dataset_description",
+            provided_metadata=provided_metadata,
+            df_sample_str=df_sample.to_string(index=False)
+        )
 
         try:
             response = self.model.generate_content(prompt)
@@ -265,6 +267,30 @@ class GeminiProvider(BaseLLMProvider):
         except Exception as e:
             logger.error(f"Error calling Gemini: {e}")
             return "Could not generate description from Gemini model."
+
+    def detect_target_columns(self, df_sample):
+        prompt = prompt_manager.get_prompt(
+            "target_detection",
+            df_sample_str=df_sample.to_string(index=False)
+        )
+
+        try:
+            response = self.model.generate_content(
+                prompt,
+                generation_config=self.genai.types.GenerationConfig(
+                    response_mime_type="application/json",
+                    temperature=0.1
+                )
+            )
+            log_interaction("Target Detection", prompt, response.text)
+            
+            targets = robust_json_loads(response.text)
+            if isinstance(targets, list):
+                return targets
+            return []
+        except Exception as e:
+            logger.error(f"Error calling Gemini for target detection: {e}")
+            return []
 
     def generate_bulk_data(self, rows_payload, context, all_columns, algorithm, instructions, temperature, num_empty=0, chunk_size=30):
         # Compact payload and context for Gemini
@@ -278,24 +304,12 @@ class GeminiProvider(BaseLLMProvider):
                 "global_ctx": to_compact_json(context.get("global_ctx", []), all_columns)
             }
         
-        prompt = f"""
-        SYSTEM CONTEXT (Compact): {json.dumps(compact_ctx)}
-        USER INSTRUCTIONS: {instructions}
-        DATA STRUCTURE: Columns are {all_columns}. 
-        
-        TASK:
-        1. Complete these specific PARTIAL TARGET ROWS in compact format:
-        {json.dumps(compact_payload)}
-
-        2. Generate {num_empty} NEW rows following the distribution patterns.
-
-        OUTPUT FORMAT:
-        Return a JSON object with:
-        "cols": {all_columns}
-        "data": [[...], [...]]
-        
-        CRITICAL: Numbers ONLY for numeric rows. No commas/symbols.
-        """
+        prompt = prompt_manager.get_prompt(
+            "generation_final",
+            instructions=instructions,
+            all_columns=all_columns,
+            task_str=f"Complete partial rows: {json.dumps(compact_payload)}\nGenerate {num_empty} new rows."
+        )
         try:
             max_retries = 3
             for attempt in range(max_retries):
@@ -317,17 +331,13 @@ class GeminiProvider(BaseLLMProvider):
                         parsed_data = robust_json_loads(response.text)
                     except RobustJSONError as re:
                         logger.info(f"Gemini JSON parsing failed. Attempting focused repair... Error: {re.error_data['error']}")
-                        repair_prompt = f"""
-                        The following JSON fragment is malformed:
-                        Line {re.error_data['line']}, Column {re.error_data['column']}
-                        Error: {re.error_data['error']}
-                        
-                        Fragment context:
-                        {re.error_data['context']}
-                        
-                        Please fix ONLY the malformed part and return the complete, valid JSON structure.
-                        Return ONLY the JSON, nothing else.
-                        """
+                        repair_prompt = prompt_manager.get_prompt(
+                            "json_repair",
+                            line=re.error_data['line'],
+                            column=re.error_data['column'],
+                            error=re.error_data['error'],
+                            context=re.error_data['context']
+                        )
                         response_repair = self.model.generate_content(
                             prompt + f"\n\nPREVIOUS MALFORMED OUTPUT:\n{response.text}\n\nFIX REQUEST:\n{repair_prompt}",
                             generation_config=self.genai.types.GenerationConfig(
@@ -387,7 +397,7 @@ provider = LocalOpenAIProvider()
 def get_dataset_description(df_sample, provided_metadata=None):
     return provider.get_dataset_description(df_sample, provided_metadata)
 
-def generate_bulk_data(self, rows_payload, context, all_columns, algorithm, instructions, temperature, num_empty=0, chunk_size=30):
+def generate_bulk_data(rows_payload, context, all_columns, algorithm, instructions, temperature, num_empty=0, chunk_size=30):
     return provider.generate_bulk_data(rows_payload, context, all_columns, algorithm, instructions, temperature, num_empty, chunk_size)
 
 def detect_target_columns(df_sample):

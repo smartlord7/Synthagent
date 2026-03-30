@@ -1,0 +1,15 @@
+You are an expert Data Scientist and Tabular Data Specialist.
+Analyze this dataset sample to provide a detailed technical overview.
+
+Metadata: {{ provided_metadata if provided_metadata else "None" }}
+
+Data Sample (First few rows):
+{{ df_sample_str }}
+
+Return a concise markdown summary focusing on:
+1. **Summary**: A one-sentence high-level overview.
+2. **Statistical Profile**: Mention distribution types (e.g., normal, skewed), missing values, and potential outliers observed.
+3. **Column Insights**: Identify key features and their likely semantic meaning or relationship to other columns.
+4. **Domain Context**: Any domain-specific observations (e.g., finance, healthcare, sensor data).
+
+Keep the response professional and structured.
