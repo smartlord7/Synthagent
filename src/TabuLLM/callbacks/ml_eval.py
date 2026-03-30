@@ -7,7 +7,7 @@ from services.llm_client import detect_target_columns
 import pandas as pd
 
 @app.callback(
-    Output({"type": "target-cols-dropdown", "index": MATCH}, "value"),
+    Output({"type": "target-cols-dropdown", "index": MATCH}, "value", allow_duplicate=True),
     Input({"type": "btn-auto-suggest-targets", "index": MATCH}, "n_clicks"),
     State({"type": "original-data-store", "index": MATCH}, "data"),
     State({"type": "check-single-target", "index": MATCH}, "value"),
@@ -57,8 +57,9 @@ def render_ml_configs(selected_models, orig_data, roles, id_obj):
     task_type = MLEvaluator.detect_task_type(df, roles.get("targets", []))
     
     configs = []
+    n_samples, n_features = df.shape
     for model in selected_models:
-        ui = get_model_config_ui(model, dataset_id, task_type)
+        ui = get_model_config_ui(model, dataset_id, task_type, n_samples=n_samples, n_features=n_features)
         if ui: configs.append(ui)
     
     return configs

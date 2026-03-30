@@ -163,41 +163,87 @@ def generate_global_report_pm(n_clicks, meta_store, pipeline_results, all_orig, 
                     pass
             
             # --- STATISTICAL INFERENCE TABLE (Aggregated Across Folds) ---
-            inference_data = [] # [Feature, Orig Mean, Aug Mean ± Std, Shift ± Std, KS ± Std, Status]
-            num_cols = df_orig.select_dtypes(include='number').columns
+            inference_data = [] # [Feature, Orig Mean/Mode, Aug Mean ± Std, Shift ± Std, p-value ± Std, Status]
+            num_cols = df_orig.select_dtypes(include='number').columns.tolist()
+            cat_cols = [c for c in df_orig.columns if c not in num_cols]
+            all_features = num_cols + cat_cols
+            
+            # Encode for universal feature coverage (numeric + categorical)
+            df_orig_enc = df_orig.copy()
+            df_aug_enc = df_aug.copy()
+            for col in cat_cols:
+                combined = pd.concat([df_orig_enc[col], df_aug_enc[col]])
+                codes, _ = pd.factorize(combined)
+                df_orig_enc[col] = codes[:len(df_orig_enc)]
+                df_aug_enc[col] = codes[len(df_orig_enc):]
             
             # Map features to their fold-level stats
-            feature_stats = {col: {"shifts": [], "ks_ps": [], "aug_means": []} for col in num_cols}
+            feature_stats = {col: {"shifts": [], "ps": [], "aug_vals": [], "enc_vals": []} for col in all_features}
             
             for r in results_list:
                 fold_df = pd.DataFrame(r.get("synthetic_data", []))
                 if fold_df.empty: continue
-                for col in num_cols:
-                    if col in fold_df.columns:
-                        a = df_orig[col].dropna()
-                        b = fold_df[col].dropna()
-                        if not a.empty and not b.empty:
-                            m_a = a.mean()
-                            m_b = b.mean()
-                            shift = ((m_b - m_a) / (abs(m_a) + 1e-9)) * 100
-                            _, ks_p = stats.ks_2samp(a, b)
-                            feature_stats[col]["shifts"].append(shift)
-                            feature_stats[col]["ks_ps"].append(ks_p)
-                            feature_stats[col]["aug_means"].append(m_b)
+                # Factorize this fold too? No, use a global mapping for consistency
+                for col in all_features:
+                    if col not in df_orig.columns or col not in fold_df.columns: continue
+                    a = df_orig[col].dropna()
+                    b = fold_df[col].dropna()
+                    if a.empty or b.empty: continue
+                    
+                    if col in num_cols:
+                        m_a = a.mean()
+                        m_b = b.mean()
+                        shift = ((m_b - m_a) / (abs(m_a) + 1e-9)) * 100
+                        _, p_val = stats.ks_2samp(a, b)
+                        feature_stats[col]["aug_vals"].append(m_b)
+                    else:
+                        # Categorical drift (Hellinger proxy)
+                        p_o = a.value_counts(normalize=True)
+                        p_a = b.value_counts(normalize=True)
+                        cats = p_o.index.union(p_a.index)
+                        p_h = p_o.reindex(cats, fill_value=0).values
+                        q_h = p_a.reindex(cats, fill_value=0).values
+                        shift = (np.sqrt(np.sum((np.sqrt(p_h) - np.sqrt(q_h))**2)) / np.sqrt(2)) * 100
+                        
+                        # Chi-square p-value
+                        p_exp = p_h * len(b)
+                        p_exp = np.where(p_exp == 0, 1e-5, p_exp)
+                        try:
+                            _, p_val = stats.chisquare(q_h * len(b), f_exp=p_exp)
+                        except: p_val = 0.0
+                        
+                        # Use global encoding for this fold
+                        combined_local = pd.concat([df_orig[col], fold_df[col]])
+                        codes_local, _ = pd.factorize(combined_local)
+                        feature_stats[col]["enc_vals"].append(codes_local[len(df_orig):].mean())
+                        feature_stats[col]["aug_vals"].append(0)
+
+                    feature_stats[col]["shifts"].append(shift)
+                    feature_stats[col]["ps"].append(p_val)
             
             for col, stats_obj in feature_stats.items():
-                if stats_obj["ks_ps"]:
+                if stats_obj["ps"]:
                     m_shift, s_shift = np.mean(stats_obj["shifts"]), np.std(stats_obj["shifts"])
-                    m_ks, s_ks = np.mean(stats_obj["ks_ps"]), np.std(stats_obj["ks_ps"])
-                    m_aug, s_aug = np.mean(stats_obj["aug_means"]), np.std(stats_obj["aug_means"])
+                    m_p, s_p = np.mean(stats_obj["ps"]), np.std(stats_obj["ps"])
                     
-                    status = "Pass" if m_ks > 0.05 else "Drift"
+                    status = "Pass" if m_p > 0.05 else "Drift"
+                    if col in num_cols:
+                        m_aug, s_aug = np.mean(stats_obj["aug_vals"]), np.std(stats_obj["aug_vals"])
+                        orig_disp = f"{df_orig[col].mean():.2f}"
+                        aug_disp = f"{m_aug:.2f} ± {s_aug:.2f}"
+                    else:
+                        # Categorical display: Mode (Encoded Mean)
+                        e_orig = df_orig_enc[col].mean()
+                        orig_disp = f"'{df_orig[col].mode()[0]}' ({e_orig:.1f})" if not df_orig[col].mode().empty else "N/A"
+                        e_m, e_s = np.mean(stats_obj["enc_vals"]), np.std(stats_obj["enc_vals"])
+                        aug_disp = f"'{df_aug[col].mode()[0]}' ({e_m:.1f} ±{e_s:.1f})" if not df_aug[col].mode().empty else "N/A"
+                        
                     inference_data.append([
                         col, 
-                        f"{df_orig[col].mean():.2f}", 
-                        f"{m_aug:.2f} ± {s_aug:.2f}",
+                        orig_disp, 
+                        aug_disp,
                         f"{m_shift:+.1f} ± {s_shift:.1f}%", 
-                        f"{m_ks:.4f} ± {s_ks:.2f}", 
+                        f"{m_p:.4f} ± {s_p:.2f}", 
                         status
                     ])
         else:
@@ -229,18 +275,28 @@ def generate_global_report_pm(n_clicks, meta_store, pipeline_results, all_orig, 
 
             # --- VIZ EXPORT (PCA & CORR) ---
             plot_paths = []
-            if len(num_cols) >= 2:
+
+            if len(all_features) >= 2:
                 try:
                     import plotly.io as pio
                     temp_dir = os.path.join(os.getcwd(), "tmp_plots")
                     os.makedirs(temp_dir, exist_ok=True)
                     
                     # 1. Original Correlation Heatmap
-                    c_orig_df = df_orig[num_cols].corr().fillna(0)
+                    c_orig_df = df_orig_enc[all_features].corr().fillna(0)
+                    
+                    # Adaptive sizing for many columns
+                    dim = max(800, len(all_features) * 30)
+                    font_size = max(6, min(12, 1000 // len(all_features)))
+                    
                     fig_corr_orig = px.imshow(c_orig_df, text_auto=".1f", color_continuous_scale="RdBu_r", zmin=-1, zmax=1,
                                              template="plotly_dark", title="Original Relational Structure")
+                    fig_corr_orig.update_layout(width=dim, height=dim, margin=dict(l=100, r=50, t=100, b=100))
+                    fig_corr_orig.update_xaxes(tickfont=dict(size=font_size))
+                    fig_corr_orig.update_yaxes(tickfont=dict(size=font_size))
+                    
                     orig_corr_path = os.path.join(temp_dir, f"corr_orig_{d_id}.png")
-                    fig_corr_orig.write_image(orig_corr_path)
+                    fig_corr_orig.write_image(orig_corr_path, scale=3)
                     plot_paths.append({"title": "Relational Baseline (Original)", "path": orig_corr_path})
 
                     # 2. Augmented Correlation Heatmap (Average of folds)
@@ -250,35 +306,48 @@ def generate_global_report_pm(n_clicks, meta_store, pipeline_results, all_orig, 
                         for f in folds:
                             f_df = pd.DataFrame(f.get("synthetic_data", []))
                             if not f_df.empty:
-                                fold_corrs.append(f_df[num_cols].corr().fillna(0))
+                                # Simple encoding for fold corr
+                                f_df_enc = f_df.copy()
+                                for col in cat_cols:
+                                    # Use same codes as main if possible, but factorize is local per fold here for simplicity
+                                    f_df_enc[col] = pd.factorize(f_df_enc[col])[0]
+                                fold_corrs.append(f_df_enc[all_features].corr().fillna(0))
                         if fold_corrs:
                             c_aug_df = sum(fold_corrs) / len(fold_corrs)
                         else:
-                            c_aug_df = df_aug[num_cols].corr().fillna(0)
+                            c_aug_df = df_aug_enc[all_features].corr().fillna(0)
                     else:
-                        c_aug_df = df_aug[num_cols].corr().fillna(0)
+                        c_aug_df = df_aug_enc[all_features].corr().fillna(0)
 
                     fig_corr_aug = px.imshow(c_aug_df, text_auto=".1f", color_continuous_scale="RdBu_r", zmin=-1, zmax=1,
                                             template="plotly_dark", title="Augmented Relational Stability (Averaged)")
+                    fig_corr_aug.update_layout(width=dim, height=dim, margin=dict(l=100, r=50, t=100, b=100))
+                    fig_corr_aug.update_xaxes(tickfont=dict(size=font_size))
+                    fig_corr_aug.update_yaxes(tickfont=dict(size=font_size))
+                    
                     aug_corr_path = os.path.join(temp_dir, f"corr_aug_{d_id}.png")
-                    fig_corr_aug.write_image(aug_corr_path)
+                    fig_corr_aug.write_image(aug_corr_path, scale=3)
                     plot_paths.append({"title": "Relational Stability (Averaged Augmented)", "path": aug_corr_path})
                     
-                    # 2. PCA Scatter
+                    # 2. PCA Scatter (Encapsulating all features via encoding)
                     pca = PCA(n_components=2)
-                    scaler = MinMaxScaler()
-                    df_full = pd.concat([df_orig[num_cols], df_aug[num_cols]]).fillna(0)
-                    scaler.fit(df_full)
-                    z_orig = pca.fit_transform(scaler.transform(df_orig[num_cols].fillna(0)))
-                    z_aug = pca.transform(scaler.transform(df_aug[num_cols].fillna(0)))
+                    scaler_pca = MinMaxScaler()
+                    combined_pca = pd.concat([df_orig_enc[all_features], df_aug_enc[all_features]]).fillna(0)
+                    scaler_pca.fit(combined_pca)
+                    o_norm = scaler_pca.transform(df_orig_enc[all_features].fillna(0))
+                    a_norm = scaler_pca.transform(df_aug_enc[all_features].fillna(0))
+                    
+                    z_orig = pca.fit_transform(o_norm)
+                    z_aug = pca.transform(a_norm)
                     df_pca = pd.concat([
                         pd.DataFrame(z_orig, columns=['PC1', 'PC2']).assign(State='Original'),
                         pd.DataFrame(z_aug, columns=['PC1', 'PC2']).assign(State='Augmented')
                     ])
                     fig_pca = px.scatter(df_pca, x='PC1', y='PC2', color='State', 
                                         template="plotly_dark", opacity=0.6, title="Geometric Space Coverage (PCA)")
+                    fig_pca.update_layout(width=1000, height=800)
                     pca_path = os.path.join(temp_dir, f"pca_{d_id}.png")
-                    fig_pca.write_image(pca_path)
+                    fig_pca.write_image(pca_path, scale=3)
                     plot_paths.append({"title": "PCA Geometric Coverage", "path": pca_path})
                 except Exception as ve:
                     logger.warning(f"Failed to export viz for {d_id}: {ve}")

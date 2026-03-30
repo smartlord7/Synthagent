@@ -246,9 +246,25 @@ def calculate_metrics(df_orig: pd.DataFrame, df_aug: pd.DataFrame) -> dict:
             if mre > 0:
                 mre_list.append(mre)
 
-    # Calculate Aggregate Numerical Correlation and Privacy structural distances
-    corr_stability = compute_correlation_stability(df_orig, df_aug, numeric_cols)
-    privacy_results = compute_privacy_metrics(df_orig, df_aug, numeric_cols)
+    # Prepare Encoded Data for All Features (Numeric + Categorical)
+    # We use pd.factorize for categoricals to make them numeric for structural metrics
+    df_orig_enc = df_orig.copy()
+    df_aug_enc = df_aug.copy()
+    
+    all_features = numeric_cols + cat_cols
+    
+    for col in cat_cols:
+        # Get combined unique values for consistent encoding
+        combined = pd.concat([df_orig[col], df_aug[col]])
+        codes, uniques = pd.factorize(combined)
+        
+        # Split back
+        df_orig_enc[col] = codes[:len(df_orig)]
+        df_aug_enc[col] = codes[len(df_orig):]
+
+    # Calculate Aggregate Structural Metrics on ALL encoded features
+    corr_stability = compute_correlation_stability(df_orig_enc, df_aug_enc, all_features)
+    privacy_results = compute_privacy_metrics(df_orig_enc, df_aug_enc, all_features)
     
     # Evaluate Categorical Columns
     hellinger_cats = []

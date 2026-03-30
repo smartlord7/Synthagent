@@ -8,7 +8,7 @@ from components.layout import create_layout
 import callbacks
 
 # Assign layout to the app
-app.layout = create_layout()
+app.layout = create_layout
 server = app.server  # Expose for Gunicorn
 
 if __name__ == '__main__':

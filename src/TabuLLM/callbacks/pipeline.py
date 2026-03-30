@@ -123,6 +123,7 @@ def render_pipeline_ui_in_modal(n_clicks, metadata, roles_vals, roles_ids):
     Output({"type": "eda-dashboard-container", "index": ALL}, "children"),
     Output({"type": "ml-evaluation-results-dashboard", "index": ALL}, "children"),
     Output({"type": "pipeline-target", "index": ALL}, "value"),
+    Output({"type": "target-cols-dropdown", "index": ALL}, "value", allow_duplicate=True),
     Output({"type": "column-roles-store", "index": ALL}, "data", allow_duplicate=True),
     Output("pipeline-results-store", "data"),
     Input("btn-run-pipeline", "n_clicks"),
@@ -172,6 +173,7 @@ def render_pipeline_ui_in_modal(n_clicks, metadata, roles_vals, roles_ids):
     State({"type": "ml-evaluation-results-dashboard", "index": ALL}, "id"),
     State({"type": "pipeline-target", "index": ALL}, "value"),
     State({"type": "pipeline-target", "index": ALL}, "id"),
+    State({"type": "target-cols-dropdown", "index": ALL}, "id"),
     background=True,
     progress=[
         Output("pipeline-status", "children"),
@@ -197,12 +199,13 @@ def execute_pipeline_pm(set_progress, n_clicks, global_folds, global_ml_models, 
                         ml_config_list, ml_ids,
                         roles_list, roles_ids,
                         eda_ids, ml_res_ids,
-                        dataset_targets_vals, dataset_targets_ids):
+                        dataset_targets_vals, dataset_targets_ids,
+                        target_dropdown_ids):
     
     if not n_clicks: 
         return (dash.no_update, dash.no_update, [dash.no_update]*len(eda_ids), 
                 [dash.no_update]*len(ml_res_ids), [dash.no_update]*len(dataset_targets_ids), 
-                [dash.no_update]*len(roles_ids), dash.no_update)
+                [dash.no_update]*len(target_dropdown_ids), [dash.no_update]*len(roles_ids), dash.no_update)
     
     # helper to map ALL states back to dataset_id
     def map_states(values, ids):
@@ -293,7 +296,10 @@ def execute_pipeline_pm(set_progress, n_clicks, global_folds, global_ml_models, 
         })
 
     if not tasks_raw:
-        return dbc.Alert("No datasets selected.", color="warning", className="m-0"), "", [dash.no_update]*len(eda_ids), [dash.no_update]*len(ml_res_ids), [dash.no_update]*len(dataset_targets_ids), [dash.no_update]*len(roles_ids)
+        return (dbc.Alert("No datasets selected.", color="warning", className="m-0"), "", 
+                [dash.no_update]*len(eda_ids), [dash.no_update]*len(ml_res_ids), 
+                [dash.no_update]*len(dataset_targets_ids), [dash.no_update]*len(target_dropdown_ids),
+                [dash.no_update]*len(roles_ids), dash.no_update)
 
     tasks_raw.sort(key=lambda x: x["priority"])
     tasks = [t["payload"] for t in tasks_raw]
@@ -353,7 +359,8 @@ def execute_pipeline_pm(set_progress, n_clicks, global_folds, global_ml_models, 
         logger.error(f"High-level pipeline failure: {e}")
         return (dbc.Alert(f"Pipeline failed: {e}", color="danger"), dash.no_update, 
                 [dash.no_update]*len(eda_ids), [dash.no_update]*len(ml_res_ids),
-                [dash.no_update]*len(dataset_targets_ids), [dash.no_update]*len(roles_ids), dash.no_update)
+                [dash.no_update]*len(dataset_targets_ids), [dash.no_update]*len(target_dropdown_ids),
+                [dash.no_update]*len(roles_ids), dash.no_update)
     
     # 3. Process Results & Prepare Updates
     result_cards = [html.H5("Results", className="text-light fw-bold mb-3 border-bottom border-secondary pb-2")]
@@ -548,18 +555,27 @@ def execute_pipeline_pm(set_progress, n_clicks, global_folds, global_ml_models, 
                 ], className="mb-2 border-secondary bg-dark shadow-sm", style={"minWidth": "280px", "flex": "1"}))
             if ml_cards:
                 ml_updates[ml_index_map[d_id]] = html.Div([
-                    html.H6([html.I(className="bi bi-cpu-fill me-2 text-warning"), "Downstream Utility Performance"], className="text-light mb-3 small fw-bold"),
+                    html.H6([html.I(className="bi bi-cpu-fill me-2 text-warning"), "ML Evaluation"], className="text-light mb-3 small fw-bold"),
                     html.Div(ml_cards, className="d-flex flex-wrap gap-2")
                 ], className="mt-2")
 
     summary_ui = html.Div(result_cards, style={"maxHeight": "400px", "overflowY": "auto"})
     status_msg = f"Completed {len(pipeline_results)} datasets."
     
-    # Prepare sync updates for UI (avoid dash.no_update inside list if possible)
+    # Prepare sync updates for UI
     target_updates = []
     for i, id_obj in enumerate(dataset_targets_ids):
         d_id = id_obj["index"]
-        target_updates.append(target_map.get(d_id, dataset_targets_vals[i]))
+        val = target_map.get(d_id, dataset_targets_vals[i])
+        target_updates.append(val)
+        
+    dropdown_updates = []
+    for i, id_obj in enumerate(target_dropdown_ids):
+        d_id = id_obj["index"]
+        # Match target from target_map if it exists, else keep current or empty
+        val = target_map.get(d_id, "") 
+        # Dropdown expects a list if multi=True
+        dropdown_updates.append(val.split(",") if isinstance(val, str) and "," in val else [val] if val else [])
         
     roles_updates = []
     for i, id_obj in enumerate(roles_ids):
@@ -569,4 +585,4 @@ def execute_pipeline_pm(set_progress, n_clicks, global_folds, global_ml_models, 
     # 4. Prepare Global Results Store
     results_dict = {res['dataset_id']: res for res in pipeline_results}
 
-    return status_msg, summary_ui, eda_updates, ml_updates, target_updates, roles_updates, results_dict
+    return status_msg, summary_ui, eda_updates, ml_updates, target_updates, dropdown_updates, roles_updates, results_dict

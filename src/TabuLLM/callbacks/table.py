@@ -11,6 +11,7 @@ from utils.constants import ai_highlight_style
 @app.callback(
     Output("tabs-datasets", "children"),
     Output("datasets-metadata-store", "data"),
+    Output("tabs-datasets", "value", allow_duplicate=True),
     Input("upload-data", "contents"),
     State("upload-data", "filename"),
     State("tabs-datasets", "children"),
@@ -19,10 +20,11 @@ from utils.constants import ai_highlight_style
 )
 def handle_multiple_uploads_pm(list_of_contents, list_of_filenames, current_tabs, metadata):
     if not list_of_contents:
-        return dash.no_update, dash.no_update
+        return dash.no_update, dash.no_update, dash.no_update
 
     metadata = metadata or {}
     new_tabs = list(current_tabs or [])
+    last_id = None
     
     for contents, filename in zip(list_of_contents, list_of_filenames):
         dataset_id = str(uuid.uuid4())
@@ -38,12 +40,13 @@ def handle_multiple_uploads_pm(list_of_contents, list_of_filenames, current_tabs
                     "rows": df.shape[0],
                     "cols": df.shape[1]
                 }
+                last_id = dataset_id
             else:
                 logger.error(f"Failed to parse {filename}: Empty or invalid.")
         except Exception as e:
             logger.error(f"Error processing {filename}: {e}")
 
-    return new_tabs, metadata
+    return new_tabs, metadata, last_id if last_id else dash.no_update
 
 
 @app.callback(

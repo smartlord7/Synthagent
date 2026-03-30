@@ -4,12 +4,104 @@ import dash_ag_grid as dag
 import dash_bootstrap_components as dbc
 from utils.constants import initial_data, initial_cols, row_class_rules, ai_highlight_style
 from services.data_manager import df_to_aggrid_format
+import pandas as pd
 
-def create_dataset_tab(dataset_id, filename, df=None):
-    if df is not None:
-        # Build Column Definitions
+def create_dataset_tab(dataset_id, filename, df=None, saved_state=None, pipeline_res=None):
+    saved_state = saved_state or {}
+    
+    eda_content = dbc.Alert("Click 'Refresh Analytics' to compute distribution changes and audit reports.", color="secondary", className="small")
+    ml_content = dbc.Alert("Run pipeline to view machine learning benchmarks.", color="secondary", className="small")
+    
+    if saved_state and pipeline_res and pipeline_res.get("results"):
+        try:
+            from callbacks.eda import get_eda_layout
+            df_orig = pd.DataFrame(saved_state.get("original-data-store", []))
+            df_aug = pd.DataFrame(saved_state.get("data-grid", []))
+            eda_content = get_eda_layout(df_orig, df_aug, dataset_id, results_list=pipeline_res.get("results", []))
+        except Exception as e:
+            import traceback
+            print(f"Failed to restore EDA for {dataset_id}: {e}")
+            traceback.print_exc()
+            
+        try:
+            import numpy as np
+            ml_agg = {}
+            for r in pipeline_res.get("results", []):
+                ml_eval = r.get("ml_eval", {})
+                for m_type, m_perf in ml_eval.items():
+                    if not m_perf: continue
+                    if m_type not in ml_agg: ml_agg[m_type] = {}
+                    for m_name in ["accuracy", "f1", "rmse", "r2"]:
+                        v_orig = (m_perf.get("original") or {}).get(m_name)
+                        v_aug = (m_perf.get("augmented") or {}).get(m_name)
+                        if v_orig is not None and v_aug is not None:
+                            if m_name not in ml_agg[m_type]: ml_agg[m_type][m_name] = {"orig": [], "aug": [], "delta": []}
+                            ml_agg[m_type][m_name]["orig"].append(float(v_orig))
+                            ml_agg[m_type][m_name]["aug"].append(float(v_aug))
+                            ml_agg[m_type][m_name]["delta"].append(float(v_aug - v_orig))
+            
+            def get_stats(vals):
+                if not vals: return 0.0, 0.0
+                m, s = float(np.mean(vals)), float(np.std(vals))
+                return (m if np.isfinite(m) else 0.0), (s if np.isfinite(s) else 0.0)
+
+            ml_cards = []
+            for m_type, metrics in ml_agg.items():
+                metric_rows = []
+                for m_name, data in metrics.items():
+                    orig_m, orig_s = get_stats(data["orig"])
+                    aug_m, aug_s = get_stats(data["aug"])
+                    d_m, d_s = get_stats(data["delta"])
+                    diff_color = "success" if (d_m >= -0.05 if m_name != "rmse" else d_m <= 0.05) else "danger"
+                    metric_rows.append(dbc.Row([
+                        dbc.Col(html.Small(m_name.upper(), className="x-small text-info fw-bold"), width=3),
+                        dbc.Col(html.Span(f"{orig_m:.3f}±{orig_s:.2f}", className="x-small text-muted"), width=3),
+                        dbc.Col(html.Span(f"{aug_m:.3f}±{aug_s:.2f}", className="x-small text-light fw-bold"), width=3),
+                        dbc.Col(html.Span(f"{d_m:+.3f}±{d_s:.2f}", className=f"text-{diff_color} x-small fw-bold"), width=3),
+                    ], className="g-0 border-bottom border-secondary-subtle py-1 align-items-center"))
+                
+                ml_cards.append(dbc.Card([
+                    dbc.CardBody([
+                        html.Div([html.I(className="bi bi-cpu me-2 text-info"), html.Span(m_type.upper(), className="fw-bold small")], className="d-flex align-items-center mb-2 border-bottom border-secondary pb-1"),
+                        html.Div([
+                            dbc.Row([dbc.Col(html.Small("Metric", className="xx-small text-muted"), width=3), dbc.Col(html.Small("Real", className="xx-small text-muted"), width=3), dbc.Col(html.Small("Syn", className="xx-small text-muted"), width=3), dbc.Col(html.Small("Delta", className="xx-small text-muted"), width=3)], className="g-0 opacity-75 mb-1"),
+                            html.Div(metric_rows)
+                        ])
+                    ], className="p-2")
+                ], className="mb-2 border-secondary bg-dark shadow-sm", style={"minWidth": "280px", "flex": "1"}))
+                
+            if ml_cards:
+                ml_content = html.Div([
+                    html.H6([html.I(className="bi bi-cpu-fill me-2 text-warning"), "ML Evaluation"], className="text-light mb-3 small fw-bold"),
+                    html.Div(ml_cards, className="d-flex flex-wrap gap-2")
+                ], className="mt-2")
+        except Exception as e:
+            import traceback
+            print(f"Failed to restore ML Eval for {dataset_id}: {e}")
+            traceback.print_exc()
+
+    # 1. Base Data Loading priority: 1. saved_state, 2. provided df, 3. default empty
+    if "original-data-store" in saved_state:
+        new_data = saved_state["original-data-store"]
+        # Dummy df for stats/cols
+        if new_data:
+            df_stat = pd.DataFrame(new_data).drop(columns=['_row_id', 'is_context', 'is_target', 'ai_audit'], errors='ignore')
+        else:
+            df_stat = pd.DataFrame()
+    elif df is not None:
+        new_data = df_to_aggrid_format(df)
+        for row in new_data:
+            row['_row_id'] = str(uuid.uuid4())
+            row['is_context'] = False
+            row['is_target'] = False
+            row['ai_audit'] = ""
+        df_stat = df.copy()
+    else:
+        new_data = initial_data
+        df_stat = pd.DataFrame()
+    if not df_stat.empty:
         new_cols = []
-        for i, col in enumerate(df.columns):
+        for i, col in enumerate(df_stat.columns):
             col_def = {"field": col, "headerName": col, "cellStyle": ai_highlight_style, "editable": True}
             if i == 0:
                 col_def["checkboxSelection"] = True
@@ -20,26 +112,17 @@ def create_dataset_tab(dataset_id, filename, df=None):
             "field": "ai_audit", "headerName": "Generation Audit", "editable": False,
             "cellStyle": {"color": "#666", "fontSize": "0.8em", "fontStyle": "italic"}
         })
-
-        new_data = df_to_aggrid_format(df)
-        for row in new_data:
-            row['_row_id'] = str(uuid.uuid4())
-            row['is_context'] = False
-            row['is_target'] = False
-            row['ai_audit'] = ""
-            
-        # Calculate Quick Stats
-        missing_count = int(df.isnull().sum().sum())
-        memory_use = df.memory_usage(deep=True).sum() / 1024 # KB
+        
+        missing_count = int(df_stat.isnull().sum().sum())
+        memory_use = df_stat.memory_usage(deep=True).sum() / 1024 # KB
         
         stats_grid = dbc.Row([
-            dbc.Col([html.H4(f"{df.shape[0]}", className="text-info fw-bold mb-0"), html.Small("Rows", className="text-muted")], width=6, className="text-center mb-3"),
-            dbc.Col([html.H4(f"{df.shape[1]}", className="text-info fw-bold mb-0"), html.Small("Columns", className="text-muted")], width=6, className="text-center mb-3"),
+            dbc.Col([html.H4(f"{df_stat.shape[0]}", className="text-info fw-bold mb-0"), html.Small("Rows", className="text-muted")], width=6, className="text-center mb-3"),
+            dbc.Col([html.H4(f"{df_stat.shape[1]}", className="text-info fw-bold mb-0"), html.Small("Columns", className="text-muted")], width=6, className="text-center mb-3"),
             dbc.Col([html.H4(f"{missing_count}", className="text-warning mb-0"), html.Small("Missing", className="text-muted")], width=6, className="text-center"),
             dbc.Col([html.H4(f"{memory_use:.1f} KB", className="text-success mb-0"), html.Small("Memory", className="text-muted")], width=6, className="text-center")
         ], className="g-2")
     else:
-        new_data = initial_data
         new_cols = initial_cols
         stats_grid = dbc.Alert("Upload file to view stats.", color="secondary", className="small py-2")
 
@@ -70,14 +153,14 @@ def create_dataset_tab(dataset_id, filename, df=None):
             html.Div([
                 # Stores for tracking this dataset's state (Pattern-Matching)
                 dcc.Store(id={"type": "original-data-store", "index": dataset_id}, data=new_data),
-                dcc.Store(id={"type": "active-col-store", "index": dataset_id}),
-                dcc.Store(id={"type": "context-row-ids", "index": dataset_id}, data=[]),
-                dcc.Store(id={"type": "target-row-ids", "index": dataset_id}, data=[]),
-                dcc.Store(id={"type": "selection-mode", "index": dataset_id}, data="target"),
-                dcc.Store(id={"type": "dataset-description-store", "index": dataset_id}, data=""),
-                dcc.Store(id={"type": "column-roles-store", "index": dataset_id}, data={"targets": []}),
-                dcc.Store(id={"type": "ml-config-store", "index": dataset_id}, data={}),
-                dcc.Store(id={"type": "bench-state-store", "index": dataset_id}, data={"active": False, "k_total": 0, "k_current": 0, "fraction": 0.2, "results": []}),
+                dcc.Store(id={"type": "active-col-store", "index": dataset_id}, data=saved_state.get("active-col-store")),
+                dcc.Store(id={"type": "context-row-ids", "index": dataset_id}, data=saved_state.get("context-row-ids", [])),
+                dcc.Store(id={"type": "target-row-ids", "index": dataset_id}, data=saved_state.get("target-row-ids", [])),
+                dcc.Store(id={"type": "selection-mode", "index": dataset_id}, data=saved_state.get("selection-mode", "target")),
+                dcc.Store(id={"type": "dataset-description-store", "index": dataset_id}, data=saved_state.get("dataset-description-store", "")),
+                dcc.Store(id={"type": "column-roles-store", "index": dataset_id}, data=saved_state.get("column-roles-store", {"targets": []})),
+                dcc.Store(id={"type": "ml-config-store", "index": dataset_id}, data=saved_state.get("ml-config-store", {})),
+                dcc.Store(id={"type": "bench-state-store", "index": dataset_id}, data=saved_state.get("bench-state-store", {"active": False, "k_total": 0, "k_current": 0, "fraction": 0.2, "results": []})),
                 
                 dcc.Download(id={"type": "download-csv", "index": dataset_id}),
                 dcc.Download(id={"type": "download-pdf", "index": dataset_id}),
@@ -121,7 +204,8 @@ def create_dataset_tab(dataset_id, filename, df=None):
                                 ),
                                 dcc.Dropdown(
                                     id={"type": "target-cols-dropdown", "index": dataset_id},
-                                    options=[{"label": c, "value": c} for c in (df.columns if df is not None else [])],
+                                    options=[{"label": c, "value": c} for c in (df_stat.columns if df_stat is not None else [])],
+                                    value=saved_state.get('target-cols-dropdown', []),
                                     multi=True, placeholder="Select Target(s)...",
                                     className="bg-dark text-light small-dropdown mb-2"
                                 ),
@@ -146,14 +230,14 @@ def create_dataset_tab(dataset_id, filename, df=None):
                                                    options=[{"label": "Concise", "value": "Concise / Standard"},
                                                             {"label": "Descriptive", "value": "Descriptive"},
                                                             {"label": "Professional", "value": "Professional"}],
-                                                    value='Concise / Standard', size="sm")
+                                                    value=saved_state.get('param-tone', 'Concise / Standard'), size="sm")
                                     ], width=4),
                                     dbc.Col([
                                         html.Label("Consistency:", className="fw-bold text-muted small"),
                                         dbc.Select(id={"type": "param-consistency", "index": dataset_id},
                                                    options=[{"label": "Strict", "value": "Strict (Perfectly uniform)"},
                                                             {"label": "Realistic", "value": "Realistic (Natural variations)"}],
-                                                    value='Strict (Perfectly uniform)', size="sm")
+                                                    value=saved_state.get('param-consistency', 'Strict (Perfectly uniform)'), size="sm")
                                     ], width=4),
                                     dbc.Col([
                                         html.Label("AI Model:", className="fw-bold text-muted small"),
@@ -161,15 +245,15 @@ def create_dataset_tab(dataset_id, filename, df=None):
                                                    options=[{"label": "Gemma-3-4b", "value": "google/gemma-3-4b"},
                                                             {"label": "Llama-3.1-8b", "value": "meta/llama-3.1-8b"},
                                                             {"label": "Gemma-2-9b", "value": "google/gemma-2-9b"}],
-                                                   value='google/gemma-3-4b', size="sm")
+                                                   value=saved_state.get('algo-selector', 'google/gemma-3-4b'), size="sm")
                                     ], width=4),
                                 ], className="mb-2"),
                                 
                                 dbc.Row([
                                     dbc.Col([
                                         html.Label("Temperature:", className="fw-bold text-muted small"),
-                                        dcc.Slider(id={"type": "temperature-slider", "index": dataset_id}, min=0.0, max=1.0, step=0.1, value=0.3,
-                                                   marks={0: {'label': 'Strict', 'style': {'color': '#aaa'}}, 1: {'label': 'Creative', 'style': {'color': '#aaa'}}})
+                                        dcc.Slider(id={"type": "temperature-slider", "index": dataset_id}, min=0.0, max=1.0, step=0.1, value=saved_state.get('temperature-slider', 0.3),
+                                                   marks={0: {'label': 'Strict', 'style': {'color': '#ffffff'}}, 1: {'label': 'Creative', 'style': {'color': '#ffffff'}}})
                                     ], width=12)
                                 ], className="mb-2"),
 
@@ -177,14 +261,14 @@ def create_dataset_tab(dataset_id, filename, df=None):
                                 dbc.Row([
                                     dbc.Col([
                                         html.Label("Chunk Size:", className="fw-bold text-light small"),
-                                        dcc.Slider(id={"type": "gen-chunk-size", "index": dataset_id}, min=10, max=100, step=10, value=30)
+                                        dcc.Slider(id={"type": "gen-chunk-size", "index": dataset_id}, min=10, max=100, step=10, value=saved_state.get('gen-chunk-size', 30))
                                     ], width=6),
                                     dbc.Col([
                                         html.Div([
                                             html.Label("Max Context:", className="fw-bold text-light small me-auto"),
                                             html.Span("~0 Tok", id={"type": "estimated-tokens-lbl", "index": dataset_id}, className="badge bg-info ms-1")
                                         ], className="d-flex align-items-center justify-content-between"),
-                                        dcc.Slider(id={"type": "gen-max-context", "index": dataset_id}, min=20, max=1000, step=20, value=60)
+                                        dcc.Slider(id={"type": "gen-max-context", "index": dataset_id}, min=20, max=1000, step=20, value=saved_state.get('gen-max-context', 60))
                                     ], width=6)
                                 ], className="mb-3"),
 
@@ -198,7 +282,7 @@ def create_dataset_tab(dataset_id, filename, df=None):
                                                 {"label": "Dense", "value": "dense"},
                                                 {"label": "Diverse", "value": "diverse"}
                                             ],
-                                            value="random", size="sm", className="bg-dark text-light border-secondary"
+                                            value=saved_state.get('gen-context-strategy', 'random'), size="sm", className="bg-dark text-light border-secondary"
                                         )
                                     ], width=12)
                                 ], className="mb-2"),
@@ -223,6 +307,8 @@ def create_dataset_tab(dataset_id, filename, df=None):
                                     html.I(className="bi bi-pencil-square me-1 text-info"),
                                     dbc.Input(id={"type": "quick-rename-input", "index": dataset_id}, type="text", placeholder="Rename...", size="sm", className="bg-dark text-light border-secondary", style={"width": "160px", "display": "inline-block"}),
                                     dbc.Button([html.I(className="bi bi-trash")], id={"type": "btn-remove-col", "index": dataset_id}, color="danger", size="sm", outline=True, className="ms-1 py-1 px-2"),
+                                    dbc.Button([html.I(className="bi bi-plus-square")], id={"type": "btn-add-row", "index": dataset_id}, color="success", size="sm", outline=True, className="ms-2 py-1 px-2"),
+                                    dbc.Button([html.I(className="bi bi-layout-three-columns")], id={"type": "btn-add-col", "index": dataset_id}, color="info", size="sm", outline=True, className="ms-1 py-1 px-2"),
                                 ], className="d-flex align-items-center")
                             ], md=4, className="d-flex align-items-center"),
 
@@ -246,10 +332,10 @@ def create_dataset_tab(dataset_id, filename, df=None):
                             id={"type": "data-grid", "index": dataset_id},
                             className="ag-theme-alpine-dark",
                             columnDefs=new_cols,
-                            rowData=new_data,
+                            rowData=saved_state.get("data-grid", new_data),
                             rowClassRules=row_class_rules,
                             defaultColDef={"editable": True, "sortable": True, "filter": True, "resizable": True},
-                            dashGridOptions={"rowSelection": "multiple", "undoRedoCellEditing": True},
+                            dashGridOptions={"rowSelection": "multiple", "undoRedoCellEditing": True, "columnSize": "sizeToFit"},
                             style={"height": "500px", "width": "100%", "border": "none"},
                         )
                     ], className="p-0 border-0 rounded-bottom overflow-hidden")
@@ -272,17 +358,17 @@ def create_dataset_tab(dataset_id, filename, df=None):
                     dbc.CardBody([
                         html.H4("Exploratory Data Analysis", className="mb-2"),
                         dbc.Button("Refresh Dashboard", id={"type": "btn-refresh-eda", "index": dataset_id}, color="warning", outline=True, className="mb-3"),
-                        html.Div(id={"type": "eda-dashboard-container", "index": dataset_id})
+                        html.Div(id={"type": "eda-dashboard-container", "index": dataset_id}, children=eda_content)
                     ], className="p-4")
                 ], className="tabu-card mb-5 shadow border-secondary"),
 
-                # Downstream ML Evaluation Results
+                # ML Evaluation Settings
                 dbc.Card([
                     dbc.CardBody([
                         html.Div([
-                            html.H4([html.I(className="bi bi-cpu-fill me-2 text-primary"), "Downstream ML Evaluation Results"], className="mb-0"),
+                            html.H4([html.I(className="bi bi-cpu-fill me-2 text-primary"), "ML Evaluation Settings"], className="mb-0"),
                         ], className="d-flex align-items-center mb-3"),
-                        html.Div(id={"type": "ml-evaluation-results-dashboard", "index": dataset_id})
+                        html.Div(id={"type": "ml-evaluation-results-dashboard", "index": dataset_id}, children=ml_content)
                     ], className="p-4")
                 ], id={"type": "ml-evaluation-card", "index": dataset_id}, className="tabu-card mb-5 shadow border-secondary"),
 
@@ -292,6 +378,9 @@ def create_dataset_tab(dataset_id, filename, df=None):
                 dbc.Tooltip("Mark selected rows as Context (Blue)", target={"type": "btn-mode-context", "index": dataset_id}),
                 dbc.Tooltip("Mark selected rows as Targets (Red)", target={"type": "btn-mode-target", "index": dataset_id}),
                 dbc.Tooltip("Detect target columns automatically via LLM", target={"type": "btn-auto-suggest-targets", "index": dataset_id}),
-            ], className="px-4 py-3 text-light")
+                dbc.Tooltip("Add new empty Row at the end", target={"type": "btn-add-row", "index": dataset_id}),
+                dbc.Tooltip("Add new Column to the current view", target={"type": "btn-add-col", "index": dataset_id}),
+                dbc.Tooltip("Remove the currently selected/active column", target={"type": "btn-remove-col", "index": dataset_id}),
+            ], className="py-3 text-light w-100")
         ]
     )

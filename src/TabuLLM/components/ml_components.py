@@ -1,7 +1,19 @@
 from dash import html, dcc
 import dash_bootstrap_components as dbc
+import numpy as np
 
-def get_model_config_ui(model_type, dataset_id, task_type="classification"):
+def get_model_config_ui(model_type, dataset_id, task_type="classification", n_samples=None, n_features=None):
+    # Auto-adaptive logic for UI placeholders
+    s_rf_est = min(300, max(50, int(n_samples / 5))) if n_samples else 100
+    s_rf_depth = min(20, max(5, int(np.log2(n_samples + 2)))) if n_samples else "Auto"
+    
+    s_xgb_est = min(400, max(50, int(n_samples / 5))) if n_samples else 100
+    s_xgb_depth = min(12, max(3, int(np.log2(n_features + 2)))) if n_features else 6
+    
+    s_mlp_l1 = min(512, max(64, n_features * 4)) if n_features else 100
+    s_mlp_l2 = min(256, max(32, n_features * 2)) if n_features else 50
+    s_mlp_layers = f"({s_mlp_l1}, {s_mlp_l2})" if n_samples and n_samples > 500 else (f"({s_mlp_l1 // 2},)" if n_samples else "(100,)")
+    s_mlp_iter = max(1000, min(5000, 1000000 // (n_samples + 1))) if n_samples else 200
     if model_type == "logistic" or model_type == "linear":
         return dbc.Card([
             dbc.CardHeader(f"Configure {'Logistic' if task_type == 'classification' else 'Linear/Ridge'} Regression", className="py-1 small fw-bold"),
@@ -28,11 +40,11 @@ def get_model_config_ui(model_type, dataset_id, task_type="classification"):
                 dbc.Row([
                     dbc.Col([
                         html.Label("Estimators:", className="x-small fw-bold text-muted mb-1"),
-                        dbc.Input(id={"type": "ml-param", "index": f"{dataset_id}-rf-n_estimators"}, type="number", value=100, step=50, size="sm")
+                        dbc.Input(id={"type": "ml-param", "index": f"{dataset_id}-rf-n_estimators"}, type="number", value=None, placeholder=str(s_rf_est), step=10, size="sm")
                     ], width=4),
                     dbc.Col([
                         html.Label("Max Depth:", className="x-small fw-bold text-muted mb-1"),
-                        dbc.Input(id={"type": "ml-param", "index": f"{dataset_id}-rf-max_depth"}, type="number", value=None, placeholder="Auto", size="sm")
+                        dbc.Input(id={"type": "ml-param", "index": f"{dataset_id}-rf-max_depth"}, type="number", value=None, placeholder=str(s_rf_depth), size="sm")
                     ], width=4),
                     dbc.Col([
                         html.Label("Min Split:", className="x-small fw-bold text-muted mb-1"),
@@ -48,12 +60,12 @@ def get_model_config_ui(model_type, dataset_id, task_type="classification"):
             dbc.CardBody([
                 dbc.Row([
                     dbc.Col([
-                        html.Label("LR / Eta:", className="x-small fw-bold text-muted mb-1"),
-                        dbc.Input(id={"type": "ml-param", "index": f"{dataset_id}-xgb-learning_rate"}, type="number", value=0.1, step=0.01, size="sm")
+                        html.Label("Estimators:", className="x-small fw-bold text-muted mb-1"),
+                        dbc.Input(id={"type": "ml-param", "index": f"{dataset_id}-xgb-n_estimators"}, type="number", value=None, placeholder=str(s_xgb_est), size="sm")
                     ], width=4),
                     dbc.Col([
                         html.Label("Max Depth:", className="x-small fw-bold text-muted mb-1"),
-                        dbc.Input(id={"type": "ml-param", "index": f"{dataset_id}-xgb-max_depth"}, type="number", value=6, size="sm")
+                        dbc.Input(id={"type": "ml-param", "index": f"{dataset_id}-xgb-max_depth"}, type="number", value=None, placeholder=str(s_xgb_depth), size="sm")
                     ], width=4),
                     dbc.Col([
                         html.Label("Subsample:", className="x-small fw-bold text-muted mb-1"),
@@ -70,11 +82,11 @@ def get_model_config_ui(model_type, dataset_id, task_type="classification"):
                 dbc.Row([
                     dbc.Col([
                         html.Label("Hidden Layers:", className="x-small fw-bold text-muted mb-1"),
-                        dbc.Input(id={"type": "ml-param", "index": f"{dataset_id}-mlp-hidden_layer_sizes"}, type="text", value="(100,)", size="sm")
+                        dbc.Input(id={"type": "ml-param", "index": f"{dataset_id}-mlp-hidden_layer_sizes"}, type="text", value=None, placeholder=str(s_mlp_layers), size="sm")
                     ], width=6),
                     dbc.Col([
-                        html.Label("Max Epochs:", className="x-small fw-bold text-muted mb-1"),
-                        dbc.Input(id={"type": "ml-param", "index": f"{dataset_id}-mlp-max_iter"}, type="number", value=200, size="sm")
+                        html.Label("Max Iterations (Epochs):", className="x-small fw-bold text-muted mb-1"),
+                        dbc.Input(id={"type": "ml-param", "index": f"{dataset_id}-mlp-max_iter"}, type="number", value=None, placeholder=str(s_mlp_iter), size="sm")
                     ], width=6)
                 ], className="g-2 mb-2"),
                 dbc.Row([

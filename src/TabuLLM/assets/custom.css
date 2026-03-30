@@ -1,5 +1,19 @@
 /* Custom Dark Mode Theme for TabuLLM */
 
+/* ── Full-width Tab Content Fix ──────────────────────────────────────────── */
+/* Dash renders: div#tabs-datasets-parent > div#tabs-datasets > div.tab-content */
+/* All three need explicit 100% width — set via Python props AND CSS.           */
+.tab-content,
+.tab-parent,
+#tabs-datasets-parent,
+#tabs-datasets,
+#tabs-datasets > div {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+
 /* Subtly tinted row backgrounds for context and target */
 .row-context { background-color: rgba(0, 123, 255, 0.15) !important; } /* Soft Blue */
 .row-target { background-color: rgba(220, 53, 69, 0.15) !important; }  /* Soft Red */
@@ -27,4 +41,133 @@
     background-color: #2b2b2b;
     border: 1px solid #3c3c3c;
     border-radius: 10px;
-}
+}
+
+/* Slider ticks and labels visibility */
+.dash-slider-wrapper .rc-slider-mark-text,
+.rc-slider-mark-text,
+.dash-slider-mark,
+.dash-slider-mark-text,
+.dash-slider-mark-text[style] {
+    color: #ffffff !important;
+    font-size: 0.75rem !important;
+}
+.dash-slider-wrapper .rc-slider-mark-text-active,
+.rc-slider-mark-text-active,
+.dash-slider-mark-active,
+.dash-slider-mark-text-active {
+    color: #ffffff !important;
+    font-weight: bold !important;
+}
+
+/* Custom Tabs Styling */
+.custom-tabs-container {
+    border-bottom: 2px solid #3c3c3c;
+    background-color: transparent !important;
+}
+.custom-tab {
+    background-color: #1e1e1e !important;
+    color: #666 !important;
+    border: 1px solid #3c3c3c !important;
+    border-bottom: none !important;
+    padding: 8px 16px !important;
+    font-size: 0.85rem !important;
+    font-weight: 500 !important;
+    transition: all 0.2s ease;
+}
+.custom-tab:hover {
+    color: #eee !important;
+    background-color: #2b2b2b !important;
+}
+.custom-tab--selected {
+    background-color: #2b2b2b !important;
+    color: #ffffff !important; /* Changed from lightblue to white */
+    border-top: 2px solid #ffffff !important; /* Changed from lightblue to white */
+    font-weight: 700 !important;
+}
+
+/* AG Grid Header Adjustments - Pure White headers */
+.ag-theme-alpine-dark .ag-header-cell-label {
+    color: #ffffff !important;
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 0.5px;
+}
+
+/* AG Grid Dark Theme overrides to match #2b2b2b theme */
+.ag-theme-alpine-dark {
+    --ag-background-color: #2b2b2b;
+    --ag-header-background-color: #1e1e1e;
+    --ag-odd-row-background-color: #262626;
+    --ag-border-color: #3c3c3c;
+    --ag-row-border-color: #3c3c3c;
+    --ag-secondary-border-color: #3c3c3c;
+    --ag-widget-container-background-color: #1e1e1e;
+    --ag-foreground-color: #ffffff;
+    --ag-data-color: #ffffff;
+}
+
+/* Force white text on all grid cells */
+.ag-theme-alpine-dark .ag-cell {
+    color: #ffffff !important;
+}
+
+.ag-theme-alpine-dark .ag-header-row {
+    background-color: #1e1e1e !important;
+    border-bottom: 1px solid #3c3c3c !important;
+}
+
+/* Dash dcc.Dropdown (Combobox) Dark Mode Overrides */
+.small-dropdown .Select-control,
+.small-dropdown .dash-dropdown-grid-container,
+.small-dropdown .dash-dropdown-trigger {
+    background-color: #1e1e1e !important;
+    border-color: #3c3c3c !important;
+    color: #ffffff !important;
+}
+.small-dropdown .Select-placeholder,
+.small-dropdown div[class*="placeholder"],
+.small-dropdown span[class*="placeholder"] {
+    color: #aaaaaa !important;
+}
+.small-dropdown .Select-value-label,
+.small-dropdown .dash-dropdown-content,
+.small-dropdown .dash-dropdown-content * {
+    color: #ffffff !important;
+}
+.small-dropdown .Select-menu-outer,
+.small-dropdown .dash-dropdown-menu {
+    background-color: #2b2b2b !important;
+    border: 1px solid #3c3c3c !important;
+    color: #ffffff !important;
+}
+.small-dropdown .VirtualizedSelectOption,
+.small-dropdown .dash-dropdown-option {
+    background-color: #2b2b2b !important;
+    color: #cccccc !important;
+}
+.small-dropdown .VirtualizedSelectFocusedOption,
+.small-dropdown .dash-dropdown-option--is-focused {
+    background-color: #3c3c3c !important;
+    color: #ffffff !important;
+}
+.small-dropdown .Select-value,
+.small-dropdown .dash-dropdown-chip {
+    background-color: #3c3c3c !important;
+    border: 1px solid #4a4a4a !important;
+    color: #ffffff !important;
+}
+.small-dropdown .Select-value-icon {
+    border-right: 1px solid #4a4a4a !important;
+}
+.small-dropdown .Select-arrow,
+.small-dropdown .dash-dropdown-arrow {
+    border-color: #aaaaaa transparent transparent !important;
+}
+
+/* Hard override for any span or div directly inside the newer triggers */
+.small-dropdown .dash-dropdown-trigger,
+.small-dropdown .dash-dropdown-grid-container * {
+    color: #ffffff !important;
+}

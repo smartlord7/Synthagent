@@ -106,7 +106,9 @@ def run_single_dataset_benchmark(args):
                     p["done"] = fold_num
                     progress_dict[dataset_id_key] = p
         except Exception as e:
+            import traceback
             logger.error(f"Pipeline error in {filename} fold {fold_num}: {e}")
+            logger.error(traceback.format_exc())
             continue
 
     # --- AGGREGATE ML RESULTS FOR STORE ---
@@ -120,8 +122,20 @@ def run_single_dataset_benchmark(args):
         for m_type in all_models:
             overall_ml[m_type] = {}
             for m_name in ["accuracy", "f1", "rmse", "r2"]:
-                f_orig = [r["ml_eval"][m_type]["original"][m_name] for r in results if m_type in r.get("ml_eval", {}) and m_name in r["ml_eval"][m_type]["original"]]
-                f_aug = [r["ml_eval"][m_type]["augmented"][m_name] for r in results if m_type in r.get("ml_eval", {}) and m_name in r["ml_eval"][m_type]["augmented"]]
+                f_orig = [
+                    r["ml_eval"][m_type]["original"][m_name]
+                    for r in results
+                    if m_type in r.get("ml_eval", {})
+                    and r["ml_eval"][m_type].get("original") is not None
+                    and m_name in r["ml_eval"][m_type]["original"]
+                ]
+                f_aug = [
+                    r["ml_eval"][m_type]["augmented"][m_name]
+                    for r in results
+                    if m_type in r.get("ml_eval", {})
+                    and r["ml_eval"][m_type].get("augmented") is not None
+                    and m_name in r["ml_eval"][m_type]["augmented"]
+                ]
                 
                 if f_orig and f_aug:
                     m_o, s_o = np.mean(f_orig), np.std(f_orig)

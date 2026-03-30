@@ -77,6 +77,17 @@ def get_eda_layout(df_orig, df_aug, dataset_id="base", results_list=None):
     corr_stability, privacy_risk, coverage_score, nndr = 0, 0, 0, 0
     entropy_preservation = 0 # Placeholder for simplicity
 
+    # Prepare Encoded Data for All Features
+    df_orig_enc = df_orig_c.copy()
+    df_aug_enc = df_aug_c.copy()
+    all_features = numeric_cols + cat_cols
+    
+    for col in cat_cols:
+        combined = pd.concat([df_orig_c[col], df_aug_c[col]])
+        codes, _ = pd.factorize(combined)
+        df_orig_enc[col] = codes[:len(df_orig_c)]
+        df_aug_enc[col] = codes[len(df_orig_c):]
+
     if numeric_cols:
         for col in numeric_cols:
             a, b = df_orig_c[col].dropna(), df_aug_c[col].dropna()
@@ -90,22 +101,26 @@ def get_eda_layout(df_orig, df_aug, dataset_id="base", results_list=None):
                 if a.mean() != 0:
                     mre_list.append(abs(a.mean() - b.mean()) / abs(a.mean()))
 
-        if len(numeric_cols) > 1:
-            c_orig = df_orig_c[numeric_cols].corr().fillna(0).values
-            c_aug = df_aug_c[numeric_cols].corr().fillna(0).values
+        if len(all_features) > 1:
+            c_orig = df_orig_enc[all_features].corr().fillna(0).values
+            c_aug = df_aug_enc[all_features].corr().fillna(0).values
             corr_stability = (1 - np.mean(np.abs(c_orig - c_aug))) * 100
 
+    if all_features:
+        # Use encoded data for distance-based metrics
         scaler = MinMaxScaler()
-        combined_numeric = pd.concat([df_orig_c[numeric_cols], df_aug_c[numeric_cols]]).fillna(0)
-        scaler.fit(combined_numeric)
-        orig_norm = scaler.transform(df_orig_c[numeric_cols].fillna(0))
-        aug_norm = scaler.transform(df_aug_c[numeric_cols].fillna(0))
+        combined_enc = pd.concat([df_orig_enc[all_features], df_aug_enc[all_features]]).fillna(0)
+        scaler.fit(combined_enc)
+        orig_norm = scaler.transform(df_orig_enc[all_features].fillna(0))
+        aug_norm = scaler.transform(df_aug_enc[all_features].fillna(0))
+        
         sample_sz = min(200, len(aug_norm))
         aug_sample = aug_norm[:sample_sz]
         dist_matrix = euclidean_distances(aug_sample, orig_norm)
         min_dists = np.min(dist_matrix, axis=1)
         privacy_risk = int((min_dists < 0.05).mean() * 100)
         coverage_score = int((min_dists > 0.1).mean() * 100)
+        
         if len(orig_norm) > 1 and len(aug_sample) > 1:
             aug_to_aug = euclidean_distances(aug_sample, aug_sample)
             np.fill_diagonal(aug_to_aug, np.inf)
@@ -239,38 +254,85 @@ def get_eda_layout(df_orig, df_aug, dataset_id="base", results_list=None):
                 logger.warning(f"Grouping by fold failed: {ge}")
                 has_folds = False
 
-        for col in numeric_cols:
-            # Skip if column missing in either (especially orig which lacks _fold_id)
+        for col in all_features:
+            # Skip if column missing
             if col not in df_orig_c.columns or col not in df_aug_c.columns:
                 continue
-                
+            
+            is_num = col in numeric_cols
             a = df_orig_c[col].dropna()
             b_full = df_aug_c[col].dropna()
             
             if not a.empty and not b_full.empty:
-                # 1. High-level Mean Shift (on pooled data)
-                shift = ( (b_full.mean() - a.mean()) / (abs(a.mean()) + 1e-9) ) * 100
-                
-                # 2. Per-fold aggregation for mean/std if available
-                if has_folds and fold_groups is not None:
-                    try:
-                        fold_means = fold_groups[col].mean()
-                        b_mean = fold_means.mean()
-                        b_std = fold_means.std()
-                        val_str = f"{b_mean:.2f} ±{b_std:.2f}"
-                    except:
-                        b_mean = b_full.mean()
-                        val_str = f"{b_mean:.2f}"
+                if is_num:
+                    # 1. High-level Mean Shift (on pooled data)
+                    shift = ( (b_full.mean() - a.mean()) / (abs(a.mean()) + 1e-9) ) * 100
+                    
+                    if has_folds and fold_groups is not None:
+                        try:
+                            fold_means = fold_groups[col].mean()
+                            b_mean = fold_means.mean()
+                            b_std = fold_means.std()
+                            val_str = f"{b_mean:.2f} ±{b_std:.2f}"
+                        except:
+                            val_str = f"{b_full.mean():.2f}"
+                    else:
+                        val_str = f"{b_full.mean():.2f}"
+                    
+                    _, ks_p = stats.ks_2samp(a, b_full)
+                    orig_val = f"{a.mean():.2f}"
                 else:
-                    b_mean = b_full.mean()
-                    val_str = f"{b_mean:.2f}"
-
-                # 3. KS Test (on pooled data for significance)
-                _, ks_p = stats.ks_2samp(a, b_full)
-                
+                    # Categorical handling: Mode and Distribution Shift
+                    orig_val = f"'{a.mode()[0]}'" if not a.mode().empty else "N/A"
+                    
+                    if has_folds and fold_groups is not None:
+                        try:
+                            # Hellinger distance per fold for std
+                            h_folds, e_means = [], []
+                            for _, f_df in fold_groups:
+                                # For shift calculation
+                                p_f = a.value_counts(normalize=True)
+                                q_f = f_df[col].value_counts(normalize=True)
+                                cats = p_f.index.union(q_f.index)
+                                p_f = p_f.reindex(cats, fill_value=0).values
+                                q_f = q_f.reindex(cats, fill_value=0).values
+                                h_folds.append(np.sqrt(np.sum((np.sqrt(p_f) - np.sqrt(q_f))**2)) / np.sqrt(2))
+                                
+                                # For encoded stats
+                                e_means.append(df_aug_enc.loc[f_df.index, col].mean())
+                            
+                            e_m, e_s = np.mean(e_means), np.std(e_means)
+                            val_str = f"'{b_full.mode()[0]}' ({e_m:.1f} ±{e_s:.1f})" if not b_full.mode().empty else "N/A"
+                        except:
+                            val_str = f"'{b_full.mode()[0]}'" if not b_full.mode().empty else "N/A"
+                    else:
+                        e_m = df_aug_enc[col].mean()
+                        val_str = f"'{b_full.mode()[0]}' ({e_m:.1f})" if not b_full.mode().empty else "N/A"
+                    
+                    # Original Mode + Encoded Mean
+                    orig_e = df_orig_enc[col].mean()
+                    orig_val = f"'{a.mode()[0]}' ({orig_e:.1f})" if not a.mode().empty else "N/A"
+                    
+                    # Chi-square for p-value
+                    p_obs = a.value_counts(normalize=True)
+                    q_obs = b_full.value_counts(normalize=True)
+                    cats = p_obs.index.union(q_obs.index)
+                    p_vals = p_obs.reindex(cats, fill_value=0).values * len(b_full)
+                    q_vals = q_obs.reindex(cats, fill_value=0).values * len(b_full)
+                    # Add tiny epsilon to avoid zero in expected
+                    p_vals = np.where(p_vals == 0, 1e-5, p_vals)
+                    try:
+                        _, ks_p = stats.chisquare(q_vals, f_exp=p_vals)
+                    except: ks_p = 0.0
+                    
+                    # For shift, use Hellinger * 100 as a proxy %
+                    p_h = p_obs.reindex(cats, fill_value=0).values
+                    q_h = q_obs.reindex(cats, fill_value=0).values
+                    shift = (np.sqrt(np.sum((np.sqrt(p_h) - np.sqrt(q_h))**2)) / np.sqrt(2)) * 100
+                    
                 stats_list.append(html.Tr([
                     html.Td(col, className="fw-bold x-small"), 
-                    html.Td(f"{a.mean():.2f}", className="x-small"), 
+                    html.Td(orig_val, className="x-small"), 
                     html.Td(val_str, className="x-small"), 
                     html.Td(f"{shift:+.1f}%", className=f"x-small {'text-danger' if abs(shift) > 10 else 'text-success'}"),
                     html.Td(f"{ks_p:.4f}", className="x-small"), 
@@ -292,24 +354,23 @@ def get_eda_layout(df_orig, df_aug, dataset_id="base", results_list=None):
             item_id="ai-inference"
         ))
 
-    if len(numeric_cols) >= 2:
+    if len(all_features) >= 2:
         try:
             # 1. Original Correlation Matrix
-            c_orig = df_orig_c[numeric_cols].corr()
+            c_orig = df_orig_enc[all_features].corr()
             
             # 2. Augmented Correlation Matrix (Averaged over folds if present)
             if has_folds and fold_groups is not None:
                 fold_corrs = []
-                # Ensure we don't iterate on None
                 for _, g_df in fold_groups:
                     if g_df.empty: continue
-                    fold_corrs.append(g_df[numeric_cols].corr().fillna(0))
+                    fold_corrs.append(df_aug_enc.loc[g_df.index, all_features].corr().fillna(0))
                 if fold_corrs:
                     c_aug_avg = sum(fold_corrs) / len(fold_corrs)
                 else:
-                    c_aug_avg = df_aug_c[numeric_cols].corr().fillna(0)
+                    c_aug_avg = df_aug_enc[all_features].corr().fillna(0)
             else:
-                c_aug_avg = df_aug_c[numeric_cols].corr().fillna(0)
+                c_aug_avg = df_aug_enc[all_features].corr().fillna(0)
             
             fig_orig = px.imshow(c_orig, text_auto=".1f", color_continuous_scale="RdBu_r", zmin=-1, zmax=1,
                                  title="Relational Structure: Original baseline", template="plotly_dark")
@@ -357,7 +418,8 @@ def get_eda_layout(df_orig, df_aug, dataset_id="base", results_list=None):
             logger.warning(f"PCA generation failed: {e}")
 
     dist_elements = []
-    for col in df_aug_c.columns[:10]: # Limit to first 10 for performance
+    # Contemplate ALL features as requested
+    for col in df_aug_c.columns: 
         if col in numeric_cols:
             fig = px.histogram(df_combined, x=col, color="State", barmode="overlay", marginal="box", 
                                template="plotly_dark", opacity=0.7)

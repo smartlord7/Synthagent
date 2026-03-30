@@ -2,18 +2,39 @@ from dash import dcc, html
 import dash_bootstrap_components as dbc
 from components.dataset_tab import create_dataset_tab
 
+import os
+import json
+
 def create_layout():
-    # Initial state with one default workbench tab
-    default_id = "default-dataset"
-    default_tab = create_dataset_tab(default_id, "Workbench")
+    session_file = "workspace_session.json"
+    metadata = {}
+    pipeline_results = {}
+    tabs_children = []
     
+    if os.path.exists(session_file):
+        try:
+            with open(session_file, "r") as f:
+                data = json.load(f)
+            metadata = data.get("metadata", {})
+            pipeline_results = data.get("pipeline_results", {})
+            tab_states = data.get("tabs", {})
+            
+            for ds_id, ds_meta in metadata.items():
+                state = tab_states.get(ds_id, {})
+                tabs_children.append(create_dataset_tab(ds_id, ds_meta["filename"], saved_state=state, pipeline_res=pipeline_results.get(ds_id)))
+        except Exception as e:
+            print("Failed to load session:", e)
+            
+    if not tabs_children:
+        default_id = "default-dataset"
+        tabs_children = [create_dataset_tab(default_id, "Workbench")]
+        metadata = {default_id: {"filename": "Workbench", "status": "Ready", "rows": 10, "cols": 5}}
+
     return html.Div([
         # Master Store for tracking multiple datasets
-        dcc.Store(id="datasets-metadata-store", data={
-            default_id: {"filename": "Workbench", "status": "Ready", "rows": 10, "cols": 5}
-        }),
+        dcc.Store(id="datasets-metadata-store", data=metadata),
         dcc.Store(id="active-tab-store"),
-        dcc.Store(id="pipeline-results-store", data={}),
+        dcc.Store(id="pipeline-results-store", data=pipeline_results),
 
         # Navbar
         dbc.Navbar(
@@ -38,6 +59,11 @@ def create_layout():
                                id="btn-open-pipeline", color="primary", outline=True,
                                className="btn-sm rounded-pill px-3 shadow-sm me-2"),
                                
+                    # Session Context Actions
+                    dbc.Button([html.I(className="bi bi-cloud-arrow-up me-2"), "Save Setup"],
+                               id="btn-save-session", color="success", outline=True,
+                               className="btn-sm rounded-pill px-3 shadow-sm me-2"),
+                               
                     dcc.Upload(
                         id='upload-data',
                         children=dbc.Button([html.I(className="bi bi-file-earmark-arrow-up me-2"), "Upload Datasets"],
@@ -45,10 +71,13 @@ def create_layout():
                         multiple=True, className="d-inline-block"
                     ),
                     
+                    html.Div(id="session-toast-container", className="ms-2 align-middle d-inline-block"),
+
                     # Tooltips for Navbar Buttons
                     dbc.Tooltip("Download Comprehensive Pipeline Report (All Datasets & Metrics)", target="btn-global-report"),
                     dbc.Tooltip("Configure and run parallel data augmentation pipeline", target="btn-open-pipeline"),
                     dbc.Tooltip("Upload new CSV/Excel datasets to the workbench", target="upload-data"),
+                    dbc.Tooltip("Save workspace layout and configurations to file", target="btn-save-session"),
                     
                     dcc.Download(id="global-download-pdf"),
                 ], className="d-flex align-items-center")
@@ -81,8 +110,7 @@ def create_layout():
                 ]),
             ], id="delete-dataset-modal", centered=True, backdrop="static"),
 
-            dcc.Tabs(id="tabs-datasets", value=default_id, children=[
-                default_tab,
-            ], className="custom-tabs-container"),
+            dcc.Tabs(id="tabs-datasets", value=list(metadata.keys())[0] if metadata else "default-dataset", children=tabs_children, 
+                     className="custom-tabs border-bottom border-secondary bg-dark text-light mb-0"),
         ], fluid=True, className="px-0")
     ])
