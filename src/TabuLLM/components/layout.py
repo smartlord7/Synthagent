@@ -17,6 +17,7 @@ def create_layout():
                 data = json.load(f)
             metadata = data.get("metadata", {})
             pipeline_results = data.get("pipeline_results", {})
+            pipeline_config = data.get("pipeline_config", {})
             tab_states = data.get("tabs", {})
             
             for ds_id, ds_meta in metadata.items():
@@ -35,6 +36,7 @@ def create_layout():
         dcc.Store(id="datasets-metadata-store", data=metadata),
         dcc.Store(id="active-tab-store"),
         dcc.Store(id="pipeline-results-store", data=pipeline_results),
+        dcc.Store(id="pipeline-config-store", data=pipeline_config if 'pipeline_config' in locals() else {}),
 
         # Navbar
         dbc.Navbar(
@@ -74,7 +76,7 @@ def create_layout():
                     html.Div(id="session-toast-container", className="ms-2 align-middle d-inline-block"),
 
                     # Tooltips for Navbar Buttons
-                    dbc.Tooltip("Download Comprehensive Pipeline Report (All Datasets & Metrics)", target="btn-global-report"),
+                    dbc.Tooltip("Download Global Benchmark Report (All Datasets & Metrics)", target="btn-global-report"),
                     dbc.Tooltip("Configure and run parallel data augmentation pipeline", target="btn-open-pipeline"),
                     dbc.Tooltip("Upload new CSV/Excel datasets to the workbench", target="upload-data"),
                     dbc.Tooltip("Save workspace layout and configurations to file", target="btn-save-session"),
@@ -93,7 +95,7 @@ def create_layout():
                 dbc.ModalFooter(
                     dbc.Button("Close", id="btn-close-pipeline", className="ms-auto", n_clicks=0)
                 ),
-            ], id="pipeline-modal", size="lg", centered=True, scrollable=True, backdrop="static", is_open=False, className="bg-dark text-light border-secondary shadow-lg"),
+            ], id="pipeline-modal", size="lg", is_open=False, className="text-light border-secondary shadow-lg"),
             
             # Delete Confirmation Modal
             dbc.Modal([
@@ -112,5 +114,37 @@ def create_layout():
 
             dcc.Tabs(id="tabs-datasets", value=list(metadata.keys())[0] if metadata else "default-dataset", children=tabs_children, 
                      className="custom-tabs border-bottom border-secondary bg-dark text-light mb-0"),
+            
+            # Global ML Diagnostics Modal
+            dbc.Modal([
+                dbc.ModalHeader(dbc.ModalTitle(id="ml-diag-modal-title")),
+                dbc.ModalBody([
+                    # Navigation Header
+                    dbc.Row([
+                        dbc.Col(dbc.Button([html.I(className="bi bi-arrow-left me-2"), "Prev Fold"], id="btn-diag-prev", color="secondary", outline=True, size="sm"), width=4),
+                        dbc.Col(html.Div(id="ml-diag-fold-label", className="text-center fw-bold text-info"), width=4),
+                        dbc.Col(dbc.Button(["Next Fold", html.I(className="bi bi-arrow-right ms-2")], id="btn-diag-next", color="secondary", outline=True, size="sm", className="float-end"), width=4),
+                    ], align="center", className="mb-4 bg-dark p-2 rounded border border-secondary"),
+                    
+                    # Content
+                    dbc.Spinner(html.Div(id="ml-diag-modal-content")),
+                    
+                    html.Hr(className="border-secondary my-4"),
+                    html.Div([
+                        html.H6([html.I(className="bi bi-gear-fill me-2"), "Model Hyperparameters & Training Config"], className="text-muted small fw-bold mb-3"),
+                        dbc.Spinner(html.Div(id="ml-diag-params-content", className="bg-black p-3 rounded border border-secondary mb-4")),
+                    ]),
+                    
+                    html.Hr(className="border-secondary my-4"),
+                    html.H6("Aggregate Performance (Mean ± SD)", className="text-muted small fw-bold mb-3"),
+                    dbc.Spinner(html.Div(id="ml-diag-aggregate-content")),
+                ], className="bg-dark text-light"),
+                dcc.Store(id="ml-diag-current-fold", data=0),
+                dcc.Store(id="ml-diag-active-model", data=None), # {dataset_id, model_type}
+                dbc.ModalFooter(
+                    dbc.Button("Close Diagnostics", id="btn-diag-close", color="secondary", outline=True, size="sm", n_clicks=0)
+                )
+            ], id="ml-diag-modal", size="xl", is_open=False)
+            
         ], fluid=True, className="px-0")
     ])

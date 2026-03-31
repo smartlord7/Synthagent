@@ -12,7 +12,7 @@ class PDFReportGenerator(FPDF):
         self.set_y(10)
         self.set_font('Helvetica', 'B', 16)
         self.set_text_color(255, 255, 255)
-        self.cell(0, 10, 'TabuLLM: Comprehensive Augmentation Audit', border=0, ln=1, align='C')
+        self.cell(0, 10, 'TabuLLM: AI Benchmark Report', border=0, ln=1, align='C')
         self.ln(10)
 
     def footer(self):
@@ -85,7 +85,7 @@ class PDFReportGenerator(FPDF):
         for i, text in enumerate(footnotes, 1):
             self.cell(0, 4, f"[{i}] {text}", ln=1)
 
-def generate_comprehensive_pdf(report_data):
+def generate_benchmark_pdf(report_data):
     pdf = PDFReportGenerator()
     
     summary = report_data.get("executive_summary", {})
@@ -201,6 +201,7 @@ def generate_comprehensive_pdf(report_data):
                 
                 rows = []
                 for metric_name, vals in m_perf.items():
+                    if metric_name == "folds_metadata": continue
                     # vals is {"real": "...", "aug": "...", "delta": "..."}
                     rows.append([metric_name.upper(), vals.get("real"), vals.get("aug"), vals.get("delta")])
                 
@@ -210,9 +211,9 @@ def generate_comprehensive_pdf(report_data):
         else:
             pdf.cell(0, 10, "No ML evaluation results found.", ln=1)
 
-        # F. Appendix: COMPREHENSIVE DATA TRACE
+        # F. Appendix: BENCHMARK DATA TRACE
         pdf.add_page()
-        pdf.section_header("Appendix: Comprehensive Data Trace")
+        pdf.section_header("Appendix: Benchmark Data Trace")
         
         # 1. Original Dataset (Full)
         pdf.set_font('Helvetica', 'B', 11)

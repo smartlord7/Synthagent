@@ -2,8 +2,12 @@ import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression, LinearRegression, Ridge
-from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
+from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor, GradientBoostingClassifier, GradientBoostingRegressor, AdaBoostClassifier, AdaBoostRegressor
 from sklearn.neural_network import MLPClassifier, MLPRegressor
+from sklearn.svm import SVC, SVR
+from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
+from sklearn.naive_bayes import GaussianNB
+from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 from sklearn.metrics import accuracy_score, f1_score, mean_squared_error, r2_score
 from xgboost import XGBClassifier, XGBRegressor
 
@@ -23,17 +27,12 @@ class MLEvaluator:
     @staticmethod
     def train_and_evaluate(train_df, targets, model_type, params=None, task_type="classification", test_df=None):
         if not targets or train_df.empty:
-            return None
+            return None, None
         
         target = targets[0]
         if target not in train_df.columns:
             logger.warning(f"Target column '{target}' not found in training data.")
-            return None
-            
-        target = targets[0]
-        if target not in train_df.columns:
-            logger.warning(f"Target column '{target}' not found in training data.")
-            return None
+            return None, None
             
         def apply_encoding(df_fit, df_transform, cols):
             df_out = df_transform.copy()
@@ -60,7 +59,7 @@ class MLEvaluator:
         # Safeguard: Classification requires at least 2 classes
         if task_type == "classification" and y_train.nunique() < 2:
             logger.warning(f"Single class detected in training set for {model_type}. Skipping.")
-            return None
+            return None, None
 
         if test_df is not None and not test_df.empty:
             test_proc = apply_encoding(train_df, test_df, cat_cols)
@@ -75,7 +74,7 @@ class MLEvaluator:
             
         if X_train.empty:
             logger.warning(f"X_train is empty for {model_type}. Skipping.")
-            return None
+            return None, None
 
         # Cast target to int to avoid float class label issues after encoding
         try:
@@ -87,11 +86,11 @@ class MLEvaluator:
         # Safeguard: test set must also have >=2 classes for classification scoring
         if task_type == "classification" and y_test.nunique() < 1:
             logger.warning(f"Empty test set for {model_type}. Skipping.")
-            return None
+            return None, None
 
         model = MLEvaluator.get_model(model_type, params, task_type, X_train, y_train)
         if model is None:
-            return None
+            return None, None
 
         try:
             model.fit(X_train, y_train)
@@ -114,12 +113,40 @@ class MLEvaluator:
                     "rmse": float(np.sqrt(mean_squared_error(y_test, y_pred))),
                     "r2": float(r2_score(y_test, y_pred)),
                 }
-            return metrics
+
+            # --- EXTRACT METADATA ---
+            metadata = {"model_type": model_type}
+            if hasattr(model, "get_params"):
+                 metadata["params"] = model.get_params()
+            
+            try:
+                if model_type == "mlp" and hasattr(model, "loss_curve_"):
+                     metadata["loss_curve"] = [float(x) for x in model.loss_curve_]
+                
+                # Models with feature_importances_ attribute
+                if model_type in ["rf", "xgb", "gb", "dt", "ab"] and hasattr(model, "feature_importances_"):
+                     metadata["feature_importances"] = [float(x) for x in model.feature_importances_]
+                     metadata["feature_names"] = X_train.columns.tolist()
+                
+                # Models with coef_ attribute (Linear models, Linear SVM)
+                if model_type in ["logistic", "linear", "svm"] and hasattr(model, "coef_"):
+                     try:
+                         # SVM coef_ can be a sparse matrix OR a dense array depending on kernel
+                         c = model.coef_.toarray() if hasattr(model.coef_, "toarray") else model.coef_
+                         metadata["coef"] = c.tolist()
+                         metadata["feature_names"] = X_train.columns.tolist()
+                         metadata["intercept"] = model.intercept_.tolist() if hasattr(model, "intercept_") else 0
+                     except Exception as e:
+                         logger.debug(f"Could not extract coefficients for {model_type}: {e}")
+            except Exception as meta_e:
+                logger.warning(f"Failed to extract metadata for {model_type}: {meta_e}")
+
+            return metrics, metadata
         except Exception as e:
             import traceback
             logger.error(f"Error training {model_type}: {e}")
             logger.debug(traceback.format_exc())
-            return None
+            return None, None
 
     @staticmethod
     def get_model(model_type, params, task_type, X_train=None, y_train=None):
@@ -132,8 +159,11 @@ class MLEvaluator:
             if k == "hidden_layer_sizes" and isinstance(v, str):
                 try: clean_p[k] = eval(v)
                 except: clean_p[k] = (100,)
-            elif k in ["n_estimators", "max_depth", "max_iter", "min_samples_split"]:
+            elif k in ["n_estimators", "max_depth", "max_iter", "min_samples_split", "n_neighbors"]:
                 try: clean_p[k] = int(v)
+                except: clean_p[k] = v
+            elif k in ["C", "learning_rate", "var_smoothing"]:
+                try: clean_p[k] = float(v)
                 except: clean_p[k] = v
             else:
                 clean_p[k] = v
@@ -168,18 +198,47 @@ class MLEvaluator:
                 if model_type == "logistic" and n_samples > 10000 and "solver" not in clean_p:
                     clean_p["solver"] = "saga"
 
+            elif model_type == "knn":
+                if "n_neighbors" not in clean_p:
+                    clean_p["n_neighbors"] = min(15, max(3, int(np.sqrt(n_samples))))
+            elif model_type == "dt":
+                if "max_depth" not in clean_p:
+                    clean_p["max_depth"] = min(12, max(4, int(np.log2(n_samples + 2))))
+            elif model_type == "gb":
+                if "n_estimators" not in clean_p:
+                    clean_p["n_estimators"] = min(300, max(50, int(n_samples / 5)))
+            elif model_type == "ab":
+                if "n_estimators" not in clean_p:
+                    clean_p["n_estimators"] = min(150, max(50, int(n_samples / 5)))
+
         if task_type == "classification":
             if model_type == "logistic": return LogisticRegression(**clean_p)
             if model_type == "rf": return RandomForestClassifier(**clean_p)
             if model_type == "xgb": return XGBClassifier(**clean_p)
             if model_type == "mlp": return MLPClassifier(**clean_p)
+            
+            if model_type == "svm": return SVC(**clean_p)
+            if model_type == "knn": return KNeighborsClassifier(**clean_p)
+            if model_type == "nb": return GaussianNB(**clean_p)
+            if model_type == "dt": return DecisionTreeClassifier(**clean_p)
+            if model_type == "gb": return GradientBoostingClassifier(**clean_p)
+            if model_type == "ab": return AdaBoostClassifier(**clean_p)
         else:
             if model_type == "linear" or model_type == "logistic":
-                # Remove classification-specific params if switching to Ridge
                 for k in ["penalty", "dual", "solver", "C", "multi_class", "l1_ratio"]:
                     clean_p.pop(k, None)
                 return Ridge(**clean_p)
             if model_type == "rf": return RandomForestRegressor(**clean_p)
             if model_type == "xgb": return XGBRegressor(**clean_p)
             if model_type == "mlp": return MLPRegressor(**clean_p)
+            
+            if model_type == "svm": return SVR(**clean_p)
+            if model_type == "knn": return KNeighborsRegressor(**clean_p)
+            if model_type == "nb": 
+                clean_p.pop("var_smoothing", None)
+                return Ridge(**clean_p) # Naive Bayes doesn't support regression
+            if model_type == "dt": return DecisionTreeRegressor(**clean_p)
+            if model_type == "gb": return GradientBoostingRegressor(**clean_p)
+            if model_type == "ab": return AdaBoostRegressor(**clean_p)
+            
         return None

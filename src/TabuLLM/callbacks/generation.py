@@ -5,7 +5,46 @@ import dash
 from dash import Input, Output, State, ALL, MATCH
 from core import app
 from utils.logging_config import logger
-from services.llm_client import generate_bulk_data
+from services.llm_client import generate_bulk_data, provider
+from dash import callback_context
+
+# --- Sync Local Models ---
+@app.callback(
+    Output({"type": "algo-selector", "index": MATCH}, "options"),
+    Output({"type": "algo-selector", "index": MATCH}, "value"),
+    Output({"type": "gen-max-context", "index": MATCH}, "max"),
+    Output({"type": "gen-max-context", "index": MATCH}, "value"),
+    Input({"type": "btn-refresh-models", "index": MATCH}, "n_clicks"),
+    Input({"type": "algo-selector", "index": MATCH}, "value"),
+    State({"type": "algo-selector", "index": MATCH}, "options"),
+    prevent_initial_call=False
+)
+def refresh_local_models(n_clicks, current_value, existing_options):
+    ctx = dash.callback_context
+    triggered = ctx.triggered[0]['prop_id'] if ctx.triggered else ""
+    
+    # 1. Fetch info if Refresh clicked or initial load
+    if "btn-refresh-models" in triggered or not triggered:
+        models_info = provider.get_available_models()
+        options = [{"label": m["id"].split("/")[-1].title(), "value": m["id"]} for m in models_info]
+        ids = [m["id"] for m in models_info]
+        new_value = current_value if current_value in ids else (ids[0] if ids else None)
+    else:
+        # Just use existing options if selection changed
+        options = existing_options
+        new_value = current_value
+        # Re-fetch models info to get context limit for the new current_value
+        models_info = provider.get_available_models()
+
+    # Find context length
+    ctx_limit = 4096
+    for m in models_info:
+        if m["id"] == new_value:
+            ctx_limit = m["max_context"]
+            break
+            
+    safe_default = int(ctx_limit * 0.85) if ctx_limit else 1000
+    return options, new_value, ctx_limit, safe_default
 
 # --- THE MASTER AI GENERATION ENGINE ---
 @app.callback(
@@ -209,11 +248,25 @@ def estimate_context_tokens_pm(max_rows, full_ctx_toggle, row_data, context_ids,
             avg_row_char_len = rows_only_len / sample_count
             global_ctx_len = header_len + (avg_row_char_len * n_rows)
 
-        meta_len = len(desc_metadata) if desc_metadata else 0
-        estimated_char_len = len(manual_ctx_str) + global_ctx_len + meta_len + 300
-        est_tokens = int(estimated_char_len / 4)
+        # Compact JSON Heuristic:
+        # Compact format {"cols": [...], "data": [[...]]} is much more efficient than 
+        # standard list-of-dicts, but has high symbol density (brackets, commas).
+        # We use 1:2.7 for compact JSON and 1:3.5 for descriptive metadata.
+        text_tokens = (len(desc_metadata) / 3.5) if desc_metadata else 0
+        
+        # Structure tokens for 'manual_ctx_str' and 'global_ctx_len'
+        # Compact JSON is dense with structural tokens (brackets, commas, quotes).
+        json_tokens_est = (len(manual_ctx_str) + global_ctx_len) / 2.7
+        
+        # Prompt overhead: System instructions, template framing, column definitions.
+        # This is roughly constant regardless of dataset size.
+        prompt_overhead = 480 
+        
+        est_tokens = int(text_tokens + json_tokens_est + prompt_overhead)
         fraction = (n_rows / len(df)) * 100 if len(df) > 0 else 0
         suffix = " (Off)" if not full_ctx_toggle else ""
+        
         return f"~{est_tokens} Tok ({fraction:.0f}%){suffix}"
-    except Exception:
+    except Exception as e:
+        logger.error(f"Token estimation error: {e}")
         return "~Err Tok"

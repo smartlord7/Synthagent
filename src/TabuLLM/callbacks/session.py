@@ -22,13 +22,15 @@ from core import app
     State({"type": "column-roles-store", "index": ALL}, "data"),
     State({"type": "ml-config-store", "index": ALL}, "data"),
     State({"type": "bench-state-store", "index": ALL}, "data"),
+    State("pipeline-config-store", "data"),
     State({"type": "original-data-store", "index": ALL}, "id"),
     prevent_initial_call=True
 )
 def save_workspace_session(n_clicks, metadata, pipeline_results,
                            all_orig, all_grid, all_desc, all_targets, all_algo, all_tone, all_consistency,
                            all_temp, all_chunk, all_max_ctx, all_strategy,
-                           all_roles, all_ml_config, all_bench, all_ids):
+                           all_roles, all_ml_config, all_bench, 
+                           pipeline_config, all_ids):
     if not n_clicks: return dash.no_update
     
     # Pack tabs data
@@ -55,6 +57,7 @@ def save_workspace_session(n_clicks, metadata, pipeline_results,
     session_data = {
         "metadata": metadata or {},
         "pipeline_results": pipeline_results or {},
+        "pipeline_config": pipeline_config or {},
         "tabs": tabs
     }
     

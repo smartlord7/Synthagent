@@ -11,9 +11,10 @@ import pandas as pd
     Input({"type": "btn-auto-suggest-targets", "index": MATCH}, "n_clicks"),
     State({"type": "original-data-store", "index": MATCH}, "data"),
     State({"type": "check-single-target", "index": MATCH}, "value"),
+    State({"type": "algo-selector", "index": MATCH}, "value"),
     prevent_initial_call=True
 )
-def auto_suggest_targets(n_clicks, orig_data, single_target):
+def auto_suggest_targets(n_clicks, orig_data, single_target, algorithm):
     if not n_clicks: return dash.no_update
     df = pd.DataFrame(orig_data)
     
@@ -23,7 +24,7 @@ def auto_suggest_targets(n_clicks, orig_data, single_target):
     
     df_filtered = df.drop(columns=cols_to_drop, errors='ignore')
     
-    suggested = detect_target_columns(df_filtered, single_target=single_target)
+    suggested = detect_target_columns(df_filtered, single_target=single_target, algorithm=algorithm)
     # Filter to only include valid columns (double check against original df)
     valid_suggested = [c for c in suggested if c in df.columns]
     

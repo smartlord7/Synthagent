@@ -19,7 +19,7 @@ def run_single_dataset_benchmark(args):
     folds = config.get("folds", 3)
     max_context = config.get("max_context", 60)
     strategy = config.get("strategy", "random")
-    algorithm = config.get("algorithm", "bulk")
+    algorithm = config.get("algorithm", "google/gemma-3-4b")
     temperature = config.get("temperature", 0.3)
     chunk_size = config.get("chunk_size", 30)
     instructions = config.get("instructions", "")
@@ -43,7 +43,7 @@ def run_single_dataset_benchmark(args):
     for fold_num in range(1, folds + 1):
         if progress_dict is not None:
              p = progress_dict[dataset_id_key]
-             p["status"] = f"Fold {fold_num}/{folds}"
+             p["status"] = f"Fold {fold_num}/{folds} - Data Prep"
              progress_dict[dataset_id_key] = p
 
         try:
@@ -59,6 +59,11 @@ def run_single_dataset_benchmark(args):
             context_dict = {"metadata": desc_metadata, "manual_ctx": "[]", "global_ctx": context_data_list}
 
             # 3. Generate Augmented Data
+            if progress_dict is not None:
+                 p = progress_dict[dataset_id_key]
+                 p["status"] = f"Fold {fold_num}/{folds} - LLM Gen"
+                 progress_dict[dataset_id_key] = p
+                 
             result_bundle = generate_bulk_data(
                 [], context_dict, list(df_orig_all.columns),
                 algorithm, instructions, temperature, num_empty=num_empty,
@@ -84,16 +89,22 @@ def run_single_dataset_benchmark(args):
                 if ml_config and targets:
                     task_type = MLEvaluator.detect_task_type(df_orig_all, targets)
                     for m_type in ml_config.get("selected_models", []):
+                        if progress_dict is not None:
+                             p = progress_dict[dataset_id_key]
+                             p["status"] = f"Fold {fold_num}/{folds} - Eval {m_type.upper()}"
+                             progress_dict[dataset_id_key] = p
+                             
                         m_params = ml_config.get("params", {}).get(m_type, {})
                         
                         # Performance on Original (Train on 80% Real, Test on 20% Real)
-                        orig_perf = MLEvaluator.train_and_evaluate(df_train_orig, targets, m_type, m_params, task_type, test_df=df_test_orig)
+                        orig_perf, _ = MLEvaluator.train_and_evaluate(df_train_orig, targets, m_type, m_params, task_type, test_df=df_test_orig)
                         # Performance on Augmented (Train on Synthetic+Context, Test on 20% Real)
-                        aug_perf = MLEvaluator.train_and_evaluate(df_aug_train, targets, m_type, m_params, task_type, test_df=df_test_orig)
+                        aug_perf, aug_meta = MLEvaluator.train_and_evaluate(df_aug_train, targets, m_type, m_params, task_type, test_df=df_test_orig)
                         
                         ml_fold_results[m_type] = {
                             "original": orig_perf,
                             "augmented": aug_perf,
+                            "augmented_metadata": aug_meta,
                             "task_type": task_type
                         }
                 
@@ -144,11 +155,20 @@ def run_single_dataset_benchmark(args):
                     deltas = [a - o for a, o in zip(f_aug, f_orig)]
                     m_d, s_d = np.mean(deltas), np.std(deltas)
                     
+                    # Store aggregated metadata list for full fold inspection
                     overall_ml[m_type][m_name] = {
                         "real": f"{m_o:.3f} ± {s_o:.2f}",
                         "aug": f"{m_a:.3f} ± {s_a:.2f}",
                         "delta": f"{m_d:+.3f} ± {s_d:.2f}"
                     }
+                
+                # Capture all fold metadata for this model type
+                overall_ml[m_type]["folds_metadata"] = [
+                    r["ml_eval"][m_type].get("augmented_metadata")
+                    for r in results
+                    if m_type in r.get("ml_eval", {})
+                    and r["ml_eval"][m_type].get("augmented_metadata") is not None
+                ]
 
     return {
         "dataset_id": dataset_id,

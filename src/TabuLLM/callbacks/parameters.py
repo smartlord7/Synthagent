@@ -1,3 +1,4 @@
+import dash
 from dash import Input, Output, State, MATCH, ALL, dcc, html
 import dash_bootstrap_components as dbc
 from core import app
@@ -64,6 +65,39 @@ def toggle_param_inputs_pm(p_type_list):
 
 # --- DATASET DESCRIPTION / INSIGHTS LOGIC ---
 @app.callback(
+    Output({"type": "metadata-output", "index": MATCH}, "children"),
+    Input({"type": "btn-analyze-metadata", "index": MATCH}, "n_clicks"),
+    State({"type": "data-grid", "index": MATCH}, "rowData"),
+    State({"type": "algo-selector", "index": MATCH}, "value"),
+    prevent_initial_call=True
+)
+def analyze_metadata_pm(n_clicks, row_data, algorithm):
+    if not n_clicks or not row_data:
+        return ""
+    
+    import pandas as pd
+    df_sample = pd.DataFrame(row_data).head(20)
+    for col in ['_row_id', 'is_context', 'is_target']:
+        if col in df_sample.columns: df_sample.drop(columns=[col], inplace=True)
+        
+    description = get_dataset_description(df_sample, algorithm=algorithm)
+    
+    # Post-processing to strip conversational fillers by finding the first Markdown header
+    if "#" in description:
+        description = description[description.find("#"):].strip()
+    else:
+        # Fallback to simple stripping if no header found
+        fillers = ["Okay", "Here is", "Certainly", "Sure", "I analyzed", "This dataset"]
+        for f in fillers:
+            if description.lstrip().startswith(f) and ":" in description[:100]:
+                parts = description.split(":", 1)
+                if len(parts) > 1:
+                    description = parts[1].lstrip()
+                break
+            
+    return description.strip()
+
+@app.callback(
     Output({"type": "dataset-description-store", "index": MATCH}, "data"),
     Input({"type": "btn-gen-desc", "index": MATCH}, "n_clicks"),
     State({"type": "original-data-store", "index": MATCH}, "data"),
@@ -77,16 +111,57 @@ def generate_dataset_insights_pm(n_clicks, orig_data):
     if '_row_id' in df.columns:
         df = df.drop(columns=['_row_id', 'is_context', 'is_target', 'ai_audit'], errors='ignore')
     
-    # Take a sample for the LLM
     df_sample = df.head(10)
     description = get_dataset_description(df_sample)
-    return description
+    
+    # Post-processing to strip conversational fillers by finding the first Markdown header
+    if "#" in description:
+        description = description[description.find("#"):].strip()
+    else:
+        # Fallback to simple stripping if no header found
+        fillers = ["Okay", "Here is", "Certainly", "Sure", "I analyzed", "This dataset"]
+        for f in fillers:
+            if description.lstrip().startswith(f) and ":" in description[:100]:
+                parts = description.split(":", 1)
+                if len(parts) > 1:
+                    description = parts[1].lstrip()
+                break
+            
+    return description.strip()
 
 @app.callback(
-    Output({"type": "dataset-description-output", "index": MATCH}, "children"),
+    Output({"type": "dataset-description-edit", "index": MATCH}, "value"),
+    Output({"type": "dataset-description-markdown", "index": MATCH}, "children"),
     Input({"type": "dataset-description-store", "index": MATCH}, "data")
 )
 def update_description_ui_pm(description):
-    if not description:
-        return html.Div("No insights generated yet. Click 'Insights' to analyze.", className="text-muted italic small")
-    return dcc.Markdown(description)
+    desc = description or "No description available. Click 'Insights' or edit manually."
+    return desc, desc
+
+@app.callback(
+    Output({"type": "dataset-description-markdown-container", "index": MATCH}, "style"),
+    Output({"type": "dataset-description-edit-container", "index": MATCH}, "style"),
+    Output({"type": "btn-toggle-desc-view", "index": MATCH}, "color"),
+    Output({"type": "btn-toggle-desc-edit", "index": MATCH}, "color"),
+    Input({"type": "btn-toggle-desc-view", "index": MATCH}, "n_clicks"),
+    Input({"type": "btn-toggle-desc-edit", "index": MATCH}, "n_clicks"),
+    prevent_initial_call=True
+)
+def toggle_description_mode_pm(n_view, n_edit):
+    ctx = dash.callback_context
+    if not ctx.triggered:
+        return dash.no_update
+    
+    triggered_id = ctx.triggered[0]['prop_id']
+    if 'btn-toggle-desc-edit' in triggered_id:
+        return {"display": "none"}, {"display": "block"}, "secondary", "info"
+    else:
+        return {"display": "block"}, {"display": "none"}, "info", "secondary"
+
+@app.callback(
+    Output({"type": "dataset-description-store", "index": MATCH}, "data", allow_duplicate=True),
+    Input({"type": "dataset-description-edit", "index": MATCH}, "value"),
+    prevent_initial_call=True
+)
+def save_description_from_ui_pm(value):
+    return value

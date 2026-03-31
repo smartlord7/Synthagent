@@ -6,10 +6,24 @@ Metadata: {{ provided_metadata if provided_metadata else "None" }}
 Data Sample (First few rows):
 {{ df_sample_str }}
 
-Return a concise markdown summary focusing on:
-1. Summary: A one-sentence high-level overview.
-2. Statistical Profile: Mention distribution types (e.g., normal, skewed), missing values, and potential outliers observed.
-3. Column Insights: Identify key features and their likely semantic meaning or relationship to other columns.
-4. Domain Context: Any domain-specific observations (e.g., finance, healthcare, sensor data).
+CRITICAL INSTRUCTIONS:
+- Return ONLY the markdown summary.
+- Do NOT include any introductory filler (e.g. "Okay, here's...", "I have analyzed...") or concluding remarks.
+- Start directly with the first header.
 
-Keep the response professional and structured.
+MANDATORY STRUCTURE:
+# Dataset Insights
+
+## 1. Summary
+A one-sentence high-level overview of what this data likely represents.
+
+## 2. Statistical Profile
+Mention distribution types (e.g., normal, skewed), missing values, and any anomalies observed in the sample.
+
+## 3. Column Insights
+Identify key features, their types (numeric/categorical), and their likely semantic roles.
+
+## 4. Domain Context
+Observations on the industry or real-world application (e.g. "Looks like retail transactions" or "Patient clinical records").
+
+Keep the response professional, structured, and purely technical.

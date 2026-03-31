@@ -58,21 +58,39 @@ def create_dataset_tab(dataset_id, filename, df=None, saved_state=None, pipeline
                         dbc.Col(html.Span(f"{d_m:+.3f}±{d_s:.2f}", className=f"text-{diff_color} x-small fw-bold"), width=3),
                     ], className="g-0 border-bottom border-secondary-subtle py-1 align-items-center"))
                 
-                ml_cards.append(dbc.Card([
+                # --- INDIVIDUAL MODEL CARD ---
+                ml_cards.append(dbc.Col(dbc.Card([
                     dbc.CardBody([
-                        html.Div([html.I(className="bi bi-cpu me-2 text-info"), html.Span(m_type.upper(), className="fw-bold small")], className="d-flex align-items-center mb-2 border-bottom border-secondary pb-1"),
                         html.Div([
-                            dbc.Row([dbc.Col(html.Small("Metric", className="xx-small text-muted"), width=3), dbc.Col(html.Small("Real", className="xx-small text-muted"), width=3), dbc.Col(html.Small("Syn", className="xx-small text-muted"), width=3), dbc.Col(html.Small("Delta", className="xx-small text-muted"), width=3)], className="g-0 opacity-75 mb-1"),
+                            html.Div([
+                                html.I(className="bi bi-cpu me-2 text-info"), 
+                                html.Span(m_type.upper(), className="fw-bold small")
+                            ], className="d-flex align-items-center"),
+                            dbc.Button([html.I(className="bi bi-search me-1"), "Inspect"],
+                                       id={"type": "btn-inspect-ml", "dataset": dataset_id, "model": m_type},
+                                       color="info", size="sm", outline=True,
+                                       style={"fontSize": "0.6rem", "padding": "2px 6px"},
+                                       className="rounded-pill shadow-sm hover-grow")
+                        ], className="d-flex align-items-center justify-content-between mb-2 border-bottom border-secondary pb-1"),
+                        html.Div([
+                            dbc.Row([
+                                dbc.Col(html.Small("Metric", className="xx-small text-muted"), width=3), 
+                                dbc.Col(html.Small("Real", className="xx-small text-muted"), width=3), 
+                                dbc.Col(html.Small("Syn", className="xx-small text-muted"), width=3), 
+                                dbc.Col(html.Small("Delta", className="xx-small text-muted"), width=3)
+                            ], className="g-0 opacity-75 mb-1"),
                             html.Div(metric_rows)
-                        ])
-                    ], className="p-2")
-                ], className="mb-2 border-secondary bg-dark shadow-sm", style={"minWidth": "280px", "flex": "1"}))
+                        ], className="flex-grow-1")
+                    ], className="p-2 d-flex flex-column h-100")
+                ], className="h-100 border-secondary bg-dark shadow-sm"),
+                lg=3, md=6, xs=12, style={"minWidth": "250px", "maxWidth": "25%"}, className="mb-4"))
+
                 
             if ml_cards:
                 ml_content = html.Div([
-                    html.H6([html.I(className="bi bi-cpu-fill me-2 text-warning"), "ML Evaluation"], className="text-light mb-3 small fw-bold"),
-                    html.Div(ml_cards, className="d-flex flex-wrap gap-2")
-                ], className="mt-2")
+                    html.H6([html.I(className="bi bi-cpu-fill me-2 text-warning"), "ML Results & Diagnostics Dashboard"], className="text-light mb-4 small fw-bold text-uppercase tracking-wider"),
+                    dbc.Row(ml_cards, className="g-4 justify-content-start", style={"flexWrap": "wrap", "display": "flex"})
+                ], className="mt-2 w-100")
         except Exception as e:
             print(f"Failed to restore ML Eval for {dataset_id}: {e}")
 
@@ -163,7 +181,7 @@ def create_dataset_tab(dataset_id, filename, df=None, saved_state=None, pipeline
                         dbc.Card([
                             dbc.CardHeader([
                                 html.Div([
-                                    html.I(className="bi bi-bar-chart-fill me-2 text-info"), "Metadata & AI Analysis"
+                                    html.I(className="bi bi-bar-chart-fill me-2 text-info"), "Metadata"
                                 ], className="fw-bold text-light d-flex align-items-center w-100")
                             ], className="bg-dark border-secondary"),
                             dbc.CardBody([
@@ -171,14 +189,40 @@ def create_dataset_tab(dataset_id, filename, df=None, saved_state=None, pipeline
                                 html.Div(id={"type": "dataset-stats-grid", "index": dataset_id}, children=stats_grid, className="mb-3"),
                                 
                                 html.Hr(className="border-secondary my-2"),
-                                
-                                html.Div([
+                                                               html.Div([
                                     html.H6([html.I(className="bi bi-cpu-fill me-2 text-info"), "Structured Description"], className="text-muted small fw-bold mb-0 d-inline-block"),
-                                    dbc.Button([html.I(className="bi bi-magic me-1"), "Insights"], id={"type": "btn-gen-desc", "index": dataset_id}, color="info", size="sm", outline=True, className="ms-2 py-0 px-2 rounded-pill"),
+                                    html.Div([
+                                        dbc.Button([html.I(className="bi bi-magic me-1"), "Insights"], id={"type": "btn-gen-desc", "index": dataset_id}, color="info", size="sm", outline=True, className="py-0 px-2 rounded-pill me-2"),
+                                        dbc.Button([html.I(className="bi bi-eye")], id={"type": "btn-toggle-desc-view", "index": dataset_id}, color="secondary", size="sm", outline=True, className="py-0 px-2 rounded-pill", title="View Markdown"),
+                                        dbc.Button([html.I(className="bi bi-pencil")], id={"type": "btn-toggle-desc-edit", "index": dataset_id}, color="secondary", size="sm", outline=True, className="py-0 px-2 rounded-pill ms-1", title="Edit Source"),
+                                    ], className="ms-auto d-flex align-items-center")
                                 ], className="d-flex align-items-center mb-2"),
                                 
                                 dbc.Spinner(
-                                    html.Div(id={"type": "dataset-description-output", "index": dataset_id}, className="text-light small mt-1", style={"maxHeight": "100px", "overflowY": "auto"}),
+                                    html.Div([
+                                        # View Mode (Markdown)
+                                        html.Div(
+                                            dcc.Markdown(
+                                                id={"type": "dataset-description-markdown", "index": dataset_id},
+                                                children=saved_state.get("dataset-description-store", "No description available. Click 'Insights'."),
+                                                className="markdown-preview p-3 border rounded border-secondary bg-dark text-light shadow-sm",
+                                                style={"minHeight": "100px", "maxHeight": "280px", "overflowY": "auto", "fontSize": "0.85rem"}
+                                            ),
+                                            id={"type": "dataset-description-markdown-container", "index": dataset_id},
+                                            style={"display": "block"}
+                                        ),
+                                        # Edit Mode (Textarea)
+                                        html.Div(
+                                            dbc.Textarea(
+                                                id={"type": "dataset-description-edit", "index": dataset_id},
+                                                placeholder="Enter dataset description or click 'Insights'...",
+                                                className="bg-dark text-light small",
+                                                style={"height": "150px", "fontSize": "0.8rem"}
+                                            ),
+                                            id={"type": "dataset-description-edit-container", "index": dataset_id},
+                                            style={"display": "none"}
+                                        )
+                                    ]),
                                     size="sm", color="info"
                                 ),
                                 
@@ -232,7 +276,10 @@ def create_dataset_tab(dataset_id, filename, df=None, saved_state=None, pipeline
                                                     value=saved_state.get('param-consistency', 'Strict (Perfectly uniform)'), size="sm")
                                     ], width=4),
                                     dbc.Col([
-                                        html.Label("AI Model:", className="fw-bold text-muted small"),
+                                        html.Div([
+                                            html.Label("AI Model:", className="fw-bold text-muted small me-auto"),
+                                            dbc.Button([html.I(className="bi bi-arrow-clockwise")], id={"type": "btn-refresh-models", "index": dataset_id}, color="success", size="sm", outline=True, className="py-0 px-2 rounded-pill ms-2", title="Sync with LM Studio")
+                                        ], className="d-flex align-items-center mb-1"),
                                         dbc.Select(id={"type": "algo-selector", "index": dataset_id},
                                                    options=[{"label": "Gemma-3-4b", "value": "google/gemma-3-4b"},
                                                             {"label": "Llama-3.1-8b", "value": "meta/llama-3.1-8b"},
@@ -359,7 +406,7 @@ def create_dataset_tab(dataset_id, filename, df=None, saved_state=None, pipeline
                 dbc.Card([
                     dbc.CardBody([
                         html.Div([
-                            html.H4([html.I(className="bi bi-cpu-fill me-2 text-primary"), "ML Evaluation Settings"], className="mb-0"),
+                            html.H4([html.I(className="bi bi-cpu-fill me-2 text-primary"), "ML Evaluation Results"], className="mb-0"),
                         ], className="d-flex align-items-center mb-3"),
                         html.Div(id={"type": "ml-evaluation-results-dashboard", "index": dataset_id}, children=ml_content)
                     ], className="p-4")
