@@ -11,9 +11,28 @@ from sklearn.preprocessing import MinMaxScaler
 import dash
 from dash import Input, Output, State, dcc, html, callback_context, MATCH, ALL
 from core import app
-from services.report_generator import generate_comprehensive_pdf
+from services.report_generator import generate_benchmark_pdf
 from utils.metrics import calculate_metrics
 from utils.logging_config import logger
+
+# --- CONFIGURE PLOTLY EXPORT ---
+# Chromium flags for stability on Windows systems
+try:
+    pio.kaleido.scope.chromium_args = ["--no-sandbox", "--disable-gpu", "--disable-software-rasterizer"]
+    pio.kaleido.scope.mathjax = None # Avoids hangs
+except: pass
+
+def safe_image_export(fig, path, scale=3):
+    """Robust image export that handles locking and environment errors."""
+    try:
+        # Use to_image bytes instead of write_image to avoid internal file-lock conflicts
+        img_bytes = pio.to_image(fig, format="png", scale=scale)
+        with open(path, "wb") as f:
+            f.write(img_bytes)
+        return True
+    except Exception as e:
+        logger.warning(f"Static export failed for {path}: {e}")
+        return False
 
 # --- EXPORT LOGIC ---
 @app.callback(
@@ -135,8 +154,8 @@ def generate_global_report_pm(n_clicks, meta_store, pipeline_results, all_orig, 
         
         df_orig_enc = df_orig.copy()
         df_aug_enc = df_aug.copy()
-        num_cols_t = df_orig.select_dtypes(include='number').columns.tolist()
-        cat_cols_t = [c for c in df_orig.columns if c not in num_cols_t]
+        num_cols_t = [c for c in df_orig.select_dtypes(include='number').columns if c not in ['_row_id', 'is_context', 'is_target', 'ai_audit']]
+        cat_cols_t = [c for c in df_orig.columns if c not in num_cols_t and c not in ['_row_id', 'is_context', 'is_target', 'ai_audit']]
         for col in cat_cols_t:
             if col in df_aug_enc.columns:
                 combined = pd.concat([df_orig_enc[col], df_aug_enc[col]])
@@ -175,8 +194,8 @@ def generate_global_report_pm(n_clicks, meta_store, pipeline_results, all_orig, 
             
             # --- STATISTICAL INFERENCE TABLE (Aggregated Across Folds) ---
             inference_data = [] # [Feature, Orig Mean/Mode, Aug Mean ± Std, Shift ± Std, p-value ± Std, Status]
-            num_cols = df_orig.select_dtypes(include='number').columns.tolist()
-            cat_cols = [c for c in df_orig.columns if c not in num_cols]
+            num_cols = [c for c in df_orig.select_dtypes(include='number').columns if c not in ['_row_id', 'is_context', 'is_target', 'ai_audit']]
+            cat_cols = [c for c in df_orig.columns if c not in num_cols and c not in ['_row_id', 'is_context', 'is_target', 'ai_audit']]
             all_features = num_cols + cat_cols
             
             # Encode for universal feature coverage (numeric + categorical)
@@ -301,8 +320,8 @@ def generate_global_report_pm(n_clicks, meta_store, pipeline_results, all_orig, 
                     fig_corr_orig.update_yaxes(tickfont=dict(size=font_size))
                     
                     orig_corr_path = os.path.join(temp_dir, f"corr_orig_{d_id}.png")
-                    fig_corr_orig.write_image(orig_corr_path, scale=3)
-                    plot_paths.append({"title": "Relational Baseline (Original)", "path": orig_corr_path})
+                    if safe_image_export(fig_corr_orig, orig_corr_path):
+                        plot_paths.append({"title": "Relational Baseline (Original)", "path": orig_corr_path})
 
                     # 2. Augmented Correlation Heatmap (Average of folds)
                     if pipeline_results and d_id in pipeline_results:
@@ -331,8 +350,8 @@ def generate_global_report_pm(n_clicks, meta_store, pipeline_results, all_orig, 
                     fig_corr_aug.update_yaxes(tickfont=dict(size=font_size))
                     
                     aug_corr_path = os.path.join(temp_dir, f"corr_aug_{d_id}.png")
-                    fig_corr_aug.write_image(aug_corr_path, scale=3)
-                    plot_paths.append({"title": "Relational Stability (Averaged Augmented)", "path": aug_corr_path})
+                    if safe_image_export(fig_corr_aug, aug_corr_path):
+                        plot_paths.append({"title": "Relational Stability (Averaged Augmented)", "path": aug_corr_path})
                     
                     # 2. PCA Scatter (Encapsulating all features via encoding)
                     pca = PCA(n_components=2)
@@ -352,8 +371,8 @@ def generate_global_report_pm(n_clicks, meta_store, pipeline_results, all_orig, 
                                         template="plotly_dark", opacity=0.6, title="Geometric Space Coverage (PCA)")
                     fig_pca.update_layout(width=1000, height=800)
                     pca_path = os.path.join(temp_dir, f"pca_{d_id}.png")
-                    fig_pca.write_image(pca_path, scale=3)
-                    plot_paths.append({"title": "PCA Geometric Coverage", "path": pca_path})
+                    if safe_image_export(fig_pca, pca_path):
+                        plot_paths.append({"title": "PCA Geometric Coverage", "path": pca_path})
                 except Exception as ve:
                     logger.warning(f"Failed to export viz for {d_id}: {ve}")
 
@@ -410,5 +429,5 @@ def generate_global_report_pm(n_clicks, meta_store, pipeline_results, all_orig, 
     if "Synthetic Fidelity (JSD)" in global_agg:
         report_data["executive_summary"]["avg_fidelity"] = global_agg["Synthetic Fidelity (JSD)"]
 
-    pdf_bytes = generate_comprehensive_pdf(report_data)
-    return dcc.send_bytes(bytes(pdf_bytes), "TabuLLM_Comprehensive_Audit.pdf")
+    pdf_bytes = generate_benchmark_pdf(report_data)
+    return dcc.send_bytes(bytes(pdf_bytes), f"TabuLLM_Benchmark_Report_{datetime.now().strftime('%Y%m%d')}.pdf")
