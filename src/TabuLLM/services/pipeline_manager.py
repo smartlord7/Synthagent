@@ -39,6 +39,8 @@ def run_single_dataset_benchmark(args):
     
     results = []
     all_synthetic_data = []
+    all_augmented_data = [] # Hybrid set for true EDA comparison
+    overall_ml = {}
 
     for fold_num in range(1, folds + 1):
         if progress_dict is not None:
@@ -75,10 +77,18 @@ def run_single_dataset_benchmark(args):
 
             if result_bundle:
                 generated_rows = result_bundle["data"]
+                
+                # Parrotting/Leakage Check
+                if generated_rows and context_data_list:
+                    # Compare a sample to detect if LLM is just echoing context
+                    if str(generated_rows[:5]) == str(context_data_list[:5]):
+                        logger.warning(f"PIPELINE ALERT: Fold {fold_num} gen_rows match context! LLM is parrotting.")
+
                 # Add fold ID for grouping in EDA aggregation
                 for row in generated_rows:
                     row["_fold_id"] = fold_num
                 all_synthetic_data.extend(generated_rows)
+                all_augmented_data.extend(context_data_list + generated_rows)
                 
                 generated_df = pd.DataFrame(generated_rows)
                 context_df = pd.DataFrame(context_data_list)
@@ -100,15 +110,16 @@ def run_single_dataset_benchmark(args):
                         m_params = ml_config.get("params", {}).get(m_type, {})
                         
                         # Performance on Original (Train on 80% Real, Test on 20% Real)
-                        orig_perf, _ = MLEvaluator.train_and_evaluate(df_train_orig, targets, m_type, m_params, task_type, test_df=df_test_orig)
+                        orig_perf, _, orig_err = MLEvaluator.train_and_evaluate(df_train_orig, targets, m_type, m_params, task_type, test_df=df_test_orig)
                         # Performance on Augmented (Train on Synthetic+Context, Test on 20% Real)
-                        aug_perf, aug_meta = MLEvaluator.train_and_evaluate(df_aug_train, targets, m_type, m_params, task_type, test_df=df_test_orig)
+                        aug_perf, aug_meta, aug_err = MLEvaluator.train_and_evaluate(df_aug_train, targets, m_type, m_params, task_type, test_df=df_test_orig)
                         
                         ml_fold_results[m_type] = {
                             "original": orig_perf,
                             "augmented": aug_perf,
                             "augmented_metadata": aug_meta,
-                            "task_type": task_type
+                            "task_type": task_type,
+                            "error": aug_err or orig_err
                         }
                 
                 m["ml_eval"] = ml_fold_results
@@ -158,11 +169,14 @@ def run_single_dataset_benchmark(args):
                     deltas = [a - o for a, o in zip(f_aug, f_orig)]
                     m_d, s_d = np.mean(deltas), np.std(deltas)
                     
-                    # Store aggregated metadata list for full fold inspection
+                    # Store aggregated metadata and raw values
                     overall_ml[m_type][m_name] = {
-                        "real": f"{m_o:.3f} ± {s_o:.2f}",
-                        "aug": f"{m_a:.3f} ± {s_a:.2f}",
-                        "delta": f"{m_d:+.3f} ± {s_d:.2f}"
+                        "real": m_o, "real_sd": s_o,
+                        "aug": m_a, "aug_sd": s_a,
+                        "delta": m_d, "delta_sd": s_d,
+                        "display_real": f"{m_o:.3f} ± {s_o:.2f}",
+                        "display_aug": f"{m_a:.3f} ± {s_a:.2f}",
+                        "display_delta": f"{m_d:+.3f} ± {s_d:.2f}"
                     }
                 
                 # Capture all fold metadata for this model type
@@ -172,12 +186,18 @@ def run_single_dataset_benchmark(args):
                     if m_type in r.get("ml_eval", {})
                     and r["ml_eval"][m_type].get("augmented_metadata") is not None
                 ]
+                
+                # Capture the first error message if most folds failed
+                if not f_aug:
+                    errors = [r["ml_eval"][m_type].get("error") for r in results if m_type in r.get("ml_eval", {}) and r["ml_eval"][m_type].get("error")]
+                    if errors: overall_ml[m_type]["error"] = errors[0]
 
     return {
         "dataset_id": dataset_id,
         "filename": filename,
         "results": results,
         "synthetic_data": all_synthetic_data,
+        "augmented_data": all_augmented_data,
         "overall_ml": overall_ml,
         "avg_fidelity": sum(r.get("Synthetic Fidelity (JSD)", 0) for r in results) / len(results) if results else 0
     }

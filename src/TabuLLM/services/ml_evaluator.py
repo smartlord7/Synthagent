@@ -27,22 +27,24 @@ class MLEvaluator:
     @staticmethod
     def train_and_evaluate(train_df, targets, model_type, params=None, task_type="classification", test_df=None):
         if not targets or train_df.empty:
-            return None, None
+            return None, None, "Empty dataset or no targets"
         
         target = targets[0]
         if target not in train_df.columns:
             logger.warning(f"Target column '{target}' not found in training data.")
-            return None, None
+            return None, None, f"Target '{target}' missing"
             
         def apply_encoding(df_fit, df_transform, cols):
+            if not cols: return df_transform.copy()
             df_out = df_transform.copy()
+            # Optimization: Pre-calculate mappings to avoid redundant factorize calls
             for col in cols:
                 if col in df_fit.columns:
                     # Capture unique values from fit set
-                    codes, uniques = pd.factorize(df_fit[col])
+                    _, uniques = pd.factorize(df_fit[col])
                     mapping = {val: i for i, val in enumerate(uniques)}
                     # Apply to transform set
-                    df_out[col] = df_transform[col].map(mapping).fillna(-1)
+                    df_out[col] = df_transform[col].map(mapping).fillna(-1).astype(int)
             # Fill numeric NaNs
             df_out.fillna(0, inplace=True)
             return df_out
@@ -59,7 +61,7 @@ class MLEvaluator:
         # Safeguard: Classification requires at least 2 classes
         if task_type == "classification" and y_train.nunique() < 2:
             logger.warning(f"Single class detected in training set for {model_type}. Skipping.")
-            return None, None
+            return None, None, "Single class in train"
 
         if test_df is not None and not test_df.empty:
             test_proc = apply_encoding(train_df, test_df, cat_cols)
@@ -74,7 +76,7 @@ class MLEvaluator:
             
         if X_train.empty:
             logger.warning(f"X_train is empty for {model_type}. Skipping.")
-            return None, None
+            return None, None, "No features remaining"
 
         # Cast target to int to avoid float class label issues after encoding
         try:
@@ -86,11 +88,18 @@ class MLEvaluator:
         # Safeguard: test set must also have >=2 classes for classification scoring
         if task_type == "classification" and y_test.nunique() < 1:
             logger.warning(f"Empty test set for {model_type}. Skipping.")
-            return None, None
+            return None, None, "Empty test targets"
+
+        # --- SCALE SAFEGUARDS ---
+        n_samples, n_features = X_train.shape
+        if model_type == "svm" and (n_samples > 5000 or n_features > 200):
+             return None, None, f"Skipped: Scale ({n_samples}R/{n_features}C too large for SVM)"
+        if model_type == "mlp" and n_features > 500:
+             return None, None, f"Skipped: Scale ({n_features}C too complex for MLP)"
 
         model = MLEvaluator.get_model(model_type, params, task_type, X_train, y_train)
         if model is None:
-            return None, None
+            return None, None, f"Invalid model type '{model_type}'"
 
         try:
             model.fit(X_train, y_train)
@@ -141,12 +150,14 @@ class MLEvaluator:
             except Exception as meta_e:
                 logger.warning(f"Failed to extract metadata for {model_type}: {meta_e}")
 
-            return metrics, metadata
+            return metrics, metadata, None
         except Exception as e:
             import traceback
+            err_msg = str(e)
+            if "MemoryError" in err_msg: err_msg = "Memory Exhausted"
             logger.error(f"Error training {model_type}: {e}")
             logger.debug(traceback.format_exc())
-            return None, None
+            return None, None, err_msg
 
     @staticmethod
     def get_model(model_type, params, task_type, X_train=None, y_train=None):

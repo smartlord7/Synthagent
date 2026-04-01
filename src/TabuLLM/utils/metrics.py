@@ -221,8 +221,14 @@ def calculate_metrics(df_orig: pd.DataFrame, df_aug: pd.DataFrame) -> dict:
             - mean_feature_error: (int) 0-100 inverse average mean relative error.
             - nndr: (float) Nearest Neighbor Distance Ratio.
     """
-    numeric_cols = [c for c in df_aug.select_dtypes(include='number').columns if c != '_fold_id']
-    cat_cols = [c for c in df_aug.columns if c not in numeric_cols and c != '_fold_id']
+    # Strictly exclude internal metadata columns and only use columns present in both datasets
+    internal_cols = ['_fold_id', '_row_id', 'is_context', 'is_target', 'ai_audit']
+    common_cols = [c for c in df_aug.columns if c in df_orig.columns 
+                   and not c.startswith('is_ai_') 
+                   and c not in internal_cols]
+
+    numeric_cols = [c for c in df_aug[common_cols].select_dtypes(include='number').columns]
+    cat_cols = [c for c in common_cols if c not in numeric_cols]
 
     jsd_scores = []
     mre_list = []

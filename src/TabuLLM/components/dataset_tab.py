@@ -16,7 +16,14 @@ def create_dataset_tab(dataset_id, filename, df=None, saved_state=None, pipeline
         try:
             from callbacks.eda import get_eda_layout
             df_orig = pd.DataFrame(saved_state.get("original-data-store", []))
-            df_aug = pd.DataFrame(saved_state.get("data-grid", []))
+            
+            # Prioritize hybrid augmented data from results over the workbench grid
+            aug_raw = pipeline_res.get('augmented_data')
+            if aug_raw:
+                df_aug = pd.DataFrame(aug_raw)
+            else:
+                df_aug = pd.DataFrame(saved_state.get("data-grid", []))
+                
             eda_content = get_eda_layout(df_orig, df_aug, dataset_id, results_list=pipeline_res.get("results", []))
         except Exception as e:
             print(f"Failed to restore EDA for {dataset_id}: {e}")

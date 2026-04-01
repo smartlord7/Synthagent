@@ -271,7 +271,7 @@ def get_eda_layout(df_orig, df_aug, dataset_id="base", results_list=None):
                     # 1. High-level Mean Shift (on pooled data)
                     shift = ( (b_full.mean() - a.mean()) / (abs(a.mean()) + 1e-9) ) * 100
                     
-                    if has_folds and fold_groups is not None:
+                    if has_folds and fold_groups is not None and len(fold_groups) > 1:
                         try:
                             fold_means = fold_groups[col].mean()
                             b_mean = fold_means.mean()
@@ -304,8 +304,12 @@ def get_eda_layout(df_orig, df_aug, dataset_id="base", results_list=None):
                                 # For encoded stats
                                 e_means.append(df_aug_enc.loc[f_df.index, col].mean())
                             
-                            e_m, e_s = np.mean(e_means), np.std(e_means)
-                            val_str = f"'{b_full.mode()[0]}' ({e_m:.1f} ±{e_s:.1f})" if not b_full.mode().empty else "N/A"
+                            if len(e_means) > 1:
+                                e_m, e_s = np.mean(e_means), np.std(e_means)
+                                val_str = f"'{b_full.mode()[0]}' ({e_m:.1f} ±{e_s:.1f})" if not b_full.mode().empty else "N/A"
+                            else:
+                                e_m = np.mean(e_means)
+                                val_str = f"'{b_full.mode()[0]}' ({e_m:.1f})" if not b_full.mode().empty else "N/A"
                         except:
                             val_str = f"'{b_full.mode()[0]}'" if not b_full.mode().empty else "N/A"
                     else:

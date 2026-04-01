@@ -384,19 +384,13 @@ def execute_pipeline_pm(set_progress, n_clicks, global_folds, global_ml_models, 
             agg_metrics["privacy"].append(r.get("Privacy Risk", 0))
             agg_metrics["coverage"].append(r.get("Coverage Score", 0))
         
-        ml_agg = {}
+        ml_agg = res.get("overall_ml", {})
         task_type = "classification"
-        for r in results_list_m:
-            ml_eval = r.get("ml_eval", {})
-            for m_type, m_perf in ml_eval.items():
-                if not m_perf: continue
-                task_type = m_perf.get("task_type", "classification")
-                if m_type not in ml_agg: ml_agg[m_type] = {}
-                for m_name in ["accuracy", "f1", "rmse", "r2"]:
-                    v_orig, v_aug = (m_perf.get("original") or {}).get(m_name), (m_perf.get("augmented") or {}).get(m_name)
-                    if v_orig is not None and v_aug is not None:
-                        if m_name not in ml_agg[m_type]: ml_agg[m_type][m_name] = {"orig": [], "aug": [], "delta": []}
-                        ml_agg[m_type][m_name]["orig"].append(float(v_orig)); ml_agg[m_type][m_name]["aug"].append(float(v_aug)); ml_agg[m_type][m_name]["delta"].append(float(v_aug - v_orig))
+        # Determine task type for header purposes
+        for m_type, m_data in ml_agg.items():
+             if "folds_metadata" in m_data and m_data["folds_metadata"]:
+                  # Heuristic or just take from the first fold
+                  pass
 
         def get_stats(vals):
             if not vals: return 0.0, 0.0
@@ -417,6 +411,15 @@ def execute_pipeline_pm(set_progress, n_clicks, global_folds, global_ml_models, 
         ])
         
         ml_rows = []
+        # Find task type from first valid entry
+        for m_t, m_d in ml_agg.items():
+            if "accuracy" in m_d:
+                task_type = "classification"
+                break
+            if "rmse" in m_d:
+                task_type = "regression"
+                break
+
         primary_metric = "accuracy" if task_type == "classification" else "r2"
         # Add Header Row for Predictive Utility
         ml_rows.append(dbc.Row([
@@ -426,18 +429,36 @@ def execute_pipeline_pm(set_progress, n_clicks, global_folds, global_ml_models, 
             dbc.Col(html.Small("Delta", className="xx-small text-muted fw-bold"), width=2),
         ], className="g-0 opacity-75 mb-2 border-bottom border-secondary pb-1"))
 
-        for m_type, metrics in ml_agg.items():
-            if primary_metric in metrics:
-                orig_m, _ = get_stats(metrics[primary_metric]["orig"])
-                aug_m, aug_s = get_stats(metrics[primary_metric]["aug"])
-                delta = aug_m - orig_m
-                d_color = "success" if (delta >= -0.05 if primary_metric != "rmse" else delta <= 0.05) else "danger"
+        for m_type, m_data in ml_agg.items():
+            m_label = MODEL_NAMES.get(m_type, m_type.upper())
+            
+            if "error" in m_data:
+                err_text = m_data["error"]
+                ml_rows.append(dbc.Row([
+                    dbc.Col(html.Small(m_label, className="x-small text-muted"), width=5),
+                    dbc.Col(html.Span([
+                        html.I(className="bi bi-exclamation-triangle-fill me-1 text-warning"),
+                        html.Small(err_text, className="xx-small text-warning")
+                    ], className="d-flex align-items-center"), width=7)
+                ], className="g-0 mb-1 opacity-75"))
+                continue
+
+            metrics = m_data.get(primary_metric, {})
+            if metrics:
+                s_aug = metrics.get("display_aug", "N/A")
+                s_real = metrics.get("display_real", "0.000")
+                s_delta = metrics.get("display_delta", "+0.000")
+                
+                # Use raw float for color check
+                d_val = metrics.get("delta", 0)
+                d_color = "success" if (d_val >= -0.05 if primary_metric != "rmse" else d_val <= 0.05) else "danger"
+                
                 ml_rows.append(html.Div([
                     dbc.Row([
-                        dbc.Col(html.Small(MODEL_NAMES.get(m_type, m_type.upper()), className="x-small text-info fw-bold"), width=5),
-                        dbc.Col(html.Small(f"{aug_m:.3f}±{aug_s:.2f}", className="x-small text-light"), width=3),
-                        dbc.Col(html.Small(f"{orig_m:.3f}", className="x-small text-muted"), width=2),
-                        dbc.Col(html.Small(f"{delta:+.3f}", className=f"x-small text-{d_color} fw-bold text-end"), width=2)
+                        dbc.Col(html.Small(m_label, className="x-small text-info fw-bold"), width=5),
+                        dbc.Col(html.Small(s_aug.split()[0], className="x-small text-light"), width=3),
+                        dbc.Col(html.Small(s_real.split()[0], className="x-small text-muted"), width=2),
+                        dbc.Col(html.Small(s_delta.split()[0], className=f"x-small text-{d_color} fw-bold text-end"), width=2)
                     ], className="g-0 align-items-center mb-1")
                 ]))
 
@@ -451,7 +472,7 @@ def execute_pipeline_pm(set_progress, n_clicks, global_folds, global_ml_models, 
         
         if d_id in eda_index_map:
             try:
-                df_orig, df_aug = pd.DataFrame(orig_map.get(d_id, [])), pd.DataFrame(res.get('synthetic_data', []))
+                df_orig, df_aug = pd.DataFrame(orig_map.get(d_id, [])), pd.DataFrame(res.get('augmented_data', []))
                 field_to_header = {c['field']: c.get('headerName', c['field']) for c in col_defs_list[eda_index_map[d_id]] if c['field'] not in ['ai_audit', '_row_id']}
                 df_orig.rename(columns=field_to_header, inplace=True)
                 if not df_aug.empty: eda_updates[eda_index_map[d_id]] = get_eda_layout(df_orig, df_aug, d_id, results_list=results_list_m)
@@ -461,9 +482,19 @@ def execute_pipeline_pm(set_progress, n_clicks, global_folds, global_ml_models, 
             ml_cards = []
             for m_type, metrics in ml_agg.items():
                 m_rows = []
-                for m_name, data in metrics.items():
-                    orig_m, orig_s = get_stats(data["orig"]); aug_m, aug_s = get_stats(data["aug"]); d_m, d_s = get_stats(data["delta"])
-                    m_rows.append(dbc.Row([dbc.Col(html.Small(m_name.upper(), className="x-small text-info fw-bold"), width=3), dbc.Col(html.Span(f"{orig_m:.3f}", className="x-small text-muted"), width=3), dbc.Col(html.Span(f"{aug_m:.3f}±{aug_s:.2f}", className="x-small text-light fw-bold"), width=3), dbc.Col(html.Span(f"{d_m:+.3f}", className=f"text-{'success' if d_m > -0.05 else 'danger'} x-small fw-bold"), width=3)], className="g-0 border-bottom border-secondary-subtle py-1"))
+                if "error" in metrics:
+                     m_rows.append(html.Small(f"Error: {metrics['error']}", className="text-warning xx-small italic"))
+                else:
+                    for m_name, data in metrics.items():
+                        if not isinstance(data, dict) or "display_aug" not in data: continue
+                        orig_d, aug_d, d_d = data["display_real"], data["display_aug"], data["display_delta"]
+                        d_val = data.get("delta", 0)
+                        m_rows.append(dbc.Row([
+                             dbc.Col(html.Small(m_name.upper(), className="x-small text-info fw-bold"), width=3),
+                             dbc.Col(html.Span(orig_d.split()[0], className="x-small text-muted"), width=3),
+                             dbc.Col(html.Span(aug_d, className="x-small text-light fw-bold"), width=3),
+                             dbc.Col(html.Span(d_d.split()[0], className=f"text-{'success' if (d_val >= -0.05 if m_name != 'rmse' else d_val <= 0.05) else 'danger'} x-small fw-bold"), width=3)
+                        ], className="g-0 border-bottom border-secondary-subtle py-1"))
                 ml_cards.append(dbc.Col(dbc.Card([dbc.CardBody([html.Div([html.Div([html.I(className="bi bi-cpu me-2 text-info"), html.Small(MODEL_NAMES.get(m_type, m_type.upper()), className="fw-bold")], className="d-flex align-items-center"), dbc.Button("Inspect", id={"type": "btn-inspect-ml", "dataset": d_id, "model": m_type}, color="info", size="sm", outline=True, className="rounded-pill p-0 px-2", style={"fontSize": "0.6rem"}, n_clicks=0)], className="d-flex justify-content-between mb-2"), html.Div(m_rows)], className="p-2")], className="h-100 border-secondary bg-dark shadow-sm"), lg=3, md=6, className="mb-3"))
             if ml_cards: ml_updates[ml_index_map[d_id]] = html.Div([html.H6("ML Results & Diagnostics", className="text-light mb-3 small fw-bold"), dbc.Row(ml_cards, className="g-3")])
 
