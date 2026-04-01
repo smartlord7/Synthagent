@@ -1,11 +1,14 @@
 import dash
 import dash_bootstrap_components as dbc
 import diskcache
+import tempfile
+import os
 from dash import DiskcacheManager
 from utils.logging_config import logger
 
-# Diskcache to enable background callbacks for live progress bars
-cache = diskcache.Cache("./cache")
+# Diskcache to enable background callbacks (outside project root to avoid reloader)
+cache_path = os.path.join(tempfile.gettempdir(), "tabullm_cache")
+cache = diskcache.Cache(cache_path)
 background_callback_manager = DiskcacheManager(cache)
 
 app = dash.Dash(

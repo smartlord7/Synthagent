@@ -53,14 +53,16 @@ def run_single_dataset_benchmark(args):
             # This ensures we always test on "Real" data
             df_train_orig, df_test_orig = train_test_split(df_orig_all, test_size=0.2, random_state=42 + fold_num)
             
-            # 2. Setup context/augmentation split from fractions
+            # 2. Setup context/augmentation split from fractions (Substitution Model)
+            # Each fold training set size = Context (x%) + Generated (100-x%)
             ctx_ratio = config.get("ctx_ratio", 20)
             n_context_rows = max(1, int(len(df_train_orig) * (ctx_ratio / 100)))
-            num_empty = max(1, len(df_orig_all) - n_context_rows)
+            num_empty = max(1, len(df_train_orig) - n_context_rows)
             
-            logger.info(f"Fold {fold_num}: Benchmarking with {ctx_ratio}% Ctx ({n_context_rows} rows) | Augmenting {num_empty} rows (Parity Goal: {len(df_orig_all)})")
+            logger.info(f"Fold {fold_num}: Substitution Strategy | Training Ctx: {n_context_rows}, Gen: {num_empty} | Total Train: {n_context_rows + num_empty} (Original: {len(df_train_orig)})")
             
-            context_data_list = select_context_rows(df_train_orig, strategy=strategy, n_rows=n_context_rows)
+            context_data_list = select_context_rows(df_train_orig, strategy=strategy, n_rows=n_context_rows) or []
+            logger.info(f"Fold {fold_num}: Captured {len(context_data_list)} context rows for audit trace.")
             context_dict = {"metadata": desc_metadata, "manual_ctx": "[]", "global_ctx": context_data_list}
 
             # 3. Generate Augmented Data
@@ -87,8 +89,12 @@ def run_single_dataset_benchmark(args):
                 # Add fold ID for grouping in EDA aggregation
                 for row in generated_rows:
                     row["_fold_id"] = fold_num
+                
                 all_synthetic_data.extend(generated_rows)
-                all_augmented_data.extend(context_data_list + generated_rows)
+                
+                # Combine Context + Synthetic + Real Test Set for a 100% scale EDA view
+                test_data_list = df_test_orig.to_dict('records')
+                all_augmented_data.extend(context_data_list + generated_rows + test_data_list)
                 
                 generated_df = pd.DataFrame(generated_rows)
                 context_df = pd.DataFrame(context_data_list)
@@ -124,6 +130,8 @@ def run_single_dataset_benchmark(args):
                 
                 m["ml_eval"] = ml_fold_results
                 m["synthetic_data"] = generated_rows
+                m["context_data"] = context_data_list
+                m["ctx_ratio"] = ctx_ratio
                 results.append(m)
                 
                 if progress_dict is not None:

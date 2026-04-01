@@ -1,6 +1,7 @@
 from dash import dcc, html
 import dash_bootstrap_components as dbc
 from components.dataset_tab import create_dataset_tab
+from components.report_components import create_report_settings_modal
 
 import os
 import json
@@ -18,6 +19,7 @@ def create_layout():
             metadata = data.get("metadata", {})
             pipeline_results = data.get("pipeline_results", {})
             pipeline_config = data.get("pipeline_config", {})
+            report_config = data.get("report_config", {})
             tab_states = data.get("tabs", {})
             
             for ds_id, ds_meta in metadata.items():
@@ -37,6 +39,10 @@ def create_layout():
         dcc.Store(id="active-tab-store"),
         dcc.Store(id="pipeline-results-store", data=pipeline_results),
         dcc.Store(id="pipeline-config-store", data=pipeline_config if 'pipeline_config' in locals() else {}),
+
+        # Global Report Settings Modal (Selection & Detail Config)
+        create_report_settings_modal(report_config if 'report_config' in locals() else None),
+        dcc.Download(id="global-download-report-pdf"),
 
         # Navbar
         dbc.Navbar(
@@ -80,8 +86,6 @@ def create_layout():
                     dbc.Tooltip("Configure and run parallel data augmentation pipeline", target="btn-open-pipeline"),
                     dbc.Tooltip("Upload new CSV/Excel datasets to the workbench", target="upload-data"),
                     dbc.Tooltip("Save workspace layout and configurations to file", target="btn-save-session"),
-                    
-                    dcc.Download(id="global-download-pdf"),
                 ], className="d-flex align-items-center")
             ], fluid=True),
             color="dark", dark=True, className="mb-0 shadow hover-shadow border-bottom border-secondary py-2"
@@ -144,7 +148,7 @@ def create_layout():
                 dbc.ModalFooter(
                     dbc.Button("Close Diagnostics", id="btn-diag-close", color="secondary", outline=True, size="sm", n_clicks=0)
                 )
-            ], id="ml-diag-modal", size="xl", is_open=False)
+            ], id="ml-diag-modal", size="xl", is_open=False),
             
         ], fluid=True, className="px-0")
     ])

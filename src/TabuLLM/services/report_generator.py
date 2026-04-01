@@ -48,7 +48,34 @@ class PDFReportGenerator(FPDF):
             self.draw_table(["Metric", "Consolidated Value"], [["Avg Fidelity", str(avg_fidelity)]], [80, 110])
         self.ln(5)
 
-    def draw_table(self, header, data, col_widths, font_size=8, header_color=(230, 230, 250)):
+    def get_delta_color(self, metric_name, delta_val_str):
+        """
+        Determines the RGB color for a delta string based on metric type and value.
+        Better = Green (220, 255, 220)
+        Slightly Worse = Orange (255, 245, 230)
+        Worse = Red (255, 235, 235)
+        """
+        try:
+            # Extract numeric value including percentage support
+            val = float(delta_val_str.replace('%', '').replace('+', '').strip())
+            m_lower = metric_name.lower()
+            
+            # Identify if "Lower is Better"
+            lower_is_better = any(x in m_lower for x in ["rmse", "mse", "mae", "drift", "risk", "memorization", "shift"])
+            
+            if lower_is_better:
+                if val <= 0: return (220, 255, 220) # Green (Better or Equal)
+                if val <= 5.0: return (255, 245, 230) # Orange (Slightly Worse)
+                return (255, 235, 235) # Red (Worse)
+            else:
+                # Higher is Better
+                if val >= 0: return (220, 255, 220) # Green (Better or Equal)
+                if val >= -5.0: return (255, 245, 230) # Orange (Slightly Worse)
+                return (255, 235, 235) # Red (Worse)
+        except:
+            return (255, 255, 255) # Default White
+
+    def draw_table(self, header, data, col_widths, font_size=8, header_color=(230, 230, 250), row_colors=None, cell_colors=None):
         # Header
         self.set_font("helvetica", 'B', font_size + 1)
         self.set_fill_color(*header_color)
@@ -57,9 +84,14 @@ class PDFReportGenerator(FPDF):
         self.ln()
         
         self.set_font('Helvetica', '', font_size)
-        self.set_fill_color(255, 255, 255)
-        for row in data:
+        for i, row in enumerate(data):
             if self.get_y() > 270: self.add_page()
+            
+            # Determine base row color
+            base_row_color = (255, 255, 255)
+            if row_colors and i < len(row_colors):
+                base_row_color = row_colors[i]
+                
             # Multi-line cell support for long content
             max_lines = 1
             for val, width in zip(row, col_widths):
@@ -70,8 +102,14 @@ class PDFReportGenerator(FPDF):
             x_start = self.get_x()
             y_start = self.get_y()
             
-            for val, width in zip(row, col_widths):
-                self.multi_cell(width, 5, str(val), border=1, align='L')
+            for j, (val, width) in enumerate(zip(row, col_widths)):
+                # Check for cell-specific color, otherwise use row/base color
+                if cell_colors and (i, j) in cell_colors:
+                    self.set_fill_color(*cell_colors[(i, j)])
+                else:
+                    self.set_fill_color(*base_row_color)
+                    
+                self.multi_cell(width, 5, str(val), border=1, align='L', fill=True)
                 self.set_xy(x_start + width, y_start)
                 x_start += width
             self.ln(row_height)
@@ -214,7 +252,8 @@ def generate_benchmark_pdf(report_data):
                         rows.append([metric_name.upper(), "N/A", str(vals), "N/A"])
                 
                 pdf.draw_table(["Metric", "Real (Baseline)", "Augmented", "Delta (Lift)"], 
-                               rows, [50, 45, 45, 50], font_size=9, header_color=(200, 220, 240))
+                               rows, [50, 45, 45, 50], font_size=9, header_color=(200, 220, 240),
+                               cell_colors={(i, 3): pdf.get_delta_color(rows[i][0], rows[i][3]) for i in range(len(rows))})
                 pdf.ln(5)
         else:
             pdf.cell(0, 10, "No ML evaluation results found.", ln=1)
@@ -223,29 +262,44 @@ def generate_benchmark_pdf(report_data):
         pdf.add_page()
         pdf.section_header("Appendix: Benchmark Data Trace")
         
+        # Legend
+        pdf.set_font('Helvetica', 'I', 8)
+        pdf.set_text_color(100, 100, 100)
+        pdf.cell(0, 5, "Legend: [Light Blue] = Original Context Rows | [Light Green] = Generated Synthetic Rows", ln=1)
+        pdf.ln(2)
+        
         # 1. Original Dataset (Full)
         pdf.set_font('Helvetica', 'B', 11)
-        pdf.cell(0, 10, "A. Baseline: Original Dataset (Full Record)", ln=1)
+        pdf.set_text_color(0, 51, 102)
+        pdf.cell(0, 10, "A. Baseline: Original Dataset (Full Record Sample)", ln=1)
         orig_df = d_info.get("samples", {}).get("orig")
         if orig_df is not None and not orig_df.empty:
-            cols = orig_df.columns[:10]
-            pdf.draw_table(cols, orig_df[cols].values.tolist(), [190/len(cols)]*len(cols), font_size=5)
+            raw_cols = list(orig_df.columns[:10])
+            headers = ["#"] + raw_cols
+            rows = [[i+1] + r for i, r in enumerate(orig_df[raw_cols].head(30).values.tolist())]
+            pdf.draw_table(headers, rows, [10] + [180/len(raw_cols)]*len(raw_cols), font_size=5)
         pdf.ln(10)
 
         # 2. Synthetic Folds (Full)
         for i, fold in enumerate(d_info.get("appendix", []), 1):
-            # Fit multiple folds per page if possible
             if pdf.get_y() > 180: pdf.add_page()
             else: pdf.ln(10)
             
+            ctx_str = f" | Context Ratio: {fold.get('ctx_ratio')}%" if fold.get('ctx_ratio') else ""
+            
             pdf.set_font('Helvetica', 'B', 10)
             pdf.set_text_color(0, 51, 102)
-            pdf.cell(0, 8, f"B.{i} Audit Trace: {fold['name']} (Full Record)", ln=1)
+            pdf.cell(0, 8, f"B.{i} Audit Trace: {fold['name']}{ctx_str}", ln=1)
+            
             f_df = fold['sample']
+            f_colors = fold.get('row_colors', [])
             if not f_df.empty:
-                cols = f_df.columns[:10]
-                # Reduce row count for appendix to fit more
-                sample_rows = f_df[cols].head(30).values.tolist()
-                pdf.draw_table(cols, sample_rows, [190/len(cols)]*len(cols), font_size=5)
+                raw_cols = list(f_df.columns[:10])
+                headers = ["#"] + raw_cols
+                # Show up to 50 combined rows for audit
+                display_rows = f_df[raw_cols].head(50).values.tolist()
+                rows = [[i+1] + r for i, r in enumerate(display_rows)]
+                pdf.draw_table(headers, rows, [10] + [180/len(raw_cols)]*len(raw_cols), 
+                               font_size=5, row_colors=f_colors[:50])
 
     return pdf.output(dest='S')

@@ -22,4 +22,4 @@ if __name__ == '__main__':
     default_debug = "True" if not is_docker else "False"
     debug_mode = os.environ.get("DEBUG", default_debug).lower() == "true"
     
-    app.run(host=host, port=port, debug=debug_mode)
+    app.run(host=host, port=port, debug=debug_mode, reloader_type="stat")
