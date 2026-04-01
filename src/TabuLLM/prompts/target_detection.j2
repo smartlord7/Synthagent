@@ -1,13 +1,13 @@
 You are an expert Machine Learning Engineer.
-Analyze the following dataset sample to identify potential "target" columns (labels, outcome variables, or dependent variables).
+Analyze the following dataset SCHEMA to identify potential "target" columns (labels, outcome variables, or dependent variables).
 
-Data Sample:
-{{ df_sample_str }}
+Dataset Schema:
+{{ column_metadata }}
 
 Think step-by-step:
-1. Examine column names for common target indicators (e.g., 'target', 'label', 'outcome', 'y', 'status', 'class', 'price').
-2. Look at the data values: categorical values with few classes often indicate classification targets, while a single numeric column standing apart might be a regression target.
-3. Consider which columns are 'known' only after an event occurs (e.g., 'survived', 'churn', 'default').
+1. Examine column names for common target indicators (e.g., 'target', 'label', 'outcome', 'y', 'status', 'class', 'price', 'diagnosis').
+2. Consider column types: categorical variables often indicate classification targets, while numeric types might be regression targets.
+3. SEMANTIC CONTEXT: Target columns represent the results or "post-event" outcomes (e.g., 'survived' in a disaster dataset, 'risk_score' in finance).
 
 {% if single_target %}
 Return a JSON array of strings containing EXACTLY ONE detected column name (the most likely target).

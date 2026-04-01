@@ -133,9 +133,17 @@ class LocalOpenAIProvider(BaseLLMProvider):
             return "Could not generate description from local model."
 
     def detect_target_columns(self, df_sample, single_target=False, algorithm=None):
+        # 1. Generate Metadata-Only Schema String
+        col_meta = []
+        for col in df_sample.columns:
+            dtype = str(df_sample[col].dtype)
+            col_meta.append(f"- {col} ({dtype})")
+        
+        column_metadata = "\n".join(col_meta)
+        
         prompt = prompt_manager.get_prompt(
             "target_detection",
-            df_sample_str=df_sample.to_string(index=False),
+            column_metadata=column_metadata,
             single_target=single_target
         )
         messages = [{"role": "user", "content": prompt}]
@@ -143,6 +151,7 @@ class LocalOpenAIProvider(BaseLLMProvider):
         try:
             response = self._call_local_llm(messages, core_model=algorithm, temperature=0.1, json_mode=True)
             content = response["choices"][0]["message"]["content"]
+            logger.info(f"--- [SERVICE] TARGET DETECTION RAW RESPONSE: {content} ---")
             log_interaction(f"Target Detection [{algorithm or self.default_model}]", prompt, content)
             
             # Robust JSON parsing
@@ -436,31 +445,35 @@ class LocalOpenAIProvider(BaseLLMProvider):
             return []
 
     def _calculate_budget(self, subset, global_ctx, all_cols, messages, inst, limit):
-        """Calculates token costs and row limits strictly based on Compact JSON formatting."""
-        # Heuristic Ratio for Compact JSON (bracket density + symbols)
-        RATIO = 2.8 
+        """Calculates token costs and row limits strictly based on EXACT string measurement (Non-Sampling)."""
+        # Heuristic Ratio for Compact JSON (brackets, quotes, and commas are dense)
+        # 2.2 is a safer multiplier for structurally complex structured data.
+        RATIO = 2.2 
         SAFE_THRESHOLD = int(limit * 0.85)
 
+        # Full Overhead Calculation: Measure every character actually going into the messages
         overhead_chars = sum(len(m['content']) for m in messages) + len(inst) + (len(str(all_cols)) * 2)
         overhead_tok = int(overhead_chars / RATIO) + 400
         
-        # Estimate target rows as Compact List-of-Lists
+        # Exact Target Calculation: No more sampling. Measure the real JSON payload.
         target_payload = [[row.get(col) for col in all_cols] for row in subset]
         target_json = json.dumps(target_payload) if subset else "[]"
-        target_tok = int(len(target_json) / RATIO) + 200 # output buffer
+        target_tok = int(len(target_json) / RATIO) + 300 # Output buffer
         
         budget_tok = SAFE_THRESHOLD - overhead_tok - target_tok
         
-        # Average weight of a single reference row in Compact list-of-lists
+        # Reference Pool Calculation: Measures the REAL character weight of the entire context pool
         row_tok = 60
         if global_ctx:
-            sample = min(5, len(global_ctx))
-            sample_payload = [[r.get(c) for c in all_cols] for r in global_ctx[:sample]]
-            sample_json = json.dumps(sample_payload)
-            row_tok = int((len(sample_json) / sample) / RATIO) + 5
+            # Measure the average weight of the ACTUAL context pool by looking at all rows
+            full_pool_payload = [[r.get(c) for c in all_cols] for r in global_ctx]
+            full_pool_json = json.dumps(full_pool_payload)
+            avg_row_char_len = len(full_pool_json) / len(global_ctx)
+            row_tok = int(avg_row_char_len / RATIO) + 5
+            logger.debug(f"Precision Budgeting: Measured pool avg_row_char={avg_row_char_len:.1f} | row_tok={row_tok}")
         
         allowed = max(0, int(budget_tok / row_tok))
-        logger.info(f"Compact Budgeting: Threshold={SAFE_THRESHOLD} | Fixed={overhead_tok} | Target={target_tok} | Remaining={budget_tok} | AllowedRows={allowed}")
+        logger.info(f"Precision Budgeting: Threshold={SAFE_THRESHOLD} | Fixed={overhead_tok} | Target={target_tok} | AllowedRows={allowed}")
             
         return {'rows_allowed': allowed}
 
@@ -521,9 +534,17 @@ class GeminiProvider(BaseLLMProvider):
             return "Could not generate description from Gemini model."
 
     def detect_target_columns(self, df_sample, single_target=False):
+        # 1. Generate Metadata-Only Schema String
+        col_meta = []
+        for col in df_sample.columns:
+            dtype = str(df_sample[col].dtype)
+            col_meta.append(f"- {col} ({dtype})")
+        
+        column_metadata = "\n".join(col_meta)
+        
         prompt = prompt_manager.get_prompt(
             "target_detection",
-            df_sample_str=df_sample.to_string(index=False),
+            column_metadata=column_metadata,
             single_target=single_target
         )
 

@@ -256,6 +256,7 @@ def estimate_context_tokens_pm(max_rows, full_ctx_toggle, chunk_size, temp, algo
         
         from utils.json_utils import to_compact_json
         
+        # 1. Manual Context (Blue Rows) - Exact measurement
         manual_ctx_df = df[df['_row_id'].isin(context_ids or [])].drop(
             columns=['_row_id', 'is_context', 'is_target'], errors='ignore')
         all_cols = manual_ctx_df.columns.tolist()
@@ -263,42 +264,33 @@ def estimate_context_tokens_pm(max_rows, full_ctx_toggle, chunk_size, temp, algo
         manual_ctx_compact = to_compact_json(manual_ctx_rows, all_cols)
         manual_ctx_str = json.dumps(manual_ctx_compact)
         
+        # 2. Global Context (Pool) - Measured fraction of total pool
         global_ctx_len = 0
-        clean_df = df.dropna(how='all') if not df.empty else df
         n_rows = min(max_rows if max_rows else 0, len(df))
         
-        if not clean_df.empty:
-            sample_count = min(5, len(clean_df))
-            sample_rows_df = clean_df.sample(sample_count)
-            for k in ['_row_id', 'is_context', 'is_target']: 
-                if k in sample_rows_df.columns: sample_rows_df = sample_rows_df.drop(columns=[k], errors='ignore')
+        if n_rows > 0:
+            # Measure precisely the characters of the entire available pool
+            clean_df = df.copy()
+            for k in ['_row_id', 'is_context', 'is_target', 'ai_audit']:
+                if k in clean_df.columns: clean_df.drop(columns=[k], inplace=True)
             
-            all_cols_g = sample_rows_df.columns.tolist()
-            sample_records = sample_rows_df.to_dict('records')
-            compact_sample = to_compact_json(sample_records, all_cols_g)
+            pool_records = clean_df.to_dict('records')
+            compact_pool = to_compact_json(pool_records, clean_df.columns.tolist())
             
-            header_len = len(json.dumps(compact_sample['cols']))
-            rows_only_len = len(json.dumps(compact_sample['data']))
-            avg_row_char_len = rows_only_len / sample_count
-            global_ctx_len = header_len + (avg_row_char_len * n_rows)
+            # The context window sent to the LLM is 'n_rows' large
+            # We estimate based on the full measured weight of the table pool
+            pool_data_str = json.dumps(compact_pool['data'])
+            avg_row_len = len(pool_data_str) / len(clean_df) if len(clean_df) > 0 else 0
+            global_ctx_len = len(json.dumps(compact_pool['cols'])) + (avg_row_len * n_rows)
 
-        # Compact JSON Heuristic:
-        # Compact format {"cols": [...], "data": [[...]]} is much more efficient than 
-        # standard list-of-dicts, but has high symbol density (brackets, commas).
-        # We use 1:2.7 for compact JSON and 1:3.5 for descriptive metadata.
+        # 3. Final Calibration
+        # Precision Ratio: 2.2 is accurate for high-symbol-density Compact JSON
         text_tokens = (len(desc_metadata) / 3.5) if desc_metadata else 0
+        json_tokens_est = (len(manual_ctx_str) + global_ctx_len) / 2.2
         
-        # Structure tokens for 'manual_ctx_str' and 'global_ctx_len'
-        # Compact JSON is dense with structural tokens (brackets, commas, quotes).
-        json_tokens_est = (len(manual_ctx_str) + global_ctx_len) / 2.8
+        # Fixed prompt overhead (instructions/templates)
+        prompt_overhead = 600
         
-        # Prompt overhead: System instructions, template framing, column definitions.
-        # This is roughly constant regardless of dataset size.
-        # Based on generation_final.j2 and generation_init.j2 (~1300 chars)
-        prompt_overhead = 550 
-        
-        # Chunk factor: smaller chunks lead to more overhead in multi-turn logic, 
-        # though for a single estimation we focus on the context window.
         est_tokens = int(text_tokens + json_tokens_est + prompt_overhead)
         fraction = (n_rows / len(df)) * 100 if len(df) > 0 else 0
         suffix = " (Off)" if not full_ctx_toggle else ""
