@@ -177,8 +177,9 @@ def create_dataset_tab(dataset_id, filename, df=None, saved_state=None, pipeline
                 dcc.Download(id={"type": "download-pdf", "index": dataset_id}),
 
                 dbc.Row([
-                    # Left Widget: Dataset Metadata
+                    # Left Column: Metadata + Audit
                     dbc.Col([
+                        # Metadata Card
                         dbc.Card([
                             dbc.CardHeader([
                                 html.Div([
@@ -190,7 +191,7 @@ def create_dataset_tab(dataset_id, filename, df=None, saved_state=None, pipeline
                                 html.Div(id={"type": "dataset-stats-grid", "index": dataset_id}, children=stats_grid, className="mb-3"),
                                 
                                 html.Hr(className="border-secondary my-2"),
-                                                               html.Div([
+                                html.Div([
                                     html.H6([html.I(className="bi bi-cpu-fill me-2 text-info"), "Structured Description"], className="text-muted small fw-bold mb-0 d-inline-block"),
                                     html.Div([
                                         dbc.Button([html.I(className="bi bi-magic me-1"), "Insights"], id={"type": "btn-gen-desc", "index": dataset_id}, color="info", size="sm", outline=True, className="py-0 px-2 rounded-pill me-2"),
@@ -207,7 +208,7 @@ def create_dataset_tab(dataset_id, filename, df=None, saved_state=None, pipeline
                                                 id={"type": "dataset-description-markdown", "index": dataset_id},
                                                 children=saved_state.get("dataset-description-store", "No description available. Click 'Insights'."),
                                                 className="markdown-preview p-3 border rounded border-secondary bg-dark text-light shadow-sm",
-                                                style={"minHeight": "100px", "maxHeight": "280px", "overflowY": "auto", "fontSize": "0.85rem"}
+                                                style={"minHeight": "100px", "maxHeight": "200px", "overflowY": "auto", "fontSize": "0.85rem"}
                                             ),
                                             id={"type": "dataset-description-markdown-container", "index": dataset_id},
                                             style={"display": "block"}
@@ -218,7 +219,7 @@ def create_dataset_tab(dataset_id, filename, df=None, saved_state=None, pipeline
                                                 id={"type": "dataset-description-edit", "index": dataset_id},
                                                 placeholder="Enter dataset description or click 'Insights'...",
                                                 className="bg-dark text-light small",
-                                                style={"height": "150px", "fontSize": "0.8rem"}
+                                                style={"height": "100px", "fontSize": "0.8rem"}
                                             ),
                                             id={"type": "dataset-description-edit-container", "index": dataset_id},
                                             style={"display": "none"}
@@ -246,12 +247,75 @@ def create_dataset_tab(dataset_id, filename, df=None, saved_state=None, pipeline
                                     multi=True, placeholder="Select Target(s)...",
                                     className="bg-dark text-light small-dropdown mb-2"
                                 ),
-                                html.Small("Override global target if desired.", className="text-muted x-small d-block")
                             ], className="p-3 bg-dark text-light")
+                        ], className="tabu-card shadow border-secondary mb-3"),
+
+                        # New Audit Card (Tabbed)
+                        dbc.Card([
+                            dbc.CardHeader([
+                                html.Div([
+                                    html.I(className="bi bi-shield-check me-2 text-warning"), 
+                                    html.Span("Health & Ethics Audit", className="me-auto"),
+                                    dbc.Button([html.I(className="bi bi-arrow-repeat me-1"), "Run Audit"], 
+                                               id={"type": "btn-run-audit", "index": dataset_id}, 
+                                               color="warning", size="sm", outline=True, 
+                                               className="py-0 px-2 rounded-pill")
+                                ], className="fw-bold text-light d-flex align-items-center w-100")
+                            ], className="bg-dark border-secondary"),
+                            dbc.CardBody([
+                                dbc.Tabs([
+                                    # TAB 1: STRUCTURAL
+                                    dbc.Tab(label="Structural", tab_id="tab-struct", children=[
+                                        html.Div(id={"type": "audit-struct-container", "index": dataset_id}, children=[
+                                            html.Small("Run audit to view sparsity and outliers.", className="text-muted italic x-small d-block mt-3")
+                                        ], className="p-2")
+                                    ], label_style={"fontSize": "0.75rem"}, active_label_style={"color": "#ffc107"}),
+                                    
+                                    # TAB 2: FAIRNESS
+                                    dbc.Tab(label="Fairness", tab_id="tab-fairness", children=[
+                                        html.Div(id={"type": "audit-fairness-container", "index": dataset_id}, children=[
+                                            html.Small("Run audit to detect group bias.", className="text-muted italic x-small d-block mt-3")
+                                        ], className="p-2")
+                                    ], label_style={"fontSize": "0.75rem"}, active_label_style={"color": "#ffc107"}),
+                                    
+                                    # TAB 3: PRIVACY
+                                    dbc.Tab(label="Privacy", tab_id="tab-privacy", children=[
+                                        html.Div(id={"type": "audit-privacy-container", "index": dataset_id}, children=[
+                                            html.Small("Run audit to check re-identification risk.", className="text-muted italic x-small d-block mt-3")
+                                        ], className="p-2")
+                                    ], label_style={"fontSize": "0.75rem"}, active_label_style={"color": "#ffc107"}),
+                                    
+                                    # TAB 4: QUALITY
+                                    dbc.Tab(label="Quality", tab_id="tab-quality", children=[
+                                        html.Div(id={"type": "audit-quality-container", "index": dataset_id}, children=[
+                                            html.Small("Run audit to check data cleanliness.", className="text-muted italic x-small d-block mt-3")
+                                        ], className="p-2")
+                                    ], label_style={"fontSize": "0.75rem"}, active_label_style={"color": "#ffc107"}),
+                                    
+                                    # TAB 5: STRATEGY
+                                    dbc.Tab(label="Strategy", tab_id="tab-strategy", children=[
+                                        html.Div([
+                                            html.Div([
+                                                html.H6([html.I(className="bi bi-lightbulb-fill me-2 text-warning"), "Strategic Augmentation Plan"], className="text-muted small fw-bold mb-2 d-inline-block"),
+                                                dbc.Button([html.I(className="bi bi-magic me-1"), "Ponder Strategy"], id={"type": "btn-ponder-audit", "index": dataset_id}, color="warning", size="sm", outline=False, className="ms-auto py-0 px-3 rounded-pill shadow-sm hover-grow"),
+                                            ], className="d-flex align-items-center mb-2 mt-2"),
+                                            dbc.Spinner(
+                                                dcc.Markdown(
+                                                    id={"type": "audit-strategy-markdown", "index": dataset_id},
+                                                    children="*No strategy generated.*",
+                                                    className="markdown-preview p-3 border rounded bg-dark text-light shadow-sm",
+                                                    style={"minHeight": "120px", "maxHeight": "200px", "overflowY": "auto", "fontSize": "0.82rem", "borderColor": "rgba(255, 193, 7, 0.15)", "lineHeight": "1.4"}
+                                                ),
+                                                size="sm", color="warning"
+                                            )
+                                        ], className="p-1")
+                                    ], label_style={"fontSize": "0.75rem"}, active_label_style={"color": "#ffc107"}),
+                                ], id={"type": "audit-tabs", "index": dataset_id}, active_tab="tab-struct", className="custom-tabs-sm")
+                            ], className="p-2 bg-dark text-light")
                         ], className="tabu-card shadow border-secondary h-100")
                     ], md=5, className="mb-3 mb-md-0 d-flex flex-column"),
 
-                    # Right Widget: Generation Parameters
+                    # Right Column: Generation Parameters
                     dbc.Col([
                         dbc.Card([
                             dbc.CardHeader([

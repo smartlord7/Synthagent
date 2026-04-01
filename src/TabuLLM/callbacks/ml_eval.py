@@ -15,7 +15,8 @@ import pandas as pd
     prevent_initial_call=True
 )
 def auto_suggest_targets(n_clicks, orig_data, single_target, algorithm):
-    if not n_clicks: return dash.no_update
+    if not n_clicks or not orig_data:
+        return dash.no_update
     df = pd.DataFrame(orig_data)
     
     # Filter out internal and ID columns before sending to LLM
@@ -24,9 +25,13 @@ def auto_suggest_targets(n_clicks, orig_data, single_target, algorithm):
     
     df_filtered = df.drop(columns=cols_to_drop, errors='ignore')
     
+    from utils.logging_config import logger
     suggested = detect_target_columns(df_filtered, single_target=single_target, algorithm=algorithm)
+    logger.info(f"--- [CALLBACK] AUTO-SUGGEST TARGETS RECIEVED: {suggested} ---")
+    
     # Filter to only include valid columns (double check against original df)
     valid_suggested = [c for c in suggested if c in df.columns]
+    logger.info(f"--- [CALLBACK] AUTO-SUGGEST VALIDATED TARGETS: {valid_suggested} ---")
     
     # Defensive enforcement for single target
     if single_target and len(valid_suggested) > 1:
