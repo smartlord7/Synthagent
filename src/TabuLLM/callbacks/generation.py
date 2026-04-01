@@ -7,13 +7,13 @@ from core import app
 from utils.logging_config import logger
 from services.llm_client import generate_bulk_data, provider
 from dash import callback_context
+from utils.json_utils import to_compact_json
+from services.data_manager import select_context_rows
 
 # --- Sync Local Models ---
 @app.callback(
     Output({"type": "algo-selector", "index": MATCH}, "options"),
     Output({"type": "algo-selector", "index": MATCH}, "value"),
-    Output({"type": "gen-max-context", "index": MATCH}, "max"),
-    Output({"type": "gen-max-context", "index": MATCH}, "value"),
     Input({"type": "btn-refresh-models", "index": MATCH}, "n_clicks"),
     Input({"type": "algo-selector", "index": MATCH}, "value"),
     State({"type": "algo-selector", "index": MATCH}, "options"),
@@ -33,18 +33,149 @@ def refresh_local_models(n_clicks, current_value, existing_options):
         # Just use existing options if selection changed
         options = existing_options
         new_value = current_value
-        # Re-fetch models info to get context limit for the new current_value
-        models_info = provider.get_available_models()
+        
+    return options, new_value
 
-    # Find context length
-    ctx_limit = 4096
-    for m in models_info:
-        if m["id"] == new_value:
-            ctx_limit = m["max_context"]
-            break
-            
-    safe_default = int(ctx_limit * 0.85) if ctx_limit else 1000
-    return options, new_value, ctx_limit, safe_default
+# --- Sync Slider Range with Dataset Size ---
+@app.callback(
+    Output({"type": "gen-max-context", "index": MATCH}, "max"),
+    Output({"type": "gen-max-context", "index": MATCH}, "value"),
+    Input({"type": "data-grid", "index": MATCH}, "rowData"),
+    State({"type": "gen-max-context", "index": MATCH}, "value"),
+    prevent_initial_call=False
+)
+def sync_max_context_range(row_data, current_val):
+    if not row_data:
+        return 100, 20
+    
+    n_rows = len(row_data)
+    new_max = max(1, n_rows)
+    
+    # If it's a new load or the value was at the previous 'default', 
+    # snap to the actual number of rows.
+    # Otherwise, cap the current selection to the new range.
+    if current_val is None or current_val == 60 or current_val > new_max:
+        return new_max, new_max
+    
+    return new_max, current_val
+
+def _build_instructions(tone, consistency, names, types, texts, mins, maxs):
+    """Compile rules and parameters into a string."""
+    header = f"Style: {tone}\nConsistency: {consistency}\n"
+    rules = []
+    for i in range(len(names)):
+        if names[i]:
+            detail = texts[i] if types[i] != 'number' else f"Min:{mins[i]}, Max:{maxs[i]}"
+            rules.append(f"- Rule [{names[i]}]: {detail}")
+    return header + "\n".join(rules)
+
+def _prepare_context(row_data, context_ids, full_ctx_toggle, strategy, max_rows, col_defs, metadata):
+    """Extract and sample reference context data."""
+    df = pd.DataFrame(row_data)
+    fields = {c['field']: c.get('headerName', c['field']) for c in col_defs
+             if c['field'] not in ['ai_audit', '_row_id'] and not c['field'].startswith('is_ai_')}
+    
+    # Manual Context
+    manual_df = df[df['_row_id'].isin(context_ids or [])].drop(columns=['_row_id', 'is_context', 'is_target'], errors='ignore')
+    manual_records = manual_df.to_dict('records')
+    for r in manual_records:
+        for k, v in list(r.items()):
+            if k in fields:
+                r[fields[k]] = v
+                del r[k]
+    
+    logger.info(f"Context Prep: Found {len(manual_records)} manual (Blue) reference rows.")
+    
+    # Global Context
+    global_sample = []
+    if full_ctx_toggle:
+        logger.info(f"Context Prep: Sampling {max_rows} rows using strategy '{strategy}'.")
+        df_clean = df.copy()
+        for k in ['_row_id', 'is_context', 'is_target', 'ai_audit']:
+            if k in df_clean.columns: df_clean.drop(columns=[k], inplace=True)
+        df_clean = df_clean.rename(columns=fields)
+        global_sample = select_context_rows(df_clean, strategy=strategy, n_rows=max_rows or 100)
+    else:
+        logger.info("Context Prep: Global context strategy is OFF.")
+
+    return {
+        "metadata": metadata or "Not provided",
+        "manual_ctx": json.dumps(manual_records),
+        "global_ctx": global_sample,
+        "column_headers": list(fields.values()),
+        "header_to_field": {v: k for k, v in fields.items()}
+    }
+
+def _map_targets(row_data, target_ids, headers):
+    """Identify which rows need completion vs generation."""
+    payload = []
+    indices = []
+    empty_count = 0
+    header_to_field = {h: f for f, h in headers.items()} # headers is map from prepare_context
+    
+    for t_id in target_ids:
+        idx = next((i for i, r in enumerate(row_data) if r.get('_row_id') == t_id), -1)
+        if idx == -1: continue
+        
+        row = row_data[idx]
+        guidance = {h: row.get(f) for h, f in header_to_field.items() 
+                    if row.get(f) not in [None, "", "NaN"]}
+        
+        indices.append(idx)
+        if guidance: payload.append(guidance)
+        else: empty_count += 1
+    
+    logger.info(f"Target Mapping: {len(payload)} partial rows, {empty_count} entirely new rows.")
+    return payload, indices, empty_count
+
+def _process_results(rows, indices, bundle, algo, headers_map):
+    """Integrate LLM tokens back into raw data strings/numbers. Handles partial successes."""
+    if not bundle: 
+        logger.error("Result Processing: No result bundle received from LLM engine.")
+        return rows
+    
+    data = bundle["data"]
+    stats = bundle["stats"]
+    field_map = {h: f for f, h in headers_map.items()}
+    ts = datetime.now().strftime("%Y-%m-%d %H:%M")
+
+    logger.info(f"Result Processing: Integrating {len(data)} generated rows. (Expected {len(indices)})")
+
+    # Keep track of which indices were actually filled
+    filled_indices = set()
+
+    for i, gen_row in enumerate(data):
+        if i >= len(indices): break
+        idx = indices[i]
+        filled_indices.add(idx)
+        
+        rows[idx]['ai_audit'] = f"Gen AI | {algo} | {stats['total_tokens']} tok | {ts}"
+        
+        for header, val in gen_row.items():
+            if header in field_map:
+                f = field_map[header]
+                # Light sanitization
+                clean_val = val
+                if isinstance(val, str):
+                    s = val.replace('$', '').replace(',', '').strip()
+                    try: 
+                        clean_val = float(s) if '.' in s else int(s)
+                    except: pass
+                
+                # Update only if currently empty
+                if str(rows[idx].get(f)) in [None, "", "NaN", "None"]:
+                    rows[idx][f] = clean_val
+                    rows[idx][f"is_ai_{f}"] = True
+        
+        rows[idx]['is_target'] = False
+
+    # Mark failed rows in the audit
+    for i, idx in enumerate(indices):
+        if idx not in filled_indices:
+            rows[idx]['ai_audit'] = f"FAILED | {algo} | Turn timed out or socket reset | {ts}"
+            # We keep is_target=True so they stay red and visible
+
+    return rows
 
 # --- THE MASTER AI GENERATION ENGINE ---
 @app.callback(
@@ -52,9 +183,9 @@ def refresh_local_models(n_clicks, current_value, existing_options):
     Output({'type': 'target-row-ids', 'index': MATCH}, 'data', allow_duplicate=True),
     Input({'type': 'btn-generate', 'index': MATCH}, 'n_clicks'),
     State({'type': 'data-grid', 'index': MATCH}, 'rowData'),
-    State({'type': 'target-row-ids', 'index': MATCH}, 'data'),  # Target Row IDs (Red)
-    State({'type': 'context-row-ids', 'index': MATCH}, 'data'),  # Context Row IDs (Blue)
-    State({'type': 'check-full-context', 'index': MATCH}, 'value'),  # Full Dataset Context Toggle
+    State({'type': 'target-row-ids', 'index': MATCH}, 'data'),
+    State({'type': 'context-row-ids', 'index': MATCH}, 'data'),
+    State({'type': 'check-full-context', 'index': MATCH}, 'value'),
     State({'type': 'data-grid', 'index': MATCH}, 'columnDefs'),
     State({'type': 'algo-selector', 'index': MATCH}, 'value'),
     State({'type': 'param-tone', 'index': MATCH}, 'value'),
@@ -71,148 +202,51 @@ def refresh_local_models(n_clicks, current_value, existing_options):
     State({'type': 'gen-context-strategy', 'index': MATCH}, 'value'),
     prevent_initial_call=True
 )
-def run_ai_generation_pm(n_clicks, row_data, target_ids, context_ids, full_ctx_toggle,
-                         col_defs, algorithm, param_tone, param_consistency,
-                         temperature, cp_names, cp_types,
-                         cp_texts, cp_mins, cp_maxs, desc_metadata, chunk_size, max_context, strategy):
+def run_ai_generation_pm(n_clicks, row_data, target_ids, context_ids, full_ctx,
+                         col_defs, algo, tone, consistency,
+                         temp, cp_names, cp_types,
+                         cp_texts, cp_mins, cp_maxs, desc, chunk_sz, max_c, strat):
 
     if not n_clicks or not target_ids:
-        logger.warning("Generation aborted: No target rows (Red) defined.")
         return dash.no_update, dash.no_update
 
-    logger.info(f"Starting AI Generation for {len(target_ids)} target rows.")
+    logger.info(f"--- STARTING TABULLM GENERATION PIPELINE ({len(target_ids)} targets) ---")
 
-    # 1. Build Instructions
-    compiled_instructions = (
-        f"Style: {param_tone}\n"
-        f"Consistency: {param_consistency}\n"
-    )
-    for i in range(len(cp_names)):
-        if cp_names[i]:
-            detail = cp_texts[i] if cp_types[i] != 'number' else f"Min:{cp_mins[i]}, Max:{cp_maxs[i]}"
-            compiled_instructions += f"- Rule [{cp_names[i]}]: {detail}\n"
-
-    # LOG: Instructions
-    logger.info(f"--- PROMPT COMPONENT: INSTRUCTIONS ---\n{compiled_instructions}")
-
-    # 2. Context Prep
-    df_full = pd.DataFrame(row_data)
-
-    # A. Manual Context (Blue Rows)
-    manual_ctx_df = df_full[df_full['_row_id'].isin(context_ids or [])].drop(
-        columns=['_row_id', 'is_context', 'is_target'], errors='ignore')
+    # 1. Pipeline preparation
+    inst = _build_instructions(tone, consistency, cp_names, cp_types, cp_texts, cp_mins, cp_maxs)
+    logger.debug(f"Compiled Instructions:\n{inst}")
     
-    from utils.json_utils import to_compact_json
-    field_to_header = {col['field']: col.get('headerName', col['field']) for col in col_defs
-                       if col['field'] not in ['ai_audit', '_row_id'] and not col['field'].startswith('is_ai_')}
-    header_to_field = {v: k for k, v in field_to_header.items()}
-    
-    manual_ctx_records = manual_ctx_df.to_dict('records')
-    # Use headers for the compact json instead of internal fields
-    for r in manual_ctx_records:
-        for k, v in list(r.items()):
-            if k in field_to_header:
-                r[field_to_header[k]] = v
-                del r[k]
-    manual_ctx_json = json.dumps(manual_ctx_records)
+    ctx = _prepare_context(row_data, context_ids, full_ctx, strat, max_c, col_defs, desc)
+    payload, target_indices, empty_count = _map_targets(row_data, target_ids, ctx['header_to_field'])
 
-    # B. Global Patterns (Full Dataset Toggle)
-    global_ctx_sample = []
-    if full_ctx_toggle:
-        from services.data_manager import select_context_rows
-        max_c = max_context if max_context else 100
-        
-        logger.info(f"Retrieving context sample using Strategy: {strategy} for {max_c} rows.")
-        # Filter df_full to only relevant columns and rename them
-        df_full_cleaned = df_full.copy()
-        for k in ['_row_id', 'is_context', 'is_target', 'ai_audit']:
-            if k in df_full_cleaned.columns: df_full_cleaned.drop(columns=[k], inplace=True)
-        
-        df_full_cleaned = df_full_cleaned.rename(columns=field_to_header)
-        global_ctx_sample = select_context_rows(df_full_cleaned, strategy=strategy, n_rows=max_c)
-
-    # Pack context as Dictionary
-    context_data = {
-        "metadata": desc_metadata if desc_metadata else "Not provided",
-        "manual_ctx": manual_ctx_json,
-        "global_ctx": global_ctx_sample
-    }
-
-    # 3. Target Mapping
-    updated_rows = list(row_data)
-    partial_payload = []
-    empty_row_count = 0
-    target_indices = []
-
-    for t_id in target_ids:
-        idx = next((i for i, r in enumerate(updated_rows) if r.get('_row_id') == t_id), -1)
-        if idx != -1:
-            row_obj = updated_rows[idx]
-            guidance = {field_to_header[f]: v for f, v in row_obj.items()
-                        if f in field_to_header and v not in [None, "", "NaN"]}
-            target_indices.append(idx)
-            if len(guidance) > 0:
-                partial_payload.append(guidance)
-            else:
-                empty_row_count += 1
-
-    # 4. Call AI
-    result_bundle = generate_bulk_data(
-        partial_payload,
-        context_data,
-        list(field_to_header.values()),
-        algorithm,
-        compiled_instructions,
-        temperature,
-        num_empty=empty_row_count,
-        chunk_size=chunk_size
+    # 2. Execution
+    bundle = generate_bulk_data(
+        payload, ctx, ctx['column_headers'], algo, inst, temp,
+        num_empty=empty_count, chunk_size=chunk_sz
     )
 
-    remaining_targets = list(target_ids)
-
-    # 5. Process Results
-    if result_bundle:
-        filled_data = result_bundle["data"]
-        stats = result_bundle["stats"]
-        current_time = datetime.now().strftime("%Y-%m-%d %H:%M")
-
-        for i, gen_row in enumerate(filled_data):
-            if i >= len(target_indices): break
-            master_idx = target_indices[i]
-            row_uuid = updated_rows[master_idx]['_row_id']
-            updated_rows[master_idx]['ai_audit'] = f"Gen AI | {algorithm} | {stats['total_tokens']} tokens | {current_time}"
-
-            for header, val in gen_row.items():
-                if header in header_to_field:
-                    field = header_to_field[header]
-                    sanitized_val = val
-                    if isinstance(val, str):
-                        clean_str = val.replace('$', '').replace(',', '').strip()
-                        try:
-                            sanitized_val = float(clean_str) if '.' in clean_str else int(clean_str)
-                        except:
-                            sanitized_val = val
-
-                    if str(updated_rows[master_idx].get(field)) in [None, "", "NaN", "None"]:
-                        updated_rows[master_idx][field] = sanitized_val
-                        updated_rows[master_idx][f"is_ai_{field}"] = True
-
-            updated_rows[master_idx]['is_target'] = False
-            if row_uuid in remaining_targets:
-                remaining_targets.remove(row_uuid)
+    # 3. Post-processing
+    updated_rows = _process_results(list(row_data), target_indices, bundle, algo, ctx['header_to_field'])
     
-    return updated_rows, remaining_targets
+    # Identify remaining targets (those that are still marked as targets)
+    remaining = [r['_row_id'] for r in updated_rows if r.get('is_target') and r['_row_id'] in target_ids]
+    
+    logger.info(f"--- GENERATION PIPELINE FINISHED. Successfully processed {len(target_ids) - len(remaining)}/{len(target_ids)} rows. ---")
+    return updated_rows, remaining
 
 
 @app.callback(
     Output({'type': 'estimated-tokens-lbl', 'index': MATCH}, 'children'),
     Input({'type': 'gen-max-context', 'index': MATCH}, 'value'),
     Input({'type': 'check-full-context', 'index': MATCH}, 'value'),
+    Input({'type': 'gen-chunk-size', 'index': MATCH}, 'value'),
+    Input({'type': 'temperature-slider', 'index': MATCH}, 'value'),
+    Input({'type': 'algo-selector', 'index': MATCH}, 'value'),
     State({'type': 'data-grid', 'index': MATCH}, 'rowData'),
     State({'type': 'context-row-ids', 'index': MATCH}, 'data'),
     State({'type': 'dataset-description-store', 'index': MATCH}, 'data')
 )
-def estimate_context_tokens_pm(max_rows, full_ctx_toggle, row_data, context_ids, desc_metadata):
+def estimate_context_tokens_pm(max_rows, full_ctx_toggle, chunk_size, temp, algo, row_data, context_ids, desc_metadata):
     if not row_data:
         return "~0 Tok"
     try:
@@ -256,12 +290,15 @@ def estimate_context_tokens_pm(max_rows, full_ctx_toggle, row_data, context_ids,
         
         # Structure tokens for 'manual_ctx_str' and 'global_ctx_len'
         # Compact JSON is dense with structural tokens (brackets, commas, quotes).
-        json_tokens_est = (len(manual_ctx_str) + global_ctx_len) / 2.7
+        json_tokens_est = (len(manual_ctx_str) + global_ctx_len) / 2.8
         
         # Prompt overhead: System instructions, template framing, column definitions.
         # This is roughly constant regardless of dataset size.
-        prompt_overhead = 480 
+        # Based on generation_final.j2 and generation_init.j2 (~1300 chars)
+        prompt_overhead = 550 
         
+        # Chunk factor: smaller chunks lead to more overhead in multi-turn logic, 
+        # though for a single estimation we focus on the context window.
         est_tokens = int(text_tokens + json_tokens_est + prompt_overhead)
         fraction = (n_rows / len(df)) * 100 if len(df) > 0 else 0
         suffix = " (Off)" if not full_ctx_toggle else ""

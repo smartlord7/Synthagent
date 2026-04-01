@@ -1,14 +1,15 @@
 import os
 from jinja2 import Environment, FileSystemLoader, select_autoescape
+from utils.logging_config import logger
 
 class PromptManager:
     """Manages LLM prompts using Jinja2 templates."""
     
     def __init__(self, template_dir=None):
         if template_dir is None:
-            # Default to the 'prompts' directory relative to this file's parent
             template_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'prompts')
         
+        logger.info(f"PromptManager: Initializing with template directory: {template_dir}")
         self.env = Environment(
             loader=FileSystemLoader(template_dir),
             autoescape=select_autoescape(),
@@ -21,8 +22,11 @@ class PromptManager:
         if not template_name.endswith('.j2'):
             template_name += '.j2'
         
+        logger.debug(f"PromptManager: Loading template '{template_name}'.")
         template = self.env.get_template(template_name)
-        return template.render(**kwargs)
+        rendered = template.render(**kwargs)
+        logger.info(f"PromptManager: Successfully rendered '{template_name}'.")
+        return rendered
 
 # Singleton instance
 prompt_manager = PromptManager()

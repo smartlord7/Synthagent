@@ -308,7 +308,7 @@ def create_dataset_tab(dataset_id, filename, df=None, saved_state=None, pipeline
                                             html.Label("Max Context:", className="fw-bold text-light small me-auto"),
                                             html.Span("~0 Tok", id={"type": "estimated-tokens-lbl", "index": dataset_id}, className="badge bg-info ms-1")
                                         ], className="d-flex align-items-center justify-content-between"),
-                                        dcc.Slider(id={"type": "gen-max-context", "index": dataset_id}, min=20, max=1000, step=20, value=saved_state.get('gen-max-context', 60))
+                                        dcc.Slider(id={"type": "gen-max-context", "index": dataset_id}, min=1, max=1000, step=1, value=saved_state.get('gen-max-context', 60))
                                     ], width=6)
                                 ], className="mb-3"),
 

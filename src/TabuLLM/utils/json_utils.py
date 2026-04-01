@@ -11,62 +11,58 @@ def robust_json_loads(text: str):
         return None
 
     # Helper to attempt parsing with various cleanups
-    def try_parse(candidate):
+    def try_parse(candidate, stage_name):
         candidate = candidate.strip()
         if not candidate:
             return None
             
         # 1. Direct parse
         try:
-            return json.loads(candidate)
+            val = json.loads(candidate)
+            logger.debug(f"JSON Parse Success: Stage='{stage_name}' (Raw Match)")
+            return val
         except json.JSONDecodeError:
             pass
 
         # 2. Manual "fixed manner" fixes
-        # Replace NaN/inf/-inf with null
         fixed = re.sub(r'\b(NaN|inf|-inf)\b', 'null', candidate)
-        # Remove trailing commas in objects: , } -> }
         fixed = re.sub(r',\s*\}', '}', fixed)
-        # Remove trailing commas in arrays: , ] -> ]
         fixed = re.sub(r',\s*\]', ']', fixed)
         
-        try:
-            return json.loads(fixed)
-        except json.JSONDecodeError:
-            pass
+        if fixed != candidate:
+            try:
+                val = json.loads(fixed)
+                logger.debug(f"JSON Parse Success: Stage='{stage_name}' (After Regex Fixes)")
+                return val
+            except json.JSONDecodeError:
+                pass
             
         return None
 
     # Step 1: Try raw text
-    result = try_parse(text)
+    result = try_parse(text, "Raw Text")
     if result is not None:
         return result
 
     # Step 2: Strip markdown blocks and try
-    cleaned = re.sub(r'```(?:json)?\s*(.*?)\s*```', r'\1', text, flags=re.DOTALL).strip()
-    result = try_parse(cleaned)
-    if result is not None:
-        return result
+    if "```" in text:
+        cleaned = re.sub(r'```(?:json)?\s*(.*?)\s*```', r'\1', text, flags=re.DOTALL).strip()
+        result = try_parse(cleaned, "Markdown Strip")
+        if result is not None:
+            return result
 
     # Step 3: Find the first occurrence of '{' or '[' and the last occurrence of '}' or ']'
     start_match = re.search(r'[\{\[]', text)
     if start_match:
         start_idx = start_match.start()
-        
-        # Find the last closing bracket/brace by searching backwards
         end_idx = -1
         for i in range(len(text) - 1, start_idx, -1):
             if text[i] in ['}', ']']:
                 end_idx = i + 1
                 break
         
-        # If no closing bracket found, we take the rest of the string from start_idx
-        if end_idx == -1:
-            potential_json = text[start_idx:].strip()
-        else:
-            potential_json = text[start_idx:end_idx].strip()
-            
-        result = try_parse(potential_json)
+        potential_json = text[start_idx:].strip() if end_idx == -1 else text[start_idx:end_idx].strip()
+        result = try_parse(potential_json, "Bracket Extraction")
         if result is not None:
             return result
             
@@ -76,7 +72,6 @@ def robust_json_loads(text: str):
         except json.JSONDecodeError as e:
             lines = potential_json.splitlines()
             err_line = e.lineno
-            # Handle potential negative indices or empty lines
             start = max(0, err_line - 3)
             end = min(len(lines), err_line + 2)
             context_snippet = "\n".join(lines[start:end]) if lines else "Empty or truncated JSON"
@@ -88,10 +83,10 @@ def robust_json_loads(text: str):
                 "context": context_snippet,
                 "full_text": potential_json
             }
-            logger.warning(f"JSON parsing failed after all attempts. Error: {e}")
+            logger.warning(f"JSON parsing failed after all stages. Error: {e}")
             raise RobustJSONError(f"JSON parsing failed: {e}", error_data)
 
-    logger.error("Failed to extract any JSON-like structure.")
+    logger.error("Failed to extract any JSON-like structure from response.")
     raise json.JSONDecodeError("No JSON-like structure found", text, 0)
 
 class RobustJSONError(Exception):
@@ -104,6 +99,7 @@ def to_compact_json(data: list, cols: list) -> dict:
     """Converts a list of dicts to a compact columnar format."""
     if not data:
         return {"cols": cols, "data": []}
+    logger.debug(f"JSON Transform: Packing {len(data)} rows into Compact JSON.")
     return {
         "cols": cols,
         "data": [[row.get(col) for col in cols] for row in data]
@@ -112,15 +108,20 @@ def to_compact_json(data: list, cols: list) -> dict:
 def from_compact_json(compact_data: dict, fallback_cols: list = None) -> list:
     """Converts a compact columnar format back to a list of dicts."""
     if not isinstance(compact_data, dict):
+        # Fallback if list returned directly
+        if isinstance(compact_data, list):
+             logger.debug(f"JSON Transform: Response is already a raw list of {len(compact_data)} rows.")
+             return compact_data
         return []
+        
     cols = compact_data.get("cols", fallback_cols)
     if not cols:
+        logger.warning("JSON Transform: No columns found for Unpacking.")
         return []
+        
     rows = compact_data.get("data", [])
     if not isinstance(rows, list):
-        # Fallback if the dict IS the list of rows (unlikely but safe)
-        if isinstance(compact_data, list):
-             rows = compact_data
-        else:
-             return []
+        return []
+    
+    logger.info(f"JSON Transform: Successfully unpacked {len(rows)} rows from Compact JSON.")
     return [dict(zip(cols, row)) for row in rows]

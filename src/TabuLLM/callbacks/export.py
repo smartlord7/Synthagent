@@ -14,6 +14,7 @@ from core import app
 from services.report_generator import generate_benchmark_pdf
 from utils.metrics import calculate_metrics
 from utils.logging_config import logger
+from datetime import datetime
 
 # --- CONFIGURE PLOTLY EXPORT ---
 # Chromium flags for stability on Windows systems

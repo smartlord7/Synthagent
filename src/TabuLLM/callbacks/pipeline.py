@@ -386,8 +386,8 @@ def execute_pipeline_pm(set_progress, n_clicks, global_folds, global_ml_models, 
             html.Small("SYNTHETIC DATA QUALITY", className="text-muted xx-small fw-bold border-bottom border-secondary d-block mb-2"),
             html.Div([
                 dbc.Row([dbc.Col(html.Small("Fidelity", className="x-small text-light"), width=4), dbc.Col(html.Small(f"{f_m:.1f}±{f_s:.1f}", className="x-small text-info fw-bold"), width=3), dbc.Col(dbc.Progress(value=f_m, color="info", style={"height": "4px"}), width=5)], align="center", className="g-0 mb-1"),
-                dbc.Row([dbc.Col(html.Small("Correlation", className="x-small text-muted"), width=4), dbc.Col(html.Small(f"{c_m:.1f}±{c_s:.1f}", className="x-small text-muted"), width=3), dbc.Col(dbc.Progress(value=c_m, color="secondary", style={"height": "4px"}), width=5)], align="center", className="g-0 mb-1"),
-                dbc.Row([dbc.Col(html.Small("Privacy (Risk)", className="x-small text-muted"), width=4), dbc.Col(html.Small(f"{p_m:.1f}±{p_s:.1f}", className="x-small text-muted"), width=3), dbc.Col(dbc.Progress(value=p_m, color="danger", style={"height": "4px"}), width=5)], align="center", className="g-0 mb-1"),
+                dbc.Row([dbc.Col(html.Small("Correlation", className="x-small text-light"), width=4), dbc.Col(html.Small(f"{c_m:.1f}±{c_s:.1f}", className="x-small text-light"), width=3), dbc.Col(dbc.Progress(value=c_m, color="success", style={"height": "4px"}), width=5)], align="center", className="g-0 mb-1"),
+                dbc.Row([dbc.Col(html.Small("Privacy (Risk)", className="x-small text-light"), width=4), dbc.Col(html.Small(f"{p_m:.1f}±{p_s:.1f}", className="x-small text-light"), width=3), dbc.Col(dbc.Progress(value=p_m, color="danger", style={"height": "4px"}), width=5)], align="center", className="g-0 mb-1"),
             ])
         ])
         

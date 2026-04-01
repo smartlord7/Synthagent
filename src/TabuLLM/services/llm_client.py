@@ -36,11 +36,11 @@ class LocalOpenAIProvider(BaseLLMProvider):
     def __init__(self, endpoint_url="http://127.0.0.1:1234/v1/chat/completions", model_name="google/gemma-3-4b"):
         self.endpoint_url = endpoint_url
         self.default_model = model_name
-        # Load timeout from env, default to 300 seconds (5 minutes)
+        # Set timeout to 600s (10 minutes) to prevent local model timeouts
         try:
-            self.timeout = int(os.getenv("LOCAL_LLM_TIMEOUT", 300))
+            self.timeout = int(os.getenv("LOCAL_LLM_TIMEOUT", 600))
         except (ValueError, TypeError):
-            self.timeout = 300
+            self.timeout = 600
 
     def get_available_models(self):
         """Query local server for available models and context metadata."""
@@ -96,14 +96,24 @@ class LocalOpenAIProvider(BaseLLMProvider):
             "temperature": temperature
         }
         
-        logger.info(f"--- [SERVICE] CALLING LOCAL LLM: {active_model} ---")
+        logger.info(f"--- [SERVICE] CALLING LOCAL LLM: {active_model} (Timeout: {self.timeout}s) ---")
         data = json.dumps(payload).encode('utf-8')
         req = urllib.request.Request(self.endpoint_url, data=data, headers={'Content-Type': 'application/json'})
         
-        with urllib.request.urlopen(req, timeout=self.timeout) as response:
-            raw_response = response.read()
-            result = json.loads(raw_response.decode('utf-8'))
-            return result
+        try:
+            with urllib.request.urlopen(req, timeout=self.timeout) as response:
+                raw_response = response.read()
+                result = json.loads(raw_response.decode('utf-8'))
+                return result
+        except (OSError, ConnectionResetError) as socket_err:
+            if "[WinError 10038]" in str(socket_err):
+                logger.error(f"Critical Socket Failure (WinError 10038). The local server connection was dropped. Error: {socket_err}")
+            else:
+                logger.error(f"Local LLM Socket Connection Reset: {socket_err}")
+            raise socket_err
+        except Exception as e:
+            logger.error(f"Unexpected error during LLM request: {e}")
+            raise e
 
     def get_dataset_description(self, df_sample, provided_metadata=None, algorithm=None):
         prompt = prompt_manager.get_prompt(
@@ -178,40 +188,75 @@ class LocalOpenAIProvider(BaseLLMProvider):
         base_messages.append({"role": "user", "content": init_content})
         base_messages.append({"role": "assistant", "content": "I understand the dataset background context. Please feed global pattern subsets next."})
 
-        # 3. Stream Global Context In compact frame
-        if global_ctx and len(global_ctx) > 0:
-            compact_global = to_compact_json(global_ctx, all_columns)
-            global_content = prompt_manager.get_prompt(
-                "generation_global_ctx",
-                compact_global_json=json.dumps(compact_global)
-            )
-            base_messages.append({"role": "user", "content": global_content})
-            base_messages.append({"role": "assistant", "content": "Received global context references."})
+        # 3. Global Context is now streamed turn-by-turn in the chunk loop below
+        # to ensure it stays within the model's token budget.
 
         # --- CHUNKED TARGET PROCESSING ---
         chunk_sz = chunk_size if chunk_size else 30
         subsets = [rows_payload[i:i+chunk_sz] for i in range(0, len(rows_payload), chunk_sz)] if rows_payload else []
         
-        # If only adding empty rows
         if not subsets and num_empty > 0:
             subsets = [[]]
 
+        # 4. Token Budgeting Setup
+        models_info = self.get_available_models()
+        model_ctx_limit = 4096
+        for m in models_info:
+            if m["id"] == algorithm:
+                model_ctx_limit = m["max_context"]
+                break
+        
+        # Heuristic: 2.8 chars per token for dense data JSON
+        TOKEN_RATIO = 2.8 
+        SAFETY_MARGIN = 0.85 # Use 85% of window
+        MAX_SAFE_TOKENS = int(model_ctx_limit * SAFETY_MARGIN)
+        
+        # Estimate fixed overhead (Prompt init + metadata + instructions)
+        fixed_overhead_chars = len(init_content) + len(instructions) + len(str(all_columns)) * 2
+        fixed_overhead_tokens = int(fixed_overhead_chars / TOKEN_RATIO) + 300 # Buffer for framing
+        
+        # Estimate tokens per row for context
+        sample_row_tokens = 50 # Default fallback
+        if global_ctx:
+            sample_size = min(5, len(global_ctx))
+            sample_json = json.dumps(to_compact_json(global_ctx[:sample_size], all_columns))
+            sample_row_tokens = int((len(sample_json) / sample_size) / TOKEN_RATIO)
+
         final_data = []
         accumulated_stats = {"prompt_tokens": 0, "candidates_tokens": 0, "total_tokens": 0}
-
-        logger.info(f"Chunk splitting rows payload into {len(subsets)} iterative subsets.")
+        logger.info(f"Budgeting generation context for model {algorithm} (Max: {model_ctx_limit} tok).")
 
         for subset_idx, subset in enumerate(subsets):
-            # Attempt with current context, reduce if 400/422 (Context Overflow)
-            current_global_ctx = list(global_ctx)
+            # A. Calculate Budget for this turn
+            target_json = json.dumps(to_compact_json(subset, all_columns)) if subset else "{}"
+            target_tokens = int(len(target_json) / TOKEN_RATIO)
+            
+            # If generating empty rows, reserve space for them in output
+            output_reserve = 100 * (chunk_sz if not subset else 1) 
+            
+            used_tokens = fixed_overhead_tokens + target_tokens + output_reserve
+            remaining_budget = MAX_SAFE_TOKENS - used_tokens
+            
+            # B. Smart Context Slicing & Rotation
+            rows_allowed = max(1, int(remaining_budget / sample_row_tokens)) if sample_row_tokens > 0 else 20
+            
+            # Rotate context so different chunks see different rows if we have plenty
+            start_row = (subset_idx * rows_allowed) % len(global_ctx) if global_ctx else 0
+            current_global_ctx = global_ctx[start_row : start_row + rows_allowed]
+            # Wrap around if slicing reached the end but didn't fill allowed count
+            if len(current_global_ctx) < rows_allowed and len(global_ctx) > rows_allowed:
+                current_global_ctx += global_ctx[0 : rows_allowed - len(current_global_ctx)]
+
+            logger.info(f"Turn {subset_idx+1}: Budgeting {len(current_global_ctx)} context rows out of {len(global_ctx)} requested.")
+
             attempt_reduction = 0
             max_reductions = 3
 
             while attempt_reduction <= max_reductions:
                 messages = list(base_messages)
                 
-                # Dynamic Global Context (allows for reduction on retry)
-                if current_global_ctx and len(current_global_ctx) > 0:
+                # C. Feed Dynamic Global Context
+                if current_global_ctx:
                     compact_global = to_compact_json(current_global_ctx, all_columns)
                     global_content = prompt_manager.get_prompt(
                         "generation_global_ctx",
@@ -296,6 +341,156 @@ class LocalOpenAIProvider(BaseLLMProvider):
             "stats": accumulated_stats
         }
 
+    def _prepare_messages(self, meta, manual_ctx_json, all_columns):
+        """Prepare initialization messages."""
+        messages = []
+        try:
+            manual_data = json.loads(manual_ctx_json)
+        except:
+            manual_data = []
+        compact_manual = to_compact_json(manual_data, all_columns)
+        content = prompt_manager.get_prompt("generation_init", meta=meta, compact_manual_json=json.dumps(compact_manual))
+        messages.append({"role": "user", "content": content})
+        messages.append({"role": "assistant", "content": "I understand the dataset background context. Please feed global pattern subsets next."})
+        return messages
+
+    def _process_chunk(self, subset, global_ctx, idx, total, messages, all_cols, algo, inst, temp, empty, limit, stats, depth=0):
+        """Processes a target generation chunk with recursive splitting on overflow. Shielded to prevent crashes."""
+        try:
+            depth_str = f"[Depth {depth}] " if depth > 0 else ""
+            logger.info(f"{depth_str}Processing Chunk {idx+1}/{total} ({len(subset)} targets, {empty} new).")
+            
+            # 1. Selection & Budgeting
+            budget_info = self._calculate_budget(subset, global_ctx, all_cols, messages, inst, limit)
+            ctx_rows = self._apply_rotation(global_ctx, idx, budget_info['rows_allowed'])
+            
+            # 2. Execution
+            attempts = 0
+            while attempts < 3:
+                try:
+                    turn_messages = list(messages)
+                    if ctx_rows:
+                        compact_ctx = to_compact_json(ctx_rows, all_cols)
+                        ctx_content = prompt_manager.get_prompt("generation_global_ctx", compact_global_json=json.dumps(compact_ctx))
+                        turn_messages.append({"role": "user", "content": ctx_content})
+                        turn_messages.append({"role": "assistant", "content": "Received global context references."})
+                        logger.info(f"{depth_str}Chunk {idx+1}: Injected {len(ctx_rows)} context rows into prompt.")
+
+                    tasks = []
+                    if subset:
+                        compact_subset = to_compact_json(subset, all_cols)
+                        tasks.append(f"- Complete these specific PARTIAL TARGET ROWS in compact format (Chunk {idx+1}):\n{json.dumps(compact_subset)}")
+                    if empty > 0:
+                        tasks.append(f"- Generate {empty} entirely NEW rows following the fed distribution patterns.")
+                    
+                    final_prompt = prompt_manager.get_prompt("generation_final", instructions=inst, all_columns=all_cols, task_str="\n".join(tasks))
+                    turn_messages.append({"role": "user", "content": final_prompt})
+
+                    # Call LLM
+                    response = self._call_llm(turn_messages, algo, temp)
+                    usage = response.get("usage", {})
+                    logger.info(f"{depth_str}Chunk {idx+1} [Attempt {attempts+1}] LLM Response Received. (Tokens: P={usage.get('prompt_tokens')} C={usage.get('completion_tokens')} T={usage.get('total_tokens')})")
+
+                    stats["prompt_tokens"] += usage.get("prompt_tokens", 0)
+                    stats["candidates_tokens"] += usage.get("completion_tokens", 0)
+                    stats["total_tokens"] += usage.get("total_tokens", 0)
+
+                    # Parse & Fix JSON
+                    content = response["choices"][0]["message"]["content"]
+                    parsed = self._repair_json(content, turn_messages, algo, all_cols)
+                    
+                    if isinstance(parsed, dict) and "data" in parsed:
+                        return from_compact_json(parsed, all_cols)
+                    elif isinstance(parsed, list):
+                        return from_compact_json({"data": parsed}, all_cols) if len(parsed)>0 and isinstance(parsed[0], list) else parsed
+                    return parsed.get("data", [])
+
+                except urllib.error.HTTPError as e:
+                    # 400 Context Overflow Handling
+                    if e.code in [400, 422]:
+                        if ctx_rows:
+                            logger.warning(f"{depth_str}Overflow in chunk {idx+1}. Reducing context from {len(ctx_rows)} to {int(len(ctx_rows)*0.6)}.")
+                            ctx_rows = ctx_rows[:int(len(ctx_rows)*0.6)]
+                        elif len(subset) > 1:
+                            logger.warning(f"{depth_str}Overflow with 0 context. Splitting chunk {idx+1} (targets={len(subset)}) recursively.")
+                            mid = len(subset) // 2
+                            left = self._process_chunk(subset[:mid], [], idx, total, messages, all_cols, algo, inst, temp, 0, limit, stats, depth + 1)
+                            right = self._process_chunk(subset[mid:], [], idx, total, messages, all_cols, algo, inst, temp, empty, limit, stats, depth + 1)
+                            return left + right
+                        else:
+                            logger.error(f"{depth_str}Fatal Token Overflow: Target row is too large even for 0-context window of {limit} tokens.")
+                            raise e
+                    else: 
+                        attempts += 1
+                        time.sleep(2)
+                except Exception as e:
+                    attempts += 1
+                    logger.error(f"{depth_str}Error in chunk {idx+1} (Attempt {attempts}/3): {e}")
+                    if attempts >= 3:
+                        logger.error(f"{depth_str}Fatal failure in chunk {idx+1}. Skipping these rows to prevent application crash.")
+                        return []
+                    time.sleep(2)
+            return []
+        except Exception as global_e:
+            logger.critical(f"UNRECOVERABLE CHUNK ERROR: {global_e}. Skipping targets to persist generation.")
+            return []
+
+    def _calculate_budget(self, subset, global_ctx, all_cols, messages, inst, limit):
+        """Calculates token costs and row limits strictly based on Compact JSON formatting."""
+        # Heuristic Ratio for Compact JSON (bracket density + symbols)
+        RATIO = 2.8 
+        SAFE_THRESHOLD = int(limit * 0.85)
+
+        overhead_chars = sum(len(m['content']) for m in messages) + len(inst) + (len(str(all_cols)) * 2)
+        overhead_tok = int(overhead_chars / RATIO) + 400
+        
+        # Estimate target rows as Compact List-of-Lists
+        target_payload = [[row.get(col) for col in all_cols] for row in subset]
+        target_json = json.dumps(target_payload) if subset else "[]"
+        target_tok = int(len(target_json) / RATIO) + 200 # output buffer
+        
+        budget_tok = SAFE_THRESHOLD - overhead_tok - target_tok
+        
+        # Average weight of a single reference row in Compact list-of-lists
+        row_tok = 60
+        if global_ctx:
+            sample = min(5, len(global_ctx))
+            sample_payload = [[r.get(c) for c in all_cols] for r in global_ctx[:sample]]
+            sample_json = json.dumps(sample_payload)
+            row_tok = int((len(sample_json) / sample) / RATIO) + 5
+        
+        allowed = max(0, int(budget_tok / row_tok))
+        logger.info(f"Compact Budgeting: Threshold={SAFE_THRESHOLD} | Fixed={overhead_tok} | Target={target_tok} | Remaining={budget_tok} | AllowedRows={allowed}")
+            
+        return {'rows_allowed': allowed}
+
+    def _apply_rotation(self, global_ctx, idx, allowed):
+        """Samples context using a sliding window rotation."""
+        if not global_ctx or allowed <= 0: return []
+        offset = (idx * allowed) % len(global_ctx)
+        subset = global_ctx[offset : offset + allowed]
+        if len(subset) < allowed and len(global_ctx) > allowed:
+            subset += global_ctx[0 : allowed - len(subset)]
+        logger.debug(f"Rotation Offset: {offset} | Returning {len(subset)} rows from pool of {len(global_ctx)}.")
+        return subset
+
+    def _call_llm(self, messages, algo, temp):
+        """Provider request handler."""
+        return self._call_local_llm(messages, core_model=algo, temperature=temp, json_mode=True)
+
+    def _repair_json(self, content, messages, algo, all_cols):
+        """Attempts to fix malformed JSON using feedback turn."""
+        try:
+            return robust_json_loads(content)
+        except RobustJSONError as re:
+            logger.info("JSON repair turn initiated.")
+            repair_prompt = prompt_manager.get_prompt("json_repair", line=re.error_data['line'], column=re.error_data['column'], error=re.error_data['error'], context=re.error_data['context'])
+            repair_messages = list(messages)
+            repair_messages.append({"role": "assistant", "content": content})
+            repair_messages.append({"role": "user", "content": repair_prompt})
+            
+            response = self._call_llm(repair_messages, algo, 0.1)
+            return robust_json_loads(response["choices"][0]["message"]["content"])
 
 
 class GeminiProvider(BaseLLMProvider):
