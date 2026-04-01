@@ -28,6 +28,11 @@ class BaseLLMProvider(ABC):
     def get_available_models(self):
         pass
 
+    @abstractmethod
+    def call_llm(self, messages: list, model_id: str = None, temperature: float = 0.7):
+        """Standard interface for raw chat completions."""
+        pass
+
 
 
 class LocalOpenAIProvider(BaseLLMProvider):
@@ -114,6 +119,13 @@ class LocalOpenAIProvider(BaseLLMProvider):
         except Exception as e:
             logger.error(f"Unexpected error during LLM request: {e}")
             raise e
+
+    def call_llm(self, messages: list, model_id: str = None, temperature: float = 0.7):
+        """Public wrapper for OpenAI-style completions."""
+        response = self._call_local_llm(messages, core_model=model_id, temperature=temperature)
+        if "choices" in response and len(response["choices"]) > 0:
+            return response["choices"][0]["message"]["content"]
+        return "Error: No response from local LLM."
 
     def get_dataset_description(self, df_sample, provided_metadata=None, algorithm=None):
         prompt = prompt_manager.get_prompt(
@@ -662,6 +674,21 @@ class GeminiProvider(BaseLLMProvider):
         except Exception as e:
             logger.error(f"Error in Gemini Client: {e}")
             return None
+
+    def call_llm(self, messages: list, model_id: str = None, temperature: float = 0.7):
+        """Implementation for Gemini API."""
+        prompt = messages[-1]["content"] if messages else ""
+        try:
+            response = self.model.generate_content(
+                prompt,
+                generation_config=self.genai.types.GenerationConfig(
+                    temperature=temperature
+                )
+            )
+            return response.text
+        except Exception as e:
+            logger.error(f"Gemini call_llm error: {e}")
+            return f"Error: {str(e)}"
 
 
 # ==========================================
