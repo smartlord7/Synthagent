@@ -17,7 +17,6 @@ def run_single_dataset_benchmark(args):
     logger.info(f"Starting pipeline benchmark: {filename}")
     
     folds = config.get("folds", 3)
-    max_context = config.get("max_context", 60)
     strategy = config.get("strategy", "random")
     algorithm = config.get("algorithm", "google/gemma-3-4b")
     temperature = config.get("temperature", 0.3)
@@ -26,6 +25,7 @@ def run_single_dataset_benchmark(args):
     desc_metadata = config.get("desc_metadata", "")
     ml_config = config.get("ml_config", {})
     targets = config.get("targets", [])
+    na_strategy = config.get("na_strategy", "impute")
     
     progress_dict = config.get("_progress_dict")
     dataset_id_key = config.get("_dataset_id")
@@ -39,8 +39,7 @@ def run_single_dataset_benchmark(args):
     
     results = []
     all_synthetic_data = []
-    all_augmented_data = [] # Hybrid set for true EDA comparison
-    overall_ml = {}
+    all_augmented_data = [] 
 
     for fold_num in range(1, folds + 1):
         if progress_dict is not None:
@@ -50,19 +49,14 @@ def run_single_dataset_benchmark(args):
 
         try:
             # 1. Split Original into Train/Test (80/20) for this fold
-            # This ensures we always test on "Real" data
             df_train_orig, df_test_orig = train_test_split(df_orig_all, test_size=0.2, random_state=42 + fold_num)
             
-            # 2. Setup context/augmentation split from fractions (Substitution Model)
-            # Each fold training set size = Context (x%) + Generated (100-x%)
+            # 2. Setup context/augmentation split
             ctx_ratio = config.get("ctx_ratio", 20)
             n_context_rows = max(1, int(len(df_train_orig) * (ctx_ratio / 100)))
             num_empty = max(1, len(df_train_orig) - n_context_rows)
             
-            logger.info(f"Fold {fold_num}: Substitution Strategy | Training Ctx: {n_context_rows}, Gen: {num_empty} | Total Train: {n_context_rows + num_empty} (Original: {len(df_train_orig)})")
-            
             context_data_list = select_context_rows(df_train_orig, strategy=strategy, n_rows=n_context_rows) or []
-            logger.info(f"Fold {fold_num}: Captured {len(context_data_list)} context rows for audit trace.")
             context_dict = {"metadata": desc_metadata, "manual_ctx": "[]", "global_ctx": context_data_list}
 
             # 3. Generate Augmented Data
@@ -71,39 +65,22 @@ def run_single_dataset_benchmark(args):
                  p["status"] = f"Fold {fold_num}/{folds} - LLM Gen"
                  progress_dict[dataset_id_key] = p
                  
-            result_bundle = generate_bulk_data(
-                [], context_dict, list(df_orig_all.columns),
-                algorithm, instructions, temperature, num_empty=num_empty,
-                chunk_size=chunk_size
-            )
+            result_bundle = generate_bulk_data([], context_dict, list(df_orig_all.columns), algorithm, instructions, temperature, num_empty=num_empty, chunk_size=chunk_size)
 
             if result_bundle:
                 generated_rows = result_bundle["data"]
-                
-                # Parrotting/Leakage Check
-                if generated_rows and context_data_list:
-                    # Compare a sample to detect if LLM is just echoing context
-                    if str(generated_rows[:5]) == str(context_data_list[:5]):
-                        logger.warning(f"PIPELINE ALERT: Fold {fold_num} gen_rows match context! LLM is parrotting.")
-
-                # Add fold ID for grouping in EDA aggregation
-                for row in generated_rows:
-                    row["_fold_id"] = fold_num
+                for row in generated_rows: row["_fold_id"] = fold_num
                 
                 all_synthetic_data.extend(generated_rows)
-                
-                # Combine Context + Synthetic + Real Test Set for a 100% scale EDA view
                 test_data_list = df_test_orig.to_dict('records')
                 all_augmented_data.extend(context_data_list + generated_rows + test_data_list)
                 
-                generated_df = pd.DataFrame(generated_rows)
-                context_df = pd.DataFrame(context_data_list)
-                df_aug_train = pd.concat([context_df, generated_df], ignore_index=True)
+                df_aug_train = pd.concat([pd.DataFrame(context_data_list), pd.DataFrame(generated_rows)], ignore_index=True)
                 
                 # Fidelity Metrics
                 m = calculate_metrics(df_orig_all, df_aug_train)
                 
-                # ML Downstream Metrics (Train on Synthetic, Test on Real)
+                # ML Downstream Metrics
                 ml_fold_results = {}
                 if ml_config and targets:
                     task_type = MLEvaluator.detect_task_type(df_orig_all, targets)
@@ -114,24 +91,15 @@ def run_single_dataset_benchmark(args):
                              progress_dict[dataset_id_key] = p
                              
                         m_params = ml_config.get("params", {}).get(m_type, {})
+                        # Apply NA Handling Strategy to both original and augmented
+                        orig_perf, _, orig_err = MLEvaluator.train_and_evaluate(df_train_orig, targets, m_type, m_params, task_type, test_df=df_test_orig, na_strategy=na_strategy)
+                        aug_perf, aug_meta, aug_err = MLEvaluator.train_and_evaluate(df_aug_train, targets, m_type, m_params, task_type, test_df=df_test_orig, na_strategy=na_strategy)
                         
-                        # Performance on Original (Train on 80% Real, Test on 20% Real)
-                        orig_perf, _, orig_err = MLEvaluator.train_and_evaluate(df_train_orig, targets, m_type, m_params, task_type, test_df=df_test_orig)
-                        # Performance on Augmented (Train on Synthetic+Context, Test on 20% Real)
-                        aug_perf, aug_meta, aug_err = MLEvaluator.train_and_evaluate(df_aug_train, targets, m_type, m_params, task_type, test_df=df_test_orig)
-                        
-                        ml_fold_results[m_type] = {
-                            "original": orig_perf,
-                            "augmented": aug_perf,
-                            "augmented_metadata": aug_meta,
-                            "task_type": task_type,
-                            "error": aug_err or orig_err
-                        }
+                        ml_fold_results[m_type] = {"original": orig_perf, "augmented": aug_perf, "augmented_metadata": aug_meta, "task_type": task_type, "error": aug_err or orig_err}
                 
                 m["ml_eval"] = ml_fold_results
                 m["synthetic_data"] = generated_rows
-                m["context_data"] = context_data_list
-                m["ctx_ratio"] = ctx_ratio
+                m.update({"context_data": context_data_list, "ctx_ratio": ctx_ratio})
                 results.append(m)
                 
                 if progress_dict is not None:
@@ -139,74 +107,39 @@ def run_single_dataset_benchmark(args):
                     p["done"] = fold_num
                     progress_dict[dataset_id_key] = p
         except Exception as e:
-            import traceback
             logger.error(f"Pipeline error in {filename} fold {fold_num}: {e}")
-            logger.error(traceback.format_exc())
             continue
 
     # --- AGGREGATE ML RESULTS FOR STORE ---
     overall_ml = {}
     if results:
-        # Collect all models across folds
         all_models = set()
-        for r in results:
-            all_models.update(r.get("ml_eval", {}).keys())
+        for r in results: all_models.update(r.get("ml_eval", {}).keys())
             
         for m_type in all_models:
             overall_ml[m_type] = {}
             for m_name in ["accuracy", "f1", "rmse", "r2"]:
-                f_orig = [
-                    r["ml_eval"][m_type]["original"][m_name]
-                    for r in results
-                    if m_type in r.get("ml_eval", {})
-                    and r["ml_eval"][m_type].get("original") is not None
-                    and m_name in r["ml_eval"][m_type]["original"]
-                ]
-                f_aug = [
-                    r["ml_eval"][m_type]["augmented"][m_name]
-                    for r in results
-                    if m_type in r.get("ml_eval", {})
-                    and r["ml_eval"][m_type].get("augmented") is not None
-                    and m_name in r["ml_eval"][m_type]["augmented"]
-                ]
+                f_orig = [r["ml_eval"][m_type]["original"][m_name] for r in results if m_type in r.get("ml_eval", {}) and r["ml_eval"][m_type].get("original") is not None and m_name in r["ml_eval"][m_type]["original"]]
+                f_aug = [r["ml_eval"][m_type]["augmented"][m_name] for r in results if m_type in r.get("ml_eval", {}) and r["ml_eval"][m_type].get("augmented") is not None and m_name in r["ml_eval"][m_type]["augmented"]]
                 
                 if f_orig and f_aug:
                     m_o, s_o = np.mean(f_orig), np.std(f_orig)
                     m_a, s_a = np.mean(f_aug), np.std(f_aug)
+                    m_d, s_d = np.mean([a - o for a, o in zip(f_aug, f_orig)]), np.std([a - o for a, o in zip(f_aug, f_orig)])
                     
-                    deltas = [a - o for a, o in zip(f_aug, f_orig)]
-                    m_d, s_d = np.mean(deltas), np.std(deltas)
-                    
-                    # Store aggregated metadata and raw values
                     overall_ml[m_type][m_name] = {
-                        "real": m_o, "real_sd": s_o,
-                        "aug": m_a, "aug_sd": s_a,
-                        "delta": m_d, "delta_sd": s_d,
-                        "display_real": f"{m_o:.3f} ± {s_o:.2f}",
-                        "display_aug": f"{m_a:.3f} ± {s_a:.2f}",
-                        "display_delta": f"{m_d:+.3f} ± {s_d:.2f}"
+                        "real": m_o, "real_sd": s_o, "aug": m_a, "aug_sd": s_a, "delta": m_d, "delta_sd": s_d,
+                        "display_real": f"{m_o:.3f} ± {s_o:.2f}", "display_aug": f"{m_a:.3f} ± {s_a:.2f}", "display_delta": f"{m_d:+.3f} ± {s_d:.2f}"
                     }
                 
-                # Capture all fold metadata for this model type
-                overall_ml[m_type]["folds_metadata"] = [
-                    r["ml_eval"][m_type].get("augmented_metadata")
-                    for r in results
-                    if m_type in r.get("ml_eval", {})
-                    and r["ml_eval"][m_type].get("augmented_metadata") is not None
-                ]
-                
-                # Capture the first error message if most folds failed
+                overall_ml[m_type]["folds_metadata"] = [r["ml_eval"][m_type].get("augmented_metadata") for r in results if m_type in r.get("ml_eval", {}) and r["ml_eval"][m_type].get("augmented_metadata") is not None]
                 if not f_aug:
                     errors = [r["ml_eval"][m_type].get("error") for r in results if m_type in r.get("ml_eval", {}) and r["ml_eval"][m_type].get("error")]
                     if errors: overall_ml[m_type]["error"] = errors[0]
 
     return {
-        "dataset_id": dataset_id,
-        "filename": filename,
-        "results": results,
-        "synthetic_data": all_synthetic_data,
-        "augmented_data": all_augmented_data,
-        "overall_ml": overall_ml,
+        "dataset_id": dataset_id, "filename": filename, "results": results, "synthetic_data": all_synthetic_data,
+        "augmented_data": all_augmented_data, "overall_ml": overall_ml,
         "avg_fidelity": sum(r.get("Synthetic Fidelity (JSD)", 0) for r in results) / len(results) if results else 0
     }
 

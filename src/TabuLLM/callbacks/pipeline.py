@@ -116,7 +116,12 @@ def render_pipeline_ui_in_modal(n_clicks, metadata, pipeline_config, roles_vals,
     selected_models = pipeline_config.get("selected_models", ["logistic", "rf", "xgb", "mlp", "svm", "knn", "nb", "dt", "gb", "ab"])
 
     ui = html.Div([
-        html.P("Parallel validation pipeline configuration.", className="text-muted small mb-3"),
+        html.P("Benchmark validation pipeline configuration.", className="text-muted small mb-3"),
+        
+        dbc.Row([
+            dbc.Col(html.Label("Parallel Execution:", className="small text-info fw-bold"), width=3),
+            dbc.Col(dbc.Switch(id="pipeline-parallel-toggle", label="", value=True, className="mt-1"), width=3),
+        ], className="mb-3 align-items-center g-2 bg-dark border border-secondary rounded p-2 mx-0"),
         
         dbc.Accordion([
             dbc.AccordionItem([
@@ -131,6 +136,16 @@ def render_pipeline_ui_in_modal(n_clicks, metadata, pipeline_config, roles_vals,
             dbc.AccordionItem([
                 dbc.Row([
                     dbc.Col([
+                        html.Label("NA Handling Strategy:", className="text-muted small fw-bold mb-2 d-block"),
+                        dbc.Select(
+                            id="pipeline-na-handling",
+                            options=[
+                                {"label": "Drop Rows with NAs", "value": "drop"},
+                                {"label": "Impute (Mean/Mode)", "value": "impute"}
+                            ],
+                            value=pipeline_config.get("na_strategy", "impute"),
+                            size="sm", className="bg-dark text-light border-secondary mb-3"
+                        ),
                         html.Label("Select Models:", className="text-muted small fw-bold mb-2 d-block"),
                         dbc.Checklist(
                             id="pipeline-ml-model-checklist",
@@ -165,6 +180,8 @@ def render_pipeline_ui_in_modal(n_clicks, metadata, pipeline_config, roles_vals,
     Input("pipeline-global-folds", "value"),
     Input("pipeline-ml-model-checklist", "value"),
     Input("pipeline-auto-detect-targets", "value"),
+    Input("pipeline-parallel-toggle", "value"),
+    Input("pipeline-na-handling", "value"),
     Input({"type": "pipeline-priority", "index": ALL}, "value"),
     Input({"type": "pipeline-include", "index": ALL}, "value"),
     Input({"type": "pipeline-ctx-ratio", "index": ALL}, "value"),
@@ -173,11 +190,13 @@ def render_pipeline_ui_in_modal(n_clicks, metadata, pipeline_config, roles_vals,
     State("pipeline-config-store", "data"),
     prevent_initial_call=True
 )
-def sync_pipeline_config_pm(folds, models, auto, priorities, includes, ctx_ratios, ids, ctx_ids, current_config):
+def sync_pipeline_config_pm(folds, models, auto, parallel, na_strategy, priorities, includes, ctx_ratios, ids, ctx_ids, current_config):
     current_config = current_config or {}
     current_config["global_folds"] = folds
     current_config["selected_models"] = models
     current_config["auto_detect"] = auto
+    current_config["parallel_enabled"] = parallel
+    current_config["na_strategy"] = na_strategy
     
     if "datasets" not in current_config:
         current_config["datasets"] = {}
@@ -195,6 +214,25 @@ def sync_pipeline_config_pm(folds, models, auto, priorities, includes, ctx_ratio
             current_config["datasets"][d_id]["ctx_ratio"] = ctx_ratios[i]
         
     return current_config
+
+def get_delta_color_class(metric_name, delta_val):
+    """
+    Returns the Bootstrap color class (success, warning, danger) for a delta value.
+    Higher is Better: Accuracy, F1, Precision, Recal, AUC, JSD, Stability...
+    Lower is Better: RMSE, MSE, MAE, Drift, Risk, Shift...
+    """
+    m_lower = metric_name.lower()
+    lower_is_better = any(x in m_lower for x in ["rmse", "mse", "mae", "drift", "risk", "memorization", "shift"])
+    
+    if lower_is_better:
+        if delta_val <= 0: return "success" # Green (Better or Equal)
+        if delta_val <= 0.05: return "warning" # Orange (Slightly Worse)
+        return "danger" # Red (Worse)
+    else:
+        # Higher is Better
+        if delta_val >= 0: return "success" # Green (Better or Equal)
+        if delta_val >= -0.05: return "warning" # Orange (Slightly Worse)
+        return "danger" # Red (Worse)
 
 @app.callback(
     Output("pipeline-status", "children"),
@@ -231,6 +269,7 @@ def sync_pipeline_config_pm(folds, models, auto, priorities, includes, ctx_ratio
     State({"type": "target-cols-dropdown", "index": ALL}, "id"),
     State({"type": "algo-selector", "index": ALL}, "value"),
     State({"type": "algo-selector", "index": ALL}, "id"),
+    State("pipeline-parallel-toggle", "value"),
     background=True,
     progress=[
         Output("pipeline-status", "children"),
@@ -249,7 +288,8 @@ def execute_pipeline_pm(set_progress, n_clicks, global_folds, global_ml_models, 
                         dataset_targets_vals, dataset_targets_ids,
                         ctx_frac_vals,
                         target_dropdown_ids,
-                        all_algo_vals, all_algo_ids):
+                        all_algo_vals, all_algo_ids,
+                        parallel_enabled):
     
     if not n_clicks: 
         return (dash.no_update, dash.no_update, [dash.no_update]*len(eda_ids), 
@@ -332,24 +372,37 @@ def execute_pipeline_pm(set_progress, n_clicks, global_folds, global_ml_models, 
             tasks_with_progress.append((d_id, filename, d, c, cfg))
             progress_dict[d_id] = {"filename": filename, "done": 0, "total": cfg.get("folds", 3), "status": "Queued"}
 
-        cpus = min(len(tasks), multiprocessing.cpu_count())
-        with multiprocessing.Pool(processes=cpus) as pool:
-            async_results = [pool.apply_async(run_single_dataset_benchmark, (t,)) for t in tasks_with_progress]
-            while any(not r.ready() for r in async_results):
-                prog_bars = []
-                for d_id, p_info in progress_dict.items():
-                    pct = (p_info["done"] / p_info["total"]) * 100 if p_info["total"] > 0 else 0
-                    prog_bars.append(html.Div([
-                        dbc.Row([
-                            dbc.Col(html.Small(p_info["filename"], className="fw-bold text-info truncate-text", style={"maxWidth": "150px"}), width=4),
-                            dbc.Col(dbc.Progress(value=pct, color="info", striped=True, animated=True, style={"height": "8px"}), width=6),
-                            dbc.Col(html.Small(f"{int(pct)}%", className="text-light x-small"), width=2),
-                        ], align="center", className="mb-1"),
-                        html.Div(html.Small(p_info.get("status", "Queued"), className="text-muted xx-small fst-italic ms-1"), className="mb-2")
-                    ]))
-                set_progress((f"Processing {sum(1 for r in async_results if r.ready())}/{len(tasks)} datasets...", html.Div(prog_bars, className="mt-3 border-top border-secondary pt-3")))
-                time.sleep(1)
-            pipeline_results = [r.get() for r in async_results]
+        # Define Progress Polling Function
+        def update_ui_progress(is_done=False):
+            prog_bars = []
+            for d_id, p_info in progress_dict.items():
+                pct = (p_info["done"] / p_info["total"]) * 100 if p_info["total"] > 0 else 0
+                prog_bars.append(html.Div([
+                    dbc.Row([
+                        dbc.Col(html.Small(p_info["filename"], className="fw-bold text-info truncate-text", style={"maxWidth": "150px"}), width=4),
+                        dbc.Col(dbc.Progress(value=pct, color="info", striped=True, animated=True, style={"height": "8px"}), width=6),
+                        dbc.Col(html.Small(f"{int(pct)}%", className="text-light x-small"), width=2),
+                    ], align="center", className="mb-1"),
+                    html.Div(html.Small(p_info.get("status", "Queued"), className="text-muted xx-small fst-italic ms-1"), className="mb-2")
+                ]))
+            msg = f"Completed {sum(1 for d_id, p in progress_dict.items() if p['done'] == p['total'])}/{len(tasks)} datasets..." if not is_done else "Finalizing results..."
+            set_progress((msg, html.Div(prog_bars, className="mt-3 border-top border-secondary pt-3")))
+
+        pipeline_results = []
+        if parallel_enabled:
+            cpus = min(len(tasks), multiprocessing.cpu_count())
+            with multiprocessing.Pool(processes=cpus) as pool:
+                async_results = [pool.apply_async(run_single_dataset_benchmark, (t,)) for t in tasks_with_progress]
+                while any(not r.ready() for r in async_results):
+                    update_ui_progress()
+                    time.sleep(1)
+                pipeline_results = [r.get() for r in async_results]
+        else:
+            # Sequential Execution
+            for t in tasks_with_progress:
+                update_ui_progress()
+                pipeline_results.append(run_single_dataset_benchmark(t))
+            update_ui_progress(is_done=True)
     except Exception as e:
         logger.error(f"Pipeline failure: {e}")
         return (dbc.Alert(f"Pipeline failed: {e}", color="danger"), dash.no_update, [dash.no_update]*len(eda_ids), [dash.no_update]*len(ml_res_ids), [dash.no_update]*len(dataset_targets_ids), [dash.no_update]*len(target_dropdown_ids), [dash.no_update]*len(roles_ids), dash.no_update)
@@ -449,9 +502,9 @@ def execute_pipeline_pm(set_progress, n_clicks, global_folds, global_ml_models, 
                 s_real = metrics.get("display_real", "0.000")
                 s_delta = metrics.get("display_delta", "+0.000")
                 
-                # Use raw float for color check
+                # Use 3-state coloring helper
                 d_val = metrics.get("delta", 0)
-                d_color = "success" if (d_val >= -0.05 if primary_metric != "rmse" else d_val <= 0.05) else "danger"
+                d_color = get_delta_color_class(primary_metric, d_val)
                 
                 ml_rows.append(html.Div([
                     dbc.Row([
@@ -493,7 +546,7 @@ def execute_pipeline_pm(set_progress, n_clicks, global_folds, global_ml_models, 
                              dbc.Col(html.Small(m_name.upper(), className="x-small text-info fw-bold"), width=3),
                              dbc.Col(html.Span(orig_d.split()[0], className="x-small text-muted"), width=3),
                              dbc.Col(html.Span(aug_d, className="x-small text-light fw-bold"), width=3),
-                             dbc.Col(html.Span(d_d.split()[0], className=f"text-{'success' if (d_val >= -0.05 if m_name != 'rmse' else d_val <= 0.05) else 'danger'} x-small fw-bold"), width=3)
+                             dbc.Col(html.Span(d_d.split()[0], className=f"text-{get_delta_color_class(m_name, d_val)} x-small fw-bold"), width=3)
                         ], className="g-0 border-bottom border-secondary-subtle py-1"))
                 ml_cards.append(dbc.Col(dbc.Card([dbc.CardBody([html.Div([html.Div([html.I(className="bi bi-cpu me-2 text-info"), html.Small(MODEL_NAMES.get(m_type, m_type.upper()), className="fw-bold")], className="d-flex align-items-center"), dbc.Button("Inspect", id={"type": "btn-inspect-ml", "dataset": d_id, "model": m_type}, color="info", size="sm", outline=True, className="rounded-pill p-0 px-2", style={"fontSize": "0.6rem"}, n_clicks=0)], className="d-flex justify-content-between mb-2"), html.Div(m_rows)], className="p-2")], className="h-100 border-secondary bg-dark shadow-sm"), lg=3, md=6, className="mb-3"))
             if ml_cards: ml_updates[ml_index_map[d_id]] = html.Div([html.H6("ML Results & Diagnostics", className="text-light mb-3 small fw-bold"), dbc.Row(ml_cards, className="g-3")])

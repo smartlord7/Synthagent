@@ -156,7 +156,8 @@ def generate_benchmark_pdf(report_data):
         inf_table = d_info.get("inference_table", [])
         if inf_table:
             pdf.draw_table(["Feature", "Orig Mean", "Aug Mean", "Shift", "P-Value", "Status"], 
-                           inf_table, [50, 30, 30, 25, 30, 25], font_size=8)
+                           inf_table, [50, 30, 30, 25, 30, 25], font_size=8,
+                           cell_colors={(i, 3): pdf.get_delta_color("Shift", inf_table[i][3]) for i in range(len(inf_table))})
         pdf.ln(5)
 
         # 4. Quality & Fidelity (with Footnotes)

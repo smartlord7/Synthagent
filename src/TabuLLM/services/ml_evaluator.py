@@ -25,10 +25,45 @@ class MLEvaluator:
         return "regression"
 
     @staticmethod
-    def train_and_evaluate(train_df, targets, model_type, params=None, task_type="classification", test_df=None):
+    def preprocess_data(df, strategy="impute", targets=None):
+        """Handle missing values before ML training."""
+        if df.empty: return df
+        df_clean = df.copy()
+        
+        # Internal tracking columns to ignore
+        internal = ['_fold_id', '_row_id', 'is_context', 'is_target', 'ai_audit']
+        cols_to_process = [c for c in df_clean.columns if c not in internal]
+
+        if strategy == "drop":
+            # Drop rows with NAs in features or targets
+            df_clean = df_clean.dropna(subset=cols_to_process)
+        elif strategy == "impute":
+            # Impute Mean for numeric, Mode for categorical
+            for col in cols_to_process:
+                if df_clean[col].isnull().any():
+                    if pd.api.types.is_numeric_dtype(df_clean[col]):
+                        df_clean[col] = df_clean[col].fillna(df_clean[col].mean())
+                    else:
+                        mode_vals = df_clean[col].mode()
+                        if not mode_vals.empty:
+                            df_clean[col] = df_clean[col].fillna(mode_vals[0])
+                        else:
+                            df_clean[col] = df_clean[col].fillna("N/A")
+        
+        # Fallback filler for any remaining edge cases
+        df_clean = df_clean.fillna(0) if strategy == "impute" else df_clean
+        return df_clean
+
+    @staticmethod
+    def train_and_evaluate(train_df, targets, model_type, params=None, task_type="classification", test_df=None, na_strategy="impute"):
         if not targets or train_df.empty:
             return None, None, "Empty dataset or no targets"
         
+        # 0. Preprocess Missing Values
+        train_df = MLEvaluator.preprocess_data(train_df, na_strategy, targets)
+        if test_df is not None and not test_df.empty:
+            test_df = MLEvaluator.preprocess_data(test_df, na_strategy, targets)
+
         target = targets[0]
         if target not in train_df.columns:
             logger.warning(f"Target column '{target}' not found in training data.")
@@ -40,11 +75,11 @@ class MLEvaluator:
             # Optimization: Pre-calculate mappings to avoid redundant factorize calls
             for col in cols:
                 if col in df_fit.columns:
-                    # Capture unique values from fit set
-                    _, uniques = pd.factorize(df_fit[col])
+                    # Capture unique values from fit set - ensure string cast to avoid unhashable lists
+                    _, uniques = pd.factorize(df_fit[col].astype(str))
                     mapping = {val: i for i, val in enumerate(uniques)}
                     # Apply to transform set
-                    df_out[col] = df_transform[col].map(mapping).fillna(-1).astype(int)
+                    df_out[col] = df_transform[col].astype(str).map(mapping).fillna(-1).astype(int)
             # Fill numeric NaNs
             df_out.fillna(0, inplace=True)
             return df_out

@@ -38,15 +38,22 @@ def build_eda_dashboard_pm(n_clicks, orig_data, aug_data, col_defs, btn_id):
     df_orig = pd.DataFrame(orig_data)
     df_aug = pd.DataFrame(aug_data)
 
+    # 1. Clean Original Data (Fields -> Headers)
+    internal_cols = ['_row_id', 'is_context', 'is_target', 'ai_audit']
+    df_orig.drop(columns=[c for c in df_orig.columns if c in internal_cols], inplace=True, errors='ignore')
+    # Use headers as columns for statistical comparison
+    df_orig.rename(columns=field_to_header, inplace=True)
+    df_orig.replace(["", "NaN", "None", None], pd.NA, inplace=True)
+
+    # 2. Clean Augmented Data (Already has headers from Grid)
+    df_aug.drop(columns=[c for c in df_aug.columns if c in internal_cols], inplace=True, errors='ignore')
+    df_aug.replace(["", "NaN", "None", None], pd.NA, inplace=True)
+    
+    # Ensure numeric types for both
     for df in [df_orig, df_aug]:
-        if '_row_id' in df.columns:
-            df.drop(columns=['_row_id', 'is_context', 'is_target', 'ai_audit'], inplace=True, errors='ignore')
-        cols_to_keep = [c for c in df.columns if c in field_to_header]
-        df.drop(columns=[c for c in df.columns if c not in cols_to_keep], inplace=True, errors='ignore')
-        df.rename(columns=field_to_header, inplace=True)
-        df.replace(["", "NaN", "None", None], pd.NA, inplace=True)
         for col in df.columns:
-            df[col] = pd.to_numeric(df[col], errors='coerce').fillna(df[col])
+            if col != "_fold_id":
+                df[col] = pd.to_numeric(df[col], errors='coerce').fillna(df[col])
 
     return get_eda_layout(df_orig, df_aug, dataset_id)
 
@@ -246,7 +253,7 @@ def get_eda_layout(df_orig, df_aug, dataset_id="base", results_list=None):
 
     # Accordion items
     items = []
-    if numeric_cols:
+    if all_features:
         stats_list = []
         # Check if we have fold info for feature-level aggregation
         has_folds = '_fold_id' in df_aug_c.columns
@@ -337,13 +344,15 @@ def get_eda_layout(df_orig, df_aug, dataset_id="base", results_list=None):
                     p_h = p_obs.reindex(cats, fill_value=0).values
                     q_h = q_obs.reindex(cats, fill_value=0).values
                     shift = (np.sqrt(np.sum((np.sqrt(p_h) - np.sqrt(q_h))**2)) / np.sqrt(2)) * 100
-                    
+
+                # --- Common: 3-state coloring + row append (numeric & categorical) ---
+                shift_color = "success" if shift <= 0 else "warning" if shift <= 5.0 else "danger"
                 stats_list.append(html.Tr([
-                    html.Td(col, className="fw-bold x-small"), 
-                    html.Td(orig_val, className="x-small"), 
-                    html.Td(val_str, className="x-small"), 
-                    html.Td(f"{shift:+.1f}%", className=f"x-small {'text-danger' if abs(shift) > 10 else 'text-success'}"),
-                    html.Td(f"{ks_p:.4f}", className="x-small"), 
+                    html.Td(col, className="fw-bold x-small"),
+                    html.Td(orig_val, className="x-small"),
+                    html.Td(val_str, className="x-small"),
+                    html.Td(f"{shift:+.1f}%", className=f"x-small text-{shift_color}"),
+                    html.Td(f"{ks_p:.4f}", className="x-small"),
                     html.Td(html.I(className="bi bi-check-circle-fill text-success" if ks_p > 0.05 else "bi bi-exclamation-triangle-fill text-warning"))
                 ]))
         

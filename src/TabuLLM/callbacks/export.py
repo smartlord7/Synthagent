@@ -199,12 +199,13 @@ def sync_report_settings(plots, audit, appendix, counter, ds_values, ds_ids, cur
     State({"type": "gen-max-context", "index": ALL}, "value"),
     State({"type": "gen-context-strategy", "index": ALL}, "value"),
     State({"type": "target-cols-dropdown", "index": ALL}, "value"),
+    State({"type": "data-grid", "index": ALL}, "columnDefs"),
     State({"type": "original-data-store", "index": ALL}, "id"),
     prevent_initial_call=True
 )
 def execute_global_report_pm(n_clicks, config_store, meta_store, pipeline_results, all_orig, all_aug_rows, 
                               all_desc, all_algo, all_tone, all_consistency, 
-                              all_temp, all_chunk, all_max_ctx, all_strategy, all_targets, all_ids):
+                              all_temp, all_chunk, all_max_ctx, all_strategy, all_targets, all_col_defs_list, all_ids):
     if not n_clicks or not meta_store: return dash.no_update
     
     import numpy as np
@@ -239,12 +240,14 @@ def execute_global_report_pm(n_clicks, config_store, meta_store, pipeline_result
             target_vars = all_targets[idx] or []
             
             df_orig = pd.DataFrame(all_orig[idx]) if all_orig[idx] else pd.DataFrame()
+            
+            # Sync original columns with friendly headers
+            col_defs = all_col_defs_list[idx]
+            field_map = {c['field']: c.get('headerName', c['field']) for c in col_defs if c['field'] not in ['ai_audit', '_row_id']}
+            df_orig = df_orig.rename(columns=field_map)
+            df_orig.drop(columns=[c for c in df_orig.columns if c in ['_row_id', 'is_context', 'is_target', 'ai_audit']], inplace=True, errors='ignore')
+
             df_aug = pd.DataFrame(all_aug_rows[idx]) if all_aug_rows[idx] else pd.DataFrame()
-            
-            # Filter internal metadata for clean reporting
-            internal_cols = ['_fold_id', '_row_id', 'is_context', 'is_target', 'ai_audit']
-            df_aug = df_aug.drop(columns=[c for c in df_aug.columns if c.startswith('is_ai_') or c in internal_cols], errors='ignore')
-            
             df_orig_enc = df_orig.copy()
             df_aug_enc = df_aug.copy()
             num_cols_t = [c for c in df_orig.select_dtypes(include='number').columns if c not in ['_row_id', 'is_context', 'is_target', 'ai_audit']]
@@ -308,7 +311,7 @@ def execute_global_report_pm(n_clicks, config_store, meta_store, pipeline_result
                         
                         if col in num_cols:
                             m_a = a.mean()
-                            m_b = b.mean()
+                            m_b = pd.to_numeric(b, errors="coerce").mean()
                             shift = ((m_b - m_a) / (abs(m_a) + 1e-9)) * 100
                             _, p_val = stats.ks_2samp(a, b)
                             feature_stats[col]["aug_vals"].append(m_b)
