@@ -86,6 +86,30 @@
     font-weight: 700 !important;
 }
 
+/* Ensure the tab label container fills the tab and handles spacing */
+.custom-tab > div {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+}
+
+.truncate-text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.delete-tab-btn {
+    transition: transform 0.2s ease, opacity 0.2s ease !important;
+}
+.delete-tab-btn:hover {
+    transform: scale(1.2);
+    opacity: 1 !important;
+}
+
 /* AG Grid Header Adjustments - Pure White headers */
 .ag-theme-alpine-dark .ag-header-cell-label {
     color: #ffffff !important;
@@ -170,4 +194,33 @@
 .small-dropdown .dash-dropdown-trigger,
 .small-dropdown .dash-dropdown-grid-container * {
     color: #ffffff !important;
+}
+
+/* Markdown Preview Styling */
+.markdown-preview {
+    color: #ffffff !important;
+    line-height: 1.6;
+}
+.markdown-preview h1, .markdown-preview h2, .markdown-preview h3, 
+.markdown-preview h4, .markdown-preview h5, .markdown-preview h6 {
+    color: #00f2fe !important; /* Brand cyan for headers */
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+    font-weight: 700;
+}
+.markdown-preview p {
+    margin-bottom: 0.75rem;
+}
+.markdown-preview ul, .markdown-preview ol {
+    margin-bottom: 0.75rem;
+    padding-left: 1.5rem;
+}
+.markdown-preview li {
+    margin-bottom: 0.25rem;
+}
+.markdown-preview code {
+    background-color: #1e1e1e;
+    color: #e6ebf1;
+    padding: 2px 4px;
+    border-radius: 4px;
 }
