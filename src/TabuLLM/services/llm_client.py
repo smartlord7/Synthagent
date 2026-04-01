@@ -217,7 +217,10 @@ class LocalOpenAIProvider(BaseLLMProvider):
         subsets = [rows_payload[i:i+chunk_sz] for i in range(0, len(rows_payload), chunk_sz)] if rows_payload else []
         
         if not subsets and num_empty > 0:
-            subsets = [[]]
+            # Split pure generation into batches of chunk_sz so the LLM
+            # isn't asked to produce too many rows in a single call.
+            n_gen_chunks = max(1, (num_empty + chunk_sz - 1) // chunk_sz)
+            subsets = [[] for _ in range(n_gen_chunks)]
 
         # 4. Token Budgeting Setup
         models_info = self.get_available_models()
@@ -290,8 +293,15 @@ class LocalOpenAIProvider(BaseLLMProvider):
                 if subset:
                     compact_subset = to_compact_json(subset, all_columns)
                     tasks.append(f"- Complete these specific PARTIAL TARGET ROWS in compact format (Chunk {subset_idx+1}):\n{json.dumps(compact_subset)}")
-                if subset_idx == len(subsets) - 1 and num_empty > 0:
-                    tasks.append(f"- Generate {num_empty} entirely NEW rows following the fed distribution patterns.")
+                if num_empty > 0:
+                    if not subset:
+                        # Pure generation chunk — ask for this chunk's share only
+                        rows_this = min(chunk_sz, num_empty - subset_idx * chunk_sz)
+                        if rows_this > 0:
+                            tasks.append(f"- Generate {rows_this} entirely NEW rows following the fed distribution patterns.")
+                    elif subset_idx == len(subsets) - 1:
+                        # Last chunk of a partial-row completion run — extra new rows appended here
+                        tasks.append(f"- Generate {num_empty} entirely NEW rows following the fed distribution patterns.")
                 
                 final_prompt = prompt_manager.get_prompt(
                     "generation_final",
@@ -356,6 +366,57 @@ class LocalOpenAIProvider(BaseLLMProvider):
                 except Exception as e:
                     logger.error(f"Fatally failed chunk index {subset_idx+1}: {e}")
                     raise e
+
+        # --- TOP-UP GUARANTEE ---
+        # The LLM may return fewer rows than requested per chunk.
+        # Keep requesting the shortfall until we reach num_empty or exhaust retries.
+        if num_empty > 0 and len(final_data) < num_empty:
+            max_topup = 5
+            for topup_round in range(max_topup):
+                shortfall = num_empty - len(final_data)
+                if shortfall <= 0:
+                    break
+                to_request = min(chunk_sz, shortfall)
+                logger.info(f"Top-up {topup_round + 1}/{max_topup}: have {len(final_data)}/{num_empty} rows — requesting {to_request} more.")
+                try:
+                    t_messages = list(base_messages)
+                    if global_ctx:
+                        ctx_slice = global_ctx[:min(20, len(global_ctx))]
+                        compact_topup_ctx = to_compact_json(ctx_slice, all_columns)
+                        t_messages.append({"role": "user", "content": prompt_manager.get_prompt("generation_global_ctx", compact_global_json=json.dumps(compact_topup_ctx))})
+                        t_messages.append({"role": "assistant", "content": "Received global context references."})
+                    t_messages.append({"role": "user", "content": prompt_manager.get_prompt(
+                        "generation_final",
+                        instructions=instructions,
+                        all_columns=all_columns,
+                        task_str=f"- Generate {to_request} entirely NEW rows following the fed distribution patterns."
+                    )})
+                    t_response = self._call_local_llm(t_messages, core_model=algorithm, temperature=temperature, json_mode=True)
+                    t_content = t_response["choices"][0]["message"]["content"]
+                    try:
+                        t_parsed = robust_json_loads(t_content)
+                    except RobustJSONError:
+                        logger.warning(f"Top-up {topup_round + 1}: JSON parse failed. Stopping.")
+                        break
+                    if isinstance(t_parsed, dict) and "cols" in t_parsed and "data" in t_parsed:
+                        topup_rows = from_compact_json(t_parsed, all_columns)
+                    elif isinstance(t_parsed, list):
+                        topup_rows = from_compact_json({"data": t_parsed}, all_columns) if t_parsed and isinstance(t_parsed[0], list) else t_parsed
+                    else:
+                        topup_rows = t_parsed.get("data", [])
+                    if topup_rows:
+                        final_data.extend(topup_rows)
+                    else:
+                        logger.warning(f"Top-up {topup_round + 1} returned 0 rows. Stopping.")
+                        break
+                except Exception as e:
+                    logger.warning(f"Top-up {topup_round + 1} failed: {e}. Stopping.")
+                    break
+            logger.info(f"Generation complete: {len(final_data)}/{num_empty} rows collected after top-ups.")
+
+        # Trim to exact count in case of overshoot
+        if num_empty > 0 and len(final_data) > num_empty:
+            final_data = final_data[:num_empty]
 
         return {
             "data": final_data,
@@ -656,6 +717,61 @@ class GeminiProvider(BaseLLMProvider):
                             final_rows = parsed_data
                     else:
                         raise ValueError("Gemini returned unexpected structure")
+
+                    # --- TOP-UP GUARANTEE ---
+                    if num_empty > 0 and len(final_rows) < num_empty:
+                        max_topups = 5
+                        for topup_round in range(max_topups):
+                            shortfall = num_empty - len(final_rows)
+                            if shortfall <= 0:
+                                break
+                            logger.info(f"Gemini Top-up {topup_round + 1}/{max_topups}: have {len(final_rows)}/{num_empty} rows — requesting {shortfall} more.")
+                            
+                            topup_prompt = prompt_manager.get_prompt(
+                                "generation_final",
+                                instructions=instructions,
+                                all_columns=all_columns,
+                                task_str=f"- Generate {shortfall} entirely NEW rows following the fed distribution patterns."
+                            )
+                            try:
+                                t_resp = self.model.generate_content(
+                                    topup_prompt,
+                                    generation_config=self.genai.types.GenerationConfig(
+                                        response_mime_type="application/json",
+                                        temperature=temperature
+                                    )
+                                )
+                                t_usage = t_resp.usage_metadata
+                                usage.prompt_token_count += t_usage.prompt_token_count
+                                usage.candidates_token_count += t_usage.candidates_token_count
+                                usage.total_token_count += t_usage.total_token_count
+
+                                t_parsed = robust_json_loads(t_resp.text)
+                                if isinstance(t_parsed, dict) and "cols" in t_parsed and "data" in t_parsed:
+                                    t_rows = from_compact_json(t_parsed, all_columns)
+                                elif isinstance(t_parsed, dict) and "data" in t_parsed:
+                                    first = t_parsed["data"][0] if t_parsed["data"] else None
+                                    t_rows = from_compact_json(t_parsed, all_columns) if isinstance(first, list) else t_parsed["data"]
+                                elif isinstance(t_parsed, list):
+                                    first = t_parsed[0] if t_parsed else None
+                                    t_rows = from_compact_json({"data": t_parsed}, all_columns) if isinstance(first, list) else t_parsed
+                                else:
+                                    t_rows = []
+                                
+                                if t_rows:
+                                    final_rows.extend(t_rows)
+                                else:
+                                    logger.warning(f"Gemini Top-up {topup_round+1} returned zero rows.")
+                                    break
+                            except Exception as e:
+                                logger.warning(f"Gemini Top-up failed: {e}")
+                                break
+                        
+                        logger.info(f"Gemini Generation complete: {len(final_rows)}/{num_empty} rows collected after top-ups.")
+
+                    # Trim to exact length in case of overshoot
+                    if num_empty > 0 and len(final_rows) > num_empty:
+                        final_rows = final_rows[:num_empty]
 
                     return {
                         "data": final_rows,

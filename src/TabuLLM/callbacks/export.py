@@ -310,10 +310,15 @@ def execute_global_report_pm(n_clicks, config_store, meta_store, pipeline_result
                         if a.empty or b.empty: continue
                         
                         if col in num_cols:
-                            m_a = a.mean()
-                            m_b = pd.to_numeric(b, errors="coerce").mean()
+                            a_num = pd.to_numeric(a, errors="coerce").dropna()
+                            b_num = pd.to_numeric(b, errors="coerce").dropna()
+                            m_a = a_num.mean() if not a_num.empty else 0
+                            m_b = b_num.mean() if not b_num.empty else 0
                             shift = ((m_b - m_a) / (abs(m_a) + 1e-9)) * 100
-                            _, p_val = stats.ks_2samp(a, b)
+                            if len(a_num) > 1 and len(b_num) > 1:
+                                _, p_val = stats.ks_2samp(a_num, b_num)
+                            else:
+                                p_val = 1.0
                             feature_stats[col]["aug_vals"].append(m_b)
                         else:
                             # Categorical drift (Hellinger proxy)
@@ -381,26 +386,39 @@ def execute_global_report_pm(n_clicks, config_store, meta_store, pipeline_result
             }
     
             # Appendix: Multi-Fold Trace (Color-Coded combined Context + Synthetic)
+            # Build a header-renamed view of the full augmented grid, keeping _fold_id for splitting
             appendix_folds = []
             if pipeline_results and d_id in pipeline_results:
                 results_list = pipeline_results[d_id].get("results", [])
+
+                # df_aug uses field names from Ag-Grid — rename to friendly headers for display
+                # Keep _fold_id so we can split per fold
+                df_aug_display = pd.DataFrame(all_aug_rows[idx]) if all_aug_rows[idx] else pd.DataFrame()
+                if not df_aug_display.empty:
+                    df_aug_display = df_aug_display.rename(columns=field_map)
+                    internal_drop = [c for c in df_aug_display.columns
+                                     if c in ['_row_id', 'is_context', 'is_target', 'ai_audit']
+                                     or c.startswith('is_ai_')]
+                    df_aug_display.drop(columns=internal_drop, inplace=True, errors='ignore')
+
                 for i, r in enumerate(results_list):
+                    fold_num = i + 1
                     ctx_raw = r.get("context_data")
-                    syn_raw = r.get("synthetic_data")
-                    df_ctx = pd.DataFrame(ctx_raw) if ctx_raw is not None else pd.DataFrame()
-                    df_syn = pd.DataFrame(syn_raw) if syn_raw is not None else pd.DataFrame()
-                    
+                    df_ctx = pd.DataFrame(ctx_raw) if ctx_raw else pd.DataFrame()
+
+                    # Use the grid data filtered by _fold_id — source of truth for synthetic rows
+                    if not df_aug_display.empty and '_fold_id' in df_aug_display.columns:
+                        df_syn = df_aug_display[df_aug_display['_fold_id'] == fold_num].drop(columns=['_fold_id'], errors='ignore')
+                    else:
+                        # Fallback: use stored synthetic_data (may be sparse)
+                        syn_raw = r.get("synthetic_data")
+                        df_syn = pd.DataFrame(syn_raw) if syn_raw else pd.DataFrame()
+
                     if not df_ctx.empty or not df_syn.empty:
-                        # Combine them
                         combined_fold = pd.concat([df_ctx, df_syn], ignore_index=True)
-                        
-                        # Generate row colors
-                        colors = []
-                        for _ in range(len(df_ctx)): colors.append((235, 245, 255)) # Light Blue for Context
-                        for _ in range(len(df_syn)): colors.append((240, 255, 245)) # Light Green for Synthetic
-                        
+                        colors = ([(235, 245, 255)] * len(df_ctx)) + ([(240, 255, 245)] * len(df_syn))
                         appendix_folds.append({
-                            "name": f"Fold {i+1}",
+                            "name": f"Fold {fold_num}",
                             "sample": combined_fold,
                             "row_colors": colors,
                             "ctx_ratio": r.get("ctx_ratio")

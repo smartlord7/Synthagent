@@ -277,7 +277,7 @@ def generate_benchmark_pdf(report_data):
         if orig_df is not None and not orig_df.empty:
             raw_cols = list(orig_df.columns[:10])
             headers = ["#"] + raw_cols
-            rows = [[i+1] + r for i, r in enumerate(orig_df[raw_cols].head(30).values.tolist())]
+            rows = [[i+1] + r for i, r in enumerate(orig_df[raw_cols].values.tolist())]
             pdf.draw_table(headers, rows, [10] + [180/len(raw_cols)]*len(raw_cols), font_size=5)
         pdf.ln(10)
 
@@ -297,10 +297,9 @@ def generate_benchmark_pdf(report_data):
             if not f_df.empty:
                 raw_cols = list(f_df.columns[:10])
                 headers = ["#"] + raw_cols
-                # Show up to 50 combined rows for audit
-                display_rows = f_df[raw_cols].head(50).values.tolist()
+                display_rows = f_df[raw_cols].values.tolist()
                 rows = [[i+1] + r for i, r in enumerate(display_rows)]
-                pdf.draw_table(headers, rows, [10] + [180/len(raw_cols)]*len(raw_cols), 
-                               font_size=5, row_colors=f_colors[:50])
+                pdf.draw_table(headers, rows, [10] + [180/len(raw_cols)]*len(raw_cols),
+                               font_size=5, row_colors=f_colors)
 
     return pdf.output(dest='S')
