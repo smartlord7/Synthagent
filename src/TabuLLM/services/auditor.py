@@ -28,7 +28,7 @@ class DatasetAuditor:
         # 3. Gini Stability (Categorical Dominance)
         stability = {}
         for col in df_clean.select_dtypes(include=['object', 'category']).columns:
-            probs = df_clean[col].value_counts(normalize=True)
+            probs = df_clean[col].astype(str).value_counts(normalize=True)
             gini_impurity = 1 - np.sum(probs**2)
             stability[col] = float(1 - gini_impurity)
         metrics['stability'] = stability
@@ -111,10 +111,10 @@ class DatasetAuditor:
             df_binary = (df_clean[target_col] == pos_label).astype(int)
 
         for s_col in sensitive_cols:
-            # Re-verify that s_col is in current clean columns
             if s_col not in df_clean.columns or s_col == target_col: continue
-            
-            counts = df_clean[s_col].value_counts()
+
+            # Cast to string for type-safe distribution and majority group detection
+            counts = df_clean[s_col].astype(str).value_counts()
             if counts.empty: continue
             
             majority_class = counts.index[0]

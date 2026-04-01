@@ -202,8 +202,16 @@ def generate_benchmark_pdf(report_data):
                 rows = []
                 for metric_name, vals in m_perf.items():
                     if metric_name == "folds_metadata": continue
-                    # vals is {"real": "...", "aug": "...", "delta": "..."}
-                    rows.append([metric_name.upper(), vals.get("real"), vals.get("aug"), vals.get("delta")])
+                    
+                    # Safe extraction supporting old and new schemas
+                    if isinstance(vals, dict):
+                        m_real = vals.get("real") or vals.get("orig_m") or "N/A"
+                        m_aug = vals.get("aug") or vals.get("aug_m") or "N/A"
+                        m_delta = vals.get("delta") or vals.get("d_m") or "0"
+                        rows.append([metric_name.upper(), str(m_real), str(m_aug), str(m_delta)])
+                    else:
+                        # Fallback for simple string metrics
+                        rows.append([metric_name.upper(), "N/A", str(vals), "N/A"])
                 
                 pdf.draw_table(["Metric", "Real (Baseline)", "Augmented", "Delta (Lift)"], 
                                rows, [50, 45, 45, 50], font_size=9, header_color=(200, 220, 240))

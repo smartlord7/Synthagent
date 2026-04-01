@@ -132,8 +132,9 @@ def get_eda_layout(df_orig, df_aug, dataset_id="base", results_list=None):
 
     if cat_cols:
         for col in cat_cols:
-            p = df_orig_c[col].value_counts(normalize=True)
-            q = df_aug_c[col].value_counts(normalize=True)
+            # Cast to string for type-safe distribution comparison
+            p = df_orig_c[col].astype(str).value_counts(normalize=True)
+            q = df_aug_c[col].astype(str).value_counts(normalize=True)
             all_cats = p.index.union(q.index)
             p = p.reindex(all_cats, fill_value=0).values
             q = q.reindex(all_cats, fill_value=0).values
@@ -294,8 +295,8 @@ def get_eda_layout(df_orig, df_aug, dataset_id="base", results_list=None):
                             h_folds, e_means = [], []
                             for _, f_df in fold_groups:
                                 # For shift calculation
-                                p_f = a.value_counts(normalize=True)
-                                q_f = f_df[col].value_counts(normalize=True)
+                                p_f = a.astype(str).value_counts(normalize=True)
+                                q_f = f_df[col].astype(str).value_counts(normalize=True)
                                 cats = p_f.index.union(q_f.index)
                                 p_f = p_f.reindex(cats, fill_value=0).values
                                 q_f = q_f.reindex(cats, fill_value=0).values
@@ -321,8 +322,8 @@ def get_eda_layout(df_orig, df_aug, dataset_id="base", results_list=None):
                     orig_val = f"'{a.mode()[0]}' ({orig_e:.1f})" if not a.mode().empty else "N/A"
                     
                     # Chi-square for p-value
-                    p_obs = a.value_counts(normalize=True)
-                    q_obs = b_full.value_counts(normalize=True)
+                    p_obs = a.astype(str).value_counts(normalize=True)
+                    q_obs = b_full.astype(str).value_counts(normalize=True)
                     cats = p_obs.index.union(q_obs.index)
                     p_vals = p_obs.reindex(cats, fill_value=0).values * len(b_full)
                     q_vals = q_obs.reindex(cats, fill_value=0).values * len(b_full)

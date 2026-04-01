@@ -150,16 +150,10 @@ def compute_privacy_metrics(df_orig: pd.DataFrame, df_aug: pd.DataFrame, numeric
 def compute_hellinger_fidelity(a: pd.Series, b: pd.Series) -> float:
     """
     Computes the Hellinger Distance based fidelity between two categorical series.
-    
-    Args:
-        a (pd.Series): The original categorical data series.
-        b (pd.Series): The augmented or synthetic categorical data series.
-        
-    Returns:
-        float: A fidelity score between 0 and 1, where 1 indicates identical proportion distributions.
     """
-    p = a.value_counts(normalize=True).sort_index()
-    q = b.value_counts(normalize=True).sort_index()
+    # Cast to string to prevent mixed-type comparison errors during sort_index
+    p = a.astype(str).value_counts(normalize=True).sort_index()
+    q = b.astype(str).value_counts(normalize=True).sort_index()
     
     all_cats = p.index.union(q.index)
     p = p.reindex(all_cats, fill_value=0).values
@@ -173,7 +167,8 @@ def compute_entropy_preservation(a: pd.Series, b: pd.Series) -> float:
     Computes how well the Shannon entropy is preserved between two numerical series.
     """
     def shannon_entropy(s):
-        counts = s.value_counts(normalize=True)
+        # Cast to string for consistent categorical entropy calculation
+        counts = s.astype(str).value_counts(normalize=True)
         return -np.sum(counts * np.log2(counts + 1e-12))
     
     e_a = shannon_entropy(a.dropna())

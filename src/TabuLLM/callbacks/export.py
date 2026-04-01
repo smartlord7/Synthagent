@@ -77,6 +77,10 @@ def export_augmented_pdf_pm(n_clicks, orig_data, row_data, description, algo, to
     df_orig = pd.DataFrame(orig_data)
     df_aug = pd.DataFrame(row_data)
 
+    # Filter internal columns for clean PDF appendix & metrics
+    internal_cols = ['_fold_id', '_row_id', 'is_context', 'is_target', 'ai_audit']
+    df_aug = df_aug.drop(columns=[c for c in df_aug.columns if c.startswith('is_ai_') or c in internal_cols], errors='ignore')
+
     # Prepare single dataset report in the NEW format expected by generator
     dataset_id = dash.callback_context.triggered_id['index']
     
@@ -97,7 +101,7 @@ def export_augmented_pdf_pm(n_clicks, orig_data, row_data, description, algo, to
         }
     }
     
-    pdf_bytes = generate_comprehensive_pdf(report_data)
+    pdf_bytes = generate_benchmark_pdf(report_data)
     return dcc.send_bytes(bytes(pdf_bytes), f"TabuLLM_Audit_{dataset_id}.pdf")
 
 
@@ -149,9 +153,14 @@ def generate_global_report_pm(n_clicks, meta_store, pipeline_results, all_orig, 
         if d_id == "default-dataset": continue
         if d_id not in id_map: continue
         idx = id_map[d_id]
+        target_vars = all_targets[idx] or []
         
         df_orig = pd.DataFrame(all_orig[idx]) if all_orig[idx] else pd.DataFrame()
         df_aug = pd.DataFrame(all_aug_rows[idx]) if all_aug_rows[idx] else pd.DataFrame()
+        
+        # Filter internal metadata for clean reporting
+        internal_cols = ['_fold_id', '_row_id', 'is_context', 'is_target', 'ai_audit']
+        df_aug = df_aug.drop(columns=[c for c in df_aug.columns if c.startswith('is_ai_') or c in internal_cols], errors='ignore')
         
         df_orig_enc = df_orig.copy()
         df_aug_enc = df_aug.copy()
@@ -168,7 +177,6 @@ def generate_global_report_pm(n_clicks, meta_store, pipeline_results, all_orig, 
             results_list = pipeline_results[d_id].get("results", [])
             # --- AGGREGATE METRICS (Mean ± Std) ---
             agg_metrics = {}
-            target_vars = all_targets[idx] or []
             
             metric_keys = [
                 "Synthetic Fidelity (JSD)", "Correlation Stability", "Distribution Consistency", 
@@ -223,8 +231,8 @@ def generate_global_report_pm(n_clicks, meta_store, pipeline_results, all_orig, 
                         feature_stats[col]["aug_vals"].append(m_b)
                     else:
                         # Categorical drift (Hellinger proxy)
-                        p_o = a.value_counts(normalize=True)
-                        p_a = b.value_counts(normalize=True)
+                        p_o = a.astype(str).value_counts(normalize=True)
+                        p_a = b.astype(str).value_counts(normalize=True)
                         cats = p_o.index.union(p_a.index)
                         p_h = p_o.reindex(cats, fill_value=0).values
                         q_h = p_a.reindex(cats, fill_value=0).values
