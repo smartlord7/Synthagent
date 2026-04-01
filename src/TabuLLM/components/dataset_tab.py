@@ -144,15 +144,16 @@ def create_dataset_tab(dataset_id, filename, df=None, saved_state=None, pipeline
             id={"type": "btn-delete-dataset", "index": dataset_id},
             color="link",
             size="sm",
-            className="p-0 text-danger opacity-75 delete-tab-btn",
+            className="p-0 text-danger opacity-75 delete-tab-btn ms-auto",
             style={"lineHeight": "1", "fontSize": "1.1rem", "verticalAlign": "middle", "border": "none", "background": "transparent"}
         )
 
     tab_label = html.Span([
         html.I(className="bi bi-table me-2"),
-        html.Span(filename, className="truncate-text", style={"maxWidth": "120px"}),
-        delete_btn
-    ], className="d-flex align-items-center")
+        html.Span(filename, id={"type": "dataset-tab-filename", "index": dataset_id}, className="truncate-text", style={"maxWidth": "120px"}),
+        delete_btn,
+        dbc.Tooltip(filename, target={"type": "dataset-tab-filename", "index": dataset_id}, placement="top")
+    ], className="d-flex align-items-center w-100")
 
     return dcc.Tab(
         label=tab_label,
