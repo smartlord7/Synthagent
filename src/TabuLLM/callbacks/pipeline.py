@@ -71,28 +71,42 @@ def render_pipeline_ui_in_modal(n_clicks, metadata, pipeline_config, roles_vals,
         if not rows:
              rows.append(dbc.ListGroupItem([
                  dbc.Row([
-                     dbc.Col(html.Small("Dataset Filename", className="xx-small text-muted fw-bold"), width=3),
-                     dbc.Col(html.Small("Shape", className="xx-small text-muted fw-bold text-center"), width=2),
-                     dbc.Col(html.Small("Target Columns (comma-sep)", className="xx-small text-muted fw-bold"), width=4),
-                     dbc.Col(html.Small("Prio / Incl", className="xx-small text-muted fw-bold text-end"), width=3),
+                     dbc.Col(html.Small("Incl", className="xx-small text-muted fw-bold text-center"), width=1),
+                     dbc.Col(html.Small("Dataset Filename", className="xx-small text-muted fw-bold"), width=2),
+                     dbc.Col(html.Small("Shape", className="xx-small text-muted fw-bold text-center"), width=1),
+                     dbc.Col(html.Small("Target Columns", className="xx-small text-muted fw-bold"), width=3),
+                     dbc.Col(html.Small("Context Split & Tokens", className="xx-small text-muted fw-bold"), width=4),
+                     dbc.Col(html.Small("Prio", className="xx-small text-muted fw-bold text-end"), width=1),
                  ], align="center", className="gx-1")
              ], className="bg-transparent border-0 border-bottom border-secondary pb-1 mb-1"))
 
         p_val = ds_settings.get(dataset_id, {})
         priority = p_val.get("priority", 1)
         include = p_val.get("include", True)
+        ctx_ratio = p_val.get("ctx_ratio", 20)
 
         rows.append(dbc.ListGroupItem([
             dbc.Row([
-                dbc.Col(html.Span(info["filename"], className="fw-bold text-info small truncate-text", style={"maxWidth": "120px"}), width=3),
-                dbc.Col(html.Small(size_str, className="text-muted d-block", style={"fontSize": "0.7rem"}), width=2),
-                dbc.Col(dbc.Input(id={"type": "pipeline-target", "index": dataset_id}, placeholder="Target", value=target_val, size="sm", className="bg-dark text-light border-secondary"), width=4),
+                dbc.Col(dbc.Checkbox(id={"type": "pipeline-include", "index": dataset_id}, value=include, className="d-flex justify-content-center"), width=1),
+                dbc.Col(html.Span(info["filename"], className="fw-bold text-info small truncate-text", style={"maxWidth": "120px"}), width=2),
+                dbc.Col(html.Small(size_str, className="text-muted d-block text-center", style={"fontSize": "0.65rem"}), width=1),
+                dbc.Col(dbc.Input(id={"type": "pipeline-target", "index": dataset_id}, placeholder="Target", value=target_val, size="sm", className="bg-dark text-light border-secondary"), width=3),
                 dbc.Col([
-                    dbc.Input(id={"type": "pipeline-priority", "index": dataset_id}, type="number", value=priority, size="sm", style={"width": "40px"}),
-                    dbc.Checkbox(id={"type": "pipeline-include", "index": dataset_id}, value=include, className="ms-2")
-                ], width=3, className="d-flex align-items-center justify-content-end"),
-            ], align="center", className="gx-1")
-        ], className="bg-dark border-secondary text-light py-1 px-2"))
+                    # Compact Slider + Token Badge
+                    dcc.Slider(
+                        id={"type": "pipeline-ctx-ratio", "index": dataset_id},
+                        min=5, max=95, step=5, value=ctx_ratio,
+                        marks={5: {"label": "5%", "style": {"fontSize": "0.5rem"}}, 
+                               50: {"label": "50%", "style": {"fontSize": "0.5rem"}}, 
+                               95: {"label": "95%", "style": {"fontSize": "0.5rem"}}},
+                        className="ps-0 pe-0",
+                        tooltip={"placement": "bottom", "always_visible": False}
+                    ),
+                    html.Div(id={"type": "pipeline-token-est", "index": dataset_id}, className="text-info x-small mt-n2", style={"fontSize": "0.65rem"}),
+                ], width=4, className="px-2 d-flex flex-column justify-content-center"),
+                dbc.Col(dbc.Input(id={"type": "pipeline-priority", "index": dataset_id}, type="number", value=priority, size="sm", className="text-end"), width=1),
+            ], align="center", className="gx-2")
+        ], className="bg-dark border-secondary text-light py-2 px-1"))
 
     if not rows:
         return dbc.Alert("No valid datasets found for pipeline.", color="warning", className="m-0")
@@ -153,11 +167,13 @@ def render_pipeline_ui_in_modal(n_clicks, metadata, pipeline_config, roles_vals,
     Input("pipeline-auto-detect-targets", "value"),
     Input({"type": "pipeline-priority", "index": ALL}, "value"),
     Input({"type": "pipeline-include", "index": ALL}, "value"),
+    Input({"type": "pipeline-ctx-ratio", "index": ALL}, "value"),
     State({"type": "pipeline-priority", "index": ALL}, "id"),
+    State({"type": "pipeline-ctx-ratio", "index": ALL}, "id"),
     State("pipeline-config-store", "data"),
     prevent_initial_call=True
 )
-def sync_pipeline_config_pm(folds, models, auto, priorities, includes, ids, current_config):
+def sync_pipeline_config_pm(folds, models, auto, priorities, includes, ctx_ratios, ids, ctx_ids, current_config):
     current_config = current_config or {}
     current_config["global_folds"] = folds
     current_config["selected_models"] = models
@@ -172,6 +188,11 @@ def sync_pipeline_config_pm(folds, models, auto, priorities, includes, ids, curr
             current_config["datasets"][d_id] = {}
         current_config["datasets"][d_id]["priority"] = priorities[i]
         current_config["datasets"][d_id]["include"] = includes[i]
+        
+    for i, id_obj in enumerate(ctx_ids):
+        d_id = id_obj["index"]
+        if d_id in current_config["datasets"]:
+            current_config["datasets"][d_id]["ctx_ratio"] = ctx_ratios[i]
         
     return current_config
 
@@ -206,6 +227,7 @@ def sync_pipeline_config_pm(folds, models, auto, priorities, includes, ids, curr
     State({"type": "ml-evaluation-results-dashboard", "index": ALL}, "id"),
     State({"type": "pipeline-target", "index": ALL}, "value"),
     State({"type": "pipeline-target", "index": ALL}, "id"),
+    State({"type": "pipeline-ctx-ratio", "index": ALL}, "value"),
     State({"type": "target-cols-dropdown", "index": ALL}, "id"),
     State({"type": "algo-selector", "index": ALL}, "value"),
     State({"type": "algo-selector", "index": ALL}, "id"),
@@ -225,6 +247,7 @@ def execute_pipeline_pm(set_progress, n_clicks, global_folds, global_ml_models, 
                         roles_list, roles_ids,
                         eda_ids, ml_res_ids,
                         dataset_targets_vals, dataset_targets_ids,
+                        ctx_frac_vals,
                         target_dropdown_ids,
                         all_algo_vals, all_algo_ids):
     
@@ -242,6 +265,7 @@ def execute_pipeline_pm(set_progress, n_clicks, global_folds, global_ml_models, 
     roles_map = map_states(roles_list, roles_ids)
     target_map = map_states(dataset_targets_vals, dataset_targets_ids)
     algo_map = map_states(all_algo_vals, all_algo_ids)
+    ctx_map = {dataset_targets_ids[i]["index"]: ctx_frac_vals[i] for i in range(len(ctx_frac_vals))}
     
     global_ml_config = {"selected_models": global_ml_models or [], "params": {}}
     for val, pid in zip(all_ml_param_values, all_ml_param_ids):
@@ -282,7 +306,8 @@ def execute_pipeline_pm(set_progress, n_clicks, global_folds, global_ml_models, 
             "ml_config": global_ml_config,
             "targets": target_cols,
             "desc_metadata": desc_map.get(d_id, ""),
-            "algorithm": algo_map.get(d_id, "google/gemma-3-4b")
+            "algorithm": algo_map.get(d_id, "google/gemma-3-4b"),
+            "ctx_ratio": ctx_map.get(d_id, 20)
         }
         tasks_raw.append({"priority": priority, "payload": (d_id, filename, orig_map.get(d_id, []), col_map.get(d_id, []), config)})
 
@@ -598,3 +623,57 @@ def format_params(params):
         ], className="m-1 p-2 border border-secondary rounded bg-dark d-inline-block", style={"minWidth": "160px"}))
     
     return html.Div(badges, className="d-flex flex-wrap")
+
+@app.callback(
+    Output({"type": "pipeline-token-est", "index": ALL}, "children"),
+    Input({"type": "pipeline-ctx-ratio", "index": ALL}, "value"),
+    Input("pipeline-global-folds", "value"),
+    State("datasets-metadata-store", "data"),
+    State({"type": "pipeline-ctx-ratio", "index": ALL}, "id"),
+    prevent_initial_call=False
+)
+def update_pipeline_token_estimates(ctx_ratios, folds, metadata, ctx_ids):
+    if not metadata or not ctx_ids: 
+        return [dash.no_update] * len(ctx_ids)
+    
+    results = []
+    TOKEN_RATIO = 2.8 # Heuristic for dense JSON
+    
+    # We use 80% as the train fraction in folds
+    TRAIN_FRAC = 0.8
+    
+    for i, id_obj in enumerate(ctx_ids):
+        d_id = id_obj["index"]
+        info = metadata.get(d_id, {})
+        rows = info.get("rows", 0)
+        cols = info.get("cols", 0)
+        
+        # Current ratio from slider
+        ratio = ctx_ratios[i] if i < len(ctx_ratios) else 20
+        
+        # Estimate average characters per row (JSON-like structure)
+        # Each column has a name (~10 chars) and a value (~10 chars) + syntax
+        avg_row_chars = cols * 20 
+        
+        # Benchmark logic: 
+        # Ctx = Total * TRAIN_FRAC * Ratio
+        # Aug = Total - (Total * TRAIN_FRAC * Ratio)
+        # Actually it's simpler:
+        # ctx_rows = rows * 0.8 * (ratio/100)
+        # aug_rows = rows - ctx_rows
+        
+        n_ctx = int(rows * TRAIN_FRAC * (ratio / 100))
+        n_aug = max(1, rows - n_ctx)
+        
+        # Input Tokens Estimate: Prompt Overhead (approx 600) + Context Data
+        in_tok = 600 + int((n_ctx * avg_row_chars) / TOKEN_RATIO)
+        
+        # Output Tokens Estimate: Augmented Data
+        out_tok = int((n_aug * avg_row_chars) / TOKEN_RATIO)
+        
+        results.append(html.Div([
+            html.Span([html.I(className="bi bi-box-arrow-in-right me-1"), f"~{in_tok}"], className="me-2"),
+            html.Span([html.I(className="bi bi-box-arrow-right me-1"), f"~{out_tok}"])
+        ], className="d-flex justify-content-end align-items-center"))
+    
+    return results

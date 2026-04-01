@@ -51,11 +51,14 @@ def run_single_dataset_benchmark(args):
             # This ensures we always test on "Real" data
             df_train_orig, df_test_orig = train_test_split(df_orig_all, test_size=0.2, random_state=42 + fold_num)
             
-            # 2. Setup context for synthesis from the training fraction
-            n_context_rows = min(len(df_train_orig), max_context)
-            context_data_list = select_context_rows(df_train_orig, strategy=strategy, n_rows=n_context_rows)
-            num_empty = len(df_orig_all) - len(context_data_list)
+            # 2. Setup context/augmentation split from fractions
+            ctx_ratio = config.get("ctx_ratio", 20)
+            n_context_rows = max(1, int(len(df_train_orig) * (ctx_ratio / 100)))
+            num_empty = max(1, len(df_orig_all) - n_context_rows)
             
+            logger.info(f"Fold {fold_num}: Benchmarking with {ctx_ratio}% Ctx ({n_context_rows} rows) | Augmenting {num_empty} rows (Parity Goal: {len(df_orig_all)})")
+            
+            context_data_list = select_context_rows(df_train_orig, strategy=strategy, n_rows=n_context_rows)
             context_dict = {"metadata": desc_metadata, "manual_ctx": "[]", "global_ctx": context_data_list}
 
             # 3. Generate Augmented Data
