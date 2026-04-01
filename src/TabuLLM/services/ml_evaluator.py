@@ -46,7 +46,10 @@ class MLEvaluator:
                     else:
                         mode_vals = df_clean[col].mode()
                         if not mode_vals.empty:
-                            df_clean[col] = df_clean[col].fillna(mode_vals[0])
+                            val = mode_vals[0]
+                            if isinstance(val, (list, dict, tuple)):
+                                val = str(val)
+                            df_clean[col] = df_clean[col].fillna(val)
                         else:
                             df_clean[col] = df_clean[col].fillna("N/A")
         
