@@ -1,0 +1,9 @@
+primary_diagnosis,secondary_diagnosis,icd10_code,admission_type
+Hypertension,None,I10,Outpatient
+Type 2 Diabetes,Hypertension,E11,Inpatient
+Hyperlipidemia,None,E78,Outpatient
+Healthy,None,Z00,Outpatient
+Cardiovascular Disease,Diabetes,I25,Inpatient
+Hypertension,Obesity,I10,Outpatient
+Diabetes,Hyperlipidemia,E11,Inpatient
+Healthy,None,Z00,Outpatient

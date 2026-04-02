@@ -74,8 +74,8 @@ def render_pipeline_ui_in_modal(n_clicks, metadata, pipeline_config, roles_vals,
                      dbc.Col(html.Small("Incl", className="xx-small text-muted fw-bold text-center"), width=1),
                      dbc.Col(html.Small("Dataset Filename", className="xx-small text-muted fw-bold"), width=2),
                      dbc.Col(html.Small("Shape", className="xx-small text-muted fw-bold text-center"), width=1),
-                     dbc.Col(html.Small("Target Columns", className="xx-small text-muted fw-bold"), width=3),
-                     dbc.Col(html.Small("Context Split & Tokens", className="xx-small text-muted fw-bold"), width=4),
+                     dbc.Col(html.Small("Target Columns", className="xx-small text-muted fw-bold"), width=2),
+                     dbc.Col(html.Small("Join | Context & Gen size | Tokens", className="xx-small text-muted fw-bold"), width=5),
                      dbc.Col(html.Small("Prio", className="xx-small text-muted fw-bold text-end"), width=1),
                  ], align="center", className="gx-1")
              ], className="bg-transparent border-0 border-bottom border-secondary pb-1 mb-1"))
@@ -83,27 +83,41 @@ def render_pipeline_ui_in_modal(n_clicks, metadata, pipeline_config, roles_vals,
         p_val = ds_settings.get(dataset_id, {})
         priority = p_val.get("priority", 1)
         include = p_val.get("include", True)
-        ctx_ratio = p_val.get("ctx_ratio", 20)
+        join_context = p_val.get("join_context", True)
+        ctx_size_pct = p_val.get("ctx_size_pct", 20)
+        gen_size_pct = p_val.get("gen_size_pct", 80)
 
         rows.append(dbc.ListGroupItem([
             dbc.Row([
                 dbc.Col(dbc.Checkbox(id={"type": "pipeline-include", "index": dataset_id}, value=include, className="d-flex justify-content-center"), width=1),
                 dbc.Col(html.Span(info["filename"], className="fw-bold text-info small truncate-text", style={"maxWidth": "120px"}), width=2),
                 dbc.Col(html.Small(size_str, className="text-muted d-block text-center", style={"fontSize": "0.65rem"}), width=1),
-                dbc.Col(dbc.Input(id={"type": "pipeline-target", "index": dataset_id}, placeholder="Target", value=target_val, size="sm", className="bg-dark text-light border-secondary"), width=3),
+                dbc.Col(dbc.Input(id={"type": "pipeline-target", "index": dataset_id}, placeholder="Target", value=target_val, size="sm", className="bg-dark text-light border-secondary"), width=2),
                 dbc.Col([
-                    # Compact Slider + Token Badge
-                    dcc.Slider(
-                        id={"type": "pipeline-ctx-ratio", "index": dataset_id},
-                        min=5, max=95, step=5, value=ctx_ratio,
-                        marks={5: {"label": "5%", "style": {"fontSize": "0.5rem"}}, 
-                               50: {"label": "50%", "style": {"fontSize": "0.5rem"}}, 
-                               95: {"label": "95%", "style": {"fontSize": "0.5rem"}}},
-                        className="ps-0 pe-0",
-                        tooltip={"placement": "bottom", "always_visible": False}
-                    ),
-                    html.Div(id={"type": "pipeline-token-est", "index": dataset_id}, className="text-info x-small mt-n2", style={"fontSize": "0.65rem"}),
-                ], width=4, className="px-2 d-flex flex-column justify-content-center"),
+                    # Controls: Join Toggle + Two Sliders
+                    html.Div([
+                        dbc.Checkbox(id={"type": "pipeline-join-context", "index": dataset_id}, value=join_context, label="Join", labelClassName="x-small text-muted mb-0", className="me-2"),
+                        html.Div([
+                            html.Small("Ctx:", className="xx-small text-muted me-1"),
+                                dcc.Slider(
+                                    id={"type": "pipeline-ctx-size", "index": dataset_id},
+                                    min=5, max=95, step=5, value=ctx_size_pct,
+                                    marks={5: {"label": "5%", "style": {"fontSize": "0.41rem"}}, 95: {"label": "95%", "style": {"fontSize": "0.41rem"}}},
+                                    className="p-0 flex-grow-1"
+                                ),
+                        ], className="d-flex align-items-center flex-grow-1 me-2"),
+                        html.Div([
+                            html.Small("Gen:", className="xx-small text-muted me-1"),
+                                dcc.Slider(
+                                    id={"type": "pipeline-gen-size", "index": dataset_id},
+                                    min=10, max=500, step=10, value=gen_size_pct,
+                                    marks={10: {"label": "10%", "style": {"fontSize": "0.41rem"}}, 500: {"label": "500%", "style": {"fontSize": "0.41rem"}}},
+                                    className="p-0 flex-grow-1"
+                                ),
+                        ], className="d-flex align-items-center flex-grow-1"),
+                    ], className="d-flex align-items-center mb-1"),
+                    html.Div(id={"type": "pipeline-token-est", "index": dataset_id}, className="text-info x-small text-end pt-1", style={"fontSize": "0.6rem"}),
+                ], width=5, className="px-2 d-flex flex-column justify-content-center"),
                 dbc.Col(dbc.Input(id={"type": "pipeline-priority", "index": dataset_id}, type="number", value=priority, size="sm", className="text-end"), width=1),
             ], align="center", className="gx-2")
         ], className="bg-dark border-secondary text-light py-2 px-1"))
@@ -120,7 +134,7 @@ def render_pipeline_ui_in_modal(n_clicks, metadata, pipeline_config, roles_vals,
         
         dbc.Row([
             dbc.Col(html.Label("Parallel Execution:", className="small text-info fw-bold"), width=3),
-            dbc.Col(dbc.Switch(id="pipeline-parallel-toggle", label="", value=True, className="mt-1"), width=3),
+            dbc.Col(dbc.Switch(id="pipeline-parallel-toggle", label="", value=pipeline_config.get("parallel_enabled", True), className="mt-1"), width=3),
         ], className="mb-3 align-items-center g-2 bg-dark border border-secondary rounded p-2 mx-0"),
         
         dbc.Accordion([
@@ -184,13 +198,14 @@ def render_pipeline_ui_in_modal(n_clicks, metadata, pipeline_config, roles_vals,
     Input("pipeline-na-handling", "value"),
     Input({"type": "pipeline-priority", "index": ALL}, "value"),
     Input({"type": "pipeline-include", "index": ALL}, "value"),
-    Input({"type": "pipeline-ctx-ratio", "index": ALL}, "value"),
+    Input({"type": "pipeline-join-context", "index": ALL}, "value"),
+    Input({"type": "pipeline-ctx-size", "index": ALL}, "value"),
+    Input({"type": "pipeline-gen-size", "index": ALL}, "value"),
     State({"type": "pipeline-priority", "index": ALL}, "id"),
-    State({"type": "pipeline-ctx-ratio", "index": ALL}, "id"),
     State("pipeline-config-store", "data"),
     prevent_initial_call=True
 )
-def sync_pipeline_config_pm(folds, models, auto, parallel, na_strategy, priorities, includes, ctx_ratios, ids, ctx_ids, current_config):
+def sync_pipeline_config_pm(folds, models, auto, parallel, na_strategy, priorities, includes, joins, ctx_sizes, gen_sizes, ids, current_config):
     current_config = current_config or {}
     current_config["global_folds"] = folds
     current_config["selected_models"] = models
@@ -207,11 +222,9 @@ def sync_pipeline_config_pm(folds, models, auto, parallel, na_strategy, prioriti
             current_config["datasets"][d_id] = {}
         current_config["datasets"][d_id]["priority"] = priorities[i]
         current_config["datasets"][d_id]["include"] = includes[i]
-        
-    for i, id_obj in enumerate(ctx_ids):
-        d_id = id_obj["index"]
-        if d_id in current_config["datasets"]:
-            current_config["datasets"][d_id]["ctx_ratio"] = ctx_ratios[i]
+        current_config["datasets"][d_id]["join_context"] = joins[i]
+        current_config["datasets"][d_id]["ctx_size_pct"] = ctx_sizes[i]
+        current_config["datasets"][d_id]["gen_size_pct"] = gen_sizes[i]
         
     return current_config
 
@@ -265,7 +278,9 @@ def get_delta_color_class(metric_name, delta_val):
     State({"type": "ml-evaluation-results-dashboard", "index": ALL}, "id"),
     State({"type": "pipeline-target", "index": ALL}, "value"),
     State({"type": "pipeline-target", "index": ALL}, "id"),
-    State({"type": "pipeline-ctx-ratio", "index": ALL}, "value"),
+    State({"type": "pipeline-join-context", "index": ALL}, "value"),
+    State({"type": "pipeline-ctx-size", "index": ALL}, "value"),
+    State({"type": "pipeline-gen-size", "index": ALL}, "value"),
     State({"type": "target-cols-dropdown", "index": ALL}, "id"),
     State({"type": "algo-selector", "index": ALL}, "value"),
     State({"type": "algo-selector", "index": ALL}, "id"),
@@ -286,7 +301,7 @@ def execute_pipeline_pm(set_progress, n_clicks, global_folds, global_ml_models, 
                         roles_list, roles_ids,
                         eda_ids, ml_res_ids,
                         dataset_targets_vals, dataset_targets_ids,
-                        ctx_frac_vals,
+                        join_vals, ctx_size_vals, gen_size_vals,
                         target_dropdown_ids,
                         all_algo_vals, all_algo_ids,
                         parallel_enabled):
@@ -307,7 +322,9 @@ def execute_pipeline_pm(set_progress, n_clicks, global_folds, global_ml_models, 
     roles_map = map_states(roles_list, roles_ids)
     target_map = map_states(dataset_targets_vals, dataset_targets_ids)
     algo_map = map_states(all_algo_vals, all_algo_ids)
-    ctx_map = {dataset_targets_ids[i]["index"]: ctx_frac_vals[i] for i in range(len(ctx_frac_vals))}
+    join_map = map_states(join_vals, dataset_targets_ids)
+    ctx_size_map = map_states(ctx_size_vals, dataset_targets_ids) # Using targets_ids for index mapping consistency
+    gen_size_map = map_states(gen_size_vals, dataset_targets_ids)
     
     global_ml_config = {"selected_models": global_ml_models or [], "params": {}}
     for val, pid in zip(all_ml_param_values, all_ml_param_ids):
@@ -349,7 +366,9 @@ def execute_pipeline_pm(set_progress, n_clicks, global_folds, global_ml_models, 
             "targets": target_cols,
             "desc_metadata": desc_map.get(d_id, ""),
             "algorithm": algo_map.get(d_id, "google/gemma-3-4b"),
-            "ctx_ratio": ctx_map.get(d_id, 20)
+            "join_context": join_map.get(d_id, True),
+            "ctx_size_pct": ctx_size_map.get(d_id, 20),
+            "gen_size_pct": gen_size_map.get(d_id, 80)
         }
         tasks_raw.append({"priority": priority, "payload": (d_id, filename, orig_map.get(d_id, []), col_map.get(d_id, []), config)})
 
@@ -402,11 +421,14 @@ def execute_pipeline_pm(set_progress, n_clicks, global_folds, global_ml_models, 
                     update_ui_progress()
                     time.sleep(1)
                 pipeline_results = [r.get() for r in async_results]
-        else:
             # Sequential Execution
             for t in tasks_with_progress:
+                # In sequential mode, we can't poll easily, so we just show start status
                 update_ui_progress()
-                pipeline_results.append(run_single_dataset_benchmark(t))
+                res = run_single_dataset_benchmark(t)
+                pipeline_results.append(res)
+                # Force an update after each dataset in sequential mode
+                update_ui_progress()
             update_ui_progress(is_done=True)
     except Exception as e:
         logger.error(f"[UI] Pipeline Execution Engine Failure: {e}")
@@ -717,50 +739,37 @@ def format_params(params):
 
 @app.callback(
     Output({"type": "pipeline-token-est", "index": ALL}, "children"),
-    Input({"type": "pipeline-ctx-ratio", "index": ALL}, "value"),
+    Input({"type": "pipeline-ctx-size", "index": ALL}, "value"),
+    Input({"type": "pipeline-gen-size", "index": ALL}, "value"),
     Input("pipeline-global-folds", "value"),
     State("datasets-metadata-store", "data"),
-    State({"type": "pipeline-ctx-ratio", "index": ALL}, "id"),
+    State({"type": "pipeline-ctx-size", "index": ALL}, "id"),
     prevent_initial_call=False
 )
-def update_pipeline_token_estimates(ctx_ratios, folds, metadata, ctx_ids):
+def update_pipeline_token_estimates(ctx_sizes, gen_sizes, folds, metadata, ctx_ids):
     if not metadata or not ctx_ids: 
         return [dash.no_update] * len(ctx_ids)
     
     results = []
     TOKEN_RATIO = 2.8 # Heuristic for dense JSON
-    
-    # We use 80% as the train fraction in folds
     TRAIN_FRAC = 0.8
     
     for i, id_obj in enumerate(ctx_ids):
         d_id = id_obj["index"]
         info = metadata.get(d_id, {})
-        rows = info.get("rows", 0)
-        cols = info.get("cols", 0)
+        rows, cols = info.get("rows", 0), info.get("cols", 0)
         
-        # Current ratio from slider
-        ratio = ctx_ratios[i] if i < len(ctx_ratios) else 20
+        ctx_pct = ctx_sizes[i] if i < len(ctx_sizes) else 20
+        gen_pct = gen_sizes[i] if i < len(gen_sizes) else 80
         
-        # Estimate average characters per row (JSON-like structure)
-        # Each column has a name (~10 chars) and a value (~10 chars) + syntax
         avg_row_chars = cols * 20 
+        n_ctx = int(rows * TRAIN_FRAC * (ctx_pct / 100))
+        n_gen = int(rows * TRAIN_FRAC * (gen_pct / 100))
         
-        # Benchmark logic: 
-        # Ctx = Total * TRAIN_FRAC * Ratio
-        # Aug = Total - (Total * TRAIN_FRAC * Ratio)
-        # Actually it's simpler:
-        # ctx_rows = rows * 0.8 * (ratio/100)
-        # aug_rows = rows - ctx_rows
-        
-        n_ctx = int(rows * TRAIN_FRAC * (ratio / 100))
-        n_aug = max(1, rows - n_ctx)
-        
-        # Input Tokens Estimate: Prompt Overhead (approx 600) + Context Data
+        # In benchmark mode, each fold generates n_gen rows.
+        # We estimate per fold.
         in_tok = 600 + int((n_ctx * avg_row_chars) / TOKEN_RATIO)
-        
-        # Output Tokens Estimate: Augmented Data
-        out_tok = int((n_aug * avg_row_chars) / TOKEN_RATIO)
+        out_tok = int((n_gen * avg_row_chars) / TOKEN_RATIO)
         
         results.append(html.Div([
             html.Span([html.I(className="bi bi-box-arrow-in-right me-1"), f"~{in_tok}"], className="me-2"),

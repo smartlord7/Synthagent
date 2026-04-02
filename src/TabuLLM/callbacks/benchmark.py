@@ -12,11 +12,13 @@ from utils.metrics import calculate_metrics
     Output({"type": "bench-state-store", "index": MATCH}, "data"),
     Output({"type": "bench-progress-collapse", "index": MATCH}, "is_open"),
     Input({"type": "btn-run-benchmark", "index": MATCH}, "n_clicks"),
-    State({"type": "gen-max-context", "index": MATCH}, "value"),
     State({"type": "bench-folds", "index": MATCH}, "value"),
+    State({"type": "bench-join-context", "index": MATCH}, "value"),
+    State({"type": "bench-ctx-size", "index": MATCH}, "value"),
+    State({"type": "bench-gen-size", "index": MATCH}, "value"),
     prevent_initial_call=True
 )
-def start_benchmark_pm(n_clicks, max_context, folds):
+def start_benchmark_pm(n_clicks, folds, joins, ctx_size, gen_size):
     if not n_clicks:
         return dash.no_update, dash.no_update
     
@@ -24,7 +26,9 @@ def start_benchmark_pm(n_clicks, max_context, folds):
         "active": True,
         "k_total": int(folds) if folds is not None else 3,
         "k_current": 0,
-        "max_context": int(max_context) if max_context is not None else 60,
+        "join_context": bool(joins and 1 in joins),
+        "ctx_size_pct": ctx_size if ctx_size is not None else 20,
+        "gen_size_pct": gen_size if gen_size is not None else 80,
         "results": []
     }, True
 
@@ -57,16 +61,20 @@ def run_benchmark_fold_pm(state, orig_data, col_defs, algorithm,
     try:
         current_fold_idx = int(state.get("k_current", 0))
         total_folds = int(state.get("k_total", 3))
-        max_context_val = int(state.get("max_context", 60))
+        join_context = state.get("join_context", True)
+        ctx_size_pct = state.get("ctx_size_pct", 20)
+        gen_size_pct = state.get("gen_size_pct", 80)
+        
         df_orig = pd.DataFrame(orig_data)
-        fraction = min(0.8, max_context_val / len(df_orig)) if not df_orig.empty else 0.2
     except (ValueError, TypeError):
         current_fold_idx = 0
         total_folds = 3
-        fraction = 0.2
+        join_context = True
+        ctx_size_pct = 20
+        gen_size_pct = 80
+        df_orig = pd.DataFrame()
 
     all_synthetic_rows = []
-    df_orig = pd.DataFrame(orig_data)
 
     # We remove background=True so we loop through all folds in one request
     # NOTE: This might be slow for many folds, but it bypasses the WildcardInLongCallback error.
@@ -87,13 +95,15 @@ def run_benchmark_fold_pm(state, orig_data, col_defs, algorithm,
             df_orig_c = df_orig_c.rename(columns=field_to_header)
             
             from services.data_manager import select_context_rows
-            n_target = int(len(df_orig_c) * fraction)
-            n_context_rows = min(n_target, max_context if max_context else n_target)
             
-            context_data_list = select_context_rows(df_orig_c, strategy=strategy, n_rows=n_context_rows)
+            # Divide training set (simulating fold split - here we just use 80% as base for context)
+            df_train_base = df_orig_c.sample(frac=0.8, random_state=42 + fold_num)
+            
+            n_context_rows = max(1, int(len(df_train_base) * (ctx_size_pct / 100)))
+            num_empty = max(1, int(len(df_train_base) * (gen_size_pct / 100)))
+            
+            context_data_list = select_context_rows(df_train_base, strategy=strategy, n_rows=n_context_rows)
             context_df = pd.DataFrame(context_data_list)
-            
-            num_empty = len(df_orig_c) - len(context_df)
             
             context_dict = {
                 "metadata": desc_metadata if desc_metadata else "Not provided",
@@ -114,8 +124,13 @@ def run_benchmark_fold_pm(state, orig_data, col_defs, algorithm,
                 all_synthetic_rows.extend(filled_data)
                 
                 generated_df = pd.DataFrame(filled_data)
-                aug_df = pd.concat([context_df, generated_df], ignore_index=True)
                 
+                if join_context:
+                    aug_df = pd.concat([context_df, generated_df], ignore_index=True)
+                else:
+                    aug_df = generated_df # Pure Synthetic
+                
+                # Fidelity metrics - compare against whole real dataset if relevant, but here we keep calculate_metrics logic
                 m = calculate_metrics(df_orig_c, aug_df)
                 state["results"].append(m)
             

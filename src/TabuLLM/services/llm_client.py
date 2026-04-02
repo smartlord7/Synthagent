@@ -146,8 +146,11 @@ class LocalOpenAIProvider(BaseLLMProvider):
 
     def detect_target_columns(self, df_sample, single_target=False, algorithm=None):
         # 1. Generate Metadata-Only Schema String
+        internal_cols = ['_row_id', 'is_context', 'is_target', 'ai_audit']
         col_meta = []
         for col in df_sample.columns:
+            if col in internal_cols or col.startswith('is_ai_'):
+                continue
             dtype = str(df_sample[col].dtype)
             col_meta.append(f"- {col} ({dtype})")
         
@@ -643,8 +646,11 @@ class GeminiProvider(BaseLLMProvider):
 
     def detect_target_columns(self, df_sample, single_target=False):
         # 1. Generate Metadata-Only Schema String
+        internal_cols = ['_row_id', 'is_context', 'is_target', 'ai_audit']
         col_meta = []
         for col in df_sample.columns:
+            if col in internal_cols or col.startswith('is_ai_'):
+                continue
             dtype = str(df_sample[col].dtype)
             col_meta.append(f"- {col} ({dtype})")
         

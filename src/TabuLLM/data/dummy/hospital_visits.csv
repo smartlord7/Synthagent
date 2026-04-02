@@ -1,0 +1,9 @@
+visit_date,department,doctor_specialty,length_of_stay_days,visit_type
+2025-01-10,Cardiology,Cardiologist,1,Outpatient
+2025-01-12,Endocrinology,Endocrinologist,3,Inpatient
+2025-01-15,Internal Medicine,Internist,1,Outpatient
+2025-01-18,General Practice,General Practitioner,0,Checkup
+2025-01-20,Cardiology,Cardiologist,5,Inpatient
+2025-01-22,Internal Medicine,Internist,2,Outpatient
+2025-01-25,Endocrinology,Endocrinologist,4,Inpatient
+2025-01-28,General Practice,General Practitioner,0,Checkup

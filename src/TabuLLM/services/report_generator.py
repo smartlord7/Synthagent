@@ -266,7 +266,7 @@ def generate_benchmark_pdf(report_data):
         # Legend
         pdf.set_font('Helvetica', 'I', 8)
         pdf.set_text_color(100, 100, 100)
-        pdf.cell(0, 5, "Legend: [Light Blue] = Original Context Rows | [Light Green] = Generated Synthetic Rows", ln=1)
+        pdf.cell(0, 5, "Legend: [Blue] = Real Context | [Green] = Generated Synthetic | [Yellow] = Real Training (Remaining) | [Grey] = Real Test Baseline", ln=1)
         pdf.ln(2)
         
         # 1. Original Dataset (Full)
@@ -286,11 +286,12 @@ def generate_benchmark_pdf(report_data):
             if pdf.get_y() > 180: pdf.add_page()
             else: pdf.ln(10)
             
-            ctx_str = f" | Context Ratio: {fold.get('ctx_ratio')}%" if fold.get('ctx_ratio') else ""
+            ctx_str = f" | Ctx: {fold.get('ctx_size_pct')}%" if fold.get('ctx_size_pct') else ""
+            gen_str = f" | Gen: {fold.get('gen_size_pct')}%" if fold.get('gen_size_pct') else ""
             
             pdf.set_font('Helvetica', 'B', 10)
             pdf.set_text_color(0, 51, 102)
-            pdf.cell(0, 8, f"B.{i} Audit Trace: {fold['name']}{ctx_str}", ln=1)
+            pdf.cell(0, 8, f"B.{i} Audit Trace: {fold['name']}{ctx_str}{gen_str}", ln=1)
             
             f_df = fold['sample']
             f_colors = fold.get('row_colors', [])

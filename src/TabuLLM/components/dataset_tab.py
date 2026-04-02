@@ -458,10 +458,21 @@ def create_dataset_tab(dataset_id, filename, df=None, saved_state=None, pipeline
                     dbc.CardBody([
                         html.H4("Cross-Validation Benchmark", className="mb-2"),
                         dbc.Row([
-                            dbc.Col(dbc.InputGroup([dbc.InputGroupText("Folds"), dbc.Input(id={"type": "bench-folds", "index": dataset_id}, type="number", value=3)], size="sm"), width=4),
-                            dbc.Col(dbc.Button("Run Benchmark", id={"type": "btn-run-benchmark", "index": dataset_id}, color="primary", size="sm", className="w-100"), width=3)
-                        ], className="mb-4 align-items-center"),
-                        dbc.Collapse(dbc.Progress(id={"type": "bench-progress-bar", "index": dataset_id}, value=0, striped=True, animated=True), id={"type": "bench-progress-collapse", "index": dataset_id}, is_open=False)
+                            dbc.Col(dbc.InputGroup([dbc.InputGroupText("Folds"), dbc.Input(id={"type": "bench-folds", "index": dataset_id}, type="number", value=3)], size="sm"), width=3),
+                            dbc.Col(dbc.Checklist(id={"type": "bench-join-context", "index": dataset_id}, options=[{"label": "Join Context Baseline", "value": 1}], value=[1], switch=True, className="small text-info"), width=3),
+                            dbc.Col(dbc.Button("Run Benchmark", id={"type": "btn-run-benchmark", "index": dataset_id}, color="primary", size="sm", className="w-100 rounded-pill"), width=3)
+                        ], className="mb-3 align-items-center g-3"),
+                        dbc.Row([
+                            dbc.Col([
+                                html.Label("Context Size (% of fold):", className="fw-bold text-muted x-small mb-1"),
+                                dcc.Slider(id={"type": "bench-ctx-size", "index": dataset_id}, min=5, max=95, step=5, value=20, marks={5: "5%", 95: "95%"})
+                            ], width=6),
+                            dbc.Col([
+                                html.Label("Generated Size (% of fold):", className="fw-bold text-muted x-small mb-1"),
+                                dcc.Slider(id={"type": "bench-gen-size", "index": dataset_id}, min=10, max=500, step=10, value=80, marks={10: "10%", 500: "500%"})
+                            ], width=6)
+                        ], className="mb-4"),
+                         dbc.Collapse(dbc.Progress(id={"type": "bench-progress-bar", "index": dataset_id}, value=0, striped=True, animated=True), id={"type": "bench-progress-collapse", "index": dataset_id}, is_open=False)
                     ], className="p-4")
                 ], className="tabu-card mb-5 shadow border-secondary"),
 

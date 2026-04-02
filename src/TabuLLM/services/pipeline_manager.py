@@ -30,6 +30,14 @@ def run_single_dataset_benchmark(args):
     progress_dict = config.get("_progress_dict")
     dataset_id_key = config.get("_dataset_id")
 
+    if progress_dict is not None and dataset_id_key:
+        try:
+            p = dict(progress_dict[dataset_id_key])
+            p["status"] = "Initializing..."
+            p["done"] = 0
+            progress_dict[dataset_id_key] = p
+        except: pass
+
     df_orig_all = pd.DataFrame(orig_data)
     if '_row_id' in df_orig_all.columns:
         df_orig_all.drop(columns=['_row_id', 'is_context', 'is_target', 'ai_audit'], inplace=True, errors='ignore')
@@ -53,19 +61,40 @@ def run_single_dataset_benchmark(args):
             logger.info(f"[DATA] [{filename} | Fold {fold_num}] Split Complete: Train={len(df_train_orig)}, Test={len(df_test_orig)}")
             
             # 2. Setup context/augmentation split
-            ctx_ratio = config.get("ctx_ratio", 20)
-            n_context_rows = max(1, int(len(df_train_orig) * (ctx_ratio / 100)))
-            num_empty = max(1, len(df_train_orig) - n_context_rows)
+            join_context = config.get("join_context", True)
+            ctx_size_pct = config.get("ctx_size_pct", 20)
+            gen_size_pct = config.get("gen_size_pct", 80)
             
-            logger.info(f"[DATA] [{filename} | Fold {fold_num}] Strategy: {strategy} | Context Rows: {n_context_rows} | Target Synthetic: {num_empty}")
+            # Context is sampled from the train split (80% of original)
+            n_context_rows = max(1, int(len(df_train_orig) * (ctx_size_pct / 100)))
+            # Generated size is also relative to the train split size to maintain scale
+            num_empty = max(1, int(len(df_train_orig) * (gen_size_pct / 100)))
+            
+            logger.info(f"[DATA] [{filename} | Fold {fold_num}] Strategy: {strategy} | Join: {join_context} | Context: {n_context_rows} | Target Gen: {num_empty}")
             context_data_list = select_context_rows(df_train_orig, strategy=strategy, n_rows=n_context_rows) or []
             context_dict = {"metadata": desc_metadata, "manual_ctx": "[]", "global_ctx": context_data_list}
+            
+            # Isolate rows that are in the training split but NOT sent to the LLM as context
+            # This provides a 100% complete trace of the original dataset's role per fold.
+            try:
+                # If _row_id is available (standard), we use it to differntiate
+                if '_row_id' in df_train_orig.columns:
+                    ctx_ids = [row.get('_row_id') for row in context_data_list]
+                    df_non_ctx = df_train_orig[~df_train_orig['_row_id'].isin(ctx_ids)]
+                    train_non_context_data = df_non_ctx.to_dict('records')
+                else:
+                    train_non_context_data = []
+            except:
+                train_non_context_data = []
 
             # 3. Generate Augmented Data
-            if progress_dict is not None:
-                 p = progress_dict[dataset_id_key]
-                 p["status"] = f"Fold {fold_num}/{folds} - LLM Gen"
-                 progress_dict[dataset_id_key] = p
+            if progress_dict is not None and dataset_id_key:
+                 try:
+                     # Refresh dict to force sync
+                     p = dict(progress_dict[dataset_id_key])
+                     p["status"] = f"Fold {fold_num}/{folds}: LLM Gen..."
+                     progress_dict[dataset_id_key] = p
+                 except: pass
                  
             logger.info(f"[{filename} | Fold {fold_num}] Pre-Generation Geometry -> Train: {len(df_train_orig)} | Context: {n_context_rows} | Target Gen: {num_empty}")
             
@@ -82,9 +111,14 @@ def run_single_dataset_benchmark(args):
                 all_synthetic_data.extend(generated_rows)
                 all_augmented_data.extend(context_data_list + generated_rows + test_data_list)
                 
-                df_aug_train = pd.concat([pd.DataFrame(context_data_list), pd.DataFrame(generated_rows)], ignore_index=True)
+                if join_context:
+                    df_aug_train = pd.concat([pd.DataFrame(context_data_list), pd.DataFrame(generated_rows)], ignore_index=True)
+                    test_df_eval = df_test_orig # Standard 20% test
+                else:
+                    df_aug_train = pd.DataFrame(generated_rows)
+                    test_df_eval = df_orig_all # Evaluate against whole real dataset
                 
-                logger.info(f"[{filename} | Fold {fold_num}] Post-Generation Geometry -> Target: {num_empty} | Generated: {len(generated_rows)} | Final Aug Train Size: {len(df_aug_train)} | Test Size: {len(df_test_orig)}")
+                logger.info(f"[{filename} | Fold {fold_num}] Post-Generation Geometry -> Target: {num_empty} | Generated: {len(generated_rows)} | Final Train Size: {len(df_aug_train)} | Test Size: {len(test_df_eval)}")
                 
                 # Fidelity Metrics
                 m = calculate_metrics(df_orig_all, df_aug_train)
@@ -102,20 +136,34 @@ def run_single_dataset_benchmark(args):
                         m_params = ml_config.get("params", {}).get(m_type, {})
                         # Apply NA Handling Strategy to both original and augmented
                         logger.info(f"[ML] [{filename} | Fold {fold_num}] Evaluating {m_type.upper()} (NA Strategy: {na_strategy})")
-                        orig_perf, _, orig_err = MLEvaluator.train_and_evaluate(df_train_orig, targets, m_type, m_params, task_type, test_df=df_test_orig, na_strategy=na_strategy)
-                        aug_perf, aug_meta, aug_err = MLEvaluator.train_and_evaluate(df_aug_train, targets, m_type, m_params, task_type, test_df=df_test_orig, na_strategy=na_strategy)
+                        
+                        # Reference model is always tested on the same test set as the augmented model for comparison
+                        orig_perf, _, orig_err = MLEvaluator.train_and_evaluate(df_train_orig, targets, m_type, m_params, task_type, test_df=test_df_eval, na_strategy=na_strategy)
+                        aug_perf, aug_meta, aug_err = MLEvaluator.train_and_evaluate(df_aug_train, targets, m_type, m_params, task_type, test_df=test_df_eval, na_strategy=na_strategy)
                         
                         ml_fold_results[m_type] = {"original": orig_perf, "augmented": aug_perf, "augmented_metadata": aug_meta, "task_type": task_type, "error": aug_err or orig_err}
                 
                 m["ml_eval"] = ml_fold_results
                 m["synthetic_data"] = generated_rows
-                m.update({"context_data": context_data_list, "ctx_ratio": ctx_ratio})
+                m.update({
+                    "context_data": context_data_list, 
+                    "test_data": test_df_eval.to_dict('records') if not test_df_eval.empty else [],
+                    "train_non_ctx_data": train_non_context_data,
+                    "ctx_size_pct": ctx_size_pct, 
+                    "gen_size_pct": gen_size_pct, 
+                    "join_context": join_context
+                })
                 results.append(m)
                 
-                if progress_dict is not None:
-                    p = progress_dict[dataset_id_key]
-                    p["done"] = fold_num
-                    progress_dict[dataset_id_key] = p
+                if progress_dict is not None and dataset_id_key:
+                    # Explicitly update nested manager dict to ensure cross-process visibility
+                    try:
+                        p = dict(progress_dict[dataset_id_key])
+                        p["done"] = fold_num
+                        p["status"] = f"Fold {fold_num}/{folds} complete..."
+                        progress_dict[dataset_id_key] = p
+                    except Exception as pe:
+                        logger.warning(f"Metadata progress update failed for {filename}: {pe}")
         except Exception as e:
             logger.error(f"Pipeline error in {filename} fold {fold_num}: {e}")
             continue
@@ -125,7 +173,6 @@ def run_single_dataset_benchmark(args):
     if results:
         all_models = set()
         for r in results: all_models.update(r.get("ml_eval", {}).keys())
-            
         for m_type in all_models:
             overall_ml[m_type] = {}
             for m_name in ["accuracy", "f1", "rmse", "r2"]:

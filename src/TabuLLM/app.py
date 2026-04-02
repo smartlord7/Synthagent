@@ -6,7 +6,7 @@ from core import app
 from utils.logging_config import logger
 from components.layout import create_layout
 import callbacks
-from test.run_master_suite import run_master_suite
+from tests.run_master_suite import run_master_suite
 
 # Assign layout to the app
 app.layout = create_layout

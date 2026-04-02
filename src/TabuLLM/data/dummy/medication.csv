@@ -1,0 +1,9 @@
+medication_name,dosage_mg,frequency_per_day,route
+Lisinopril,10,1,Oral
+Metformin,500,2,Oral
+Atorvastatin,20,1,Oral
+None,0,0,None
+Aspirin,100,1,Oral
+Amlodipine,5,1,Oral
+Insulin,20,2,Injection
+None,0,0,None

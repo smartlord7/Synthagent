@@ -418,14 +418,44 @@ def execute_global_report_pm(n_clicks, config_store, meta_store, pipeline_result
                         syn_raw = r.get("synthetic_data")
                         df_syn = pd.DataFrame(syn_raw) if syn_raw else pd.DataFrame()
 
-                    if not df_ctx.empty or not df_syn.empty:
-                        combined_fold = pd.concat([df_ctx, df_syn], ignore_index=True)
-                        colors = ([(235, 245, 255)] * len(df_ctx)) + ([(240, 255, 245)] * len(df_syn))
+                    test_raw = r.get("test_data")
+                    df_test = pd.DataFrame(test_raw) if test_raw else pd.DataFrame()
+                    
+                    non_ctx_raw = r.get("train_non_ctx_data")
+                    df_non_ctx = pd.DataFrame(non_ctx_raw) if non_ctx_raw else pd.DataFrame()
+
+                    # STRICTLY filter technical columns from ALL constituent dataframes before concatenation
+                    internal_drop = ['_fold_id', '_row_id', 'is_context', 'is_target', 'ai_audit']
+                    df_ctx = df_ctx.drop(columns=[c for c in df_ctx.columns if c in internal_drop or c.startswith('is_ai_')], errors='ignore')
+                    df_syn = df_syn.drop(columns=[c for c in df_syn.columns if c in internal_drop or c.startswith('is_ai_')], errors='ignore')
+                    df_test = df_test.drop(columns=[c for c in df_test.columns if c in internal_drop or c.startswith('is_ai_')], errors='ignore')
+                    df_non_ctx = df_non_ctx.drop(columns=[c for c in df_non_ctx.columns if c in internal_drop or c.startswith('is_ai_')], errors='ignore')
+
+                    if not df_ctx.empty or not df_syn.empty or not df_test.empty or not df_non_ctx.empty:
+                        # Display EVERYTHING — no row limits/caps
+                        # Warning: For large datasets, this will result in many PDF pages.
+                        df_ctx_sample = df_ctx
+                        df_syn_sample = df_syn
+                        df_test_sample = df_test
+                        df_non_ctx_sample = df_non_ctx
+                        
+                        combined_fold = pd.concat([df_ctx_sample, df_syn_sample, df_non_ctx_sample, df_test_sample], ignore_index=True)
+                        # Final safety drop for any leaked internal columns after concat
+                        combined_fold.drop(columns=[c for c in combined_fold.columns if c in internal_drop or c.startswith('is_ai_')], errors='ignore', inplace=True)
+                        
+                        # Generate row colors for the combined set: 
+                        # Blue (Ctx), Green (Syn), Yellow (Remaining), Grey (Test)
+                        colors = ([(235, 245, 255)] * len(df_ctx_sample)) + \
+                                 ([(240, 255, 245)] * len(df_syn_sample)) + \
+                                 ([(255, 248, 220)] * len(df_non_ctx_sample)) + \
+                                 ([(245, 245, 245)] * len(df_test_sample))
+                        
                         appendix_folds.append({
                             "name": f"Fold {fold_num}",
                             "sample": combined_fold,
                             "row_colors": colors,
-                            "ctx_ratio": r.get("ctx_ratio")
+                            "ctx_size_pct": r.get("ctx_size_pct"),
+                            "gen_size_pct": r.get("gen_size_pct")
                         })
     
                 # --- VIZ EXPORT (PCA & CORR) ---
