@@ -6,6 +6,7 @@ from core import app
 from utils.logging_config import logger
 from components.layout import create_layout
 import callbacks
+from test.run_master_suite import run_master_suite
 
 # Assign layout to the app
 app.layout = create_layout
@@ -21,6 +22,16 @@ if __name__ == '__main__':
     default_debug = "True" if not is_docker else "False"
     debug_mode = os.environ.get("DEBUG", default_debug).lower() == "true"
     
+    # --- STARTUP TESTING GATE ---
+    # Optional logic to run all functionality checks before binding
+    if os.environ.get("CHECK_TESTS_ON_START", "False").lower() == "true":
+        logger.info("[SYS] Startup Test Gate ACTIVE. Running Master Suite...")
+        tests_passed = run_master_suite()
+        if not tests_passed:
+            logger.error("[SYS] Startup aborted. TabuLLM test suite FAILED.")
+            sys.exit(1)
+        logger.info("[SYS] Startup Test Gate SUCCESS. Proceeding to launch...")
+
     logger.info(f"[SYS] Booting TabuLLM Server Instance...")
     logger.info(f"[SYS] Environment: {'Docker' if is_docker else 'Local'} | Host: {host} | Port: {port} | Dash Debug: {debug_mode}")
     

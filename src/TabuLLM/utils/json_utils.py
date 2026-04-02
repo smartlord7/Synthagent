@@ -133,7 +133,14 @@ def robust_json_loads(text: str):
             raise RobustJSONError(f"JSON parsing failed: {e}", error_data)
 
     logger.error("Failed to extract any JSON-like structure from response.")
-    raise json.JSONDecodeError("No JSON-like structure found", text, 0)
+    error_data = {
+        "error": "No JSON-like structure (brackets) found in text.", 
+        "full_text": text,
+        "context": "No JSON brackets detected",
+        "line": 0,
+        "column": 0
+    }
+    raise RobustJSONError("JSON extraction failed: No brackets found", error_data)
 
 class RobustJSONError(Exception):
     """Custom error carrying context for LLM repair."""
