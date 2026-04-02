@@ -27,11 +27,13 @@ def handle_multiple_uploads_pm(list_of_contents, list_of_filenames, current_tabs
     new_tabs = list(current_tabs or [])
     last_id = None
     
+    logger.info(f"[IO] Processing {len(list_of_contents)} upload(s)...")
     for contents, filename in zip(list_of_contents, list_of_filenames):
         dataset_id = str(uuid.uuid4())
         try:
             df = parse_uploaded_file(contents, filename)
             if df is not None and not df.empty:
+                logger.info(f"[IO] Successfully parsed '{filename}' -> {df.shape[0]} rows, {df.shape[1]} cols.")
                 new_tab = create_dataset_tab(dataset_id, filename, df=df)
                 new_tabs.append(new_tab)
                 
@@ -43,9 +45,9 @@ def handle_multiple_uploads_pm(list_of_contents, list_of_filenames, current_tabs
                 }
                 last_id = dataset_id
             else:
-                logger.error(f"Failed to parse {filename}: Empty or invalid.")
+                logger.warning(f"[IO] Failed to parse '{filename}': Empty or invalid format.")
         except Exception as e:
-            logger.error(f"Error processing {filename}: {e}")
+            logger.error(f"[IO] Error processing upload '{filename}': {e}")
 
     return new_tabs, metadata, last_id if last_id else dash.no_update
 
@@ -76,9 +78,10 @@ def manage_delete_modal_pm(n_delete, n_cancel, n_confirm, metadata, is_open):
             btn_id = json.loads(btn_id_json)
             idx = btn_id["index"]
             fname = metadata.get(idx, {}).get("filename", "Unknown")
+            logger.info(f"[UI] User initiated deletion of dataset '{fname}' ({idx}).")
             return True, f"Dataset: {fname}", idx
         except Exception as e:
-            logger.error(f"Error opening delete modal: {e}")
+            logger.error(f"[UI] Error opening delete modal: {e}")
             return dash.no_update
         
     if "btn-cancel-delete" in trig_id or "btn-confirm-delete" in trig_id:
@@ -104,7 +107,9 @@ def confirm_delete_dataset_pm(n_clicks, delete_id, current_tabs, metadata, curre
     
     # 1. Update metadata
     if delete_id in metadata:
+        fname = metadata[delete_id].get("filename", "Unknown")
         del metadata[delete_id]
+        logger.info(f"[UI] Dataset '{fname}' confirmed and removed from workspace.")
         
     # 2. Update tabs list
     new_tabs = []
@@ -127,8 +132,10 @@ def confirm_delete_dataset_pm(n_clicks, delete_id, current_tabs, metadata, curre
                 new_value = first_tab.get("props", {}).get("value")
             else:
                 new_value = getattr(first_tab, "value", None)
+            logger.info(f"[UI] Switched active view to {new_value}.")
         else:
             new_value = None
+            logger.info(f"[UI] All datasets cleared. Workbench empty.")
 
     return new_tabs, metadata, new_value
 
@@ -142,6 +149,7 @@ def confirm_delete_dataset_pm(n_clicks, delete_id, current_tabs, metadata, curre
 def add_row_pm(n_clicks, row_data):
     if not n_clicks: return dash.no_update
     new_row = {"_row_id": str(uuid.uuid4()), "is_context": False, "is_target": False, "ai_audit": ""}
+    logger.info(f"[UI] Added new manual row to current grid (Total: {len(row_data) + 1}).")
     return row_data + [new_row]
 
 

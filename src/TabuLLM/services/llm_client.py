@@ -395,8 +395,18 @@ class LocalOpenAIProvider(BaseLLMProvider):
                         all_columns=all_columns,
                         task_str=f"- Generate {to_request} entirely NEW rows following the fed distribution patterns."
                     )})
+                    
+                    # Log truncated prompt for debugging
+                    p_trunc = t_messages[-1]["content"][:200] + "..." if len(t_messages[-1]["content"]) > 200 else t_messages[-1]["content"]
+                    logger.info(f"[LLM] [{algorithm}] Dispatching Prompt: {p_trunc}")
+                    
                     t_response = self._call_local_llm(t_messages, core_model=algorithm, temperature=temperature, json_mode=True)
                     t_content = t_response["choices"][0]["message"]["content"]
+                    
+                    # Log truncated response
+                    r_trunc = t_content[:200] + "..." if len(t_content) > 200 else t_content
+                    logger.info(f"[LLM] [{algorithm}] Received Raw Response: {r_trunc}")
+                    
                     try:
                         t_parsed = robust_json_loads(t_content)
                     except RobustJSONError:

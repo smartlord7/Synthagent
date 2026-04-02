@@ -140,6 +140,7 @@ class MLEvaluator:
             return None, None, f"Invalid model type '{model_type}'"
 
         try:
+            logger.info(f"[ML] Training {model_type.upper()} Model ({task_type}) on {n_samples} samples x {n_features} features...")
             model.fit(X_train, y_train)
             y_pred = model.predict(X_test)
 
@@ -160,6 +161,8 @@ class MLEvaluator:
                     "rmse": float(np.sqrt(mean_squared_error(y_test, y_pred))),
                     "r2": float(r2_score(y_test, y_pred)),
                 }
+
+            logger.info(f"[ML] {model_type.upper()} Evaluation Complete. Metrics: {metrics}")
 
             # --- EXTRACT METADATA ---
             metadata = {"model_type": model_type}

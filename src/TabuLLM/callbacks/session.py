@@ -1,7 +1,7 @@
 import json
 import dash
-from dash import Input, Output, State, ALL
 from core import app
+from utils.logging_config import logger
 
 @app.callback(
     Output("session-toast-container", "children"),
@@ -63,14 +63,18 @@ def save_workspace_session(n_clicks, metadata, pipeline_results,
         "tabs": tabs
     }
     
+    logger.info(f"[IO] Persistence Triggered: Saving workspace session ({len(tabs)} datasets).")
+    
     try:
         with open("workspace_session.json", "w") as f:
             json.dump(session_data, f)
         
+        logger.info(f"[IO] Session successfully serialized to 'workspace_session.json'.")
         import dash_bootstrap_components as dbc
         from dash import html
         return dbc.Alert([html.I(className="bi bi-check-circle-fill me-2"), "Session completely synced!"], 
                          color="success", duration=3000, className="mb-0 py-1 px-3 small shadow-sm")
     except Exception as e:
+        logger.error(f"[IO] Workspace persistence failed: {e}")
         import dash_bootstrap_components as dbc
         return dbc.Alert(f"Failed to sync: {e}", color="danger", duration=4000)

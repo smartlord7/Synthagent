@@ -50,12 +50,14 @@ def run_single_dataset_benchmark(args):
         try:
             # 1. Split Original into Train/Test (80/20) for this fold
             df_train_orig, df_test_orig = train_test_split(df_orig_all, test_size=0.2, random_state=42 + fold_num)
+            logger.info(f"[DATA] [{filename} | Fold {fold_num}] Split Complete: Train={len(df_train_orig)}, Test={len(df_test_orig)}")
             
             # 2. Setup context/augmentation split
             ctx_ratio = config.get("ctx_ratio", 20)
             n_context_rows = max(1, int(len(df_train_orig) * (ctx_ratio / 100)))
             num_empty = max(1, len(df_train_orig) - n_context_rows)
             
+            logger.info(f"[DATA] [{filename} | Fold {fold_num}] Strategy: {strategy} | Context Rows: {n_context_rows} | Target Synthetic: {num_empty}")
             context_data_list = select_context_rows(df_train_orig, strategy=strategy, n_rows=n_context_rows) or []
             context_dict = {"metadata": desc_metadata, "manual_ctx": "[]", "global_ctx": context_data_list}
 
@@ -99,6 +101,7 @@ def run_single_dataset_benchmark(args):
                              
                         m_params = ml_config.get("params", {}).get(m_type, {})
                         # Apply NA Handling Strategy to both original and augmented
+                        logger.info(f"[ML] [{filename} | Fold {fold_num}] Evaluating {m_type.upper()} (NA Strategy: {na_strategy})")
                         orig_perf, _, orig_err = MLEvaluator.train_and_evaluate(df_train_orig, targets, m_type, m_params, task_type, test_df=df_test_orig, na_strategy=na_strategy)
                         aug_perf, aug_meta, aug_err = MLEvaluator.train_and_evaluate(df_aug_train, targets, m_type, m_params, task_type, test_df=df_test_orig, na_strategy=na_strategy)
                         

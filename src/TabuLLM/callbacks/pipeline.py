@@ -296,6 +296,8 @@ def execute_pipeline_pm(set_progress, n_clicks, global_folds, global_ml_models, 
                 [dash.no_update]*len(ml_res_ids), [dash.no_update]*len(dataset_targets_ids), 
                 [dash.no_update]*len(target_dropdown_ids), [dash.no_update]*len(roles_ids), dash.no_update)
     
+    logger.info(f"[UI] Benchmark Pipeline Triggered. Folds: {global_folds} | Parallel: {parallel_enabled}")
+    
     def map_states(values, ids):
         return {id_obj["index"]: values[i] for i, id_obj in enumerate(ids)}
 
@@ -352,10 +354,13 @@ def execute_pipeline_pm(set_progress, n_clicks, global_folds, global_ml_models, 
         tasks_raw.append({"priority": priority, "payload": (d_id, filename, orig_map.get(d_id, []), col_map.get(d_id, []), config)})
 
     if not tasks_raw:
+        logger.warning("[UI] Pipeline triggered but no datasets were selected for processing.")
         return (dbc.Alert("No datasets selected.", color="warning", className="m-0"), "", 
                 [dash.no_update]*len(eda_ids), [dash.no_update]*len(ml_res_ids), 
                 [dash.no_update]*len(dataset_targets_ids), [dash.no_update]*len(target_dropdown_ids),
                 [dash.no_update]*len(roles_ids), dash.no_update)
+    
+    logger.info(f"[UI] Pipeline Tasks Queued: {len(tasks_raw)} dataset(s). Models: {global_ml_models}")
 
     tasks_raw.sort(key=lambda x: x["priority"])
     tasks = [t["payload"] for t in tasks_raw]
@@ -404,8 +409,10 @@ def execute_pipeline_pm(set_progress, n_clicks, global_folds, global_ml_models, 
                 pipeline_results.append(run_single_dataset_benchmark(t))
             update_ui_progress(is_done=True)
     except Exception as e:
-        logger.error(f"Pipeline failure: {e}")
+        logger.error(f"[UI] Pipeline Execution Engine Failure: {e}")
         return (dbc.Alert(f"Pipeline failed: {e}", color="danger"), dash.no_update, [dash.no_update]*len(eda_ids), [dash.no_update]*len(ml_res_ids), [dash.no_update]*len(dataset_targets_ids), [dash.no_update]*len(target_dropdown_ids), [dash.no_update]*len(roles_ids), dash.no_update)
+    
+    logger.info(f"[UI] Pipeline processing complete. Processing results for {len(pipeline_results)} datasets.")
     
     result_cards = [html.H5("Results", className="text-light fw-bold mb-3 border-bottom border-secondary pb-2")]
     eda_updates = [dash.no_update] * len(eda_ids)

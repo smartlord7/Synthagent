@@ -12,7 +12,6 @@ app.layout = create_layout
 server = app.server  # Expose for Gunicorn
 
 if __name__ == '__main__':
-    logger.info("Starting TabuLLM Application...")
     # Bind to 0.0.0.0 and enable debug in prod/docker generally or use env variables
     host = os.environ.get("HOST", "0.0.0.0")
     port = int(os.environ.get("PORT", 8050))
@@ -22,4 +21,11 @@ if __name__ == '__main__':
     default_debug = "True" if not is_docker else "False"
     debug_mode = os.environ.get("DEBUG", default_debug).lower() == "true"
     
-    app.run(host=host, port=port, debug=debug_mode, reloader_type="stat")
+    logger.info(f"[SYS] Booting TabuLLM Server Instance...")
+    logger.info(f"[SYS] Environment: {'Docker' if is_docker else 'Local'} | Host: {host} | Port: {port} | Dash Debug: {debug_mode}")
+    
+    try:
+        app.run(host=host, port=port, debug=debug_mode, reloader_type="stat")
+    except Exception as e:
+        logger.error(f"[SYS] Fatal exception during application launch: {e}")
+        sys.exit(1)

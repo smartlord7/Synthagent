@@ -57,7 +57,9 @@ def export_augmented_data_pm(n_clicks, row_data, col_defs):
     df = df[[k for k in field_to_header.keys() if k in df.columns]]
     df = df.rename(columns=field_to_header)
 
-    return dcc.send_data_frame(df.to_csv, "AI_Augmented_Dataset.csv", index=False)
+    dataset_id = dash.callback_context.triggered_id['index']
+    logger.info(f"[UI] Exporting CSV for dataset '{dataset_id}' ({len(df)} rows).")
+    return dcc.send_data_frame(df.to_csv, f"TabuLLM_Export_{dataset_id}.csv", index=False)
 
 
 @app.callback(
@@ -86,6 +88,7 @@ def export_augmented_pdf_pm(n_clicks, orig_data, row_data, description, algo, to
 
     # Prepare single dataset report in the NEW format expected by generator
     dataset_id = dash.callback_context.triggered_id['index']
+    logger.info(f"[UI] Generating PDF Audit Report for dataset '{dataset_id}'. Engine: {algo}")
     
     report_data = {
         "executive_summary": {"avg_fidelity": "Calculating...", "status": "Single Dataset Export"},
@@ -105,6 +108,7 @@ def export_augmented_pdf_pm(n_clicks, orig_data, row_data, description, algo, to
     }
     
     pdf_bytes = generate_benchmark_pdf(report_data)
+    logger.info(f"[IO] PDF Audit generated successfully ({len(pdf_bytes)} bytes).")
     return dcc.send_bytes(bytes(pdf_bytes), f"TabuLLM_Audit_{dataset_id}.pdf")
 
 
