@@ -215,6 +215,7 @@ class LocalOpenAIProvider(BaseLLMProvider):
         # --- CHUNKED TARGET PROCESSING ---
         chunk_sz = chunk_size if chunk_size else 30
         subsets = [rows_payload[i:i+chunk_sz] for i in range(0, len(rows_payload), chunk_sz)] if rows_payload else []
+        logger.info(f"Starting LocalOpenAI generation... Total payload: {len(rows_payload)}. Num empty requested: {num_empty}. Chunk limit: {chunk_sz}. Derived subsets: {max(1, len(subsets))}")
         
         if not subsets and num_empty > 0:
             # Split pure generation into batches of chunk_sz so the LLM
@@ -303,6 +304,7 @@ class LocalOpenAIProvider(BaseLLMProvider):
                         # Last chunk of a partial-row completion run — extra new rows appended here
                         tasks.append(f"- Generate {num_empty} entirely NEW rows following the fed distribution patterns.")
                 
+                logger.info(f"Processing chunk {subset_idx + 1}/{len(subsets)}. Prompt generation...")
                 final_prompt = prompt_manager.get_prompt(
                     "generation_final",
                     instructions=instructions,
@@ -371,13 +373,15 @@ class LocalOpenAIProvider(BaseLLMProvider):
         # The LLM may return fewer rows than requested per chunk.
         # Keep requesting the shortfall until we reach num_empty or exhaust retries.
         if num_empty > 0 and len(final_data) < num_empty:
-            max_topup = 5
-            for topup_round in range(max_topup):
+            logger.info(f"Initial bulk generation fell short. Have {len(final_data)}/{num_empty} rows. Transitioning to Top-Up Guarantee loop...")
+            max_topups = 50 # High limit to run "until dataset is completed" securely
+            topup_round = 0
+            consecutive_zeros = 0
+            
+            while len(final_data) < num_empty and topup_round < max_topups:
                 shortfall = num_empty - len(final_data)
-                if shortfall <= 0:
-                    break
                 to_request = min(chunk_sz, shortfall)
-                logger.info(f"Top-up {topup_round + 1}/{max_topup}: have {len(final_data)}/{num_empty} rows — requesting {to_request} more.")
+                logger.info(f"[Top-up Loop {topup_round + 1}] Exact deficit: {shortfall}. Requesting {to_request} missing rows.")
                 try:
                     t_messages = list(base_messages)
                     if global_ctx:
@@ -396,23 +400,44 @@ class LocalOpenAIProvider(BaseLLMProvider):
                     try:
                         t_parsed = robust_json_loads(t_content)
                     except RobustJSONError:
-                        logger.warning(f"Top-up {topup_round + 1}: JSON parse failed. Stopping.")
-                        break
+                        consecutive_zeros += 1
+                        logger.warning(f"Top-up {topup_round + 1}: JSON parse critically failed. Skipping round... (Consecutive failures: {consecutive_zeros})")
+                        if consecutive_zeros >= 5:
+                            logger.error(f"Top-up Loop halting. JSON parsing consistently failed {consecutive_zeros} times.")
+                            break
+                        topup_round += 1
+                        continue
+                        
                     if isinstance(t_parsed, dict) and "cols" in t_parsed and "data" in t_parsed:
                         topup_rows = from_compact_json(t_parsed, all_columns)
                     elif isinstance(t_parsed, list):
                         topup_rows = from_compact_json({"data": t_parsed}, all_columns) if t_parsed and isinstance(t_parsed[0], list) else t_parsed
                     else:
                         topup_rows = t_parsed.get("data", [])
+                        
                     if topup_rows:
                         final_data.extend(topup_rows)
+                        logger.info(f"[Top-up Loop {topup_round + 1} Success] Received {len(topup_rows)} valid rows. New Total: {len(final_data)}/{num_empty}.")
+                        consecutive_zeros = 0
                     else:
-                        logger.warning(f"Top-up {topup_round + 1} returned 0 rows. Stopping.")
-                        break
+                        consecutive_zeros += 1
+                        logger.warning(f"[Top-up Loop {topup_round + 1} Failure] Received 0 rows. (Consecutive failures: {consecutive_zeros})")
+                        if consecutive_zeros >= 5:
+                            logger.error(f"Top-up Loop halting. LLM consistently failing to return data after {consecutive_zeros} sequential errors.")
+                            break
+                            
                 except Exception as e:
-                    logger.warning(f"Top-up {topup_round + 1} failed: {e}. Stopping.")
-                    break
-            logger.info(f"Generation complete: {len(final_data)}/{num_empty} rows collected after top-ups.")
+                    logger.warning(f"Top-up Loop {topup_round + 1} suffered an exception error: {e}")
+                    consecutive_zeros += 1
+                    if consecutive_zeros >= 5:
+                        break
+                        
+                topup_round += 1
+                
+            if len(final_data) < num_empty:
+                logger.error(f"Generation fatally ended short: {len(final_data)}/{num_empty} rows generated. Limit reached or errors persisted.")
+            else:
+                logger.info(f"Algebraic Guarantee successfully satisfied: {len(final_data)}/{num_empty} rows strictly assembled.")
 
         # Trim to exact count in case of overshoot
         if num_empty > 0 and len(final_data) > num_empty:
@@ -720,18 +745,21 @@ class GeminiProvider(BaseLLMProvider):
 
                     # --- TOP-UP GUARANTEE ---
                     if num_empty > 0 and len(final_rows) < num_empty:
-                        max_topups = 5
-                        for topup_round in range(max_topups):
+                        logger.info(f"Gemini initial generation mapped securely. Deficit detected: have {len(final_rows)}/{num_empty}. Entering top-up loop...")
+                        max_topups = 50
+                        topup_round = 0
+                        consecutive_zeros = 0
+                        
+                        while len(final_rows) < num_empty and topup_round < max_topups:
                             shortfall = num_empty - len(final_rows)
-                            if shortfall <= 0:
-                                break
-                            logger.info(f"Gemini Top-up {topup_round + 1}/{max_topups}: have {len(final_rows)}/{num_empty} rows — requesting {shortfall} more.")
+                            to_request = min(chunk_size, shortfall)
+                            logger.info(f"[Gemini Top-up Loop {topup_round + 1}] Target: {num_empty} | Currently holds: {len(final_rows)}. Requesting exact deficit of {to_request}...")
                             
                             topup_prompt = prompt_manager.get_prompt(
                                 "generation_final",
                                 instructions=instructions,
                                 all_columns=all_columns,
-                                task_str=f"- Generate {shortfall} entirely NEW rows following the fed distribution patterns."
+                                task_str=f"- Generate {to_request} entirely NEW rows following the fed distribution patterns."
                             )
                             try:
                                 t_resp = self.model.generate_content(
@@ -746,7 +774,17 @@ class GeminiProvider(BaseLLMProvider):
                                 usage.candidates_token_count += t_usage.candidates_token_count
                                 usage.total_token_count += t_usage.total_token_count
 
-                                t_parsed = robust_json_loads(t_resp.text)
+                                try:
+                                    t_parsed = robust_json_loads(t_resp.text)
+                                except RobustJSONError:
+                                    consecutive_zeros += 1
+                                    logger.warning(f"[Gemini Top-up Loop {topup_round + 1}] JSON parsing failed completely. Yielding iteration. (Sequential errors: {consecutive_zeros})")
+                                    if consecutive_zeros >= 5:
+                                        logger.error(f"Gemini Top-up critical abort: {consecutive_zeros} sequential JSON parse failures.")
+                                        break
+                                    topup_round += 1
+                                    continue
+
                                 if isinstance(t_parsed, dict) and "cols" in t_parsed and "data" in t_parsed:
                                     t_rows = from_compact_json(t_parsed, all_columns)
                                 elif isinstance(t_parsed, dict) and "data" in t_parsed:
@@ -760,14 +798,26 @@ class GeminiProvider(BaseLLMProvider):
                                 
                                 if t_rows:
                                     final_rows.extend(t_rows)
+                                    logger.info(f"[Gemini Top-up {topup_round + 1} Success] Retrieved {len(t_rows)} valid arrays. New Total: {len(final_rows)}/{num_empty}")
+                                    consecutive_zeros = 0
                                 else:
-                                    logger.warning(f"Gemini Top-up {topup_round+1} returned zero rows.")
-                                    break
+                                    consecutive_zeros += 1
+                                    logger.warning(f"[Gemini Top-up {topup_round + 1} Failure] Received 0 rows. (Sequential zeros: {consecutive_zeros})")
+                                    if consecutive_zeros >= 5:
+                                        logger.error(f"Gemini Top-up critical abort: {consecutive_zeros} sequential failures from the model.")
+                                        break
                             except Exception as e:
-                                logger.warning(f"Gemini Top-up failed: {e}")
-                                break
+                                logger.warning(f"Exception during Gemini Top-up round {topup_round + 1}: {e}")
+                                consecutive_zeros += 1
+                                if consecutive_zeros >= 5:
+                                    break
+                                    
+                            topup_round += 1
                         
-                        logger.info(f"Gemini Generation complete: {len(final_rows)}/{num_empty} rows collected after top-ups.")
+                        if len(final_rows) < num_empty:
+                            logger.error(f"Gemini specific generation ended fatally short: {len(final_rows)}/{num_empty}")
+                        else:
+                            logger.info(f"Gemini Algebraic Constraint strictly met: {len(final_rows)}/{num_empty} records secured.")
 
                     # Trim to exact length in case of overshoot
                     if num_empty > 0 and len(final_rows) > num_empty:

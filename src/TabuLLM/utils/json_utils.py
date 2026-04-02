@@ -26,16 +26,62 @@ def robust_json_loads(text: str):
 
         # 2. Manual "fixed manner" fixes
         fixed = re.sub(r'\b(NaN|inf|-inf)\b', 'null', candidate)
+        
+        # Remove trailing commas causing JSONDecodeError
         fixed = re.sub(r',\s*\}', '}', fixed)
         fixed = re.sub(r',\s*\]', ']', fixed)
         
+        # Inject missing structural commas (e.g. LLM forgot comma between arrays or objects)
+        fixed = re.sub(r'\}\s*\{', '}, {', fixed)
+        fixed = re.sub(r'\]\s*\[', '], [', fixed)
+        
+        # Auto-close truncated JSON gracefully using a bracket stack
+        stripped = fixed.rstrip()
+        if stripped.endswith(','): 
+            stripped = stripped[:-1]
+            
+        stack = []
+        in_string = False
+        escape = False
+        for char in stripped:
+            if escape:
+                escape = False
+                continue
+            if char == '"':
+                in_string = not in_string
+            elif char == '\\':
+                escape = True
+            elif not in_string:
+                if char in '[{':
+                    stack.append(char)
+                elif char in ']}':
+                    if stack: stack.pop()
+        
+        closer = ''
+        while stack:
+            c = stack.pop()
+            closer += ']' if c == '[' else '}'
+            
+        fixed = stripped + closer
+
         if fixed != candidate:
             try:
                 val = json.loads(fixed)
-                logger.debug(f"JSON Parse Success: Stage='{stage_name}' (After Regex Fixes)")
+                logger.debug(f"JSON Parse Success: Stage='{stage_name}' (After Aggressive Regex Fixes)")
                 return val
             except json.JSONDecodeError:
                 pass
+                
+        # 3. Ultimate Fallback: Python AST evaluation handles single quotes and trailing syntax natively
+        try:
+            import ast
+            ast_str = fixed.replace('null', 'None').replace('true', 'True').replace('false', 'False')
+            val = ast.literal_eval(ast_str)
+            if isinstance(val, (list, dict)):
+                logger.debug(f"JSON Parse Success: Stage='{stage_name}' (AST Literal Eval Match)")
+                return val
+        except Exception:
+            pass
             
         return None
 

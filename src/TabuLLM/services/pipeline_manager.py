@@ -65,17 +65,24 @@ def run_single_dataset_benchmark(args):
                  p["status"] = f"Fold {fold_num}/{folds} - LLM Gen"
                  progress_dict[dataset_id_key] = p
                  
+            logger.info(f"[{filename} | Fold {fold_num}] Pre-Generation Geometry -> Train: {len(df_train_orig)} | Context: {n_context_rows} | Target Gen: {num_empty}")
+            
             result_bundle = generate_bulk_data([], context_dict, list(df_orig_all.columns), algorithm, instructions, temperature, num_empty=num_empty, chunk_size=chunk_size)
 
             if result_bundle:
                 generated_rows = result_bundle["data"]
+                test_data_list = df_test_orig.to_dict('records')
+                
                 for row in generated_rows: row["_fold_id"] = fold_num
+                for row in context_data_list: row["_fold_id"] = fold_num
+                for row in test_data_list: row["_fold_id"] = fold_num
                 
                 all_synthetic_data.extend(generated_rows)
-                test_data_list = df_test_orig.to_dict('records')
                 all_augmented_data.extend(context_data_list + generated_rows + test_data_list)
                 
                 df_aug_train = pd.concat([pd.DataFrame(context_data_list), pd.DataFrame(generated_rows)], ignore_index=True)
+                
+                logger.info(f"[{filename} | Fold {fold_num}] Post-Generation Geometry -> Target: {num_empty} | Generated: {len(generated_rows)} | Final Aug Train Size: {len(df_aug_train)} | Test Size: {len(df_test_orig)}")
                 
                 # Fidelity Metrics
                 m = calculate_metrics(df_orig_all, df_aug_train)
