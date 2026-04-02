@@ -70,7 +70,13 @@ def robust_json_loads(text: str):
                 logger.debug(f"JSON Parse Success: Stage='{stage_name}' (After Aggressive Regex Fixes)")
                 return val
             except json.JSONDecodeError:
-                pass
+                # Try wrapping in brackets if it looks like a sequence of objects
+                try:
+                    val = json.loads("[" + fixed + "]")
+                    logger.debug(f"JSON Parse Success: Stage='{stage_name}' (Bracket Wrap Fallback)")
+                    return val
+                except:
+                    pass
                 
         # 3. Ultimate Fallback: Python AST evaluation handles single quotes and trailing syntax natively
         try:
