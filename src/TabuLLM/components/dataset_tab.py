@@ -435,13 +435,16 @@ def create_dataset_tab(dataset_id, filename, df=None, saved_state=None, pipeline
                             dbc.Col([
                                 html.Div([
                                     html.I(className="bi bi-pencil-square me-1 text-info"),
-                                    dbc.Input(id={"type": "quick-rename-input", "index": dataset_id}, type="text", placeholder="Rename...", size="sm", className="bg-dark text-light border-secondary", style={"width": "160px", "display": "inline-block"}),
+                                    dbc.Input(id={"type": "quick-rename-input", "index": dataset_id}, type="text", value=filename, placeholder="Filename...", size="sm", className="bg-dark text-light border-secondary", style={"width": "140px", "display": "inline-block"}),
+                                    html.I(className="bi bi-bookmark-fill ms-3 me-1 text-warning"),
+                                    dbc.Input(id={"type": "session-name-input", "index": dataset_id}, type="text", value=saved_state.get("session_name", "Initial Experiment"), placeholder="Session Name...", size="sm", className="bg-dark text-warning border-secondary", style={"width": "120px", "display": "inline-block"}),
+                                    
                                     dbc.Button([html.I(className="bi bi-trash")], id={"type": "btn-remove-col", "index": dataset_id}, color="danger", size="sm", outline=True, className="ms-1 py-1 px-2"),
                                     dbc.Button([html.I(className="bi bi-search")], id={"type": "btn-inspect-row", "index": dataset_id}, color="warning", size="sm", outline=True, className="ms-2 py-1 px-2"),
                                     dbc.Button([html.I(className="bi bi-plus-square")], id={"type": "btn-add-row", "index": dataset_id}, color="success", size="sm", outline=True, className="ms-2 py-1 px-2"),
                                     dbc.Button([html.I(className="bi bi-layout-three-columns")], id={"type": "btn-add-col", "index": dataset_id}, color="info", size="sm", outline=True, className="ms-1 py-1 px-2"),
                                 ], className="d-flex align-items-center")
-                            ], md=4, className="d-flex align-items-center"),
+                            ], md=6, className="d-flex align-items-center"),
 
                             dbc.Col([
                                 html.Div([
@@ -454,7 +457,7 @@ def create_dataset_tab(dataset_id, filename, df=None, saved_state=None, pipeline
                                     dbc.Button([html.I(className="bi bi-file-earmark-spreadsheet")], id={"type": "btn-export", "index": dataset_id}, color="light", outline=True, size="sm", className="ms-2"),
                                     dbc.Button([html.I(className="bi bi-file-earmark-pdf")], id={"type": "btn-export-pdf", "index": dataset_id}, color="light", outline=True, size="sm", className="ms-1"),
                                 ], className="d-flex align-items-center")
-                            ], md=8, className="d-flex align-items-center justify-content-end")
+                            ], md=6, className="d-flex align-items-center justify-content-end")
                         ])
                     ], className="bg-dark border-bottom-0 p-2"),
 

@@ -8,11 +8,17 @@ from utils.logging_config import logger
 from components.dataset_tab import create_dataset_tab
 from services.data_manager import parse_uploaded_file, df_to_aggrid_format
 from utils.constants import ai_highlight_style
+from services.session_manager import SessionManager
 
 @app.callback(
-    Output("tabs-datasets", "children"),
-    Output("datasets-metadata-store", "data"),
+    Output("tabs-datasets", "children", allow_duplicate=True),
+    Output("datasets-metadata-store", "data", allow_duplicate=True),
     Output("tabs-datasets", "value", allow_duplicate=True),
+    Output("session-browser-modal", "is_open"),
+    Output("session-browser-list", "children"),
+    Output("pending-upload-hash-store", "data"),
+    Output("pending-upload-contents-store", "data"),
+    Output("pending-upload-filename-store", "data"),
     Input("upload-data", "contents"),
     State("upload-data", "filename"),
     State("tabs-datasets", "children"),
@@ -21,19 +27,43 @@ from utils.constants import ai_highlight_style
 )
 def handle_multiple_uploads_pm(list_of_contents, list_of_filenames, current_tabs, metadata):
     if not list_of_contents:
-        return dash.no_update, dash.no_update, dash.no_update
+        return dash.no_update, dash.no_update, dash.no_update, False, [], None, None, None
 
     metadata = metadata or {}
     new_tabs = list(current_tabs or [])
     last_id = None
     
     logger.info(f"[IO] Processing {len(list_of_contents)} upload(s)...")
+    
     for contents, filename in zip(list_of_contents, list_of_filenames):
+        ds_hash = SessionManager.get_dataset_hash(contents)
+        sessions = SessionManager.list_sessions(ds_hash)
+        
+        if sessions:
+            # INTERRUPT: Show Selection Modal
+            list_items = []
+            for s in sessions:
+                list_items.append(dbc.Card([
+                    dbc.CardBody([
+                        dbc.Row([
+                            dbc.Col([
+                                html.H6(s['name'], className="mb-0 fw-bold"),
+                                html.Small(f"Modified: {s['modified_at']} | Rows: {s['row_count']}", className="text-muted")
+                            ], width=8),
+                            dbc.Col(dbc.Button("Resume", id={"type": "btn-resume-session", "hash": ds_hash, "session": s['id']}, 
+                                               color="primary", size="sm", className="w-100 rounded-pill"), width=4)
+                        ], align="center")
+                    ], className="p-2")
+                ], className="mb-2 bg-dark border-secondary shadow-sm"))
+
+            return dash.no_update, dash.no_update, dash.no_update, True, list_items, ds_hash, contents, filename
+
+        # ELSE: Clean upload
         dataset_id = str(uuid.uuid4())
         try:
             df = parse_uploaded_file(contents, filename)
             if df is not None and not df.empty:
-                logger.info(f"[IO] Successfully parsed '{filename}' -> {df.shape[0]} rows, {df.shape[1]} cols.")
+                logger.info(f"[IO] Successfully parsed '{filename}' (Clean) -> {df.shape[0]} rows.")
                 new_tab = create_dataset_tab(dataset_id, filename, df=df)
                 new_tabs.append(new_tab)
                 
@@ -41,7 +71,8 @@ def handle_multiple_uploads_pm(list_of_contents, list_of_filenames, current_tabs
                     "filename": filename,
                     "status": "Ready",
                     "rows": df.shape[0],
-                    "cols": df.shape[1]
+                    "cols": df.shape[1],
+                    "hash_id": ds_hash
                 }
                 last_id = dataset_id
             else:
@@ -49,7 +80,7 @@ def handle_multiple_uploads_pm(list_of_contents, list_of_filenames, current_tabs
         except Exception as e:
             logger.error(f"[IO] Error processing upload '{filename}': {e}")
 
-    return new_tabs, metadata, last_id if last_id else dash.no_update
+    return new_tabs, metadata, (last_id if last_id else dash.no_update), False, [], None, None, None
 
 
 @app.callback(
@@ -72,7 +103,6 @@ def manage_delete_modal_pm(n_delete, n_cancel, n_confirm, metadata, is_open):
     
     if "btn-delete-dataset" in trig_id:
         if not trig_value: return dash.no_update
-        # Pattern-matched ID is a JSON string in prop_id
         try:
             btn_id_json = trig_id.split(".")[0]
             btn_id = json.loads(btn_id_json)
@@ -137,6 +167,9 @@ def confirm_delete_dataset_pm(n_clicks, delete_id, current_tabs, metadata, curre
             new_value = None
             logger.info(f"[UI] All datasets cleared. Workbench empty.")
 
+    # 4. IMMEDIATE PERSISTENCE SYNC
+    SessionManager.sync_global_session(metadata)
+
     return new_tabs, metadata, new_value
 
 
@@ -194,8 +227,6 @@ def inspect_selected_rows_pm(n_clicks, selected_rows, algo):
     
     for audit_str, rows in batches.items():
         parts = audit_str.split(" | ")
-        
-        # Determine contents based on legacy format or new format
         if len(parts) >= 4:
             model = parts[1]
             tokens = parts[2]
@@ -227,3 +258,71 @@ def inspect_selected_rows_pm(n_clicks, selected_rows, algo):
         ], className="mb-3 bg-transparent border-secondary shadow-sm"))
         
     return True, html.Div(children)
+
+
+@app.callback(
+    Output("tabs-datasets", "children", allow_duplicate=True),
+    Output("datasets-metadata-store", "data", allow_duplicate=True),
+    Output("tabs-datasets", "value", allow_duplicate=True),
+    Output("session-browser-modal", "is_open", allow_duplicate=True),
+    Input({"type": "btn-resume-session", "hash": ALL, "session": ALL}, "n_clicks"),
+    Input("btn-session-start-fresh", "n_clicks"),
+    Input("btn-session-cancel", "n_clicks"),
+    State("pending-upload-hash-store", "data"),
+    State("pending-upload-contents-store", "data"),
+    State("pending-upload-filename-store", "data"),
+    State("tabs-datasets", "children"),
+    State("datasets-metadata-store", "data"),
+    prevent_initial_call=True
+)
+def handle_session_choice_pm(n_resume, n_fresh, n_cancel, 
+                            ds_hash, contents, filename, current_tabs, metadata):
+    ctx = dash.callback_context
+    if not ctx.triggered: return dash.no_update
+    
+    trig_id = ctx.triggered[0]["prop_id"]
+    trig_val = ctx.triggered[0]["value"]
+    
+    # Validation: Ensure it was a real click, not just a layout update
+    if trig_val is None or trig_val == 0:
+        return dash.no_update
+    
+    # 1. Cancel
+    if "btn-session-cancel" in trig_id:
+        return dash.no_update, dash.no_update, dash.no_update, False
+        
+    metadata = metadata or {}
+    new_tabs = list(current_tabs or [])
+    dataset_id = str(uuid.uuid4())
+    saved_state = None
+    
+    if "btn-resume-session" in trig_id:
+        try:
+            btn_id = json.loads(trig_id.split(".")[0])
+            session_id = btn_id["session"]
+            hash_id = btn_id["hash"]
+            saved_state = SessionManager.load_session(hash_id, session_id)
+        except Exception as e:
+            logger.error(f"[SESSION] Error in resumption selection: {e}")
+
+    try:
+        df = parse_uploaded_file(contents, filename)
+        if df is None or df.empty:
+            return dash.no_update, dash.no_update, dash.no_update, False
+            
+        new_tab = create_dataset_tab(dataset_id, filename, df=df, saved_state=saved_state)
+        new_tabs.append(new_tab)
+        
+        metadata[dataset_id] = {
+            "filename": filename,
+            "hash_id": ds_hash,
+            "session_id": dataset_id,
+            "status": "Resumed" if saved_state else "Ready",
+            "rows": df.shape[0],
+            "cols": df.shape[1]
+        }
+    except Exception as e:
+        logger.error(f"[SESSION] Data parsing error during reconstruction: {e}")
+        return dash.no_update, dash.no_update, dash.no_update, False
+
+    return new_tabs, metadata, dataset_id, False

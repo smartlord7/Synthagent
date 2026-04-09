@@ -206,3 +206,6 @@ marimo/_static/
 marimo/_lsp/
 __marimo__/
 src/TabuLLM/cache/
+src/TabuLLM/dataset_sessions/d04de13f35a4fcb1843a7b7be240e5c02bd4777c4d89b40dd233997875848e46/c127bb2f-b884-48b0-ba5d-382517facba5.json
+src/TabuLLM/dataset_sessions/d04de13f35a4fcb1843a7b7be240e5c02bd4777c4d89b40dd233997875848e46/dc3d091b-b530-4d58-bbdd-aa68f647381a.json
+src/TabuLLM/workspace_session.json

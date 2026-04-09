@@ -3,6 +3,7 @@ import dash
 from dash import Input, Output, State, ALL
 from core import app
 from utils.logging_config import logger
+from services.session_manager import SessionManager
 
 @app.callback(
     Output("session-toast-container", "children"),
@@ -26,20 +27,22 @@ from utils.logging_config import logger
     State("pipeline-config-store", "data"),
     State("report-config-store", "data"),
     State({"type": "original-data-store", "index": ALL}, "id"),
+    State({"type": "session-name-input", "index": ALL}, "value"),
     prevent_initial_call=True
 )
 def save_workspace_session(n_clicks, metadata, pipeline_results,
                            all_orig, all_grid, all_desc, all_targets, all_algo, all_tone, all_consistency,
                            all_temp, all_chunk, all_max_ctx, all_strategy,
                            all_roles, all_ml_config, all_bench, 
-                           pipeline_config, report_config, all_ids):
+                           pipeline_config, report_config, all_ids, all_names):
     if not n_clicks: return dash.no_update
     
     # Pack tabs data
     tabs = {}
     for i, _id_obj in enumerate(all_ids):
         d_id = _id_obj["index"]
-        tabs[d_id] = {
+        dataset_state = {
+            "session_name": all_names[i] if i < len(all_names) else "Initial Experiment",
             "original-data-store": all_orig[i] if i < len(all_orig) else None,
             "data-grid": all_grid[i] if i < len(all_grid) else None,
             "dataset-description-store": all_desc[i] if i < len(all_desc) else "",
@@ -53,8 +56,18 @@ def save_workspace_session(n_clicks, metadata, pipeline_results,
             "gen-context-strategy": all_strategy[i] if i < len(all_strategy) else "random",
             "column-roles-store": all_roles[i] if i < len(all_roles) else {"targets": []},
             "ml-config-store": all_ml_config[i] if i < len(all_ml_config) else {},
-            "bench-state-store": all_bench[i] if i < len(all_bench) else {"active": False, "k_total": 0, "k_current": 0, "fraction": 0.2, "results": []}
+            "bench-state-store": all_bench[i] if i < len(all_bench) else {"active": False, "k_total": 0, "k_current": 0, "fraction": 0.2, "results": []},
+            "row_count": len(all_orig[i]) if i < len(all_orig) and all_orig[i] else 0,
+            "synthetic_count": len([r for r in all_grid[i] if r.get('ai_audit')]) if i < len(all_grid) and all_grid[i] else 0
         }
+        tabs[d_id] = dataset_state
+
+        # --- PERSIST INDIVIDUAL SESSION ARCHIVE ---
+        ds_meta = (metadata or {}).get(d_id, {})
+        ds_hash = ds_meta.get("hash_id")
+        if ds_hash:
+            # We use the dataset_id (UUID) as the session file ID
+            SessionManager.save_session(ds_hash, d_id, dataset_state)
         
     session_data = {
         "metadata": metadata or {},

@@ -39,6 +39,9 @@ def create_layout():
         dcc.Store(id="active-tab-store"),
         dcc.Store(id="pipeline-results-store", data=pipeline_results),
         dcc.Store(id="pipeline-config-store", data=pipeline_config if 'pipeline_config' in locals() else {}),
+        dcc.Store(id="pending-upload-hash-store"),
+        dcc.Store(id="pending-upload-contents-store"),
+        dcc.Store(id="pending-upload-filename-store"),
 
         # Global Report Settings Modal (Selection & Detail Config)
         create_report_settings_modal(report_config if 'report_config' in locals() else None),
@@ -105,16 +108,31 @@ def create_layout():
             dbc.Modal([
                 dbc.ModalHeader(dbc.ModalTitle([html.I(className="bi bi-exclamation-triangle-fill me-2 text-danger"), "Confirm Removal"])),
                 dbc.ModalBody([
-                    html.P("Are you sure you want to remove this dataset?", className="mb-1"),
+                    html.P("Remove this dataset from the current workbench?", className="mb-1"),
                     html.P(id="delete-dataset-name", className="fw-bold text-info small"),
-                    html.P("All associated configurations, synthetic data, and metrics will be permanently cleared.", className="text-muted small"),
+                    html.P("The session remains archived. You can resume it later by re-uploading the same file.", className="text-muted small"),
                     dcc.Store(id="pending-delete-id-store")
                 ]),
                 dbc.ModalFooter([
                     dbc.Button("Cancel", id="btn-cancel-delete", color="secondary", outline=True, size="sm"),
-                    dbc.Button("Remove", id="btn-confirm-delete", color="danger", size="sm", className="ms-2")
+                    dbc.Button("Remove from View", id="btn-confirm-delete", color="danger", size="sm", className="ms-2")
                 ]),
             ], id="delete-dataset-modal", centered=True, backdrop="static"),
+
+            # Session Browser Modal
+            dbc.Modal([
+                dbc.ModalHeader(dbc.ModalTitle([html.I(className="bi bi-folder2-open me-2 text-info"), "Resume or Branch Session"])),
+                dbc.ModalBody([
+                    html.P("We found previous work-sessions for this dataset. Would you like to resume an existing experiment or start a clean slate?", className="small text-muted mb-3"),
+                    html.Div(id="session-browser-list", className="mb-3", style={"maxHeight": "400px", "overflowY": "auto"}),
+                    html.Hr(className="border-secondary"),
+                    dbc.Button([html.I(className="bi bi-plus-circle me-2"), "Start Clean / New Session"], 
+                               id="btn-session-start-fresh", color="success", className="w-100 rounded-pill shadow-sm")
+                ], className="bg-dark text-light p-4"),
+                dbc.ModalFooter(
+                    dbc.Button("Cancel Upload", id="btn-session-cancel", color="secondary", outline=True, size="sm")
+                )
+            ], id="session-browser-modal", centered=True, size="lg", backdrop="static"),
 
             dcc.Tabs(id="tabs-datasets", value=list(metadata.keys())[0] if metadata else "default-dataset", children=tabs_children, 
                      className="custom-tabs border-bottom border-secondary bg-dark text-light mb-0"),
