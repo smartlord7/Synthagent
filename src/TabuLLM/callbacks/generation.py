@@ -5,7 +5,7 @@ import dash
 from dash import Input, Output, State, ALL, MATCH
 from core import app
 from utils.logging_config import logger
-from services.llm_client import generate_bulk_data, provider
+from services.llm_client import generate_bulk_data, get_available_models
 from dash import callback_context
 from utils.json_utils import to_compact_json
 from services.data_manager import select_context_rows
@@ -26,8 +26,8 @@ def refresh_local_models(n_clicks, current_value, existing_options):
     
     # 1. Fetch info if Refresh clicked or initial load
     if "btn-refresh-models" in triggered or not triggered:
-        models_info = provider.get_available_models()
-        options = [{"label": m["id"].split("/")[-1].title(), "value": m["id"]} for m in models_info]
+        models_info = get_available_models()
+        options = [{"label": m["id"].split("/")[-1].replace("-", " ").title(), "value": m["id"]} for m in models_info]
         ids = [m["id"] for m in models_info]
         new_value = current_value if current_value in ids else (ids[0] if ids else None)
     else:
@@ -60,18 +60,28 @@ def sync_max_context_range(row_data, current_val):
     
     return new_max, current_val
 
-def _build_instructions(tone, consistency, names, types, texts, mins, maxs):
+def _build_instructions(tone, consistency, names, types, texts, mins, maxs, all_headers):
     """Compile rules and parameters into a string and a structured metadata list."""
-    header = f"Style: {tone}\nConsistency: {consistency}\n"
     rules_text = []
     rules_metadata = []
+    
+    # Identify Generic Columns for Active Target Tagging
+    generic_targets = []
+    for h in all_headers:
+        low_h = str(h).lower().strip()
+        if low_h == "new column" or low_h.startswith("column_") or low_h.startswith("col_"):
+            generic_targets.append(h)
+
+    header = f"Style: {tone}\nConsistency: {consistency}\n"
+    if generic_targets:
+        targets_str = ", ".join([f"'{t}'" for t in generic_targets])
+        header += f"MANDATORY SCHEMA EVOLUTION: The columns [{targets_str}] are temporary placeholders and MUST be given specific, semantically relevant names.\n"
     
     for i in range(len(names)):
         if names[i]:
             detail = texts[i] if types[i] != 'number' else f"Min:{mins[i]}, Max:{maxs[i]}"
             rules_text.append(f"- Rule [{names[i]}]: {detail}")
             
-            # Create structured metadata for RuleValidator
             rules_metadata.append({
                 "name": names[i],
                 "type": types[i],
@@ -89,14 +99,16 @@ def _prepare_context(row_data, context_ids, full_ctx_toggle, strategy, max_rows,
     fields = {c['field']: c.get('headerName', c['field']) for c in col_defs
              if c['field'] not in ['ai_audit', '_row_id'] and not c['field'].startswith('is_ai_')}
     
-    # Manual Context
-    manual_df = df[df['_row_id'].isin(context_ids or [])].drop(columns=['_row_id', 'is_context', 'is_target'], errors='ignore')
-    manual_records = manual_df.to_dict('records')
-    for r in manual_records:
-        for k, v in list(r.items()):
-            if k in fields:
-                r[fields[k]] = v
-                del r[k]
+    # Manual Context extraction
+    manual_rows = [r for r in row_data if r.get('_row_id') in (context_ids or [])]
+    manual_records = []
+    
+    for row in manual_rows:
+        record = {}
+        for f, h in fields.items():
+            # Get value, default to None if column is brand new and missing from dict
+            record[h] = row.get(f)
+        manual_records.append(record)
     
     logger.info(f"Context Prep: Found {len(manual_records)} manual (Blue) reference rows.")
     
@@ -104,10 +116,13 @@ def _prepare_context(row_data, context_ids, full_ctx_toggle, strategy, max_rows,
     global_sample = []
     if full_ctx_toggle:
         logger.info(f"Context Prep: Sampling {max_rows} rows using strategy '{strategy}'.")
-        df_clean = df.copy()
-        for k in ['_row_id', 'is_context', 'is_target', 'ai_audit']:
-            if k in df_clean.columns: df_clean.drop(columns=[k], inplace=True)
-        df_clean = df_clean.rename(columns=fields)
+        # Pre-process row_data to ensure all fields exist (Inflation)
+        inflated_data = []
+        for r in row_data:
+            nr = {f: r.get(f) for f in fields.keys()}
+            inflated_data.append(nr)
+            
+        df_clean = pd.DataFrame(inflated_data).rename(columns=fields)
         global_sample = select_context_rows(df_clean, strategy=strategy, n_rows=max_rows or 100)
     else:
         logger.info("Context Prep: Global context strategy is OFF.")
@@ -121,79 +136,72 @@ def _prepare_context(row_data, context_ids, full_ctx_toggle, strategy, max_rows,
     }
 
 def _map_targets(row_data, target_ids, headers):
-    """Identify which rows need completion vs generation."""
+    """Identify which rows need completion vs generation and track indices with provider-parity order."""
     payload = []
-    indices = []
-    empty_count = 0
-    header_to_field = {h: f for f, h in headers.items()} # headers is map from prepare_context
+    partial_indices = []
+    empty_indices = []
+    header_to_field = {h: f for f, h in headers.items()}
     
     for t_id in target_ids:
         idx = next((i for i, r in enumerate(row_data) if r.get('_row_id') == t_id), -1)
         if idx == -1: continue
         
         row = row_data[idx]
+        # Check if row has any existing data as guidance
         guidance = {h: row.get(f) for h, f in header_to_field.items() 
                     if row.get(f) not in [None, "", "NaN"]}
         
-        indices.append(idx)
-        if guidance: payload.append(guidance)
-        else: empty_count += 1
+        if guidance:
+            payload.append(guidance)
+            partial_indices.append(idx)
+        else:
+            empty_indices.append(idx)
+    
+    # Combined indices must match the LLM provider's return order: Partials then New
+    combined_indices = partial_indices + empty_indices
+    empty_count = len(empty_indices)
     
     logger.info(f"Target Mapping: {len(payload)} partial rows, {empty_count} entirely new rows.")
-    return payload, indices, empty_count
+    return payload, combined_indices, empty_count
 
-def _process_results(rows, indices, bundle, algo, headers_map):
-    """Integrate LLM tokens back into raw data strings/numbers. Handles partial successes."""
-    if not bundle: 
-        logger.error("Result Processing: No result bundle received from LLM engine.")
+def _process_results(rows, target_indices, result_bundle, algo, all_fields):
+    """Integrate LLM rows into the local grid rowData using strict positional mapping."""
+    if not result_bundle:
+        logger.error("Result Processing: No result bundle received.")
         return rows
+        
+    rows_from_llm = result_bundle.get('data', [])
+    ts = datetime.now().strftime("%H:%M:%S")
     
-    data = bundle["data"]
-    stats = bundle["stats"]
-    field_map = {h: f for f, h in headers_map.items()}
-    ts = datetime.now().strftime("%Y-%m-%d %H:%M")
-
-    logger.info(f"Result Processing: Integrating {len(data)} generated rows. (Expected {len(indices)})")
-
-    # Keep track of which indices were actually filled
-    filled_indices = set()
-
-    for i, gen_row in enumerate(data):
-        if i >= len(indices): break
-        idx = indices[i]
-        filled_indices.add(idx)
-        
-        rows[idx]['ai_audit'] = f"Gen AI | {algo} | {stats['total_tokens']} tok | {ts}"
-        
-        for header, val in gen_row.items():
-            if header in field_map:
-                f = field_map[header]
-                # Light sanitization
-                clean_val = val
-                if isinstance(val, str):
-                    s = val.replace('$', '').replace(',', '').strip()
-                    try: 
-                        clean_val = float(s) if '.' in s else int(s)
-                    except: pass
-                
-                # Update only if currently empty
-                if str(rows[idx].get(f)) in [None, "", "NaN", "None"]:
+    # Integration logic: LLM Row 1 -> Target Index 1
+    for i, idx in enumerate(target_indices):
+        if i < len(rows_from_llm):
+            new_row_data = rows_from_llm[i]
+            
+            # Use ALL_FIELDS (the list of unique IDs) to map data
+            # Since from_compact_json was called with all_fields, new_row_data keys are field IDs
+            for f in all_fields:
+                val = new_row_data.get(f)
+                if val is not None:
+                    # Clean and Inject
+                    clean_val = str(val).strip()
+                    if clean_val.replace('.', '').replace('-', '').isdigit():
+                        try: clean_val = float(clean_val) if '.' in clean_val else int(clean_val)
+                        except: pass
                     rows[idx][f] = clean_val
                     rows[idx][f"is_ai_{f}"] = True
-        
-        rows[idx]['is_target'] = False
-
-    # Mark failed rows in the audit
-    for i, idx in enumerate(indices):
-        if idx not in filled_indices:
-            rows[idx]['ai_audit'] = f"FAILED | {algo} | Turn timed out or socket reset | {ts}"
-            # We keep is_target=True so they stay red and visible
-
+            
+            # Metadata update
+            rows[idx]['is_target'] = False
+            rows[idx]['is_context'] = True 
+            rows[idx]['ai_audit'] = f"GEN | {algo} | {ts}"
+            
     return rows
 
 # --- THE MASTER AI GENERATION ENGINE ---
 @app.callback(
     Output({'type': 'data-grid', 'index': MATCH}, 'rowData', allow_duplicate=True),
+    Output({'type': 'data-grid', 'index': MATCH}, 'columnDefs', allow_duplicate=True),
     Output({'type': 'target-row-ids', 'index': MATCH}, 'data', allow_duplicate=True),
     Input({'type': 'btn-generate', 'index': MATCH}, 'n_clicks'),
     State({'type': 'data-grid', 'index': MATCH}, 'rowData'),
@@ -224,15 +232,21 @@ def run_ai_generation_pm(n_clicks, row_data, target_ids, context_ids, full_ctx,
                          cp_texts, cp_mins, cp_maxs, desc, chunk_sz, max_c, strat, enforce_rules, enforce_boundaries):
 
     if not n_clicks or not target_ids:
-        return dash.no_update, dash.no_update
+        return dash.no_update, dash.no_update, dash.no_update
 
     logger.info(f"--- STARTING TABULLM GENERATION PIPELINE ({len(target_ids)} targets) ---")
 
     # 1. Rules aggregation
-    inst, user_rules = _build_instructions(tone, consistency, cp_names, cp_types, cp_texts, cp_mins, cp_maxs)
+    all_headers = [c.get('headerName', c['field']) for c in col_defs]
+    inst, user_rules = _build_instructions(tone, consistency, cp_names, cp_types, cp_texts, cp_mins, cp_maxs, all_headers)
     
-    # Infer rules from current dataset
-    inferred_rules = RuleInference.infer_dataset_rules(pd.DataFrame(row_data))
+    # Infer rules from current dataset — ensure columns are preserved for empty sets
+    all_fields = [c['field'] for c in col_defs if c['field'] not in ['ai_audit', '_row_id']]
+    df_for_rules = pd.DataFrame(row_data)
+    if df_for_rules.empty:
+        df_for_rules = pd.DataFrame(columns=all_fields)
+    
+    inferred_rules = RuleInference.infer_dataset_rules(df_for_rules)
     
     # Hierarchical rules: Integrity (Level 1), Boundaries (Level 2), User (Level 3)
     # We pass all of them, but also pass the toggles to decide which are 'Hard'
@@ -252,19 +266,41 @@ def run_ai_generation_pm(n_clicks, row_data, target_ids, context_ids, full_ctx,
 
     # 2. Execution
     result_bundle = generate_bulk_data(
-            payload, ctx, ctx['column_headers'], algo, inst, temp,
+            payload, ctx, ctx['column_headers'], all_fields, algo, inst, temp,
             num_empty=empty_count, chunk_size=chunk_sz, 
             rules_metadata=rules_hierarchy, enforce_rules=True
         )
 
     # 3. Post-processing
-    updated_rows = _process_results(list(row_data), target_indices, result_bundle, algo, ctx['header_to_field'])
+    updated_rows = _process_results(list(row_data), target_indices, result_bundle, algo, all_fields)
     
+    # 3b. Apply Schema Updates (Column Renaming)
+    updated_cols = list(col_defs)
+    schema_updates = result_bundle.get("schema_updates", {})
+    if schema_updates:
+        logger.info(f"Schema Evolution: Applying {len(schema_updates)} automated renames.")
+        def _canonical(s):
+            return str(s).lower().replace("_", "").replace(" ", "").strip()
+            
+        for old_name, new_name in schema_updates.items():
+            canon_old = _canonical(old_name)
+            for col in updated_cols:
+                # Match by headerName or field using canonical comparison
+                h_name = col.get("headerName")
+                f_name = col.get("field")
+                if _canonical(h_name) == canon_old or _canonical(f_name) == canon_old:
+                    logger.info(f"Schema Evolution: Refined '{h_name}' to '{new_name}'")
+                    col["headerName"] = new_name
+                    # Highlight the renamed column visually
+                    from utils.constants import ai_highlight_style
+                    col["cellStyle"] = ai_highlight_style
+                    break
+
     # Identify remaining targets (those that are still marked as targets)
     remaining = [r['_row_id'] for r in updated_rows if r.get('is_target') and r['_row_id'] in target_ids]
     
     logger.info(f"--- GENERATION PIPELINE FINISHED. Successfully processed {len(target_ids) - len(remaining)}/{len(target_ids)} rows. ---")
-    return updated_rows, remaining
+    return updated_rows, updated_cols, remaining
 
 
 @app.callback(

@@ -164,8 +164,12 @@ def to_compact_json(data: list, cols: list) -> dict:
         "data": [[row.get(col) for col in cols] for row in data]
     }
 
-def from_compact_json(compact_data: dict, fallback_cols: list = None) -> list:
-    """Converts a compact columnar format back to a list of dicts."""
+def from_compact_json(compact_data: dict, fallback_cols: list, h_to_f: dict = None) -> list:
+    """
+    Unpacks a compact JSON object into a list of dicts.
+    fallback_cols: The list of Field IDs (primary keys) to ensure result dicts are keyed by these.
+    h_to_f: (Optional) Map of Header Name -> Field ID to bridge AI names back to internal IDs.
+    """
     if not isinstance(compact_data, dict):
         # Fallback if list returned directly
         if isinstance(compact_data, list):
@@ -173,8 +177,38 @@ def from_compact_json(compact_data: dict, fallback_cols: list = None) -> list:
              return compact_data
         return []
         
-    cols = compact_data.get("cols", fallback_cols)
-    if not cols:
+    # If the LLM returned its own 'cols' list, we try to match them to the fallback_cols
+    # safely (handling case-insensitivity or small typos).
+    actual_cols = compact_data.get("cols")
+    mapping_keys = []
+    
+    if actual_cols and fallback_cols:
+        # 1. Try Strict Ordinal mapping (Gold Standard for robustness)
+        if len(actual_cols) == len(fallback_cols):
+            mapping_keys = fallback_cols
+            logger.debug(f"JSON Transform: Using strict ordinal mapping into {len(mapping_keys)} unique fields.")
+        else:
+            # 2. Try Header-to-Field Bridge (Silver Standard for mismatched counts)
+            logger.warning(f"JSON Transform: Length mismatch ({len(actual_cols)} vs {len(fallback_cols)}). Using Fuzzy Bridge.")
+            # Build normalized maps
+            norm_to_canonical = {str(c).strip().lower(): c for c in fallback_cols}
+            bridge_norm = {str(h).strip().lower(): f for h, f in (h_to_f.items() if h_to_f else {})}
+            
+            for ac in actual_cols:
+                ac_norm = str(ac).strip().lower()
+                # Priority 1: Check if it's already a Field ID (fallback_cols)
+                if ac_norm in norm_to_canonical:
+                    mapping_keys.append(norm_to_canonical[ac_norm])
+                # Priority 2: Check if it's a known Header that maps to a Field ID
+                elif ac_norm in bridge_norm:
+                    mapping_keys.append(bridge_norm[ac_norm])
+                # Priority 3: Keep original name (last resort)
+                else:
+                    mapping_keys.append(ac)
+    else:
+        mapping_keys = fallback_cols or actual_cols
+
+    if not mapping_keys:
         logger.warning("JSON Transform: No columns found for Unpacking.")
         return []
         
@@ -182,8 +216,23 @@ def from_compact_json(compact_data: dict, fallback_cols: list = None) -> list:
     if not isinstance(rows, list):
         return []
     
-    logger.info(f"JSON Transform: Successfully unpacked {len(rows)} rows from Compact JSON.")
-    # Detect if data is already a list of dicts (v3/v4 format) or list of lists (compact format)
-    if rows and isinstance(rows[0], dict):
-        return rows
-    return [dict(zip(cols, row)) for row in rows]
+    logger.info(f"JSON Transform: Successfully unpacked {len(rows)} rows from Compact JSON using {len(mapping_keys)} identifying keys.")
+    
+    # Standardize result into a list of dicts using canonical mapping_keys
+    final_output = []
+    for row in rows:
+        if isinstance(row, dict):
+            norm_item = {str(k).strip().lower(): v for k, v in row.items()}
+            new_item = {}
+            # Use the derived mapping_keys to pull from the normalized AI dict
+            # mapping_keys are Field IDs if the bridge succeeded
+            for target_col in mapping_keys:
+                new_item[target_col] = norm_item.get(str(target_col).lower(), row.get(target_col))
+            final_output.append(new_item)
+        elif isinstance(row, list):
+            # Zip it with the derived mapping_keys (positional alignment)
+            final_output.append(dict(zip(mapping_keys, row)))
+        else:
+            final_output.append(row)
+            
+    return final_output

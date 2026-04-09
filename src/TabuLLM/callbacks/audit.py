@@ -4,7 +4,7 @@ from dash import Input, Output, State, MATCH, html, dcc
 import dash_bootstrap_components as dbc
 from core import app
 from services.auditor import auditor
-from services.llm_client import provider
+from services.llm_client import call_llm
 from services.prompt_manager import prompt_manager
 from utils.logging_config import logger
 
@@ -230,7 +230,7 @@ def ponder_audit_strategy(n_clicks, row_data, targets, algo, temp):
     # 3. Call LLM
     try:
         logger.info(f"AI Pondering: Generating Ethics-Aware Strategy using {algo}")
-        response = provider.call_llm(
+        response = call_llm(
             messages=[{"role": "user", "content": prompt}],
             model_id=algo,
             temperature=temp

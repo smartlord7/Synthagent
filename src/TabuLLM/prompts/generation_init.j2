@@ -1,5 +1,9 @@
 BACKGROUND CONTEXT:
 Metadata Analysis: {{ meta }}
 
-Manual/Reference Examples (Compact Format):
+{% if compact_manual_json == '[]' or not compact_manual_json %}
+REFERENCE DATA: No reference rows provided. This is a Zero-Shot generation task.
+{% else %}
+REFERENCE DATA (Compact Format):
 {{ compact_manual_json }}
+{% endif %}

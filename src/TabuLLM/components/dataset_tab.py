@@ -226,7 +226,10 @@ def create_dataset_tab(dataset_id, filename, df=None, saved_state=None, pipeline
                                                 id={"type": "dataset-description-edit", "index": dataset_id},
                                                 placeholder="Enter dataset description or click 'Insights'...",
                                                 className="bg-dark text-light small",
-                                                style={"height": "100px", "fontSize": "0.8rem"}
+                                                style={"height": "100px", "fontSize": "0.8rem"},
+                                                debounce=True,
+                                                persistence=True,
+                                                persistence_type="session"
                                             ),
                                             id={"type": "dataset-description-edit-container", "index": dataset_id},
                                             style={"display": "none"}
@@ -353,9 +356,10 @@ def create_dataset_tab(dataset_id, filename, df=None, saved_state=None, pipeline
                                             dbc.Button([html.I(className="bi bi-arrow-clockwise")], id={"type": "btn-refresh-models", "index": dataset_id}, color="success", size="sm", outline=True, className="py-0 px-2 rounded-pill ms-2", title="Sync with LM Studio")
                                         ], className="d-flex align-items-center mb-1"),
                                         dbc.Select(id={"type": "algo-selector", "index": dataset_id},
-                                                   options=[{"label": "Gemma-3-4b", "value": "google/gemma-3-4b"},
-                                                            {"label": "Llama-3.1-8b", "value": "meta/llama-3.1-8b"},
-                                                            {"label": "Gemma-2-9b", "value": "google/gemma-2-9b"}],
+                                                   options=[{"label": "Gemma 3 4B (Local)", "value": "google/gemma-3-4b"},
+                                                            {"label": "Llama 3.1 8B (Local)", "value": "meta/llama-3.1-8b"},
+                                                            {"label": "Gemini 2.0 Flash", "value": "gemini-2.0-flash"},
+                                                            {"label": "Gemini 1.5 Flash", "value": "gemini-1.5-flash"}],
                                                    value=saved_state.get('algo-selector', 'google/gemma-3-4b'), size="sm")
                                     ], width=4),
                                 ], className="mb-2"),

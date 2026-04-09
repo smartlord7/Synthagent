@@ -240,6 +240,13 @@ def inspect_selected_rows_pm(n_clicks, selected_rows, algo):
             tokens = "N/A"
             ts = audit_str.replace("Gen AI", "").strip(" |") if audit_str != "Gen AI" else "N/A"
             
+        # Filter out internal/metadata keys for a clean inspection view
+        clean_rows = []
+        for r in rows:
+            clean_r = {k: v for k, v in r.items() 
+                       if not (k.startswith('is_ai_') or k in ['_row_id', 'is_target', 'is_context', 'ai_audit'])}
+            clean_rows.append(clean_r)
+            
         details = [
             html.Div([
                 html.Strong("Timestamp: ", className="text-muted"), html.Span(ts, className="ms-1"), html.Br(),
@@ -247,7 +254,7 @@ def inspect_selected_rows_pm(n_clicks, selected_rows, algo):
                 html.Strong("Model: ", className="text-muted"), html.Span(model, className="ms-1"), html.Br(),
                 html.Strong("Rows count: ", className="text-muted"), html.Span(str(len(rows)), className="ms-1 fw-bold text-info"),
             ], className="small mb-3"),
-            html.Pre(json.dumps([r for r in rows], indent=2), 
+            html.Pre(json.dumps(clean_rows, indent=2), 
                      className="bg-dark text-light p-2 rounded border border-secondary",
                      style={"maxHeight": "250px", "overflowY": "auto", "fontSize": "0.75rem"})
         ]

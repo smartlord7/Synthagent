@@ -132,10 +132,24 @@ def generate_dataset_insights_pm(n_clicks, orig_data):
 @app.callback(
     Output({"type": "dataset-description-edit", "index": MATCH}, "value"),
     Output({"type": "dataset-description-markdown", "index": MATCH}, "children"),
-    Input({"type": "dataset-description-store", "index": MATCH}, "data")
+    Input({"type": "dataset-description-store", "index": MATCH}, "data"),
+    prevent_initial_call=True
 )
 def update_description_ui_pm(description):
-    desc = description or "No description available. Click 'Insights' or edit manually."
+    # Break infinite loop strictly.
+    ctx = dash.callback_context
+    if not ctx.triggered:
+        return dash.no_update, dash.no_update
+        
+    triggered_id = ctx.triggered[0]['prop_id']
+    
+    desc = description or ""
+    
+    # If the user was the one who changed the store, DO NOT push the value back to the box.
+    # This is the primary cause of cursor jumping / focus loss.
+    if '"type":"dataset-description-edit"' in triggered_id:
+        return dash.no_update, desc
+        
     return desc, desc
 
 @app.callback(

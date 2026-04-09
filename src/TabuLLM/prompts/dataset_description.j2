@@ -6,6 +6,10 @@ Metadata: {{ provided_metadata if provided_metadata else "None" }}
 Data Sample (First few rows):
 {{ df_sample_str }}
 
+{% if is_empty %}
+NOTE: The dataset is currently empty. Please infer the semantic roles and likely distributions based ONLY on the column names.
+{% endif %}
+
 CRITICAL INSTRUCTIONS:
 - Return ONLY the markdown summary.
 - Do NOT include any introductory filler (e.g. "Okay, here's...", "I have analyzed...") or concluding remarks.

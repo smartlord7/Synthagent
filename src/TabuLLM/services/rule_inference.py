@@ -19,12 +19,12 @@ class RuleInference:
         """
         inferred_rules = []
         
-        if df.empty:
-            return inferred_rules
-
         # Filter out internal tracking columns
         excluded_cols = ['_row_id', 'is_context', 'is_target', 'ai_audit']
         cols_to_analyze = [c for c in df.columns if c not in excluded_cols and not c.startswith('is_ai_')]
+
+        if not cols_to_analyze:
+            return inferred_rules
 
         for col in cols_to_analyze:
             dtype = df[col].dtype
