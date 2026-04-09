@@ -4,6 +4,30 @@ This document visualizes the exact, exhaustive data flow, token compression, gen
 
 ---
 
+## 0. High-Level Generation Overview
+A simplified view of how data travels from your source file to the final verified synthetic output.
+
+```mermaid
+graph LR
+    classDef input fill:#2c3e50,stroke:#34495e,color:#fff,stroke-width:2px;
+    classDef process fill:#2980b9,stroke:#1f6391,color:#fff,stroke-width:2px;
+    classDef ai fill:#8e44ad,stroke:#71368a,color:#fff,stroke-width:2px;
+    classDef safety fill:#c0392b,stroke:#962d22,color:#fff,stroke-width:2px;
+    classDef result fill:#27ae60,stroke:#1e8449,color:#fff,stroke-width:2px;
+
+    Source[(Source Dataset)]:::input --> Rules[Rule Inference & User Rules]:::process
+    Rules --> Context[Context Sampling<br/>Selection of reference rows]:::process
+    
+    Context --> LLM[Generative Synthesis<br/>LLM-powered dataset creation]:::ai
+    
+    LLM --> Guard[Hierarchical Guardrails<br/>Pydantic self-correction loop]:::safety
+    Guard -.-> |"Automatic Fix Turn"| LLM
+    
+    Guard --> Final[(Verified Synthetic Data)]:::result
+```
+
+---
+
 ## 1. Global Pipeline Control & Parallel Processing
 How datasets are ingested, evaluated synchronously via multiprocessing, and heavily pre-processed to minimize token expenditure before interacting with the LLM API.
 
@@ -109,22 +133,77 @@ sequenceDiagram
 
 ---
 
-## 4. Logical Validation Auditing Layer
-*(Settings Configuration Dependent)*
-Algorithmically generated arrays are fed through hardcoded numeric heuristic boundaries (e.g., catching minus signs on purely positive physiological variables) to prevent AI token hallucinations from silently passing into the machine learning datasets.
+## 4. The Hierarchical Generation & Self-Correction Pipeline
+How the system orchestrates automated rule inference, hierarchical merging, and the iterative Pydantic-based repair loop.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    
+    participant UI as Dash Components (UI)
+    participant INF as RuleInference Service
+    participant CB as Generation Callback
+    participant LC as LLM Client Broker
+    participant VAL as RuleValidator (Pydantic)
+    participant AI as Generative LLM (Gemini/Gemma)
+
+    UI->>CB: Click Generate (Toggles: UserRules, Boundaries)
+    
+    rect rgb(30, 30, 50)
+    Note over CB, INF: Static Analysis Phase
+    CB->>INF: infer_dataset_rules(original_df)
+    INF-->>CB: Hierarchy: Integrity (L1) + Boundaries (L2)
+    end
+    
+    CB->>LC: call generate_bulk_data(rules_hierarchy)
+    
+    loop Per Chunk (size=30)
+        LC->>AI: Initial Generation (System Instructions + Context)
+        AI-->>LC: Raw JSON Chunk (e.g., 30 rows)
+        
+        rect rgb(50, 40, 20)
+        Note over LC, VAL: Validation Turn
+        LC->>VAL: validate_batch(chunk, active_pydantic_model)
+        VAL-->>LC: Found N Violations (e.g., Age > Max OR String in Num field)
+        end
+        
+        break No Violations or Max Retries met
+            Note over LC, VAL: Proceed to next chunk
+        end
+        
+        rect rgb(60, 20, 20)
+        Note over LC, AI: Self-Correction Turn
+        LC->>AI: Fix Prompt (Template: generation_fix.j2 + Detailed Violations)
+        AI-->>LC: Corrected JSON Chunk
+        end
+    end
+    
+    LC-->>CB: Consolidated Validated Data Records
+    CB-->>UI: Update Grid (Mark successful rows in Green)
+```
+
+---
+
+## 5. Pydantic Hierarchical Guardrail Layer
+Instead of simple heuristics, TabuLLM uses dynamic Pydantic models to categorize and enforce constraints across three layers of strictness.
 
 ```mermaid
 graph LR
-    classDef logic fill:#3e1f47,stroke:#1a0820,color:#fff,stroke-width:2px;
-    classDef reject fill:#bc3a3a,stroke:#4a1212,color:#fff,stroke-width:2px;
-    classDef pass fill:#1c7c4b,stroke:#0d4227,color:#fff,stroke-width:2px;
+    classDef integrity fill:#b33939,stroke:#4d1313,color:#fff,stroke-width:2px;
+    classDef boundaries fill:#227093,stroke:#113a4d,color:#fff,stroke-width:2px;
+    classDef user fill:#218c74,stroke:#10473a,color:#fff,stroke-width:2px;
+    classDef validator fill:#40407a,stroke:#20203d,color:#fff,stroke-width:2px;
 
-    Input[Decoded LLM Generated Arrays] --> Filter{AI Validation Heuristic Gates}:::logic
+    L1[Level 1: Integrity<br/>Datatypes & Structure]:::integrity --> Model{Pydantic Model Generator}:::validator
+    L2[Level 2: Boundaries<br/>Min/Max & Domain Sets]:::boundaries --> |Toggle Controlled| Model
+    L3[Level 3: User Rules<br/>Custom UI Definitions]:::user --> |Toggle Controlled| Model
     
-    Filter -.-> |"Fails Physical Boundary Rule (e.g., Patient Age < 0)"| Reject[Flag Data Row as Hallucination]:::reject
-    Filter -.-> |Passes Physical Bounds| Pass[Accept Data Row]:::pass
+    Model --> Filter[Validation Runner]:::validator
+    Raw[Raw LLM Output] --> Filter
     
-    Reject --> Repair[Filter out array / Request replacement LLM batch]:::logic
+    Filter -.-> |"Violation Found!"| Repair[LLM Correction Feedback Turn]:::validator
+    Filter -.-> |Passes all Active Levels| Sink[Accepted Synthetic Row]
+    
     Repair --> Filter
 ```
 

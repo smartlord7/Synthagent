@@ -400,7 +400,26 @@ def create_dataset_tab(dataset_id, filename, df=None, saved_state=None, pipeline
 
                                 html.Hr(className="border-secondary my-2"),
                                 html.Div([
-                                    html.Span([html.I(className="bi bi-funnel me-1 text-success"), "Custom Rules"], className="text-muted small fw-bold me-auto"),
+                                    html.Div([
+                                        html.Label("Strict User Rules:", className="fw-bold text-success small mb-0 me-2"),
+                                        dbc.Checklist(
+                                            options=[{"label": "", "value": 1}],
+                                            value=[1],
+                                            id={"type": "check-enforce-rules", "index": dataset_id},
+                                            switch=True,
+                                            className="d-inline-block"
+                                        ),
+                                    ], className="d-flex align-items-center me-3"),
+                                    html.Div([
+                                        html.Label("Strict Boundaries:", className="fw-bold text-info small mb-0 me-2"),
+                                        dbc.Checklist(
+                                            options=[{"label": "", "value": 1}],
+                                            value=[],  # Freedom by default
+                                            id={"type": "check-enforce-boundaries", "index": dataset_id},
+                                            switch=True,
+                                            className="d-inline-block"
+                                        ),
+                                    ], className="d-flex align-items-center me-auto"),
                                     dbc.Button([html.I(className="bi bi-plus-circle me-1"), "Rule"], id={"type": "btn-add-param", "index": dataset_id}, size="sm", color="success", outline=True, className="py-0 px-2 rounded-pill")
                                 ], className="d-flex align-items-center mb-1"),
                                 html.Div(id={"type": "custom-params-container", "index": dataset_id}, children=[], style={"maxHeight": "100px", "overflowY": "auto"})

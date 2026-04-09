@@ -7,6 +7,7 @@ from services.data_manager import select_context_rows
 from utils.metrics import calculate_metrics
 from utils.logging_config import logger
 from services.ml_evaluator import MLEvaluator
+from services.rule_inference import RuleInference
 
 def run_single_dataset_benchmark(args):
     """
@@ -26,6 +27,9 @@ def run_single_dataset_benchmark(args):
     ml_config = config.get("ml_config", {})
     targets = config.get("targets", [])
     na_strategy = config.get("na_strategy", "impute")
+    rules_metadata = config.get("rules_metadata", None)
+    enforce_rules = config.get("enforce_rules", True)
+    enforce_boundaries = config.get("enforce_boundaries", False)
     
     progress_dict = config.get("_progress_dict")
     dataset_id_key = config.get("_dataset_id")
@@ -98,7 +102,22 @@ def run_single_dataset_benchmark(args):
                  
             logger.info(f"[{filename} | Fold {fold_num}] Pre-Generation Geometry -> Train: {len(df_train_orig)} | Context: {n_context_rows} | Target Gen: {num_empty}")
             
-            result_bundle = generate_bulk_data([], context_dict, list(df_orig_all.columns), algorithm, instructions, temperature, num_empty=num_empty, chunk_size=chunk_size)
+            # Infer hierarchical rules
+            inferred_rules = RuleInference.infer_dataset_rules(df_orig_all)
+            
+            rules_hierarchy = {
+                "integrity": [r for r in inferred_rules if r['level'] == 1],
+                "boundaries": [r for r in inferred_rules if r['level'] == 2],
+                "user": rules_metadata if isinstance(rules_metadata, list) else [],
+                "enforce_user": bool(enforce_rules),
+                "enforce_boundaries": bool(enforce_boundaries)
+            }
+
+            result_bundle = generate_bulk_data(
+                [], context_dict, list(df_orig_all.columns), algorithm, instructions, temperature,
+                num_empty=num_empty, chunk_size=chunk_size,
+                rules_metadata=rules_hierarchy, enforce_rules=True
+            )
 
             if result_bundle:
                 generated_rows = result_bundle["data"]

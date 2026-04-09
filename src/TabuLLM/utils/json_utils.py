@@ -183,4 +183,7 @@ def from_compact_json(compact_data: dict, fallback_cols: list = None) -> list:
         return []
     
     logger.info(f"JSON Transform: Successfully unpacked {len(rows)} rows from Compact JSON.")
+    # Detect if data is already a list of dicts (v3/v4 format) or list of lists (compact format)
+    if rows and isinstance(rows[0], dict):
+        return rows
     return [dict(zip(cols, row)) for row in rows]

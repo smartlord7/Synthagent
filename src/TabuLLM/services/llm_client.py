@@ -8,6 +8,7 @@ from services.logger import log_interaction
 from utils.logging_config import logger
 from utils.json_utils import robust_json_loads, RobustJSONError, to_compact_json, from_compact_json
 from services.prompt_manager import prompt_manager
+from services.rule_validator import RuleValidator
 
 class BaseLLMProvider(ABC):
     """Abstract base class for all LLM providers."""
@@ -17,7 +18,7 @@ class BaseLLMProvider(ABC):
         pass
 
     @abstractmethod
-    def generate_bulk_data(self, rows_payload, context, all_columns, algorithm, instructions, temperature, num_empty=0, chunk_size=30):
+    def generate_bulk_data(self, rows_payload, context, all_columns, algorithm, instructions, temperature, num_empty=0, chunk_size=30, rules_metadata=None, enforce_rules=True):
         pass
 
     @abstractmethod
@@ -186,7 +187,7 @@ class LocalOpenAIProvider(BaseLLMProvider):
             logger.error(f"Error calling local LLM for target detection: {e}")
             return []
 
-    def generate_bulk_data(self, rows_payload, context, all_columns, algorithm, instructions, temperature, num_empty=0, chunk_size=30):
+    def generate_bulk_data(self, rows_payload, context, all_columns, algorithm, instructions, temperature, num_empty=0, chunk_size=30, rules_metadata=None, enforce_rules=True):
         # 1. Parse dictionary context securely
         meta = context.get("metadata", "Not provided") if isinstance(context, dict) else str(context)
         manual_ctx = context.get("manual_ctx", "[]") if isinstance(context, dict) else "[]"
@@ -352,6 +353,52 @@ class LocalOpenAIProvider(BaseLLMProvider):
                         subset_data = from_compact_json({"data": parsed_content}, all_columns) if len(parsed_content)>0 and isinstance(parsed_content[0], list) else parsed_content
                     else:
                         subset_data = parsed_content.get("data", [])
+
+                    # --- RULE ENFORCEMENT VALIDATION LOOP ---
+                    if enforce_rules and rules_metadata:
+                        # Hierarchical filtering
+                        if isinstance(rules_metadata, dict) and "integrity" in rules_metadata:
+                            active_rules = list(rules_metadata.get("integrity", []))
+                            if rules_metadata.get("enforce_boundaries"):
+                                active_rules.extend(rules_metadata.get("boundaries", []))
+                            if rules_metadata.get("enforce_user"):
+                                active_rules.extend(rules_metadata.get("user", []))
+                        else:
+                            active_rules = rules_metadata
+
+                        pydantic_model = RuleValidator.create_pydantic_model(active_rules)
+                        if pydantic_model:
+                            max_retries = 2
+                            for retry in range(max_retries):
+                                violations = RuleValidator.validate_batch(subset_data, pydantic_model)
+                                if not violations:
+                                    break
+                                
+                                logger.warning(f"Chunk {subset_idx+1}: {len(violations)} rule violations found. Triggering self-correction (Retry {retry+1}/{max_retries}).")
+                                feedback = RuleValidator.format_violations_for_llm(violations)
+                                
+                                # Prepare correction prompt
+                                correction_messages = list(messages)
+                                correction_messages.append({"role": "assistant", "content": content})
+                                correction_messages.append({
+                                    "role": "user", 
+                                    "content": f"{feedback}\n\n" + prompt_manager.get_prompt("generation_fix")
+                                })
+                                
+                                try:
+                                    response_corr = self._call_local_llm(correction_messages, core_model=algorithm, temperature=0.1, json_mode=True)
+                                    content = response_corr["choices"][0]["message"]["content"]
+                                    # Use robust_json_loads directly here
+                                    parsed_corr = robust_json_loads(content)
+                                    if isinstance(parsed_corr, dict) and "data" in parsed_corr:
+                                        subset_data = from_compact_json(parsed_corr, all_columns)
+                                    elif isinstance(parsed_corr, list):
+                                        subset_data = from_compact_json({"data": parsed_corr}, all_columns) if len(parsed_corr)>0 and isinstance(parsed_corr[0], list) else parsed_corr
+                                    else:
+                                        subset_data = parsed_corr.get("data", [])
+                                except Exception as e:
+                                    logger.error(f"Self-correction failed: {e}")
+                                    break # Give up on correction for this chunk if it crashes
 
                     final_data.extend(subset_data)
                     break # Success! Continue onto next chunk subset
@@ -686,7 +733,7 @@ class GeminiProvider(BaseLLMProvider):
             logger.error(f"Error calling Gemini for target detection: {e}")
             return []
 
-    def generate_bulk_data(self, rows_payload, context, all_columns, algorithm, instructions, temperature, num_empty=0, chunk_size=30):
+    def generate_bulk_data(self, rows_payload, context, all_columns, algorithm, instructions, temperature, num_empty=0, chunk_size=30, rules_metadata=None, enforce_rules=True):
         # Compact payload and context for Gemini
         compact_payload = to_compact_json(rows_payload, all_columns)
         
@@ -758,6 +805,47 @@ class GeminiProvider(BaseLLMProvider):
                             final_rows = parsed_data
                     else:
                         raise ValueError("Gemini returned unexpected structure")
+
+                    # --- RULE ENFORCEMENT VALIDATION LOOP (Gemini) ---
+                    if enforce_rules and rules_metadata:
+                        # Hierarchical filtering
+                        if isinstance(rules_metadata, dict) and "integrity" in rules_metadata:
+                            active_rules = list(rules_metadata.get("integrity", []))
+                            if rules_metadata.get("enforce_boundaries"):
+                                active_rules.extend(rules_metadata.get("boundaries", []))
+                            if rules_metadata.get("enforce_user"):
+                                active_rules.extend(rules_metadata.get("user", []))
+                        else:
+                            active_rules = rules_metadata
+
+                        pydantic_model = RuleValidator.create_pydantic_model(active_rules)
+                        if pydantic_model:
+                            max_retries = 2
+                            for retry in range(max_retries):
+                                violations = RuleValidator.validate_batch(final_rows, pydantic_model)
+                                if not violations:
+                                    break
+                                
+                                logger.warning(f"Gemini: {len(violations)} rule violations found. Triggering self-correction (Retry {retry+1}/{max_retries}).")
+                                feedback = RuleValidator.format_violations_for_llm(violations)
+                                
+                                response_corr = self.model.generate_content(
+                                    prompt + f"\n\nPREVIOUS OUTPUT:\n{response.text}\n\n{feedback}\n\n" + prompt_manager.get_prompt("generation_fix"),
+                                    generation_config=self.genai.types.GenerationConfig(
+                                        response_mime_type="application/json",
+                                        temperature=0.1
+                                    )
+                                )
+                                try:
+                                    parsed_corr = robust_json_loads(response_corr.text)
+                                    if isinstance(parsed_corr, dict) and "data" in parsed_corr:
+                                        final_rows = from_compact_json(parsed_corr, all_columns)
+                                    else:
+                                        # Handle list fallback
+                                        final_rows = from_compact_json({"data": parsed_corr}, all_columns) if isinstance(parsed_corr, list) else parsed_corr.get("data", [])
+                                except Exception as e:
+                                    logger.error(f"Gemini self-correction failed: {e}")
+                                    break
 
                     # --- TOP-UP GUARANTEE ---
                     if num_empty > 0 and len(final_rows) < num_empty:

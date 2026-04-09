@@ -9,6 +9,7 @@ from services.llm_client import generate_bulk_data, provider
 from dash import callback_context
 from utils.json_utils import to_compact_json
 from services.data_manager import select_context_rows
+from services.rule_inference import RuleInference
 
 # --- Sync Local Models ---
 @app.callback(
@@ -60,14 +61,27 @@ def sync_max_context_range(row_data, current_val):
     return new_max, current_val
 
 def _build_instructions(tone, consistency, names, types, texts, mins, maxs):
-    """Compile rules and parameters into a string."""
+    """Compile rules and parameters into a string and a structured metadata list."""
     header = f"Style: {tone}\nConsistency: {consistency}\n"
-    rules = []
+    rules_text = []
+    rules_metadata = []
+    
     for i in range(len(names)):
         if names[i]:
             detail = texts[i] if types[i] != 'number' else f"Min:{mins[i]}, Max:{maxs[i]}"
-            rules.append(f"- Rule [{names[i]}]: {detail}")
-    return header + "\n".join(rules)
+            rules_text.append(f"- Rule [{names[i]}]: {detail}")
+            
+            # Create structured metadata for RuleValidator
+            rules_metadata.append({
+                "name": names[i],
+                "type": types[i],
+                "text": texts[i],
+                "min": mins[i],
+                "max": maxs[i]
+            })
+            
+    full_inst = header + "\n".join(rules_text)
+    return full_inst, rules_metadata
 
 def _prepare_context(row_data, context_ids, full_ctx_toggle, strategy, max_rows, col_defs, metadata):
     """Extract and sample reference context data."""
@@ -200,33 +214,51 @@ def _process_results(rows, indices, bundle, algo, headers_map):
     State({'type': 'gen-chunk-size', 'index': MATCH}, 'value'),
     State({'type': 'gen-max-context', 'index': MATCH}, 'value'),
     State({'type': 'gen-context-strategy', 'index': MATCH}, 'value'),
+    State({'type': 'check-enforce-rules', 'index': MATCH}, 'value'),
+    State({'type': 'check-enforce-boundaries', 'index': MATCH}, 'value'),
     prevent_initial_call=True
 )
 def run_ai_generation_pm(n_clicks, row_data, target_ids, context_ids, full_ctx,
                          col_defs, algo, tone, consistency,
                          temp, cp_names, cp_types,
-                         cp_texts, cp_mins, cp_maxs, desc, chunk_sz, max_c, strat):
+                         cp_texts, cp_mins, cp_maxs, desc, chunk_sz, max_c, strat, enforce_rules, enforce_boundaries):
 
     if not n_clicks or not target_ids:
         return dash.no_update, dash.no_update
 
     logger.info(f"--- STARTING TABULLM GENERATION PIPELINE ({len(target_ids)} targets) ---")
 
-    # 1. Pipeline preparation
-    inst = _build_instructions(tone, consistency, cp_names, cp_types, cp_texts, cp_mins, cp_maxs)
+    # 1. Rules aggregation
+    inst, user_rules = _build_instructions(tone, consistency, cp_names, cp_types, cp_texts, cp_mins, cp_maxs)
+    
+    # Infer rules from current dataset
+    inferred_rules = RuleInference.infer_dataset_rules(pd.DataFrame(row_data))
+    
+    # Hierarchical rules: Integrity (Level 1), Boundaries (Level 2), User (Level 3)
+    # We pass all of them, but also pass the toggles to decide which are 'Hard'
+    rules_hierarchy = {
+        "integrity": [r for r in inferred_rules if r['level'] == 1],
+        "boundaries": [r for r in inferred_rules if r['level'] == 2],
+        "user": user_rules,
+        "enforce_user": bool(enforce_rules and len(enforce_rules) > 0),
+        "enforce_boundaries": bool(enforce_boundaries and len(enforce_boundaries) > 0)
+    }
+
+    # 2. Pipeline preparation
     logger.debug(f"Compiled Instructions:\n{inst}")
     
     ctx = _prepare_context(row_data, context_ids, full_ctx, strat, max_c, col_defs, desc)
     payload, target_indices, empty_count = _map_targets(row_data, target_ids, ctx['header_to_field'])
 
     # 2. Execution
-    bundle = generate_bulk_data(
-        payload, ctx, ctx['column_headers'], algo, inst, temp,
-        num_empty=empty_count, chunk_size=chunk_sz
-    )
+    result_bundle = generate_bulk_data(
+            payload, ctx, ctx['column_headers'], algo, inst, temp,
+            num_empty=empty_count, chunk_size=chunk_sz, 
+            rules_metadata=rules_hierarchy, enforce_rules=True
+        )
 
     # 3. Post-processing
-    updated_rows = _process_results(list(row_data), target_indices, bundle, algo, ctx['header_to_field'])
+    updated_rows = _process_results(list(row_data), target_indices, result_bundle, algo, ctx['header_to_field'])
     
     # Identify remaining targets (those that are still marked as targets)
     remaining = [r['_row_id'] for r in updated_rows if r.get('is_target') and r['_row_id'] in target_ids]
