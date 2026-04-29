@@ -4,5 +4,5 @@ __pycache__
 .idea
 .git
 cache/*
-debug_ai_workspace.log
+debug_tabullm.log
 .env

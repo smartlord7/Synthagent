@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "TabuLLM"
+version = "1.0.0"
+description = "Synthetic Data Generation and Auditing Pipeline"
+dependencies = [
+    "pandas",
+    "dash",
+    "dash-bootstrap-components",
+    "scikit-learn",
+    "xgboost",
+    "fpdf",
+    "jinja2",
+    "numpy"
+]
+
+[tool.setuptools]
+packages = ["tabullm", "services", "utils", "callbacks", "components"]
+package-dir = {"" = "."}
+
+[tool.pyright]
+include = ["."]
+extraPaths = ["."]
+
+[tool.ruff]
+line-length = 100
+select = ["E", "F", "W", "I"]
+ignore = ["D100", "D103"]

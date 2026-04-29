@@ -1,0 +1,42 @@
+{
+    "python.analysis.extraPaths": [
+        "${workspaceFolder}"
+    ],
+    "python.autoComplete.extraPaths": [
+        "${workspaceFolder}"
+    ],
+    "terminal.integrated.env.windows": {
+        "PYTHONPATH": "${workspaceFolder}"
+    },
+    "[python]": {
+        "editor.defaultFormatter": "charliermarsh.ruff"
+    },
+    "ruff.lint.select": [
+        "E",
+        "F",
+        "W",
+        "I",
+        "PLR",
+        "PT"
+    ],
+    "ruff.lint.ignore": [
+        "D100",
+        "D101",
+        "D102",
+        "D103",
+        "D104",
+        "D105",
+        "D106",
+        "D107",
+        "D203",
+        "D204",
+        "D205",
+        "D212",
+        "D213",
+        "D400",
+        "D401",
+        "D415",
+        "N802"
+    ],
+    "ruff.format.preview": true
+}
