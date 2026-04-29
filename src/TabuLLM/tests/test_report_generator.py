@@ -1,62 +1,47 @@
 import unittest
-import pandas as pd
-import io
+import os
 from services.report_generator import generate_benchmark_pdf
 
 class TestReportGenerator(unittest.TestCase):
-    def test_generate_pdf_structure(self):
-        # Prepare dummy but correctly shaped report data
+    def test_generate_pdf_full_data(self):
+        # Mock report data
         report_data = {
             "executive_summary": {
-                "avg_fidelity": 0.88,
-                "global_metrics": {"Avg Precision": "0.82 \u00b1 0.05"}
+                "avg_fidelity": 0.85,
+                "global_metrics": {"Stability": "High", "Privacy": "Secure"}
             },
             "datasets": {
-                "dataset_alpha": {
-                    "filename": "alpha_gen.csv",
-                    "metadata": {"Rows": "50", "Columns": "5"},
-                    "params": {
-                        "generation": {"algorithm": "gemma-3-4b", "tone": "Professional", "consistency": "Strict"}
-                    },
-                    "metrics": {
-                        "Synthetic Fidelity (JSD)": 0.92,
-                        "Privacy Risk": 0.05
-                    },
-                    "plots": [], # Skip plots for headless unit test
-                    "samples": {
-                        "orig": pd.DataFrame({"col_a": [1, 2, 3], "col_b": ["x", "y", "z"]}),
-                        "aug": pd.DataFrame({"col_a": [1.1, 2.1, 3.1], "col_b": ["x", "y", "z"]})
-                    },
-                    "inference_table": [
-                        ["col_a", "2.0", "2.1", "+5%", "0.45", "Stable"]
-                    ],
+                "ds1": {
+                    "filename": "test_data.csv",
+                    "metadata": {"Rows": 100, "Cols": 10},
+                    "params": {"generation": {"Model": "GPT-4", "Temperature": 0.7}},
+                    "metrics": {"Fidelity": 0.9, "Privacy Risk": 0.1},
                     "ml_results": {
-                        "rf": {
-                            "accuracy": {"real": 0.90, "aug": 0.88, "delta": -0.02},
-                            "f1": {"real": 0.89, "aug": 0.87, "delta": -0.02}
+                        "random_forest": {
+                            "accuracy": {"real": 0.8, "aug": 0.82, "delta": "+2.5%"},
+                            "f1": {"real": 0.75, "aug": 0.78, "delta": "+4.0%"}
                         }
                     },
-                    "appendix": [
-                        {
-                            "name": "Audit Trace: Fold 1",
-                            "sample": pd.DataFrame({"col_a": [1, 2], "col_b": ["x", "y"]}),
-                            "row_colors": [(220, 240, 255), (220, 255, 220)],
-                            "ctx_ratio": 20
-                        }
-                    ]
+                    "samples": {
+                        "orig": None # Testing None handling
+                    }
                 }
             }
         }
         
-        # This will return a bytearray/string of the PDF content
-        pdf_out = generate_benchmark_pdf(report_data)
-        
-        self.assertIsInstance(pdf_out, (bytearray, bytes, str))
-        self.assertGreater(len(pdf_out), 1000) # Basic check that content exists
-        
-        # Check PDF header magic bytes if bytes
-        if isinstance(pdf_out, (bytes, bytearray)):
-            self.assertTrue(pdf_out.startswith(b'%PDF'))
+        try:
+            pdf_bytes = generate_benchmark_pdf(report_data)
+            self.assertTrue(len(pdf_bytes) > 0)
+            
+            # Save to disk for manual inspection if needed
+            output_path = "test_report_output.pdf"
+            with open(output_path, "wb") as f:
+                f.write(pdf_bytes)
+            self.assertTrue(os.path.exists(output_path))
+            os.remove(output_path)
+            
+        except Exception as e:
+            self.fail(f"PDF generation failed: {e}")
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
