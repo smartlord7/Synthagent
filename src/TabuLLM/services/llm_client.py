@@ -314,6 +314,16 @@ class LocalOpenAIProvider(BaseLLMProvider):
                 if num_empty > 0:
                     if not subset:
                         rows_to_gen = min(chunk_sz, num_empty - subset_idx * chunk_sz)
+                tasks = []
+                if subset:
+                    compact_subset = to_compact_json(subset, all_columns)
+                    tasks.append(f"- Complete these specific PARTIAL TARGET ROWS. Fill ALL null/empty fields with statistically plausible values based on context (Chunk {subset_idx+1}):\n{json.dumps(compact_subset)}")
+                if num_empty > 0:
+                    if not subset:
+                        # Pure generation chunk — ask for this chunk's share only
+                        rows_this = min(chunk_sz, num_empty - subset_idx * chunk_sz)
+                        if rows_this > 0:
+                            tasks.append(f"- Generate {rows_this} entirely NEW rows. Ensure every single column is populated and consistent with the reference data.")
                     elif subset_idx == len(subsets) - 1:
                         rows_to_gen = num_empty
 
@@ -886,118 +896,72 @@ class GeminiProvider(BaseLLMProvider):
                     if enforce_rules and rules_metadata:
                         if isinstance(rules_metadata, dict) and "integrity" in rules_metadata:
                             active_rules = list(rules_metadata.get("integrity", []))
-                            if rules_metadata.get("enforce_boundaries"):
-                                active_rules.extend(rules_metadata.get("boundaries", []))
-                            if rules_metadata.get("enforce_user"):
-                                active_rules.extend(rules_metadata.get("user", []))
-                        else:
-                            active_rules = rules_metadata
-
-                        pydantic_model = RuleValidator.create_pydantic_model(active_rules)
-                        if pydantic_model:
-                            max_retry_correction = 2
-                            for retry in range(max_retry_correction):
-                                violations = RuleValidator.validate_batch(final_rows, pydantic_model)
-                                if not violations:
-                                    break
-                                feedback = RuleValidator.format_violations_for_llm(violations)
-                                response_corr = model.generate_content(
-                                    prompt + f"\n\nPREVIOUS OUTPUT:\n{response.text}\n\n{feedback}\n\n" + prompt_manager.get_prompt("generation_fix"),
-                                    generation_config=genai.types.GenerationConfig(
-                                        response_mime_type="application/json",
-                                        temperature=0.1
-                                    )
-                                )
-                                try:
-                                    parsed_corr = robust_json_loads(response_corr.text)
-                                    if isinstance(parsed_corr, dict) and "data" in parsed_corr:
-                                        final_rows = from_compact_json(parsed_corr, all_columns)
-                                    else:
-                                        final_rows = from_compact_json({"data": parsed_corr}, all_columns) if isinstance(parsed_corr, list) else parsed_corr.get("data", [])
-                                except Exception as e:
-                                    break
-
-                    if num_empty > 0 and len(final_rows) < num_empty:
-                        max_topups = 50
-                        topup_round = 0
-                        consecutive_zeros = 0
-                        while len(final_rows) < num_empty and topup_round < max_topups:
-                            shortfall = num_empty - len(final_rows)
-                            to_request = min(chunk_size, shortfall)
-                            topup_prompt = prompt_manager.get_prompt(
-                                "generation_final", 
-                                instructions=instructions, 
-                                all_columns=all_columns,
-                                is_empty=(not final_rows and not compact_ctx.get("manual_ctx") and not compact_ctx.get("global_ctx")),
-                                num_rows_to_generate=to_request,
-                                compact_payload_json="[]"
-                            )
-                            try:
-                                t_resp = model.generate_content(topup_prompt, generation_config=genai.types.GenerationConfig(response_mime_type="application/json", temperature=temperature))
-                                try:
-                                    t_parsed = robust_json_loads(t_resp.text)
-                                except:
-                                    consecutive_zeros += 1
-                                    if consecutive_zeros >= 5: break
-                                    topup_round += 1
-                                    continue
-                                if isinstance(t_parsed, dict) and "cols" in t_parsed and "data" in t_parsed:
-                                    t_rows = from_compact_json(t_parsed, all_columns)
-                                elif isinstance(t_parsed, dict) and "data" in t_parsed:
-                                    first = t_parsed["data"][0] if t_parsed["data"] else None
-                                    t_rows = from_compact_json(t_parsed, all_columns) if isinstance(first, list) else t_parsed["data"]
-                                elif isinstance(t_parsed, list):
-                                    first = t_parsed[0] if t_parsed else None
-                                    t_rows = from_compact_json({"data": t_parsed}, all_columns) if isinstance(first, list) else t_parsed
-                                else: t_rows = []
-                                if t_rows:
-                                    final_rows.extend(t_rows)
-                                    consecutive_zeros = 0
-                                else:
-                                    consecutive_zeros += 1
-                                    if consecutive_zeros >= 5: break
-                            except:
-                                consecutive_zeros += 1
-                                if consecutive_zeros >= 5: break
-                            topup_round += 1
-                    # Uncompress and map using Fuzzy Bridge logic
+                    # 1. Unpack initial response
                     h_to_f_bridge = dict(zip(all_columns, all_fields))
-                    
-                    if isinstance(parsed_data, list):
-                        # Treat as list of rows
-                        if len(parsed_data) > 0 and isinstance(parsed_data[0], list):
-                            parsed_data = {"cols": all_columns, "data": parsed_data}
-                        else:
-                            # Already flattened or list of dicts
-                            final_rows = parsed_data
-                    
                     if isinstance(parsed_data, dict):
                         final_rows = from_compact_json(parsed_data, all_fields, h_to_f=h_to_f_bridge)
-                    else:
-                        final_rows = parsed_data
-
-                    # Capture updates from AI
-                    final_rows = parsed_data
-                    schema_updates = {}
-                    
-                    if isinstance(parsed_data, dict):
                         schema_updates = parsed_data.get("schema_updates", {})
                         returned_cols = parsed_data.get("cols", [])
-                        
-                        # Full ordinal mapping and bridge support
-                        h_to_f_bridge = dict(zip(all_columns, all_fields))
-                        final_rows = from_compact_json(parsed_data, all_fields, h_to_f=h_to_f_bridge)
-                        
-                        # Implicit Schema Discovery: Always scan for improvements
                         if returned_cols and len(returned_cols) == len(all_columns):
                             for i, rc in enumerate(returned_cols):
                                 if str(rc).strip().lower() != str(all_columns[i]).strip().lower():
                                     schema_updates[all_fields[i]] = rc
-                    
+                    elif isinstance(parsed_data, list):
+                        final_rows = from_compact_json({"data": parsed_data}, all_fields, h_to_f=h_to_f_bridge) if len(parsed_data)>0 and isinstance(parsed_data[0], list) else parsed_data
+                    else:
+                        final_rows = []
+                        schema_updates = {}
+
+                    # 2. Rule Enforcement (Self-Correction)
+                    if enforce_rules and rules_metadata and final_rows:
+                        active_rules = list(rules_metadata.get("integrity", []))
+                        if rules_metadata.get("enforce_boundaries"):
+                            active_rules.extend(rules_metadata.get("boundaries", []))
+                        if rules_metadata.get("enforce_user"):
+                            active_rules.extend(rules_metadata.get("user", []))
+                        
+                        pydantic_model = RuleValidator.create_pydantic_model(active_rules)
+                        if pydantic_model:
+                            for retry in range(2):
+                                violations = RuleValidator.validate_batch(final_rows, pydantic_model)
+                                if not violations: break
+                                
+                                feedback = RuleValidator.format_violations_for_llm(violations)
+                                response_corr = model.generate_content(
+                                    prompt + f"\n\nPREVIOUS OUTPUT:\n{response.text}\n\n{feedback}\n\n" + prompt_manager.get_prompt("generation_fix"),
+                                    generation_config=genai.types.GenerationConfig(response_mime_type="application/json", temperature=0.1)
+                                )
+                                try:
+                                    parsed_corr = robust_json_loads(response_corr.text)
+                                    final_rows = from_compact_json(parsed_corr, all_fields, h_to_f=h_to_f_bridge) if isinstance(parsed_corr, dict) else (from_compact_json({"data": parsed_corr}, all_fields, h_to_f=h_to_f_bridge) if isinstance(parsed_corr, list) else final_rows)
+                                except: break
+
+                    # 3. Top-up Guarantee
+                    if num_empty > 0 and len(final_rows) < num_empty:
+                        topup_round = 0
+                        while len(final_rows) < num_empty and topup_round < 5:
+                            shortfall = num_empty - len(final_rows)
+                            topup_prompt = prompt_manager.get_prompt("generation_final", instructions=instructions, all_columns=all_columns, num_rows_to_generate=min(chunk_size, shortfall), compact_payload_json="[]")
+                            try:
+                                t_resp = model.generate_content(topup_prompt, generation_config=genai.types.GenerationConfig(response_mime_type="application/json", temperature=temperature))
+                                try:
+                                    t_parsed = robust_json_loads(t_resp.text)
+                                except RobustJSONError as r_err:
+                                    # Focused Repair Round
+                                    logger.info(f"Gemini Top-up: JSON Malformatted. Triggering repair...")
+                                    rep_prompt = prompt_manager.get_prompt("json_repair", error=r_err.error_data['error'], context=r_err.error_data['context'])
+                                    t_resp = model.generate_content(rep_prompt, generation_config=genai.types.GenerationConfig(response_mime_type="application/json", temperature=0.1))
+                                    t_parsed = robust_json_loads(t_resp.text)
+                                
+                                t_rows = from_compact_json(t_parsed, all_fields, h_to_f=h_to_f_bridge)
+                                if t_rows: final_rows.extend(t_rows)
+                            except: break
+                            topup_round += 1
+
                     return {
                         "data": final_rows, 
                         "schema_updates": schema_updates,
-                        "stats": {"prompt_tokens": usage.prompt_token_count, "candidates_tokens": usage.candidates_token_count, "total_tokens": usage.total_token_count}
+                        "stats": {"total_tokens": usage.total_token_count}
                     }
                 except Exception as e:
                     if "429" in str(e) and attempt < max_retries - 1: continue

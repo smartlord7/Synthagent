@@ -43,6 +43,7 @@ class TestRuleHierarchy(unittest.TestCase):
             rows_payload=[{"Age": None}],
             context={},
             all_columns=["Age"],
+            all_fields=["Age"],
             algorithm="Standard",
             instructions="Gen",
             temperature=0.3,

@@ -113,8 +113,9 @@ def run_single_dataset_benchmark(args):
                 "enforce_boundaries": bool(enforce_boundaries)
             }
 
+            all_fields = list(df_orig_all.columns)
             result_bundle = generate_bulk_data(
-                [], context_dict, list(df_orig_all.columns), algorithm, instructions, temperature,
+                [], context_dict, all_fields, all_fields, algorithm, instructions, temperature,
                 num_empty=num_empty, chunk_size=chunk_size,
                 rules_metadata=rules_hierarchy, enforce_rules=True
             )
@@ -222,6 +223,11 @@ def run_single_dataset_benchmark(args):
 class PipelineManager:
     @staticmethod
     def run_pipeline(tasks):
+        # Support synchronous execution for testing (prevents mock loss across processes)
+        import os
+        if len(tasks) == 1 or os.environ.get("TABULLM_SYNC_TEST") == "1":
+            return [run_single_dataset_benchmark(t) for t in tasks]
+
         cpus = min(len(tasks), multiprocessing.cpu_count())
         if cpus == 0: return []
         with multiprocessing.Pool(processes=cpus) as pool:

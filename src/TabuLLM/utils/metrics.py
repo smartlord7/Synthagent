@@ -26,11 +26,16 @@ def compute_jensenshannon_fidelity(a: pd.Series, b: pd.Series, bins: int = 20) -
     hist_a, bin_edges = np.histogram(a_clean, bins=bins, density=True)
     hist_b, _ = np.histogram(b_clean, bins=bin_edges, density=True)
     
+    # Detect complete range mismatch
+    if a_clean.max() < b_clean.min() or b_clean.max() < a_clean.min():
+        return 0.0
+
     jsd = jensenshannon(hist_a, hist_b)
-    if np.isnan(jsd):
+    
+    if np.isnan(jsd) or (np.sum(hist_b) == 0 and np.sum(hist_a) > 0):
         return 0.0
         
-    return float(1.0 - jsd)
+    return float(max(0.0, 1.0 - jsd))
 
 def compute_z_drift(a: pd.Series, b: pd.Series) -> float:
     """

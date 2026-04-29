@@ -24,7 +24,7 @@ if __name__ == '__main__':
     
     # --- STARTUP TESTING GATE ---
     # Optional logic to run all functionality checks before binding
-    if os.environ.get("CHECK_TESTS_ON_START", "False").lower() == "true":
+    if os.environ.get("CHECK_TESTS_ON_START", "True").lower() == "true":
         logger.info("[SYS] Startup Test Gate ACTIVE. Running Master Suite...")
         tests_passed = run_master_suite()
         if not tests_passed:

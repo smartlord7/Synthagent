@@ -42,6 +42,7 @@ class TestSelfCorrection(unittest.TestCase):
             rows_payload=rows_payload,
             context={},
             all_columns=["name", "age"],
+            all_fields=["name", "age"],
             algorithm="Standard",
             instructions="Generate data",
             temperature=0.7

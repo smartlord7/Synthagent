@@ -71,6 +71,7 @@ class TestRuleEnforcement(unittest.TestCase):
             rows_payload=[{"Age": None, "Status": None}],
             context={},
             all_columns=["Age", "Status"],
+            all_fields=["Age", "Status"],
             algorithm="Standard",
             instructions="Gen",
             temperature=0.3,

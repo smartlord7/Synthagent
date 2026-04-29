@@ -175,6 +175,7 @@ class TabuLLM:
         struct = audit["structural"]
         
         context = {
+            "report": audit,
             "overall_sparsity": struct['overall_sparsity'] * 100,
             "top_sparse_cols": [c for c, s in struct['sparsity'].items() if s > 0.05][:3],
             "skewness": {c: v for c, v in struct.get('skewness', {}).items() if abs(v) > 2},

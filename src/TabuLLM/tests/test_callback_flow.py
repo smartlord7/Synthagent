@@ -20,7 +20,8 @@ class TestCallbackFlow(unittest.TestCase):
             current_tabs = []
             metadata = {}
             
-            new_tabs, new_meta, last_id = handle_multiple_uploads_pm(contents, filenames, current_tabs, metadata)
+            res = handle_multiple_uploads_pm(contents, filenames, current_tabs, metadata)
+            new_tabs, new_meta, last_id, modal_open, list_items, h, c, f = res
             
             self.assertEqual(len(new_tabs), 1)
             self.assertIn(last_id, new_meta)

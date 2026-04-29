@@ -13,6 +13,7 @@ from tabullm import TabuLLM
 class TestLibraryFullPipeline(unittest.TestCase):
     
     def setUp(self):
+        os.environ["TABULLM_SYNC_TEST"] = "1"
         self.lib = TabuLLM(provider="local", model="test-lib-model")
         # Small dataset for real pipeline execution
         self.df = pd.DataFrame({
@@ -22,8 +23,9 @@ class TestLibraryFullPipeline(unittest.TestCase):
             "target": [0, 1, 0, 1, 0, 1, 0, 1, 0, 1]
         })
 
+    @patch('services.llm_client.LocalOpenAIProvider.get_available_models')
     @patch('services.llm_client.LocalOpenAIProvider._call_local_llm')
-    def test_full_pipeline_flow(self, mock_llm):
+    def test_full_pipeline_flow(self, mock_llm, mock_models):
         """
         Verify that the library correctly orchestrates:
         1. K-Fold Augmentation
@@ -32,6 +34,7 @@ class TestLibraryFullPipeline(unittest.TestCase):
         4. AI Pondering
         """
         # --- Mock Setup ---
+        mock_models.return_value = [{"id": "test-lib-model", "max_context": 4096}]
         # 1. Models List
         # 2. Generation Logic (Success)
         # 3. Ponder Strategy Logic

@@ -36,12 +36,124 @@ def add_custom_param_row_pm(n_clicks, children, btn_id):
                 dbc.InputGroupText("Max"),
                 dbc.Input(id={'type': 'cp-val-max', 'index': dataset_id, 'row': n_clicks}, type="number")
             ], id={'type': 'cp-val-num-group', 'index': dataset_id, 'row': n_clicks}, size="sm", style={'display': 'none'})
-        ], width=6)
-    ], className="mb-2 align-items-center")
+        ], width=5),
+        dbc.Col(
+            dbc.Button(html.I(className="bi bi-trash"), id={'type': 'btn-remove-row', 'index': dataset_id, 'row': n_clicks}, color="danger", outline=True, size="sm", className="border-0 opacity-50 hover-opacity-100"),
+            width=1, className="text-end"
+        )
+    ], className="mb-2 align-items-center g-2", id={'type': 'custom-param-row-wrapper', 'index': dataset_id, 'row': n_clicks})
     
     children = list(children) if children else []
     children.append(new_row)
     return children
+
+
+@app.callback(
+    Output({"type": "custom-params-container", "index": MATCH}, "children", allow_duplicate=True),
+    Input({"type": "btn-remove-row", "index": MATCH, "row": ALL}, "n_clicks"),
+    State({"type": "custom-params-container", "index": MATCH}, "children"),
+    prevent_initial_call=True
+)
+def remove_custom_param_row_pm(n_clicks_list, children):
+    ctx = dash.callback_context
+    if not ctx.triggered or not any(n_clicks_list):
+        return dash.no_update
+    
+    # Parse which row stimulated the delete
+    triggered_id_str = ctx.triggered[0]['prop_id'].split('.')[0]
+    import json
+    triggered_id = json.loads(triggered_id_str)
+    row_to_remove = triggered_id['row']
+    
+    # Build a new list of children, excluding the one that matches
+    new_children = []
+    for child in children:
+        # Check if this child's ID matches the one to remove
+        # In Dash, children are dicts (serialized components)
+        child_id = child.get('props', {}).get('id', {})
+        if child_id.get('row') == row_to_remove:
+            continue
+        new_children.append(child)
+        
+    return new_children
+ 
+@app.callback(
+    Output({"type": "custom-params-container", "index": MATCH}, "children", allow_duplicate=True),
+    Input({"type": "btn-apply-audit-rules", "index": MATCH}, "n_clicks"),
+    State({"type": "generated-rules-store", "index": MATCH}, "data"),
+    State({"type": "custom-params-container", "index": MATCH}, "children"),
+    State({"type": "btn-apply-audit-rules", "index": MATCH}, "id"),
+    prevent_initial_call=True
+)
+def apply_audit_rules_pm(n_clicks, rules, current_children, btn_id):
+    if not n_clicks or not rules: return dash.no_update
+    dataset_id = btn_id["index"]
+    
+    new_children = list(current_children) if current_children else []
+    
+    for i, rule in enumerate(rules):
+        rule_name = rule.get("name", f"Rule {i+1}")
+        rule_type = rule.get("type", "text")
+        rule_val = rule.get("value", "")
+
+        if isinstance(rule_val, list):
+            rule_val = ", ".join(map(str, rule_val))
+            
+        # Unique ID for the new row to avoid conflicts
+        row_id = f"audit-{n_clicks}-{i}"
+        # Robustly parse rule_val for number ranges
+        val_str = str(rule_val) if rule_val is not None else ""
+        min_val = None
+        max_val = None
+        if rule_type == 'number':
+            # Try various separators: ',', '-', ' to ', ':', '/'
+            import re
+            parts = re.split(r',|-| to |:|/', val_str)
+            if len(parts) >= 2:
+                try:
+                    min_val = parts[0].strip()
+                    max_val = parts[1].strip()
+                except: pass
+            elif len(parts) == 1 and parts[0].strip():
+                # Check if it is actually a number
+                candidate = parts[0].strip().replace('%', '')
+                try:
+                    float(candidate)
+                    min_val = candidate
+                except ValueError:
+                    # Not a number! Fallback to text
+                    rule_type = 'text'
+        
+        new_row = dbc.Row([
+            dbc.Col(
+                dbc.Input(id={'type': 'cp-name', 'index': dataset_id, 'row': row_id}, value=rule_name, size="sm"),
+                width=3),
+            dbc.Col(dbc.Select(
+                id={'type': 'cp-type', 'index': dataset_id, 'row': row_id},
+                options=[{'label': 'Text Instruction', 'value': 'text'}, {'label': 'Specific Options', 'value': 'options'},
+                         {'label': 'Number Range', 'value': 'number'}],
+                value=rule_type, size="sm"
+            ), width=3),
+            dbc.Col([
+                dbc.Input(id={'type': 'cp-val-text', 'index': dataset_id, 'row': row_id}, value=rule_val if rule_type != 'number' else "",
+                          size="sm", style={'display': 'block' if rule_type != 'number' else 'none'},
+                          placeholder="e.g. Under 50 words..."),
+                dbc.InputGroup([
+                    dbc.InputGroupText("Min"),
+                    dbc.Input(id={'type': 'cp-val-min', 'index': dataset_id, 'row': row_id}, type="number", value=min_val),
+                    dbc.InputGroupText("Max"),
+                    dbc.Input(id={'type': 'cp-val-max', 'index': dataset_id, 'row': row_id}, type="number", value=max_val)
+                ], id={'type': 'cp-val-num-group', 'index': dataset_id, 'row': row_id}, size="sm", style={'display': 'flex' if rule_type == 'number' else 'none'})
+            ], width=5),
+            dbc.Col(
+                dbc.Button(html.I(className="bi bi-trash"), id={'type': 'btn-remove-row', 'index': dataset_id, 'row': row_id}, color="danger", outline=True, size="sm", className="border-0 opacity-50 hover-opacity-100"),
+                width=1, className="text-end"
+            )
+        ], className="mb-2 align-items-center bg-success bg-opacity-10 rounded p-1 g-2", id={'type': 'custom-param-row-wrapper', 'index': dataset_id, 'row': row_id})
+        
+        new_children.append(new_row)
+        
+    return new_children
 
 
 @app.callback(

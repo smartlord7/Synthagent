@@ -1,0 +1,36 @@
+TRANSFORM DATA STRATEGY INTO DETAILED ATTRIBUTE RULES
+
+You are an expert data engineer. You have been provided with a "Synthetic Prescription" derived from a dataset audit, and a list of the exact attributes (columns) present in the dataset.
+
+ATTRIBUTES:
+{{ attributes | join(', ') }}
+
+STRATEGY:
+{{ strategy }}
+
+TASK:
+Convert this strategy into a structured list of highly specific generation rules.
+Follow these mapping rules:
+1. Map rules to specific attributes from the list above whenever possible.
+2. If a strategy addresses "Age", use the exact column name (e.g. `age`).
+3. The `name` of the rule should be: "[Attribute Name] [Requirement Type]" (e.g. "Age Range" or "Gender Parity").
+
+The system supports three types of rules:
+1. `text`: A description or instruction (e.g., "Must be under 50 words").
+2. `number`: A range (e.g., 18-99). Use the format "min,max" (no spaces) for the value.
+3. `options`: A comma-separated list of allowed values (e.g., "Active,Pending,Closed").
+
+OUTPUT FORMAT:
+Return ONLY a valid JSON array of objects.
+
+Example Output (Use this structure but DO NOT copy these values):
+[
+  {"name": "column_x_privacy", "type": "text", "value": "Specific instruction derived from strategy..."},
+  {"name": "column_y_range", "type": "number", "value": "min,max"},
+  {"name": "column_z_categories", "type": "options", "value": "val1,val2,val3"}
+]
+
+Do not include any preamble or explanation. Output ONLY the JSON.
+{% if strategy | length < 10 %}
+If the strategy is empty or invalid, return an empty array: [].
+{% endif %}

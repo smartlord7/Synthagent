@@ -170,6 +170,7 @@ def create_dataset_tab(dataset_id, filename, df=None, saved_state=None, pipeline
         children=[
             html.Div([
                 # Stores for tracking this dataset's state (Pattern-Matching)
+                dcc.Store(id={"type": "generated-rules-store", "index": dataset_id}, data=[]),
                 dcc.Store(id={"type": "original-data-store", "index": dataset_id}, data=new_data),
                 dcc.Store(id={"type": "active-col-store", "index": dataset_id}, data=saved_state.get("active-col-store")),
                 dcc.Store(id={"type": "context-row-ids", "index": dataset_id}, data=saved_state.get("context-row-ids", [])),
@@ -307,7 +308,11 @@ def create_dataset_tab(dataset_id, filename, df=None, saved_state=None, pipeline
                                         html.Div([
                                             html.Div([
                                                 html.H6([html.I(className="bi bi-lightbulb-fill me-2 text-warning"), "Strategic Augmentation Plan"], className="text-muted small fw-bold mb-2 d-inline-block"),
-                                                dbc.Button([html.I(className="bi bi-magic me-1"), "Ponder Strategy"], id={"type": "btn-ponder-audit", "index": dataset_id}, color="warning", size="sm", outline=False, className="ms-auto py-0 px-3 rounded-pill shadow-sm hover-grow"),
+                                                html.Div([
+                                                    dbc.Button([html.I(className="bi bi-magic me-1"), "Ponder Strategy"], id={"type": "btn-ponder-audit", "index": dataset_id}, color="warning", size="sm", outline=False, className="py-0 px-3 rounded-pill shadow-sm hover-grow"),
+                                                    dbc.Button([html.I(className="bi bi-box-arrow-in-right me-1"), "Apply Rules"], id={"type": "btn-apply-audit-rules", "index": dataset_id}, color="success", size="sm", outline=True, className="py-0 px-2 rounded-pill shadow-sm hover-grow ms-2", style={"display": "none"}),
+                                                    dbc.Tooltip("Transfer generated strategy into actionable rules", target={"type": "btn-apply-audit-rules", "index": dataset_id}, id={"type": "tooltip-apply-audit-rules", "index": dataset_id}, placement="top", className="small")
+                                                ], className="ms-auto d-flex align-items-center"),
                                             ], className="d-flex align-items-center mb-2 mt-2"),
                                             dbc.Spinner(
                                                 dcc.Markdown(
@@ -426,7 +431,7 @@ def create_dataset_tab(dataset_id, filename, df=None, saved_state=None, pipeline
                                     ], className="d-flex align-items-center me-auto"),
                                     dbc.Button([html.I(className="bi bi-plus-circle me-1"), "Rule"], id={"type": "btn-add-param", "index": dataset_id}, size="sm", color="success", outline=True, className="py-0 px-2 rounded-pill")
                                 ], className="d-flex align-items-center mb-1"),
-                                html.Div(id={"type": "custom-params-container", "index": dataset_id}, children=[], style={"maxHeight": "100px", "overflowY": "auto"})
+                                html.Div(id={"type": "custom-params-container", "index": dataset_id}, children=[], className="mt-2")
                             ], className="p-3 bg-dark text-light")
                         ], className="tabu-card shadow border-secondary h-100")
                     ], md=7)

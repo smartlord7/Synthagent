@@ -26,7 +26,7 @@ class TestLLMIntelligence(unittest.TestCase):
         ]
         
         # Request 2 rows (num_empty=2)
-        result = self.provider.generate_bulk_data([], self.ctx, self.all_cols, "test-model", "test-inst", 0.7, num_empty=2)
+        result = self.provider.generate_bulk_data([], self.ctx, self.all_cols, self.all_cols, "test-model", "test-inst", 0.7, num_empty=2)
         
         # Verify result has 2 rows
         self.assertEqual(len(result["data"]), 2)
@@ -45,7 +45,7 @@ class TestLLMIntelligence(unittest.TestCase):
         ]
         
         # Request 1 row
-        result = self.provider.generate_bulk_data([], self.ctx, ["f1"], "test-model", "test-inst", 0.7, num_empty=1)
+        result = self.provider.generate_bulk_data([], self.ctx, ["f1"], ["f1"], "test-model", "test-inst", 0.7, num_empty=1)
         
         self.assertEqual(len(result["data"]), 1)
         # Verify 2 calls (Original + Repair)

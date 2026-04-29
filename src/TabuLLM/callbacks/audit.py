@@ -29,164 +29,157 @@ def run_dataset_audit(n_clicks, row_data, targets):
     if not n_clicks or not row_data:
         return dash.no_update, dash.no_update, dash.no_update, dash.no_update
     
-    logger.info(f"--- STARTING PREMIUM TABBED AUDIT (n={len(row_data)}) ---")
+    logger.info(f"--- STARTING EXPANSIVE MODULAR AUDIT (n={len(row_data)}) ---")
     df = pd.DataFrame(row_data)
-    
-    # 1. Calculate Comprehensive Metrics
-    struct = auditor.get_structural_metrics(df)
-    privacy = auditor.get_privacy_metrics(df)
-    outliers = auditor.get_outlier_metrics(df)
-    cardinality = auditor.get_cardinality_metrics(df)
     
     sensitive_keywords = ['gender', 'sex', 'age', 'race', 'ethnicity', 'nationality', 'religion', 'zip', 'income', 'stage', 'location', 'origin', 'education', 'marital', 'disability']
     sensitive_cols = [c for c in df.columns if any(k in c.lower() for k in sensitive_keywords) 
                       and not (c.startswith('is_ai_') or c in ['is_context', 'is_target'])]
     
     target_col = targets[0] if targets else None
-    fairness = auditor.get_fairness_metrics(df, target_col, sensitive_cols)
-    proxies = auditor.get_proxy_risks(df, sensitive_cols)
-    quality = auditor.get_quality_metrics(df, target_col)
+    
+    # 1. Calculate Comprehensive Metrics
+    report = auditor.get_audit_report(df, target_col, sensitive_cols)
+    struct = report['structural']
+    quality = report['quality']
+    fairness = report['fairness']
+    privacy = report['privacy']
 
-    # 2. Build Structural Layout
+    # 2. Build Structural Layout (10+ Metrics)
     struct_layout = [
         html.Div([
-            html.H6([html.I(className="bi bi-cpu me-2"), "Integrity & Distribution"], className="fw-bold x-small text-info text-uppercase mb-3 mt-2"),
+            html.H6([html.I(className="bi bi-cpu me-2"), "Physical & Structural Core"], className="fw-bold x-small text-info text-uppercase mb-3 mt-2"),
             dbc.Row([
                 dbc.Col([
-                    html.Small(["Sparsity", _get_help_icon("help-sparsity", "Percentage of missing values. High sparsity weakens local model patterns.")]),
-                    dbc.Progress(value=struct['overall_sparsity']*100, color="info", className="mb-2", style={"height": "4px"})
+                    html.Small(["Density", _get_help_icon("help-density", "Ratio of non-null cells. High density is better for model stability.")]),
+                    dbc.Progress(value=struct['density_ratio']*100, color="info", className="mb-2", style={"height": "4px"})
                 ], width=6),
                 dbc.Col([
-                    html.Small(["Outliers", _get_help_icon("help-outliers", "Statistically extreme rows (Z-score > 3). Excessive outliers can bias generation.")]),
-                    dbc.Progress(value=outliers['outlier_ratio']*1000 if outliers['outlier_ratio'] < 0.1 else 100, color="danger" if outliers['total_outliers'] > 0 else "success", className="mb-2", style={"height": "4px"})
+                    html.Small(["Memory Efficiency", _get_help_icon("help-mem", "Total footprint in memory.")]),
+                    html.Div(struct['memory_readable'], className="text-light fw-bold xx-small")
                 ], width=6),
             ], className="g-3 text-muted xx-small mb-3"),
             
+            html.Div([
+                html.Div([html.Span("Rows / Columns", className="xx-small"), html.Span(f"{struct['row_count']} / {struct['col_count']}", className="ms-auto text-light")], className="d-flex mb-1 border-bottom border-secondary border-opacity-25 pb-1"),
+                html.Div([html.Span("Total Cells", className="xx-small"), html.Span(f"{struct['total_cells']:,}", className="ms-auto text-light")], className="d-flex mb-1 border-bottom border-secondary border-opacity-25 pb-1"),
+                html.Div([html.Span("Empty Rows", className="xx-small"), html.Span(str(struct['empty_rows']), className="ms-auto text-light")], className="d-flex mb-1 border-bottom border-secondary border-opacity-25 pb-1"),
+                html.Div([html.Span("Avg Cardinality", className="xx-small"), html.Span(f"{struct['avg_cardinality']:.1f}", className="ms-auto text-light")], className="d-flex mb-1 border-bottom border-secondary border-opacity-25 pb-1"),
+            ], className="text-muted xx-small mb-3"),
+            
             html.Hr(className="border-secondary opacity-25 my-2"),
-            html.Small([html.I(className="bi bi-graph-up-arrow me-1"), "Distribution & Cardinality Alerts"], className="text-muted xx-small fw-bold d-block mb-2"),
+            html.Small([html.I(className="bi bi-tags me-1"), "Dynamic Type Mapping"], className="text-muted xx-small fw-bold d-block mb-2"),
+            html.Div([
+                dbc.Badge(f"Numeric: {struct['type_distribution']['numeric']}", color="info", className="me-1 xx-small"),
+                dbc.Badge(f"Categorical: {struct['type_distribution']['categorical']}", color="success", className="me-1 xx-small"),
+                dbc.Badge(f"Objects: {struct['type_distribution']['object']}", color="secondary", className="me-1 xx-small"),
+            ])
         ])
     ]
-    
-    struct_alerts = []
-    # Add Skewness Alerts
-    if 'skewness' in struct:
-        for col, skew in struct['skewness'].items():
-            if abs(skew) > 2:
-                struct_alerts.append(dbc.Badge([f"Skews: {col}"], color="warning", className="me-1 mb-1 xx-small", id=f"skew-{col}"))
-                struct_alerts.append(dbc.Tooltip(f"Highly Asymmetrical: {col} has skewness of {skew:.2f}. May need normalization.", target=f"skew-{col}"))
-    if cardinality:
-        for c_col, c_data in cardinality.items():
-            struct_alerts.append(dbc.Badge([f"High Card: {c_col}"], color="danger", className="me-1 mb-1 xx-small", id=f"card-{c_col}"))
-            struct_alerts.append(dbc.Tooltip(f"Volatility: {c_col} has {c_data['count']} uniques. Can lead to model hallucinations.", target=f"card-{c_col}"))
-    if not struct_alerts:
-        struct_alerts = [html.Small("Distributions within normal ranges.", className="text-muted xx-small italic")]
-    struct_layout.append(html.Div(struct_alerts))
 
-    # 3. Build Fairness Layout
-    fairness_layout = [html.H6([html.I(className="bi bi-balance me-2"), "Bias & Parity Scorecard"], className="fw-bold x-small text-warning text-uppercase mb-3 mt-2")]
-    
-    if not target_col:
-        fairness_layout.append(dbc.Alert([
-            html.I(className="bi bi-exclamation-triangle-fill me-2"),
-            "Action Required: Select a Target Variable in the 'Metadata' section to enable fairness parity analysis."
-        ], color="warning", className="xx-small p-2 border-warning opacity-75"))
-    elif not sensitive_cols:
-        fairness_layout.append(dbc.Alert([
-            html.I(className="bi bi-info-circle-fill me-2"),
-            "Note: No sensitive features (gender, race, age, etc.) were auto-detected. Check your column names or rename them to trigger audit metrics."
-        ], color="secondary", className="xx-small p-2 border-secondary"))
-    elif fairness:
-        for col, data in fairness.items():
-            di = data['disparate_impact']
-            impact_val = min(100, max(0, (di / 1.25) * 100))
-            color = "success" if not data['bias_detected'] else ("danger" if di < 0.8 else "warning")
-            fairness_layout.append(html.Div([
-                html.Div([html.Span(f"{col.title()}", className="fw-bold x-small"), html.Span(f"DI: {di:.2f}", className=f"ms-auto text-{color}")], className="d-flex align-items-center mb-1"),
-                dbc.Progress(value=impact_val, color=color, className="mb-1", style={"height": "10px", "borderRadius": "5px"}),
-                html.Div([html.Small([f"Ref: {data['majority_group']}", _get_help_icon(f"help-di-{col}", "Measures if groups receive equal outcomes. (Goal: 0.8 - 1.25)")]), html.Small(f"Gap: {data['parity_gap']:.2f}", className="ms-auto")], className="d-flex justify-content-between text-muted xx-small mb-2")
-            ], className="mb-3 p-2 border border-secondary rounded bg-black shadow-sm"))
-            
-        # Add Gini Stability here
-        if 'stability' in struct:
-            stab_items = []
-            for col, stab in struct['stability'].items():
-                if stab > 0.7:
-                    stab_items.append(html.Div([
-                        html.Small(f"Stuck Group: {col}", className="xx-small text-muted"),
-                        dbc.Progress(value=stab*100, color="danger", className="mb-1", style={"height": "2px"})
-                    ], className="mb-1"))
-            if stab_items:
-                fairness_layout.append(html.Div([
-                    html.Hr(className="border-secondary opacity-25 my-3"),
-                    html.Small([html.I(className="bi bi-virus me-2"), "Category Dominance (Gini Stability)"], className="text-muted xx-small fw-bold d-block mb-2"),
-                    html.Div(stab_items)
-                ]))
-    else:
-        fairness_layout.append(dbc.Alert("Fairness metrics could not be calculated. Select more diverse sensitive features.", color="secondary", className="xx-small p-2 border-secondary"))
-
-    # 4. Build Privacy Layout
-    qids = auditor.get_quasi_identifiers(df)
-    privacy_color = "success" if privacy['risk_level'] == 'Low' else ("warning" if privacy['risk_level'] == 'Medium' else "danger")
-    
-    privacy_layout = [
-        html.H6([html.I(className="bi bi-shield-lock me-2"), "Privacy & Identity Integrity"], className="fw-bold x-small text-danger text-uppercase mb-3 mt-2"),
-        html.Div([
-            html.Small([f"Re-identification Risk ({privacy['risk_level']})", _get_help_icon("help-privacy", "Identity uniqueness based on all feature combinations (including numeric QIDs).")]),
-            dbc.Progress(value=privacy['uniqueness_ratio']*100, color=privacy_color, className="mb-1", style={"height": "10px"}),
-            html.Div([
-                html.Small(f"Ratio: {privacy['uniqueness_ratio']*100:.1f}%", className="text-muted xx-small"),
-                html.Small(f"At-Risk: {privacy['at_risk_count']} rows", className="ms-auto text-muted xx-small")
-            ], className="d-flex justify-content-between mb-3")
-        ]),
-        
-        html.Hr(className="border-secondary opacity-25 my-2"),
-        html.Small([html.I(className="bi bi-fingerprint me-1"), "Potential Quasi-Identifiers"], className="text-muted xx-small fw-bold d-block mb-2"),
-        html.Div([
-            dbc.Badge(qid, color="danger" if any(k in qid.lower() for k in ['zip', 'id', 'addr', 'loc', 'dob']) else "warning", 
-                      className="me-1 mb-1 xx-small") for qid in qids
-        ] if qids else [html.Small("No sensitive QIDs found.", className="text-muted xx-small italic")]),
-
-        html.Hr(className="border-secondary opacity-25 my-2"),
-        html.Small([html.I(className="bi bi-link-45deg me-1"), "Social Correlation Proxies (0.30+)"], className="text-muted xx-small fw-bold d-block mb-2"),
-    ]
-    
-    proxy_badges = []
-    if proxies:
-        for s_col, p_map in proxies.items():
-            for p_col in p_map.keys():
-                proxy_badges.append(dbc.Badge([f"{p_col} → {s_col}"], color="warning", className="me-1 mb-1 xx-small", id=f"proxy-{p_col}"))
-                proxy_badges.append(dbc.Tooltip(f"Hidden Bias: {p_col} has {p_map[p_col]:.2f} correlation with {s_col}.", target=f"proxy-{p_col}"))
-    if not proxy_badges:
-        proxy_badges = [html.Small("No significant proxy linkages detected.", className="text-muted xx-small italic")]
-    privacy_layout.append(html.Div(proxy_badges))
-
-    # 5. Build Quality Layout
+    # 3. Build Quality Layout (10+ Metrics)
     q_score = quality['quality_score']
     q_color = "success" if q_score > 90 else ("warning" if q_score > 70 else "danger")
     quality_layout = [
-        html.H6([html.I(className="bi bi-check-circle me-2"), "Data Quality & Consistency"], className="fw-bold x-small text-primary text-uppercase mb-3 mt-2"),
+        html.H6([html.I(className="bi bi-check-circle me-2"), "Data Quality & Signal-to-Noise"], className="fw-bold x-small text-primary text-uppercase mb-3 mt-2"),
         html.Div([
-            html.Div([html.Small("Cleanliness Score", className="xx-small text-muted"), html.Small(f"{q_score:.0f}/100", className=f"ms-auto text-{q_color} fw-bold")], className="d-flex mb-1"),
+            html.Div([html.Small("Signal Quality Score", className="xx-small text-muted"), html.Small(f"{q_score:.0f}/100", className=f"ms-auto text-{q_color} fw-bold")], className="d-flex mb-1"),
             dbc.Progress(value=q_score, color=q_color, className="mb-3", style={"height": "10px"})
         ]),
         html.Div([
-            html.Div([html.Span("Duplicate Records", className="xx-small"), html.Span(str(quality['total_duplicates']), className="ms-auto text-light")], className="d-flex mb-1 border-bottom border-secondary border-opacity-25 pb-1"),
+            html.Div([html.Span("Duplicates", className="xx-small"), html.Span(f"{quality['duplicate_count']} ({quality['duplicate_ratio']*100:.1f}%)", className="ms-auto text-light")], className="d-flex mb-1 border-bottom border-secondary border-opacity-25 pb-1"),
+            html.Div([html.Span("Outlier Records", className="xx-small"), html.Span(f"{quality['outlier_count']} ({quality['outlier_ratio']*100:.1f}%)", className="ms-auto text-light")], className="d-flex mb-1 border-bottom border-secondary border-opacity-25 pb-1"),
+            html.Div([html.Span("Avg Skewness", className="xx-small"), html.Span(f"{quality['avg_skewness']:.2f}", className="ms-auto text-light")], className="d-flex mb-1 border-bottom border-secondary border-opacity-25 pb-1"),
+            html.Div([html.Span("Avg Kurtosis", className="xx-small"), html.Span(f"{quality['avg_kurtosis']:.2f}", className="ms-auto text-light")], className="d-flex mb-1 border-bottom border-secondary border-opacity-25 pb-1"),
             html.Div([html.Span("Conflicting Targets", className="xx-small"), html.Span(str(quality['conflicting_labels']), className="ms-auto text-light")], className="d-flex mb-1 border-bottom border-secondary border-opacity-25 pb-1"),
-            html.Div([html.Span("Constant Features", className="xx-small"), html.Span(str(len(quality['constant_features'])), className="ms-auto text-light")], className="d-flex mb-1 border-bottom border-secondary border-opacity-25 pb-1"),
         ], className="text-muted xx-small mb-3"),
+        
+        html.Small([html.I(className="bi bi-droplet-half me-1"), "Missingness Landscape"], className="text-muted xx-small fw-bold d-block mb-1"),
+        html.Div([
+            dbc.Badge(f"{quality['columns_with_missing']} cols with nulls", color="warning" if quality['columns_with_missing'] > 0 else "success", className="xx-small")
+        ])
     ]
-    
-    if quality['constant_features']:
-        quality_layout.append(html.Div([
-            html.Small([html.I(className="bi bi-exclamation-triangle me-1"), "Zero Variance Alert"], className="text-warning xx-small d-block mb-1"),
-            html.Div([dbc.Badge(c, color="secondary", className="me-1 mb-1 xx-small") for c in quality['constant_features']])
-        ]))
 
-    logger.info("--- PREMIUM TABBED AUDIT COMPLETE ---")
+    # 4. Build Fairness Layout (Deep Metrics)
+    fairness_layout = [html.H6([html.I(className="bi bi-balance me-2"), "Fairness & Ethical Representation"], className="fw-bold x-small text-warning text-uppercase mb-3 mt-2")]
+    
+    if "status" in fairness:
+        fairness_layout.append(dbc.Alert(fairness["status"], color="secondary", className="xx-small p-2"))
+    else:
+        fairness_layout.append(html.Div([
+            html.Div([html.Span("Detected Bias Zones", className="xx-small text-muted"), html.Span(str(fairness['detected_bias_count']), className=f"ms-auto badge bg-{'danger' if fairness['detected_bias_count'] > 0 else 'success'}")], className="d-flex mb-2 align-items-center"),
+        ]))
+        
+        for col, data in fairness['metrics_per_attr'].items():
+            di = data['disparate_impact']
+            color = "success" if (0.8 <= di <= 1.25) else ("danger" if di < 0.8 else "warning")
+            
+            # Find top distribution shift
+            shifts = data.get('distribution_shift', {})
+            top_shift_col = max(shifts, key=shifts.get) if shifts else None
+            shift_val = shifts[top_shift_col] if top_shift_col else 0
+            
+            fairness_layout.append(html.Div([
+                html.Div([html.Small(col.title(), className="fw-bold"), html.Small(f"DI: {di:.2f}", className=f"ms-auto text-{color}")], className="d-flex"),
+                dbc.Progress(value=min(100, (di/1.25)*100), color=color, className="my-1", style={"height": "6px"}),
+                html.Div([
+                    html.Small(f"Maj: {data['majority_group']}", className="xx-small text-muted"), 
+                    html.Small(f"Rep: {data['representation_ratio']*100:.1f}%", className="ms-auto xx-small text-muted")
+                ], className="d-flex mb-1"),
+                
+                # NEW: Grantular shift alerts
+                html.Div([
+                    html.I(className="bi bi-info-circle me-1 text-info"),
+                    html.Span(f"Context Shift: {top_shift_col} (+{shift_val:.2f})", className="xx-small opacity-75")
+                ], className="text-muted italic mb-2") if shift_val > 0.2 else None
+            ], className="mb-3 p-1 border-start border-3 border-secondary bg-white bg-opacity-5"))
+
+    # 5. Build Privacy Layout (Deep Metrics)
+    p_risk = privacy['identity_risk_level']
+    p_color = "success" if p_risk == 'Low' else ("warning" if p_risk == 'Medium' else "danger")
+    
+    privacy_layout = [
+        html.H6([html.I(className="bi bi-shield-lock me-2"), "Privacy Erosion & Identity Risk"], className="fw-bold x-small text-danger text-uppercase mb-3 mt-2"),
+        html.Div([
+            html.Div([html.Small(f"Risk Profile: {p_risk}", className="xx-small text-muted"), html.Small(f"{privacy['uniqueness_ratio']*100:.1f}% unique", className=f"ms-auto text-{p_color}")], className="d-flex mb-1"),
+            dbc.Progress(value=privacy['uniqueness_ratio']*100, color=p_color, className="mb-3", style={"height": "10px"}),
+        ]),
+        
+        # New K-Anonymity & Entropy Row
+        dbc.Row([
+            dbc.Col([
+                html.Small("Avg K-Anon", className="xx-small text-muted d-block"),
+                html.Strong(f"{privacy['avg_k_anonymity']:.1f}", className="text-light small")
+            ], width=6),
+            dbc.Col([
+                html.Small("Max Entropy", className="xx-small text-muted d-block"),
+                html.Strong(f"{privacy['max_column_entropy']:.2f}", className="text-light small")
+            ], width=6),
+        ], className="mb-3 text-center"),
+
+        html.Small([html.I(className="bi bi-list-stars me-1"), "Top Identifiability Leakers"], className="text-muted xx-small fw-bold d-block mb-1"),
+        html.Div([
+            html.Div([
+                html.Span(col, className="xx-small"),
+                dbc.Badge(m['identifiability'], color="danger" if m['identifiability'] == "High" else "secondary", className="ms-auto xx-small")
+            ], className="d-flex mb-1 border-bottom border-secondary border-opacity-10 pb-1")
+            for col, m in sorted(privacy['attr_identifiability'].items(), key=lambda x: x[1]['uniqueness_signal'], reverse=True)[:5]
+        ], className="mb-3"),
+        
+        html.Small([html.I(className="bi bi-fingerprint me-1"), "Suspected QID Cluster"], className="text-muted xx-small fw-bold d-block mb-1"),
+        html.Div([
+            dbc.Badge(qid, color="danger", className="me-1 mb-1 xx-small") for qid in privacy['known_sensitive_patterns'][:5]
+        ] if privacy['known_sensitive_patterns'] else [html.Small("None detected by pattern match.", className="text-muted xx-small italic")])
+    ]
+
+    logger.info("--- PHASE 3 MODULAR AUDIT COMPLETE ---")
     return struct_layout, fairness_layout, privacy_layout, quality_layout
 
 @app.callback(
     Output({"type": "audit-strategy-markdown", "index": MATCH}, "children"),
+    Output({"type": "generated-rules-store", "index": MATCH}, "data"),
+    Output({"type": "btn-apply-audit-rules", "index": MATCH}, "style"),
+    Output({"type": "tooltip-apply-audit-rules", "index": MATCH}, "children"),
     Input({"type": "btn-ponder-audit", "index": MATCH}, "n_clicks"),
     State({"type": "data-grid", "index": MATCH}, "rowData"),
     State({"type": "target-cols-dropdown", "index": MATCH}, "value"),
@@ -202,40 +195,66 @@ def ponder_audit_strategy(n_clicks, row_data, targets, algo, temp):
     df_raw = pd.DataFrame(row_data)
     df = auditor._filter_data(df_raw)
     
-    struct = auditor.get_structural_metrics(df)
-    privacy = auditor.get_privacy_metrics(df)
+    target_col = targets[0] if targets else None
     sensitive_keywords = ['gender', 'sex', 'age', 'race', 'ethnicity', 'nationality', 'religion', 'zip', 'income', 'stage', 'location', 'origin', 'education', 'marital', 'disability']
     sensitive_cols = [c for c in df.columns if any(k in c.lower() for k in sensitive_keywords) and c not in ['is_context', 'is_target']]
-    
-    target_col = targets[0] if targets else "None Selected"
-    fairness = auditor.get_fairness_metrics(df, targets[0] if targets else None, sensitive_cols)
-    proxies = auditor.get_proxy_risks(df, sensitive_cols)
-    quality = auditor.get_quality_metrics(df, targets[0] if targets else None)
-    outliers = auditor.get_outlier_metrics(df)
+
+    report = auditor.get_audit_report(df, target_col, sensitive_cols)
 
     # 2. Render Prompt
     context = {
-        "overall_sparsity": struct['overall_sparsity'] * 100,
-        "top_sparse_cols": [c for c, s in struct['sparsity'].items() if s > 0.05][:3],
-        "skewness": {c: v for c, v in struct.get('skewness', {}).items() if abs(v) > 2},
+        "report": report,
         "target_col": target_col,
-        "fairness": fairness,
-        "privacy": privacy,
-        "proxies": proxies,
-        "quality": quality,
-        "outliers": outliers
+        "sensitive_cols": sensitive_cols
     }
     prompt = prompt_manager.get_prompt("ponder_audit.j2", **context)
     
-    # 3. Call LLM
+    # 3. Call LLM for Strategy
     try:
         logger.info(f"AI Pondering: Generating Ethics-Aware Strategy using {algo}")
-        response = call_llm(
+        strategy = call_llm(
             messages=[{"role": "user", "content": prompt}],
             model_id=algo,
             temperature=temp
         )
-        return response
+        
+        # 4. Generate Rules from Strategy
+        logger.info("AI Pondering: Transforming Strategy into Actionable Rules")
+        rules_prompt = prompt_manager.get_prompt("audit_to_rules", strategy=strategy, attributes=df.columns.tolist())
+        logger.debug(f"Rules Prompt: {rules_prompt}")
+        rules_json = call_llm(
+            messages=[{"role": "user", "content": rules_prompt}],
+            model_id=algo,
+            temperature=0.1
+        )
+        
+        import json
+        try:
+            # Clean up potential markdown formatting if LLM included it
+            clean_json = rules_json.strip()
+            if clean_json.startswith("```json"):
+                clean_json = clean_json.split("```json")[1].split("```")[0].strip()
+            elif clean_json.startswith("```"):
+                clean_json = clean_json.split("```")[1].split("```")[0].strip()
+            
+            rules = json.loads(clean_json)
+            # Create a nice preview for the tooltip
+            preview = [html.Div([
+                html.B(f"{r.get('name')}: ", className="text-warning"), 
+                html.Span(f"{r.get('value')}")
+            ], className="mb-1") for r in rules[:5]]
+            if len(rules) > 5:
+                preview.append(html.Small(f"... and {len(rules)-5} more rules", className="italic opacity-75"))
+            
+            if not preview:
+                preview = "Apply the identified strategic rules to generation"
+                
+            return strategy, rules, {"display": "block"}, preview
+            
+        except Exception as e:
+            logger.error(f"Failed to parse rules JSON: {e}")
+            return strategy, [], {"display": "none"}, "Error parsing rules"
+
     except Exception as e:
         logger.error(f"Audit Pondering Error: {e}")
-        return f"**Generation Failed**: {str(e)}"
+        return f"**Generation Failed**: {str(e)}", [], {"display": "none"}, dash.no_update

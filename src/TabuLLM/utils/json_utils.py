@@ -96,6 +96,24 @@ def robust_json_loads(text: str):
     if result is not None:
         return result
 
+    # Find the start of the likely JSON structure
+    start_idx = -1
+    for i, char in enumerate(text):
+        if char in ['{', '[']:
+            start_idx = i
+            break
+
+    if start_idx == -1:
+        logger.error(f"Failed to extract any JSON-like structure from response. Content: {text[:200]}...")
+        error_data = {
+            "error": "No JSON-like structure (brackets) found in text.", 
+            "full_text": text,
+            "context": "No JSON brackets detected",
+            "line": 0,
+            "column": 0
+        }
+        raise RobustJSONError("JSON extraction failed: No brackets found", error_data)
+
     # Step 2: Strip markdown blocks and try
     if "```" in text:
         cleaned = re.sub(r'```(?:json)?\s*(.*?)\s*```', r'\1', text, flags=re.DOTALL).strip()
@@ -147,6 +165,37 @@ def robust_json_loads(text: str):
         "column": 0
     }
     raise RobustJSONError("JSON extraction failed: No brackets found", error_data)
+    # Step 4: Fallback Bracket Extraction (Last Resort)
+    end_idx = -1
+    for i in range(len(text) - 1, start_idx, -1):
+        if text[i] in ['}', ']']:
+            end_idx = i + 1
+            break
+    
+    potential_json = text[start_idx:].strip() if end_idx == -1 else text[start_idx:end_idx].strip()
+    result = try_parse(potential_json, "Bracket Extraction Fallback")
+    if result is not None:
+        return result
+        
+    # If it still fails, provide detailed error
+    try:
+        json.loads(potential_json)
+    except json.JSONDecodeError as e:
+        lines = potential_json.splitlines()
+        err_line = e.lineno
+        start = max(0, err_line - 3)
+        end = min(len(lines), err_line + 2)
+        context_snippet = "\n".join(lines[start:end]) if lines else "Empty or truncated JSON"
+        
+        error_data = {
+            "error": str(e),
+            "line": err_line,
+            "column": e.colno,
+            "context": context_snippet,
+            "full_text": potential_json
+        }
+        logger.warning(f"JSON parsing failed after all stages. Error: {e}")
+        raise RobustJSONError(f"JSON parsing failed: {e}", error_data)
 
 class RobustJSONError(Exception):
     """Custom error carrying context for LLM repair."""
@@ -214,6 +263,7 @@ def from_compact_json(compact_data: dict, fallback_cols: list, h_to_f: dict = No
         
     rows = compact_data.get("data", [])
     if not isinstance(rows, list):
+        logger.warning(f"JSON Transform: 'data' field is not a list ({type(rows)}).")
         return []
     
     logger.info(f"JSON Transform: Successfully unpacked {len(rows)} rows from Compact JSON using {len(mapping_keys)} identifying keys.")

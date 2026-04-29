@@ -15,6 +15,7 @@ from services.report_generator import PDFReportGenerator, generate_benchmark_pdf
 class TestSystemIntegration(unittest.TestCase):
     
     def setUp(self):
+        os.environ["TABULLM_SYNC_TEST"] = "1"
         self.df_orig = pd.DataFrame({
             "age": [20, 30, 40, 50, 60],
             "income": [20000, 30000, 40000, 50000, 60000],

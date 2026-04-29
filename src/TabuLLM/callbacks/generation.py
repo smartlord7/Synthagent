@@ -164,38 +164,96 @@ def _map_targets(row_data, target_ids, headers):
     logger.info(f"Target Mapping: {len(payload)} partial rows, {empty_count} entirely new rows.")
     return payload, combined_indices, empty_count
 
-def _process_results(rows, target_indices, result_bundle, algo, all_fields):
-    """Integrate LLM rows into the local grid rowData using strict positional mapping."""
+def _process_results(rows, target_indices, result_bundle, algo, all_fields, rules_hierarchy=None):
+    """Integrate LLM rows into the local grid rowData using strict positional mapping and rule-aware audit."""
     if not result_bundle:
         logger.error("Result Processing: No result bundle received.")
         return rows
         
     rows_from_llm = result_bundle.get('data', [])
+    stats = result_bundle.get('stats', {'total_tokens': 0})
     ts = datetime.now().strftime("%H:%M:%S")
     
+    # Pre-build Rule Validator Model
+    pydantic_model = None
+    if rules_hierarchy:
+        active_rules = list(rules_hierarchy.get("integrity", []))
+        if rules_hierarchy.get("enforce_boundaries"):
+            active_rules.extend(rules_hierarchy.get("boundaries", []))
+        if rules_hierarchy.get("enforce_user"):
+            active_rules.extend(rules_hierarchy.get("user", []))
+        
+        from services.rule_validator import RuleValidator
+        pydantic_model = RuleValidator.create_pydantic_model(active_rules)
+
     # Integration logic: LLM Row 1 -> Target Index 1
     for i, idx in enumerate(target_indices):
         if i < len(rows_from_llm):
             new_row_data = rows_from_llm[i]
+            has_missing_or_null = False
+            has_rule_violations = False
             
-            # Use ALL_FIELDS (the list of unique IDs) to map data
-            # Since from_compact_json was called with all_fields, new_row_data keys are field IDs
+            # 1. Basic Type Guard
+            if not isinstance(new_row_data, dict):
+                logger.error(f"Result Processing: Row {i} is NOT a dictionary. Marking for retry.")
+                rows[idx]['ai_audit'] = f"Error | Malformed format (Retrying...) | {ts}"
+                rows[idx]['is_target'] = True
+                continue
+
+            # 2. Extract and Sanitize
+            clean_row = {}
             for f in all_fields:
                 val = new_row_data.get(f)
+                
+                # Cleaning logic
+                clean_val = val
                 if val is not None:
-                    # Clean and Inject
-                    clean_val = str(val).strip()
-                    if clean_val.replace('.', '').replace('-', '').isdigit():
-                        try: clean_val = float(clean_val) if '.' in clean_val else int(clean_val)
+                    s_val = str(val).strip()
+                    if s_val.replace('.', '').replace('-', '').isdigit():
+                        try: clean_val = float(s_val) if '.' in s_val else int(s_val)
                         except: pass
-                    rows[idx][f] = clean_val
+                
+                # Null Check
+                is_null = False
+                if clean_val is None:
+                    is_null = True
+                elif isinstance(clean_val, str) and not clean_val.strip():
+                    is_null = True
+                elif str(clean_val).lower() in ["null", "none", "nan"]:
+                    is_null = True
+                
+                if is_null:
+                    has_missing_or_null = True
+                
+                clean_row[f] = clean_val
+
+            # 3. Rule Validation (if model exists)
+            if pydantic_model and not has_missing_or_null:
+                try:
+                    pydantic_model(**clean_row)
+                except Exception as e:
+                    logger.warning(f"Result Processing: Row at index {idx} failed rule validation: {e}")
+                    has_rule_violations = True
+
+            # 4. State Update / Auditing
+            if has_missing_or_null or has_rule_violations:
+                reason = "Partial/Null Data" if has_missing_or_null else "Rule Violation"
+                rows[idx]['is_target'] = True
+                rows[idx]['ai_audit'] = f"Retry | {reason} ({algo}) | {ts}"
+            else:
+                # Success - Inject data
+                for f, v in clean_row.items():
+                    rows[idx][f] = v
                     rows[idx][f"is_ai_{f}"] = True
-            
-            # Metadata update
-            rows[idx]['is_target'] = False
-            rows[idx]['is_context'] = True 
-            rows[idx]['ai_audit'] = f"GEN | {algo} | {ts}"
-            
+                
+                rows[idx]['is_target'] = False
+                rows[idx]['is_context'] = True 
+                rows[idx]['ai_audit'] = f"Gen AI | {algo} | {stats.get('total_tokens', 0)} tok | {ts}"
+        else:
+            # Shortfall handling
+            rows[idx]['ai_audit'] = f"Retry | Shortfall (Retrying...) | {ts}"
+            rows[idx]['is_target'] = True
+
     return rows
 
 # --- THE MASTER AI GENERATION ENGINE ---
@@ -261,22 +319,39 @@ def run_ai_generation_pm(n_clicks, row_data, target_ids, context_ids, full_ctx,
     # 2. Pipeline preparation
     logger.debug(f"Compiled Instructions:\n{inst}")
     
-    ctx = _prepare_context(row_data, context_ids, full_ctx, strat, max_c, col_defs, desc)
-    payload, target_indices, empty_count = _map_targets(row_data, target_ids, ctx['header_to_field'])
+    # 2. Execution Loop (Autonomous Regeneration)
+    max_rounds = 3
+    current_round = 1
+    current_target_ids = list(target_ids)
+    
+    while current_target_ids and current_round <= max_rounds:
+        logger.info(f"--- GENERATION ROUND {current_round}/{max_rounds} ({len(current_target_ids)} targets) ---")
+        
+        ctx = _prepare_context(row_data, context_ids, full_ctx, strat, max_c, col_defs, desc)
+        payload, target_indices, empty_count = _map_targets(row_data, current_target_ids, ctx['header_to_field'])
 
-    # 2. Execution
-    result_bundle = generate_bulk_data(
+        result_bundle = generate_bulk_data(
             payload, ctx, ctx['column_headers'], all_fields, algo, inst, temp,
             num_empty=empty_count, chunk_size=chunk_sz, 
             rules_metadata=rules_hierarchy, enforce_rules=True
         )
 
-    # 3. Post-processing
-    updated_rows = _process_results(list(row_data), target_indices, result_bundle, algo, all_fields)
-    
-    # 3b. Apply Schema Updates (Column Renaming)
+        # 3. Post-processing (Merges into row_data)
+        row_data = _process_results(list(row_data), target_indices, result_bundle, algo, all_fields, rules_hierarchy=rules_hierarchy)
+        
+        # 3b. Identify remaining targets (those that failed the completeness audit)
+        current_target_ids = [r['_row_id'] for r in row_data if r.get('is_target') and r['_row_id'] in target_ids]
+        
+        if current_target_ids:
+            logger.warning(f"Round {current_round} finished with {len(current_target_ids)} failures. Retrying in next round...")
+            current_round += 1
+        else:
+            logger.info("All targets successfully generated and audited.")
+            break
+
+    # 4. Final Updates (Schema & Remaining)
     updated_cols = list(col_defs)
-    schema_updates = result_bundle.get("schema_updates", {})
+    schema_updates = result_bundle.get("schema_updates", {}) # Grab last bundle's schema info
     if schema_updates:
         logger.info(f"Schema Evolution: Applying {len(schema_updates)} automated renames.")
         def _canonical(s):
@@ -285,22 +360,19 @@ def run_ai_generation_pm(n_clicks, row_data, target_ids, context_ids, full_ctx,
         for old_name, new_name in schema_updates.items():
             canon_old = _canonical(old_name)
             for col in updated_cols:
-                # Match by headerName or field using canonical comparison
                 h_name = col.get("headerName")
                 f_name = col.get("field")
                 if _canonical(h_name) == canon_old or _canonical(f_name) == canon_old:
-                    logger.info(f"Schema Evolution: Refined '{h_name}' to '{new_name}'")
                     col["headerName"] = new_name
-                    # Highlight the renamed column visually
                     from utils.constants import ai_highlight_style
                     col["cellStyle"] = ai_highlight_style
                     break
 
-    # Identify remaining targets (those that are still marked as targets)
-    remaining = [r['_row_id'] for r in updated_rows if r.get('is_target') and r['_row_id'] in target_ids]
+    # Final list of IDs that are still Targets (RED)
+    remaining_ids = [r['_row_id'] for r in row_data if r.get('is_target') and r['_row_id'] in target_ids]
     
-    logger.info(f"--- GENERATION PIPELINE FINISHED. Successfully processed {len(target_ids) - len(remaining)}/{len(target_ids)} rows. ---")
-    return updated_rows, updated_cols, remaining
+    logger.info(f"--- GENERATION PIPELINE FINISHED. Success: {len(target_ids) - len(remaining_ids)}/{len(target_ids)} ---")
+    return row_data, updated_cols, remaining_ids
 
 
 @app.callback(
