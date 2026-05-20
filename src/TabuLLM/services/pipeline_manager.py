@@ -121,7 +121,11 @@ def run_single_dataset_benchmark(args):
             )
 
             if result_bundle:
+                from services.post_processor import PostProcessor
+                
+                # Extract and then apply active rules (noise, rounding, etc.) via code post-processing
                 generated_rows = result_bundle["data"]
+                generated_rows = PostProcessor.apply_active_rules(generated_rows, rules_hierarchy.get("user", []))
                 test_data_list = df_test_orig.to_dict('records')
                 
                 for row in generated_rows: row["_fold_id"] = fold_num

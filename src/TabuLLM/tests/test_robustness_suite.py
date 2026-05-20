@@ -41,10 +41,12 @@ class TestRobustnessSuite(unittest.TestCase):
 
     # --- AUDITOR ROBUSTNESS ---
     def test_auditor_empty_df(self):
-        """Ensure auditor doesn't crash on an empty DataFrame."""
+        """Ensure auditor doesn't crash on an empty DataFrame and returns structured defaults."""
         df = pd.DataFrame()
         result = auditor.get_structural_metrics(df)
-        self.assertEqual(result, {})
+        self.assertIsInstance(result, dict)
+        self.assertEqual(result.get("row_count"), 0)
+        self.assertIn("type_distribution", result)
         
     def test_auditor_all_nan_column(self):
         """Ensure auditor handles columns containing only NaNs."""

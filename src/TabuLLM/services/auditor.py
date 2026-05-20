@@ -16,7 +16,13 @@ class DatasetAuditor:
     def get_audit_report(self, df: pd.DataFrame, target_col: str = None, sensitive_cols: List[str] = None) -> Dict[str, Any]:
         """Entry point for all audit metrics."""
         df_clean = self._filter_data(df)
-        if df_clean.empty: return {}
+        if df_clean.empty: 
+            return {
+                "structural": {},
+                "quality": {},
+                "fairness": {"status": "No data available after filtering."},
+                "privacy": {}
+            }
         
         return {
             "structural": self.get_structural_metrics(df),
@@ -28,7 +34,14 @@ class DatasetAuditor:
     def get_structural_metrics(self, df: pd.DataFrame) -> dict:
         """Exposes _audit_structure with legacy keys for backward compatibility."""
         df_clean = self._filter_data(df)
-        if df_clean.empty: return {}
+        if df_clean.empty: 
+            return {
+                "sparsity": {}, "overall_sparsity": 0, "skewness": {}, "stability": 0,
+                "row_count": 0, "col_count": 0, "total_cells": 0, "empty_rows": 0,
+                "density_ratio": 0, "sparsity_ratio": 0, "memory_readable": "0 MB",
+                "type_distribution": {"numeric": 0, "categorical": 0, "object": 0},
+                "avg_cardinality": 0, "constant_columns": []
+            }
         s = self._audit_structure(df_clean)
         
         # Calculate skewness and filter out NaNs (e.g. for all-NaN columns)
@@ -49,7 +62,13 @@ class DatasetAuditor:
     def get_quality_metrics(self, df: pd.DataFrame, target_col: str = None) -> dict:
         """Exposes _audit_quality with legacy keys for backward compatibility."""
         df_clean = self._filter_data(df)
-        if df_clean.empty: return {}
+        if df_clean.empty: 
+            return {
+                "quality_score": 0, "duplicate_count": 0, "duplicate_ratio": 0,
+                "outlier_count": 0, "outlier_ratio": 0, "avg_skewness": 0,
+                "avg_kurtosis": 0, "conflicting_labels": 0, "columns_with_missing": 0,
+                "total_duplicates": 0
+            }
         q = self._audit_quality(df_clean, target_col)
         return {
             "total_duplicates": q.get("duplicate_count", 0),
@@ -70,7 +89,14 @@ class DatasetAuditor:
     def get_fairness_metrics(self, df: pd.DataFrame, target_col: str = None, sensitive_cols: List[str] = None) -> dict:
         """Exposes _audit_fairness with legacy keys for backward compatibility."""
         df_clean = self._filter_data(df)
-        if df_clean.empty: return {}
+        if df_clean.empty: 
+            return {
+                "status": "No data available.",
+                "metrics_per_attr": {},
+                "detected_bias_count": 0,
+                "sensitive_proxies": {},
+                "group_sparsity": {}
+            }
         f = self._audit_fairness(df_clean, target_col, sensitive_cols or [])
         # Map metrics_per_attr items to top-level for legacy tests
         legacy_f = dict(f.get("metrics_per_attr", {}))
@@ -81,7 +107,12 @@ class DatasetAuditor:
     def get_privacy_metrics(self, df: pd.DataFrame) -> dict:
         """Exposes _audit_privacy with legacy keys for backward compatibility."""
         df_clean = self._filter_data(df)
-        if df_clean.empty: return {}
+        if df_clean.empty: 
+            return {
+                "uniqueness_ratio": 0, "at_risk_record_count": 0, "identity_risk_level": "N/A",
+                "attr_identifiability": {}, "avg_k_anonymity": 0, "avg_column_entropy": 0,
+                "max_column_entropy": 0, "known_sensitive_patterns": [], "risk_level": "N/A"
+            }
         p = self._audit_privacy(df_clean)
         return {
             "risk_level": p.get("identity_risk_level", "Low"),
@@ -155,7 +186,13 @@ class DatasetAuditor:
 
     def _audit_fairness(self, df: pd.DataFrame, target_col: str, sensitive_cols: List[str]) -> dict:
         if not target_col or not sensitive_cols:
-            return {"status": "Target or sensitive features not selected."}
+            return {
+                "status": "Target or sensitive features not selected.",
+                "metrics_per_attr": {},
+                "detected_bias_count": 0,
+                "sensitive_proxies": {},
+                "group_sparsity": {}
+            }
         
         metrics = {
             "metrics_per_attr": {},

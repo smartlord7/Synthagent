@@ -1,0 +1,191 @@
+{
+  "session_name": "Initial Experiment",
+  "original-data-store": [
+    {
+      "primary_diagnosis": "Hypertension",
+      "secondary_diagnosis": null,
+      "icd10_code": "I10",
+      "admission_type": "Outpatient",
+      "_row_id": "1aac4be2-d4b3-4599-96ea-76fc65845167",
+      "is_context": false,
+      "is_target": false,
+      "ai_audit": ""
+    },
+    {
+      "primary_diagnosis": "Type 2 Diabetes",
+      "secondary_diagnosis": "Hypertension",
+      "icd10_code": "E11",
+      "admission_type": "Inpatient",
+      "_row_id": "7261a3dc-aecb-419b-924f-0401844b1684",
+      "is_context": false,
+      "is_target": false,
+      "ai_audit": ""
+    },
+    {
+      "primary_diagnosis": "Hyperlipidemia",
+      "secondary_diagnosis": null,
+      "icd10_code": "E78",
+      "admission_type": "Outpatient",
+      "_row_id": "296e358f-af5d-4ba8-8f5c-a05059aae4a2",
+      "is_context": false,
+      "is_target": false,
+      "ai_audit": ""
+    },
+    {
+      "primary_diagnosis": "Healthy",
+      "secondary_diagnosis": null,
+      "icd10_code": "Z00",
+      "admission_type": "Outpatient",
+      "_row_id": "8777d793-abb4-493b-8439-566d32495cd8",
+      "is_context": false,
+      "is_target": false,
+      "ai_audit": ""
+    },
+    {
+      "primary_diagnosis": "Cardiovascular Disease",
+      "secondary_diagnosis": "Diabetes",
+      "icd10_code": "I25",
+      "admission_type": "Inpatient",
+      "_row_id": "fa73fccc-3c96-4baf-8fa9-5f559e72e825",
+      "is_context": false,
+      "is_target": false,
+      "ai_audit": ""
+    },
+    {
+      "primary_diagnosis": "Hypertension",
+      "secondary_diagnosis": "Obesity",
+      "icd10_code": "I10",
+      "admission_type": "Outpatient",
+      "_row_id": "21b0b530-f550-46ac-a849-dbd459c18044",
+      "is_context": false,
+      "is_target": false,
+      "ai_audit": ""
+    },
+    {
+      "primary_diagnosis": "Diabetes",
+      "secondary_diagnosis": "Hyperlipidemia",
+      "icd10_code": "E11",
+      "admission_type": "Inpatient",
+      "_row_id": "4a314e0a-108f-4f94-9605-74f1fd0213fd",
+      "is_context": false,
+      "is_target": false,
+      "ai_audit": ""
+    },
+    {
+      "primary_diagnosis": "Healthy",
+      "secondary_diagnosis": null,
+      "icd10_code": "Z00",
+      "admission_type": "Outpatient",
+      "_row_id": "fecfcdde-039b-4331-a963-fc5425344aa0",
+      "is_context": false,
+      "is_target": false,
+      "ai_audit": ""
+    }
+  ],
+  "data-grid": [
+    {
+      "primary_diagnosis": "Hypertension",
+      "secondary_diagnosis": null,
+      "icd10_code": "I10",
+      "admission_type": "Outpatient",
+      "_row_id": "1aac4be2-d4b3-4599-96ea-76fc65845167",
+      "is_context": false,
+      "is_target": false,
+      "ai_audit": ""
+    },
+    {
+      "primary_diagnosis": "Type 2 Diabetes",
+      "secondary_diagnosis": "Hypertension",
+      "icd10_code": "E11",
+      "admission_type": "Inpatient",
+      "_row_id": "7261a3dc-aecb-419b-924f-0401844b1684",
+      "is_context": false,
+      "is_target": false,
+      "ai_audit": ""
+    },
+    {
+      "primary_diagnosis": "Hyperlipidemia",
+      "secondary_diagnosis": null,
+      "icd10_code": "E78",
+      "admission_type": "Outpatient",
+      "_row_id": "296e358f-af5d-4ba8-8f5c-a05059aae4a2",
+      "is_context": false,
+      "is_target": false,
+      "ai_audit": ""
+    },
+    {
+      "primary_diagnosis": "Healthy",
+      "secondary_diagnosis": null,
+      "icd10_code": "Z00",
+      "admission_type": "Outpatient",
+      "_row_id": "8777d793-abb4-493b-8439-566d32495cd8",
+      "is_context": false,
+      "is_target": false,
+      "ai_audit": ""
+    },
+    {
+      "primary_diagnosis": "Cardiovascular Disease",
+      "secondary_diagnosis": "Diabetes",
+      "icd10_code": "I25",
+      "admission_type": "Inpatient",
+      "_row_id": "fa73fccc-3c96-4baf-8fa9-5f559e72e825",
+      "is_context": false,
+      "is_target": false,
+      "ai_audit": ""
+    },
+    {
+      "primary_diagnosis": "Hypertension",
+      "secondary_diagnosis": "Obesity",
+      "icd10_code": "I10",
+      "admission_type": "Outpatient",
+      "_row_id": "21b0b530-f550-46ac-a849-dbd459c18044",
+      "is_context": false,
+      "is_target": false,
+      "ai_audit": ""
+    },
+    {
+      "primary_diagnosis": "Diabetes",
+      "secondary_diagnosis": "Hyperlipidemia",
+      "icd10_code": "E11",
+      "admission_type": "Inpatient",
+      "_row_id": "4a314e0a-108f-4f94-9605-74f1fd0213fd",
+      "is_context": false,
+      "is_target": false,
+      "ai_audit": ""
+    },
+    {
+      "primary_diagnosis": "Healthy",
+      "secondary_diagnosis": null,
+      "icd10_code": "Z00",
+      "admission_type": "Outpatient",
+      "_row_id": "fecfcdde-039b-4331-a963-fc5425344aa0",
+      "is_context": false,
+      "is_target": false,
+      "ai_audit": ""
+    }
+  ],
+  "dataset-description-store": "",
+  "target-cols-dropdown": [],
+  "algo-selector": "gemma-1.1-2b-it",
+  "param-tone": "Concise / Standard",
+  "param-consistency": "Strict (Perfectly uniform)",
+  "temperature-slider": 0.3,
+  "gen-chunk-size": 30,
+  "gen-max-context": 8,
+  "gen-context-strategy": "random",
+  "column-roles-store": {
+    "targets": []
+  },
+  "ml-config-store": {},
+  "bench-state-store": {
+    "active": false,
+    "k_total": 0,
+    "k_current": 0,
+    "fraction": 0.2,
+    "results": []
+  },
+  "row_count": 8,
+  "synthetic_count": 0,
+  "created_at": "2026-04-29 10:45:23",
+  "modified_at": "2026-04-29 10:45:23"
+}

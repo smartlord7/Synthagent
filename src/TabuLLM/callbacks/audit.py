@@ -218,9 +218,34 @@ def ponder_audit_strategy(n_clicks, row_data, targets, algo, temp):
             temperature=temp
         )
         
-        # 4. Generate Rules from Strategy
+        # 4. Generate Rules from Strategy (with Data Summary for grounding)
         logger.info("AI Pondering: Transforming Strategy into Actionable Rules")
-        rules_prompt = prompt_manager.get_prompt("audit_to_rules", strategy=strategy, attributes=df.columns.tolist())
+        
+        # Build a small data summary to ground the LLM
+        data_summary = {}
+        for col in df.columns:
+            try:
+                if pd.api.types.is_numeric_dtype(df[col]):
+                    c_min = df[col].min()
+                    c_max = df[col].max()
+                    data_summary[col] = {
+                        "type": "numeric", 
+                        "min": float(c_min) if pd.notnull(c_min) else 0, 
+                        "max": float(c_max) if pd.notnull(c_max) else 0
+                    }
+                else:
+                    unique_vals = [str(v) for v in df[col].dropna().unique()[:10]]
+                    data_summary[col] = {"type": "categorical", "sample_values": unique_vals}
+            except Exception as de:
+                logger.warning(f"Data summary failed for col {col}: {de}")
+                data_summary[col] = {"type": "object", "sample_values": []}
+        
+        rules_prompt = prompt_manager.get_prompt(
+            "audit_to_rules", 
+            strategy=strategy, 
+            attributes=df.columns.tolist(),
+            data_summary=data_summary
+        )
         logger.debug(f"Rules Prompt: {rules_prompt}")
         rules_json = call_llm(
             messages=[{"role": "user", "content": rules_prompt}],

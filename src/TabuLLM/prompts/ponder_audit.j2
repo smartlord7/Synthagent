@@ -19,27 +19,31 @@ Distribution Signal: Avg Skewness {{ report.quality.avg_skewness | round(2) }}, 
 Conflicting Targets: {{ report.quality.conflicting_labels }} inconsistent labels found.
 
 3. FAIRNESS AND ETHICAL REPRESENTATION (Target: {{ target_col }})
-{% if "metrics_per_attr" in report.fairness %}
+{% if "metrics_per_attr" in report.fairness and report.fairness.metrics_per_attr %}
 {% for col, data in report.fairness.metrics_per_attr.items() %}
 Attribute [{{ col }}]:
   Majority Group: {{ data.majority_group }}
+  Minority Group: {{ data.minority_group }}
   Disparate Impact: {{ data.disparate_impact | round(3) }}
   Parity Gap: {{ data.parity_gap | round(3) }}
   Representation Ratio: {{ data.representation_ratio | round(3) }}
 {% endfor %}
 Detected Bias Zones: {{ report.fairness.detected_bias_count }}
 {% else %}
-{{ report.fairness.status }}
+{{ report.fairness.status or 'No fairness metrics available.' }}
 {% endif %}
 
 4. PRIVACY AND IDENTITY RISKS
 Risk Profile: {{ report.privacy.identity_risk_level }} (Uniqueness Ratio: {{ (report.privacy.uniqueness_ratio * 100) | round(1) }}%)
 Identifiability Score: {{ report.privacy.at_risk_record_count }} records are potentially identifiable.
 Column Information Content: Avg Entropy {{ report.privacy.avg_column_entropy | round(2) }}, Max Entropy {{ report.privacy.max_column_entropy | round(2) }}
+{% if report.fairness.sensitive_proxies %}
 Re-identification Proxies:
 {% for col, proxy_map in report.fairness.sensitive_proxies.items() %}
   Attribute {{ col }} mirrored by: {{ proxy_map.keys() | join(', ') }}
 {% endfor %}
+{% endif %}
+Detected Quasi-Identifiers (QIDs): {{ report.privacy.known_sensitive_patterns | join(', ') or 'None' }}
 
 TASK: STRATEGIC REQUIREMENT SPECIFICATION
 Based on the data profile above, generate a formal "Synthetic Prescription" addressing:

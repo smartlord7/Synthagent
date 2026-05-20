@@ -64,6 +64,11 @@ def create_layout():
                     dbc.Button([html.I(className="bi bi-file-earmark-pdf me-2"), "Global Report"],
                                id="btn-global-report", color="warning", outline=True,
                                className="btn-sm rounded-pill px-3 shadow-sm me-2"),
+
+                    # Documentation Button
+                    dbc.Button([html.I(className="bi bi-journal-text me-2"), "Docs"],
+                               id="btn-open-docs", color="info", outline=True,
+                               className="btn-sm rounded-pill px-3 shadow-sm me-2"),
                                
                     # New Pipeline Toggle Button
                     dbc.Button([html.I(className="bi bi-diagram-3 me-2"), "Pipeline"],
@@ -86,6 +91,7 @@ def create_layout():
 
                     # Tooltips for Navbar Buttons
                     dbc.Tooltip("Download Global Benchmark Report (All Datasets & Metrics)", target="btn-global-report"),
+                    dbc.Tooltip("View system architecture and user guides", target="btn-open-docs"),
                     dbc.Tooltip("Configure and run parallel data augmentation pipeline", target="btn-open-pipeline"),
                     dbc.Tooltip("Upload new CSV/Excel datasets to the workbench", target="upload-data"),
                     dbc.Tooltip("Save workspace layout and configurations to file", target="btn-save-session"),
@@ -104,6 +110,34 @@ def create_layout():
                 ),
             ], id="pipeline-modal", size="lg", is_open=False, className="text-light border-secondary shadow-lg"),
             
+            # Documentation Modal
+            dbc.Modal([
+                dbc.ModalHeader(dbc.ModalTitle([html.I(className="bi bi-journal-richtext me-2"), "System Documentation"])),
+                dbc.ModalBody([
+                    dbc.Row([
+                        dbc.Col([
+                            html.Label("Select Document:", className="small text-muted fw-bold mb-2"),
+                            dbc.Select(
+                                id="docs-file-selector",
+                                options=[
+                                    {"label": "End-to-End Pipeline", "value": "end_to_end_pipeline.md"},
+                                    {"label": "User Functionalities", "value": "user_functionalities.md"},
+                                    {"label": "Pipeline Architecture", "value": "pipeline_architecture.md"},
+                                    {"label": "Master Diagram", "value": "pipeline_master_diagram.md"},
+                                ],
+                                value="end_to_end_pipeline.md",
+                                size="sm", className="bg-dark text-light border-secondary mb-3"
+                            ),
+                        ], width=12),
+                    ]),
+                    html.Hr(className="border-secondary"),
+                    dbc.Spinner(html.Div(id="docs-modal-content", className="markdown-preview p-3 bg-black rounded border border-secondary", style={"minHeight": "400px", "maxHeight": "70vh", "overflowY": "auto"})),
+                ], className="bg-dark text-light"),
+                dbc.ModalFooter(
+                    dbc.Button("Close Docs", id="btn-close-docs", color="secondary", outline=True, size="sm")
+                ),
+            ], id="docs-modal", size="xl", is_open=False),
+
             # Delete Confirmation Modal
             dbc.Modal([
                 dbc.ModalHeader(dbc.ModalTitle([html.I(className="bi bi-exclamation-triangle-fill me-2 text-danger"), "Confirm Removal"])),

@@ -1,36 +1,36 @@
-TRANSFORM DATA STRATEGY INTO DETAILED ATTRIBUTE RULES
-
-You are an expert data engineer. You have been provided with a "Synthetic Prescription" derived from a dataset audit, and a list of the exact attributes (columns) present in the dataset.
-
-ATTRIBUTES:
-{{ attributes | join(', ') }}
+DATA SUMMARY (STRICT GROUND TRUTH):
+---
+{% for col, info in data_summary.items() %}
+COLUMN: {{ col }}
+- TYPE: {{ info.type }}
+- VALUES/RANGE: {% if info.type == 'numeric' %}{{ info.min }} to {{ info.max }}{% else %}{{ info.sample_values | join(', ') }}{% endif %}
+---
+{% endfor %}
 
 STRATEGY:
 {{ strategy }}
 
 TASK:
-Convert this strategy into a structured list of highly specific generation rules.
-Follow these mapping rules:
-1. Map rules to specific attributes from the list above whenever possible.
-2. If a strategy addresses "Age", use the exact column name (e.g. `age`).
-3. The `name` of the rule should be: "[Attribute Name] [Requirement Type]" (e.g. "Age Range" or "Gender Parity").
+Convert the STRATEGY into a valid JSON array of generation rules.
 
-The system supports three types of rules:
-1. `text`: A description or instruction (e.g., "Must be under 50 words").
-2. `number`: A range (e.g., 18-99). Use the format "min,max" (no spaces) for the value.
-3. `options`: A comma-separated list of allowed values (e.g., "Active,Pending,Closed").
+STRICT INSTRUCTIONS (MANDATORY):
+1. NO PLACEHOLDERS: NEVER use text like "[Sample Value]", "Specific instruction", or "min,max". If you don't have a value, do not create the rule.
+2. USE GROUND TRUTH: When creating an `options` rule, you MUST use the values listed in the DATA SUMMARY above.
+3. NO BRACKETS: Do not wrap values in brackets like [Value]. Use the literal string.
+4. ACTIVE TRANSFORMS: If the strategy mentions "noise" or "rounding" for a column, create a `text` rule with a name like "[Column] Noise" and a value describing the transformation (e.g., "Apply 5% Gaussian noise").
+5. NUMERIC RULES: The `value` for `number` type MUST be "min,max" using real numbers from the data summary (e.g., "10,50").
+
+RULE TYPES:
+- `text`: Instructions for active code-hardening (keywords: noise, round, precision).
+- `number`: "min,max" range.
+- `options`: Comma-separated categories.
 
 OUTPUT FORMAT:
-Return ONLY a valid JSON array of objects.
+Return ONLY a valid JSON array. No preamble.
 
-Example Output (Use this structure but DO NOT copy these values):
+Correct Output Style Example (DO NOT COPY THESE VALUES):
 [
-  {"name": "column_x_privacy", "type": "text", "value": "Specific instruction derived from strategy..."},
-  {"name": "column_y_range", "type": "number", "value": "min,max"},
-  {"name": "column_z_categories", "type": "options", "value": "val1,val2,val3"}
+  {"name": "age_range", "type": "number", "value": "18,99"},
+  {"name": "city_options", "type": "options", "value": "New York,London,Paris"},
+  {"name": "zip_code_noise", "type": "text", "value": "Apply Gaussian noise to prevent re-identification"}
 ]
-
-Do not include any preamble or explanation. Output ONLY the JSON.
-{% if strategy | length < 10 %}
-If the strategy is empty or invalid, return an empty array: [].
-{% endif %}
