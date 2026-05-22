@@ -68,11 +68,16 @@ def run_single_dataset_benchmark(args):
             join_context = config.get("join_context", True)
             ctx_size_pct = config.get("ctx_size_pct", 20)
             gen_size_pct = config.get("gen_size_pct", 80)
-            
+
             # Context is sampled from the train split (80% of original)
             n_context_rows = max(1, int(len(df_train_orig) * (ctx_size_pct / 100)))
             # Generated size is also relative to the train split size to maintain scale
             num_empty = max(1, int(len(df_train_orig) * (gen_size_pct / 100)))
+
+            # Honour explicit num_empty if caller passed a positive value (overrides % default)
+            explicit_num_empty = config.get("num_empty", 0)
+            if explicit_num_empty and int(explicit_num_empty) > 0:
+                num_empty = int(explicit_num_empty)
             
             logger.info(f"[DATA] [{filename} | Fold {fold_num}] Strategy: {strategy} | Join: {join_context} | Context: {n_context_rows} | Target Gen: {num_empty}")
             context_data_list = select_context_rows(df_train_orig, strategy=strategy, n_rows=n_context_rows) or []

@@ -263,12 +263,16 @@ class MLEvaluator:
                 if "n_estimators" not in clean_p:
                     clean_p["n_estimators"] = min(150, max(50, int(n_samples / 5)))
 
+        # Normalise "lr" alias → "logistic" so both spellings work
+        if model_type == "lr":
+            model_type = "logistic"
+
         if task_type == "classification":
             if model_type == "logistic": return LogisticRegression(**clean_p)
             if model_type == "rf": return RandomForestClassifier(**clean_p)
             if model_type == "xgb": return XGBClassifier(**clean_p)
             if model_type == "mlp": return MLPClassifier(**clean_p)
-            
+
             if model_type == "svm": return SVC(**clean_p)
             if model_type == "knn": return KNeighborsClassifier(**clean_p)
             if model_type == "nb": return GaussianNB(**clean_p)

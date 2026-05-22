@@ -3,6 +3,7 @@ import time
 import json
 import urllib.request
 from abc import ABC, abstractmethod
+from typing import Optional
 from dotenv import load_dotenv
 from services.logger import log_interaction
 from utils.logging_config import logger
@@ -12,30 +13,30 @@ from services.rule_validator import RuleValidator
 
 class BaseLLMProvider(ABC):
     """Abstract base class for all LLM providers."""
-    
+
     @abstractmethod
-    def get_dataset_description(self, df_sample, provided_metadata=None, algorithm=None):
+    def get_dataset_description(self, df_sample, provided_metadata=None, algorithm=None) -> str:
         pass
 
     @abstractmethod
-    def generate_bulk_data(self, rows_payload, context, all_columns, all_fields, algorithm, instructions, temperature, num_empty=0, chunk_size=30, rules_metadata=None, enforce_rules=True):
+    def generate_bulk_data(self, rows_payload, context, all_columns, all_fields, algorithm, instructions, temperature, num_empty=0, chunk_size=30, rules_metadata=None, enforce_rules=True) -> Optional[dict]:
         pass
 
     @abstractmethod
-    def detect_target_columns(self, df_sample, single_target=False, algorithm=None):
+    def detect_target_columns(self, df_sample, single_target=False, algorithm=None) -> list:
         pass
 
     @abstractmethod
-    def get_available_models(self):
+    def get_available_models(self) -> list:
         pass
 
     @abstractmethod
-    def call_llm(self, messages: list, model_id: str = None, temperature: float = 0.7):
+    def call_llm(self, messages: list, model_id: Optional[str] = None, temperature: float = 0.7) -> Optional[str]:
         """Standard interface for raw chat completions."""
         pass
 
     @abstractmethod
-    def can_handle(self, model_id: str) -> bool:
+    def can_handle(self, model_id: Optional[str]) -> bool:
         """Check if this provider can handle the given model ID."""
         pass
 
@@ -52,6 +53,9 @@ class LocalOpenAIProvider(BaseLLMProvider):
             self.timeout = int(os.getenv("LOCAL_LLM_TIMEOUT", 600))
         except (ValueError, TypeError):
             self.timeout = 600
+        # Cache the model context window after the first lookup — avoids a
+        # redundant HTTP round-trip to LM Studio on every generate_bulk_data call.
+        self._model_ctx_cache: dict[str, int] = {}
 
     def get_available_models(self):
         """Query local server for available models and context metadata."""
@@ -126,14 +130,14 @@ class LocalOpenAIProvider(BaseLLMProvider):
             logger.error(f"Unexpected error during LLM request: {e}")
             raise e
 
-    def call_llm(self, messages: list, model_id: str = None, temperature: float = 0.7):
+    def call_llm(self, messages: list, model_id: Optional[str] = None, temperature: float = 0.7) -> Optional[str]:
         """Public wrapper for OpenAI-style completions."""
         response = self._call_local_llm(messages, core_model=model_id, temperature=temperature)
         if "choices" in response and len(response["choices"]) > 0:
             return response["choices"][0]["message"]["content"]
         return "Error: No response from local LLM."
 
-    def can_handle(self, model_id: str) -> bool:
+    def can_handle(self, model_id: Optional[str]) -> bool:
         """LocalOpenAI is the fallback or handles specific models."""
         return True
 
@@ -241,13 +245,12 @@ class LocalOpenAIProvider(BaseLLMProvider):
             subsets = [[] for _ in range(n_gen_chunks)]
             logger.info(f"Zero-Shot Mode Activated: Generating {num_empty} rows across {n_gen_chunks} chunks.")
 
-        # 4. Token Budgeting Setup
-        models_info = self.get_available_models()
-        model_ctx_limit = 4096
-        for m in models_info:
-            if m["id"] == algorithm:
-                model_ctx_limit = m["max_context"]
-                break
+        # 4. Token Budgeting Setup  (context window cached after first lookup)
+        if algorithm not in self._model_ctx_cache:
+            models_info = self.get_available_models()
+            for m in models_info:
+                self._model_ctx_cache[str(m["id"])] = int(m["max_context"])
+        model_ctx_limit = self._model_ctx_cache.get(algorithm, 4096)
         
         # Heuristic: 2.8 chars per token for dense data JSON
         TOKEN_RATIO = 2.8 
@@ -739,9 +742,9 @@ class GeminiProvider(BaseLLMProvider):
             {"id": "gemini-1.5-pro", "max_context": 2097152},
         ]
 
-    def can_handle(self, model_id: str) -> bool:
+    def can_handle(self, model_id: Optional[str]) -> bool:
         """Checks if the model ID belongs to Gemini."""
-        return model_id and "gemini" in model_id.lower()
+        return bool(model_id and "gemini" in model_id.lower())
 
     def get_dataset_description(self, df_sample, provided_metadata=None, algorithm=None):
         from services.prompt_manager import prompt_manager
@@ -810,15 +813,19 @@ class GeminiProvider(BaseLLMProvider):
             print(f"Error calling Gemini for target detection: {e}")
             return []
 
-    def generate_bulk_data(self, rows_payload, context, all_columns, algorithm, instructions, temperature, num_empty=0, chunk_size=30, rules_metadata=None, enforce_rules=True):
+    def generate_bulk_data(self, rows_payload, context, all_columns, all_fields, algorithm, instructions, temperature, num_empty=0, chunk_size=30, rules_metadata=None, enforce_rules=True):
         import json
         import time
         from services.prompt_manager import prompt_manager
         from utils.json_utils import to_compact_json, from_compact_json, robust_json_loads, RobustJSONError
         from services.rule_validator import RuleValidator
+
+        # Bridge: display header names → internal field names
+        h_to_f_bridge = dict(zip(all_columns, all_fields))
+
         # Compact payload and context for Gemini
         compact_payload = to_compact_json(rows_payload, all_columns)
-        
+
         compact_ctx = {}
         if isinstance(context, dict):
             compact_ctx = {
@@ -826,7 +833,7 @@ class GeminiProvider(BaseLLMProvider):
                 "manual_ctx": to_compact_json(json.loads(context.get("manual_ctx", "[]")), all_columns) if context.get("manual_ctx") != "[]" else [],
                 "global_ctx": to_compact_json(context.get("global_ctx", []), all_columns)
             }
-        
+
         prompt = prompt_manager.get_prompt(
             "generation_final",
             instructions=instructions,
@@ -854,6 +861,8 @@ class GeminiProvider(BaseLLMProvider):
                         )
                     )
                     usage = response.usage_metadata
+
+                    # 1. Parse JSON (with repair if needed)
                     try:
                         parsed_data = robust_json_loads(response.text)
                     except RobustJSONError as re:
@@ -872,60 +881,40 @@ class GeminiProvider(BaseLLMProvider):
                             )
                         )
                         parsed_data = robust_json_loads(response_repair.text)
-                    
-                    if isinstance(parsed_data, dict) and "cols" in parsed_data and "data" in parsed_data:
-                        final_rows = from_compact_json(parsed_data, all_columns)
-                        final_rows = from_compact_json(parsed_data, all_fields, h_to_f=h_to_f_bridge)
-                    elif isinstance(parsed_data, dict) and "data" in parsed_data:
-                         first_row = parsed_data["data"][0] if parsed_data["data"] else None
-                         if isinstance(first_row, list):
-                             final_rows = from_compact_json(parsed_data, all_fields, h_to_f=h_to_f_bridge)
-                         else:
-                             if isinstance(parsed_data, list):
-                                 parsed_data = {"cols": all_columns, "data": parsed_data}
-                             final_rows = from_compact_json(parsed_data, all_fields, h_to_f=h_to_f_bridge)
-                    elif isinstance(parsed_data, list):
-                        first_row = parsed_data[0] if parsed_data else None
-                        if isinstance(first_row, list):
-                            final_rows = from_compact_json({"cols": all_columns, "data": parsed_data}, all_fields, h_to_f=h_to_f_bridge)
-                        else:
-                            final_rows = parsed_data
-                    else:
-                        raise ValueError("Gemini returned unexpected structure")
 
-                    if enforce_rules and rules_metadata:
-                        if isinstance(rules_metadata, dict) and "integrity" in rules_metadata:
-                            active_rules = list(rules_metadata.get("integrity", []))
-                    # 1. Unpack initial response
-                    h_to_f_bridge = dict(zip(all_columns, all_fields))
+                    # 2. Unpack response into final_rows
+                    schema_updates = {}
                     if isinstance(parsed_data, dict):
-                        final_rows = from_compact_json(parsed_data, all_fields, h_to_f=h_to_f_bridge)
                         schema_updates = parsed_data.get("schema_updates", {})
                         returned_cols = parsed_data.get("cols", [])
                         if returned_cols and len(returned_cols) == len(all_columns):
                             for i, rc in enumerate(returned_cols):
                                 if str(rc).strip().lower() != str(all_columns[i]).strip().lower():
                                     schema_updates[all_fields[i]] = rc
+                        final_rows = from_compact_json(parsed_data, all_fields, h_to_f=h_to_f_bridge)
                     elif isinstance(parsed_data, list):
-                        final_rows = from_compact_json({"data": parsed_data}, all_fields, h_to_f=h_to_f_bridge) if len(parsed_data)>0 and isinstance(parsed_data[0], list) else parsed_data
+                        final_rows = from_compact_json({"data": parsed_data}, all_fields, h_to_f=h_to_f_bridge) if parsed_data and isinstance(parsed_data[0], list) else parsed_data
                     else:
-                        final_rows = []
-                        schema_updates = {}
+                        raise ValueError("Gemini returned unexpected structure")
 
-                    # 2. Rule Enforcement (Self-Correction)
+                    # 3. Rule Enforcement (Self-Correction)
                     if enforce_rules and rules_metadata and final_rows:
-                        active_rules = list(rules_metadata.get("integrity", []))
-                        if rules_metadata.get("enforce_boundaries"):
-                            active_rules.extend(rules_metadata.get("boundaries", []))
-                        if rules_metadata.get("enforce_user"):
-                            active_rules.extend(rules_metadata.get("user", []))
-                        
+                        if isinstance(rules_metadata, dict) and "integrity" in rules_metadata:
+                            active_rules = list(rules_metadata.get("integrity", []))
+                            if rules_metadata.get("enforce_boundaries"):
+                                active_rules.extend(rules_metadata.get("boundaries", []))
+                            if rules_metadata.get("enforce_user"):
+                                active_rules.extend(rules_metadata.get("user", []))
+                        else:
+                            active_rules = rules_metadata
+
                         pydantic_model = RuleValidator.create_pydantic_model(active_rules)
                         if pydantic_model:
                             for retry in range(2):
                                 violations = RuleValidator.validate_batch(final_rows, pydantic_model)
-                                if not violations: break
-                                
+                                if not violations:
+                                    break
+
                                 feedback = RuleValidator.format_violations_for_llm(violations)
                                 response_corr = model.generate_content(
                                     prompt + f"\n\nPREVIOUS OUTPUT:\n{response.text}\n\n{feedback}\n\n" + prompt_manager.get_prompt("generation_fix"),
@@ -933,44 +922,73 @@ class GeminiProvider(BaseLLMProvider):
                                 )
                                 try:
                                     parsed_corr = robust_json_loads(response_corr.text)
-                                    final_rows = from_compact_json(parsed_corr, all_fields, h_to_f=h_to_f_bridge) if isinstance(parsed_corr, dict) else (from_compact_json({"data": parsed_corr}, all_fields, h_to_f=h_to_f_bridge) if isinstance(parsed_corr, list) else final_rows)
-                                except: break
+                                    if isinstance(parsed_corr, dict) and "data" in parsed_corr:
+                                        final_rows = from_compact_json(parsed_corr, all_fields, h_to_f=h_to_f_bridge)
+                                    elif isinstance(parsed_corr, list):
+                                        final_rows = from_compact_json({"data": parsed_corr}, all_fields, h_to_f=h_to_f_bridge) if parsed_corr and isinstance(parsed_corr[0], list) else parsed_corr
+                                except:
+                                    break
 
-                    # 3. Top-up Guarantee
+                    # 4. Top-up Guarantee
                     if num_empty > 0 and len(final_rows) < num_empty:
                         topup_round = 0
                         while len(final_rows) < num_empty and topup_round < 5:
                             shortfall = num_empty - len(final_rows)
-                            topup_prompt = prompt_manager.get_prompt("generation_final", instructions=instructions, all_columns=all_columns, num_rows_to_generate=min(chunk_size, shortfall), compact_payload_json="[]")
+                            topup_prompt = prompt_manager.get_prompt(
+                                "generation_final",
+                                instructions=instructions,
+                                all_columns=all_columns,
+                                is_empty=False,
+                                num_rows_to_generate=min(chunk_size, shortfall),
+                                compact_payload_json="[]"
+                            )
                             try:
                                 t_resp = model.generate_content(topup_prompt, generation_config=genai.types.GenerationConfig(response_mime_type="application/json", temperature=temperature))
                                 try:
                                     t_parsed = robust_json_loads(t_resp.text)
                                 except RobustJSONError as r_err:
-                                    # Focused Repair Round
-                                    logger.info(f"Gemini Top-up: JSON Malformatted. Triggering repair...")
-                                    rep_prompt = prompt_manager.get_prompt("json_repair", error=r_err.error_data['error'], context=r_err.error_data['context'])
+                                    logger.info("Gemini Top-up: JSON Malformatted. Triggering repair...")
+                                    rep_prompt = prompt_manager.get_prompt(
+                                        "json_repair",
+                                        line=r_err.error_data['line'],
+                                        column=r_err.error_data['column'],
+                                        error=r_err.error_data['error'],
+                                        context=r_err.error_data['context']
+                                    )
                                     t_resp = model.generate_content(rep_prompt, generation_config=genai.types.GenerationConfig(response_mime_type="application/json", temperature=0.1))
                                     t_parsed = robust_json_loads(t_resp.text)
-                                
-                                t_rows = from_compact_json(t_parsed, all_fields, h_to_f=h_to_f_bridge)
-                                if t_rows: final_rows.extend(t_rows)
-                            except: break
+
+                                if isinstance(t_parsed, dict) and "data" in t_parsed:
+                                    t_rows = from_compact_json(t_parsed, all_fields, h_to_f=h_to_f_bridge)
+                                elif isinstance(t_parsed, list):
+                                    t_rows = from_compact_json({"data": t_parsed}, all_fields, h_to_f=h_to_f_bridge) if t_parsed and isinstance(t_parsed[0], list) else t_parsed
+                                else:
+                                    t_rows = []
+                                if t_rows:
+                                    final_rows.extend(t_rows)
+                            except:
+                                break
                             topup_round += 1
 
+                    # 5. Trim to exact count in case of overshoot
+                    if num_empty > 0 and len(final_rows) > num_empty:
+                        final_rows = final_rows[:num_empty]
+
                     return {
-                        "data": final_rows, 
+                        "data": final_rows,
                         "schema_updates": schema_updates,
                         "stats": {"total_tokens": usage.total_token_count}
                     }
                 except Exception as e:
-                    if "429" in str(e) and attempt < max_retries - 1: continue
-                    else: raise e
+                    if "429" in str(e) and attempt < max_retries - 1:
+                        continue
+                    else:
+                        raise e
         except Exception as e:
             print(f"Error in Gemini Client: {e}")
             return None
 
-    def call_llm(self, messages: list, model_id: str = None, temperature: float = 0.7):
+    def call_llm(self, messages: list, model_id: Optional[str] = None, temperature: float = 0.7) -> Optional[str]:
         """Implementation for Gemini API."""
         prompt = messages[-1]["content"] if messages else ""
         try:
@@ -992,7 +1010,7 @@ class LLMRegistry:
             LocalOpenAIProvider() # Fallback
         ]
 
-    def get_provider(self, model_id: str) -> BaseLLMProvider:
+    def get_provider(self, model_id: Optional[str]) -> BaseLLMProvider:
         for p in self.providers:
             if p.can_handle(model_id):
                 return p
@@ -1025,7 +1043,7 @@ def detect_target_columns(df_sample, single_target=False, algorithm=None):
     p = registry.get_provider(algorithm)
     return p.detect_target_columns(df_sample, single_target=single_target, algorithm=algorithm)
 
-def call_llm(messages: list, model_id: str = None, temperature: float = 0.7):
+def call_llm(messages: list, model_id: Optional[str] = None, temperature: float = 0.7) -> Optional[str]:
     p = registry.get_provider(model_id)
     return p.call_llm(messages, model_id=model_id, temperature=temperature)
 

@@ -1,8 +1,10 @@
 import sqlite3
+import os
 from datetime import datetime
 import json
 
-DB_PATH = "services/llm_logs.db"
+_HERE = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(_HERE, "llm_logs.db")
 
 def init_db():
     conn = sqlite3.connect(DB_PATH)
