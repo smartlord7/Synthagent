@@ -102,6 +102,9 @@ class MLEvaluator:
             return None, None, "Single class in train"
 
         if test_df is not None and not test_df.empty:
+            if target not in test_df.columns:
+                logger.warning(f"Target column '{target}' not found in test data.")
+                return None, None, f"Target '{target}' missing from test data"
             test_proc = apply_encoding(train_df, test_df, cat_cols)
             # Ensure test set has same columns as train set
             for col in X_train.columns:

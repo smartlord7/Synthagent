@@ -5,9 +5,24 @@ from typing import Dict, Any, List
 
 logger = logging.getLogger(__name__)
 
+_SENSITIVE_KEYWORDS = [
+    'gender', 'sex', 'age', 'race', 'ethnicity', 'nationality', 'religion',
+    'zip', 'income', 'stage', 'location', 'origin', 'education', 'marital', 'disability',
+]
+
+
 class DatasetAuditor:
     """Modular engine for comprehensive dataset health and ethics auditing."""
-    
+
+    @staticmethod
+    def detect_sensitive_columns(df: pd.DataFrame) -> List[str]:
+        """Heuristically flags columns whose name suggests a protected/sensitive attribute."""
+        return [
+            c for c in df.columns
+            if any(k in c.lower() for k in _SENSITIVE_KEYWORDS)
+            and c not in ['is_context', 'is_target']
+        ]
+
     def _filter_data(self, df: pd.DataFrame) -> pd.DataFrame:
         """Excludes all is_ai_* columns and internal IDs from the audit."""
         cols_to_drop = [c for c in df.columns if c.startswith('is_ai_') or c in ['_row_id', 'ai_audit', 'is_context', 'is_target']]

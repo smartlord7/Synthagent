@@ -270,7 +270,7 @@ class LocalOpenAIProvider(BaseLLMProvider):
 
         final_data = []
         schema_updates = {}
-        accumulated_stats = {"prompt_tokens": 0, "candidates_tokens": 0, "total_tokens": 0}
+        accumulated_stats = {"prompt_tokens": 0, "candidates_tokens": 0, "total_tokens": 0, "rule_violations": 0, "repair_attempts": 0}
         logger.info(f"Budgeting generation context for model {algorithm} (Max: {model_ctx_limit} tok).")
 
         for subset_idx, subset in enumerate(subsets):
@@ -358,6 +358,7 @@ class LocalOpenAIProvider(BaseLLMProvider):
                         parsed_content = robust_json_loads(content)
                     except RobustJSONError as re:
                         logger.info(f"Initial JSON parsing failed. Attempting focused repair... Error: {re.error_data['error']}")
+                        accumulated_stats["repair_attempts"] += 1
                         repair_prompt = prompt_manager.get_prompt(
                             "json_repair",
                             line=re.error_data['line'],
@@ -412,7 +413,8 @@ class LocalOpenAIProvider(BaseLLMProvider):
                                 violations = RuleValidator.validate_batch(subset_data, pydantic_model)
                                 if not violations:
                                     break
-                                
+
+                                accumulated_stats["rule_violations"] += len(violations)
                                 logger.warning(f"Chunk {subset_idx+1}: {len(violations)} rule violations found. Triggering self-correction (Retry {retry+1}/{max_retries}).")
                                 feedback = RuleValidator.format_violations_for_llm(violations)
                                 
@@ -842,6 +844,7 @@ class GeminiProvider(BaseLLMProvider):
             num_rows_to_generate=num_empty,
             compact_payload_json=json.dumps(compact_payload)
         )
+        gen_stats = {"prompt_tokens": 0, "candidates_tokens": 0, "total_tokens": 0, "rule_violations": 0, "repair_attempts": 0}
         try:
             max_retries = 3
             model = self._get_model(algorithm)
@@ -861,11 +864,15 @@ class GeminiProvider(BaseLLMProvider):
                         )
                     )
                     usage = response.usage_metadata
+                    gen_stats["prompt_tokens"] += getattr(usage, "prompt_token_count", 0) or 0
+                    gen_stats["candidates_tokens"] += getattr(usage, "candidates_token_count", 0) or 0
+                    gen_stats["total_tokens"] += getattr(usage, "total_token_count", 0) or 0
 
                     # 1. Parse JSON (with repair if needed)
                     try:
                         parsed_data = robust_json_loads(response.text)
                     except RobustJSONError as re:
+                        gen_stats["repair_attempts"] += 1
                         repair_prompt = prompt_manager.get_prompt(
                             "json_repair",
                             line=re.error_data['line'],
@@ -915,6 +922,7 @@ class GeminiProvider(BaseLLMProvider):
                                 if not violations:
                                     break
 
+                                gen_stats["rule_violations"] += len(violations)
                                 feedback = RuleValidator.format_violations_for_llm(violations)
                                 response_corr = model.generate_content(
                                     prompt + f"\n\nPREVIOUS OUTPUT:\n{response.text}\n\n{feedback}\n\n" + prompt_manager.get_prompt("generation_fix"),
@@ -977,7 +985,7 @@ class GeminiProvider(BaseLLMProvider):
                     return {
                         "data": final_rows,
                         "schema_updates": schema_updates,
-                        "stats": {"total_tokens": usage.total_token_count}
+                        "stats": gen_stats
                     }
                 except Exception as e:
                     if "429" in str(e) and attempt < max_retries - 1:

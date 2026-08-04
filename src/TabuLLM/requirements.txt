@@ -13,6 +13,7 @@ fpdf2
 kaleido
 simsimd
 scikit-learn
+imbalanced-learn
 numpy
 ucimlrepo
 xgboost

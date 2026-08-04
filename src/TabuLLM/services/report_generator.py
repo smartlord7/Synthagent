@@ -240,21 +240,30 @@ def generate_benchmark_pdf(report_data):
                 
                 rows = []
                 for metric_name, vals in m_perf.items():
-                    if metric_name == "folds_metadata": continue
-                    
-                    # Safe extraction supporting old and new schemas
+                    if metric_name in ("folds_metadata", "error"): continue
+
+                    # Safe extraction supporting old and new (3-arm) schemas
                     if isinstance(vals, dict):
-                        m_real = vals.get("real") or vals.get("orig_m") or "N/A"
-                        m_aug = vals.get("aug") or vals.get("aug_m") or "N/A"
+                        m_real  = vals.get("real") or vals.get("orig_m") or "N/A"
+                        m_gen   = vals.get("gen", "N/A")
+                        m_aug   = vals.get("aug") or vals.get("aug_m") or "N/A"
                         m_delta = vals.get("delta") or vals.get("d_m") or "0"
-                        rows.append([metric_name.upper(), str(m_real), str(m_aug), str(m_delta)])
+                        # Prefer the Benjamini-Hochberg-corrected q-value (controls the
+                        # false-discovery rate across every model x metric test run for
+                        # this dataset); fall back to the raw p-value for older JSON
+                        # results saved before the correction was added.
+                        sig_val = vals.get("qvalue_aug_vs_real")
+                        if sig_val is None:
+                            sig_val = vals.get("pvalue_aug_vs_real")
+                        sig = "*" if (sig_val is not None and sig_val < 0.05) else ""
+                        rows.append([metric_name.upper(), str(m_real), str(m_gen), str(m_aug), str(m_delta), sig])
                     else:
                         # Fallback for simple string metrics
-                        rows.append([metric_name.upper(), "N/A", str(vals), "N/A"])
-                
-                pdf.draw_table(["Metric", "Real (Baseline)", "Augmented", "Delta (Lift)"], 
-                               rows, [50, 45, 45, 50], font_size=9, header_color=(200, 220, 240),
-                               cell_colors={(i, 3): pdf.get_delta_color(rows[i][0], rows[i][3]) for i in range(len(rows))})
+                        rows.append([metric_name.upper(), "N/A", "N/A", str(vals), "N/A", ""])
+
+                pdf.draw_table(["Metric", "Real (Baseline)", "Generated", "Augmented", "Delta (Lift)", "Sig."],
+                               rows, [38, 32, 32, 32, 36, 20], font_size=9, header_color=(200, 220, 240),
+                               cell_colors={(i, 4): pdf.get_delta_color(rows[i][0], rows[i][4]) for i in range(len(rows))})
                 pdf.ln(5)
         else:
             pdf.cell(0, 10, "No ML evaluation results found.", ln=1)

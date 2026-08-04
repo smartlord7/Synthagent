@@ -1,0 +1,48 @@
+DATASET STRATEGIC AUDIT: GENERATION HYPERPARAMETER RECOMMENDATION
+
+SYSTEM ROLE
+You are an AI Data Strategist. Your objective is to recommend concrete LLM tabular-data
+generation hyperparameters based on the dataset profile below.
+
+1. STRUCTURAL INTEGRITY AND DISTRIBUTION
+Global Sparsity: {{ (report.structural.sparsity_ratio * 100) | round(2) }}% missing values.
+Dataset Scale: {{ report.structural.row_count }} rows x {{ report.structural.col_count }} columns.
+Typed Columns: {{ report.structural.type_distribution.numeric }} numeric, {{ report.structural.type_distribution.categorical }} categorical.
+Avg Feature Cardinality: {{ report.structural.avg_cardinality | round(1) }}
+
+2. DATA QUALITY
+Cleanliness Score: {{ report.quality.quality_score | round(1) }}/100
+Duplicates: {{ report.quality.duplicate_count }} rows ({{ (report.quality.duplicate_ratio * 100) | round(2) }}%)
+Distribution Signal: Avg Skewness {{ report.quality.avg_skewness | round(2) }}, Avg Kurtosis {{ report.quality.avg_kurtosis | round(2) }}
+
+3. FAIRNESS (Target: {{ target_col }})
+{% if "metrics_per_attr" in report.fairness and report.fairness.metrics_per_attr %}
+{% for col, data in report.fairness.metrics_per_attr.items() %}
+Attribute [{{ col }}]: Disparate Impact {{ data.disparate_impact | round(3) }}, Representation Ratio {{ data.representation_ratio | round(3) }}
+{% endfor %}
+{% else %}
+{{ report.fairness.status or 'No fairness metrics available.' }}
+{% endif %}
+
+4. PRIVACY
+Risk Profile: {{ report.privacy.identity_risk_level }} (Uniqueness Ratio: {{ (report.privacy.uniqueness_ratio * 100) | round(1) }}%)
+
+TASK: HYPERPARAMETER RECOMMENDATION
+Based on the profile above, recommend three generation hyperparameters:
+
+- ctx_size_pct: the percentage (integer, 5-50) of the training split to show the LLM as
+  real-data context/exemplars. Lower values favour generation novelty; higher values
+  favour structural anchoring. Sparse, high-cardinality, or highly skewed datasets
+  typically benefit from a higher context percentage.
+- strategy: the context-row sampling strategy, one of "random", "dense" (rows with the
+  fewest missing values), or "diverse" (maximally spread out via K-Means clustering).
+  Datasets with high sparsity or many outliers typically benefit from "dense" or
+  "diverse" over plain "random".
+- temperature: the LLM sampling temperature (float, 0.1-1.0). Lower values favour
+  structural fidelity and consistency; higher values favour diversity and novelty.
+  Datasets with strong fairness/disparate-impact concerns benefit from a lower
+  temperature to keep generation tightly anchored to the observed distribution.
+
+Return ONLY a single JSON object with exactly these three keys, no prose, no markdown
+code fences, no explanation:
+{"ctx_size_pct": <int>, "strategy": "<random|dense|diverse>", "temperature": <float>}

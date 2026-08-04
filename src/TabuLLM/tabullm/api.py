@@ -12,6 +12,8 @@ from services.pipeline_manager import PipelineManager
 from services.report_generator import generate_benchmark_pdf
 from services.auditor import DatasetAuditor
 from services.prompt_manager import prompt_manager
+from utils.json_utils import robust_json_loads
+from utils.logging_config import logger
 
 # Numeric keys produced by calculate_metrics() — used to average across folds
 _METRIC_KEYS = [
@@ -125,6 +127,10 @@ class TabuLLM:
         na_strategy: str = "impute",
         ctx_size_pct: int = 20,
         gen_size_pct: int = 80,
+        join_context: bool = True,
+        inject_inferred_rules: bool = True,
+        apply_post_processing: bool = True,
+        temperature: float = 0.3,
     ) -> dict:
         """
         Runs the full High-Reliability Augmentation pipeline.
@@ -140,6 +146,14 @@ class TabuLLM:
             na_strategy (str): Strategy for missing values ('impute' or 'drop').
             ctx_size_pct (int): % of train split used as LLM context rows. Default 20.
             gen_size_pct (int): % of train split size to generate (when num_rows==0). Default 80.
+            join_context (bool): Whether generated rows are blended with real context rows
+                for fidelity/appendix purposes. Default True. Ablation toggle.
+            inject_inferred_rules (bool): Whether inferred dtype/boundary rules are sent to
+                the LLM as generation constraints. Default True. Ablation toggle.
+            apply_post_processing (bool): Whether code-side rule post-processing (noise,
+                rounding, etc.) is applied to generated rows. Default True. Ablation toggle.
+            temperature (float): LLM sampling temperature for generation. Default 0.3.
+                See ponder_hyperparameters() for an LLM-recommended alternative.
 
         Returns:
             dict: Results including augmented_data, fidelity scores, and ML benchmarks.
@@ -160,6 +174,10 @@ class TabuLLM:
             "num_empty": num_rows,       # 0 → pipeline falls back to gen_size_pct
             "ctx_size_pct": ctx_size_pct,
             "gen_size_pct": gen_size_pct,
+            "join_context": join_context,
+            "inject_inferred_rules": inject_inferred_rules,
+            "apply_post_processing": apply_post_processing,
+            "temperature": temperature,
             "ml_config": {"selected_models": ml_models, "params": {}},
             "na_strategy": na_strategy,
             "instructions": "",
@@ -187,16 +205,7 @@ class TabuLLM:
         """
         auditor_service = DatasetAuditor()
         target_col: Optional[str] = targets[0] if targets else None
-
-        sensitive_keywords = [
-            'gender', 'sex', 'age', 'race', 'ethnicity', 'nationality', 'religion',
-            'zip', 'income', 'stage', 'location', 'origin', 'education', 'marital', 'disability',
-        ]
-        sensitive_cols = [
-            c for c in df.columns
-            if any(k in c.lower() for k in sensitive_keywords)
-            and c not in ['is_context', 'is_target']
-        ]
+        sensitive_cols = DatasetAuditor.detect_sensitive_columns(df)
 
         return {
             "structural":       auditor_service.get_structural_metrics(df),
@@ -242,6 +251,68 @@ class TabuLLM:
             model_id=self.default_model,
             temperature=0.3,
         ) or ""
+
+    def ponder_hyperparameters(
+        self,
+        df: pd.DataFrame,
+        targets: Optional[list[str]] = None,
+        defaults: Optional[dict] = None,
+    ) -> dict:
+        """
+        The structured, empirically-testable counterpart to ponder_strategy(): asks the
+        LLM to recommend concrete generation hyperparameters (context ratio, sampling
+        strategy, temperature) from the dataset's audit profile, returned as a
+        validated dict instead of free-text prose. Never raises -- any missing/invalid
+        field, or a totally unparseable response, silently falls back to `defaults` (or
+        safe hard-coded defaults), so a malformed LLM response degrades to "use the
+        fixed baseline config" rather than breaking the caller.
+
+        Args:
+            df (pd.DataFrame): The dataset to analyze.
+            targets (list[str] | None): Target columns for fairness/audit context.
+            defaults (dict | None): Fallback values for any field the LLM omits or gets
+                wrong. Defaults to {"ctx_size_pct": 20, "strategy": "random", "temperature": 0.7}.
+
+        Returns:
+            dict: {"ctx_size_pct": int, "strategy": str, "temperature": float}
+        """
+        result = {"ctx_size_pct": 20, "strategy": "random", "temperature": 0.7}
+        if defaults:
+            result.update(defaults)
+
+        try:
+            audit = self.run_audit(df, targets)
+            context = {
+                "report": audit,
+                "target_col": targets[0] if targets else "None Selected",
+            }
+            prompt = prompt_manager.get_prompt("ponder_hyperparams.j2", **context)
+            raw = self.llm.call_llm(
+                messages=[{"role": "user", "content": prompt}],
+                model_id=self.default_model,
+                temperature=0.2,
+            )
+            parsed = robust_json_loads(raw) if raw else None
+            if not isinstance(parsed, dict):
+                logger.warning("ponder_hyperparameters: LLM response was not a JSON object; using defaults.")
+                return result
+
+            ctx_size_pct = parsed.get("ctx_size_pct")
+            if isinstance(ctx_size_pct, (int, float)) and 5 <= ctx_size_pct <= 50:
+                result["ctx_size_pct"] = int(ctx_size_pct)
+
+            strategy = parsed.get("strategy")
+            if strategy in ("random", "dense", "diverse"):
+                result["strategy"] = strategy
+
+            temperature = parsed.get("temperature")
+            if isinstance(temperature, (int, float)) and 0.1 <= temperature <= 1.0:
+                result["temperature"] = float(temperature)
+
+        except Exception as e:
+            logger.warning(f"ponder_hyperparameters failed ({e}); using defaults.")
+
+        return result
 
     # ──────────────────────────────────────────────────────────────────────────
     # Reporting

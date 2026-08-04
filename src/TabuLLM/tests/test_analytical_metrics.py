@@ -13,7 +13,10 @@ from utils.metrics import (
     compute_correlation_stability,
     compute_privacy_metrics,
     compute_hellinger_fidelity,
-    calculate_metrics
+    calculate_metrics,
+    calculate_metrics_by_class,
+    compute_c2st_accuracy,
+    compute_mia_attack_auc,
 )
 
 class TestAnalyticalMetrics(unittest.TestCase):
@@ -87,6 +90,119 @@ class TestAnalyticalMetrics(unittest.TestCase):
         self.assertIn("Synthetic Fidelity (JSD)", res)
         self.assertIn("Privacy Risk", res)
         self.assertIn("Novelty Score", res)
+
+    def test_calculate_metrics_by_class_splits_minority_majority(self):
+        """Verify the minority/majority split is by prevalence in df_orig, not df_aug."""
+        rng = np.random.RandomState(0)
+        df_orig = pd.DataFrame({
+            "num1": rng.rand(30) * 100,
+            "target": [0] * 20 + [1] * 10,   # majority=0 (20 rows), minority=1 (10 rows)
+        })
+        df_aug = pd.DataFrame({
+            "num1": rng.rand(30) * 100,
+            "target": [0] * 20 + [1] * 10,
+        })
+        result = calculate_metrics_by_class(df_orig, df_aug, "target")
+        self.assertEqual(result["minority_label"], "1")
+        self.assertEqual(result["majority_label"], "0")
+        self.assertIn("minority", result)
+        self.assertIn("majority", result)
+        self.assertIn("Synthetic Fidelity (JSD)", result["minority"])
+        self.assertIn("Synthetic Fidelity (JSD)", result["majority"])
+
+    def test_calculate_metrics_by_class_missing_target_returns_empty(self):
+        result = calculate_metrics_by_class(self.df_orig, self.df_aug_good, "nonexistent_col")
+        self.assertEqual(result, {})
+
+    def test_calculate_metrics_by_class_single_class_returns_empty(self):
+        df_orig = pd.DataFrame({"num1": [1, 2, 3, 4, 5, 6], "target": [0] * 6})
+        df_aug = pd.DataFrame({"num1": [1, 2, 3, 4, 5, 6], "target": [0] * 6})
+        result = calculate_metrics_by_class(df_orig, df_aug, "target")
+        self.assertEqual(result, {})
+
+    def test_calculate_metrics_by_class_skips_too_few_rows(self):
+        """A class subset under 6 rows shouldn't produce a (misleadingly noisy) metrics block."""
+        df_orig = pd.DataFrame({"num1": list(range(8)), "target": [0] * 6 + [1] * 2})
+        df_aug = pd.DataFrame({"num1": list(range(8)), "target": [0] * 6 + [1] * 2})
+        result = calculate_metrics_by_class(df_orig, df_aug, "target")
+        self.assertIn("minority_label", result)
+        self.assertNotIn("minority", result)  # only 2 rows in the minority class, below threshold
+
+
+class TestC2STAndMIA(unittest.TestCase):
+    """Privacy/discriminability attack metrics: C2ST (classifier two-sample test) and a
+    distance-based membership-inference-attack (MIA) simulation."""
+
+    def setUp(self):
+        rng = np.random.RandomState(0)
+        self.df_real = pd.DataFrame({
+            "num1": rng.normal(0, 1, 200),
+            "num2": rng.normal(0, 1, 200),
+        })
+        # Indistinguishable synthetic: same generating distribution.
+        self.df_synth_similar = pd.DataFrame({
+            "num1": rng.normal(0, 1, 200),
+            "num2": rng.normal(0, 1, 200),
+        })
+        # Trivially distinguishable synthetic: shifted far away.
+        self.df_synth_different = pd.DataFrame({
+            "num1": rng.normal(100, 1, 200),
+            "num2": rng.normal(100, 1, 200),
+        })
+
+    def test_c2st_near_chance_on_identical_distributions(self):
+        acc = compute_c2st_accuracy(self.df_real, self.df_synth_similar)
+        self.assertIsNotNone(acc)
+        self.assertLess(acc, 0.7)
+
+    def test_c2st_high_on_clearly_distinguishable_distributions(self):
+        acc = compute_c2st_accuracy(self.df_real, self.df_synth_different)
+        self.assertIsNotNone(acc)
+        self.assertGreater(acc, 0.9)
+
+    def test_c2st_none_on_too_few_rows(self):
+        acc = compute_c2st_accuracy(self.df_real.head(5), self.df_synth_similar.head(5))
+        self.assertIsNone(acc)
+
+    def test_c2st_none_on_no_common_columns(self):
+        df_other = pd.DataFrame({"other_col": [1, 2, 3] * 10})
+        acc = compute_c2st_accuracy(self.df_real, df_other)
+        self.assertIsNone(acc)
+
+    def test_mia_auc_near_chance_when_synthetic_equidistant(self):
+        """Synthetic drawn from the same distribution as both members and non-members
+        should give the attacker no advantage (~0.5 AUC)."""
+        rng = np.random.RandomState(1)
+        members = pd.DataFrame({"num1": rng.normal(0, 1, 50), "num2": rng.normal(0, 1, 50)})
+        nonmembers = pd.DataFrame({"num1": rng.normal(0, 1, 50), "num2": rng.normal(0, 1, 50)})
+        synth = pd.DataFrame({"num1": rng.normal(0, 1, 50), "num2": rng.normal(0, 1, 50)})
+        auc = compute_mia_attack_auc(members, nonmembers, synth)
+        self.assertIsNotNone(auc)
+        self.assertGreater(auc, 0.2)
+        self.assertLess(auc, 0.8)
+
+    def test_mia_auc_high_when_synthetic_leaks_membership(self):
+        """Synthetic data that clusters tightly around the members (and far from
+        non-members) should be an easy, high-AUC attack."""
+        rng = np.random.RandomState(1)
+        members = pd.DataFrame({"num1": rng.normal(0, 0.1, 50), "num2": rng.normal(0, 0.1, 50)})
+        nonmembers = pd.DataFrame({"num1": rng.normal(50, 0.1, 50), "num2": rng.normal(50, 0.1, 50)})
+        synth = pd.DataFrame({"num1": rng.normal(0, 0.1, 50), "num2": rng.normal(0, 0.1, 50)})
+        auc = compute_mia_attack_auc(members, nonmembers, synth)
+        self.assertIsNotNone(auc)
+        self.assertGreater(auc, 0.9)
+
+    def test_mia_auc_none_on_too_few_rows(self):
+        auc = compute_mia_attack_auc(self.df_real.head(2), self.df_real.head(2), self.df_synth_similar.head(2))
+        self.assertIsNone(auc)
+
+    def test_mia_auc_none_when_no_numeric_common_columns(self):
+        members = pd.DataFrame({"cat": ["a"] * 10})
+        nonmembers = pd.DataFrame({"cat": ["b"] * 10})
+        synth = pd.DataFrame({"cat": ["a"] * 10})
+        auc = compute_mia_attack_auc(members, nonmembers, synth)
+        self.assertIsNone(auc)
+
 
 if __name__ == "__main__":
     unittest.main()

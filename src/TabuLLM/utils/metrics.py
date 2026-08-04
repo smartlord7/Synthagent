@@ -3,6 +3,9 @@ import numpy as np
 from simsimd import jensenshannon
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics.pairwise import euclidean_distances
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, roc_auc_score
 
 def compute_jensenshannon_fidelity(a: pd.Series, b: pd.Series, bins: int = 20) -> float:
     """
@@ -292,3 +295,134 @@ def calculate_metrics(df_orig: pd.DataFrame, df_aug: pd.DataFrame) -> dict:
         "Feature Accuracy": int((1 - np.mean(mre_list)) * 100) if mre_list else 0,
         "Novelty Score": privacy_results["nndr"]
     }
+
+def calculate_metrics_by_class(df_orig: pd.DataFrame, df_aug: pd.DataFrame, target_col: str) -> dict:
+    """
+    Computes calculate_metrics() separately for the minority and majority classes of
+    target_col (by prevalence in df_orig), isolating whether synthetic fidelity holds
+    up on the minority class specifically -- the class an augmentation pipeline is
+    actually meant to help on an imbalanced dataset.
+
+    Args:
+        df_orig (pd.DataFrame): The original source dataset.
+        df_aug (pd.DataFrame): The newly generated or augmented dataset.
+        target_col (str): The classification target column to group by.
+
+    Returns:
+        dict: {"minority_label": ..., "majority_label": ...,
+               "minority": {<calculate_metrics() output>}, "majority": {...}}
+              Missing "minority"/"majority" keys (or an empty dict) when target_col is
+              absent, has fewer than 2 classes, or a class subset is too small (<6 rows)
+              for the underlying fidelity metrics to be meaningful.
+    """
+    if target_col not in df_orig.columns or target_col not in df_aug.columns:
+        return {}
+
+    counts = df_orig[target_col].value_counts()
+    if len(counts) < 2:
+        return {}
+
+    minority_label = counts.idxmin()
+    majority_label = counts.idxmax()
+
+    out: dict = {"minority_label": str(minority_label), "majority_label": str(majority_label)}
+    for role, label in (("minority", minority_label), ("majority", majority_label)):
+        orig_sub = df_orig[df_orig[target_col] == label]
+        aug_sub = df_aug[df_aug[target_col] == label]
+        if len(orig_sub) < 6 or len(aug_sub) < 6:
+            continue
+        out[role] = calculate_metrics(orig_sub, aug_sub)
+    return out
+
+
+def _encode_common_columns(df_a: pd.DataFrame, df_b: pd.DataFrame, cols: list) -> tuple:
+    """
+    Factorizes categorical columns consistently across both frames (using their combined
+    unique values, mirroring the encoding already used in calculate_metrics) and returns
+    (df_a_encoded, df_b_encoded) restricted to `cols`, both numeric and NaN-free.
+    """
+    a_enc = df_a[cols].copy()
+    b_enc = df_b[cols].copy()
+    for col in cols:
+        if pd.api.types.is_numeric_dtype(df_a[col]) and pd.api.types.is_numeric_dtype(df_b[col]):
+            continue
+        combined = pd.concat([df_a[col], df_b[col]])
+        codes, _ = pd.factorize(combined)
+        a_enc[col] = codes[:len(df_a)]
+        b_enc[col] = codes[len(df_a):]
+    return a_enc.fillna(0), b_enc.fillna(0)
+
+
+def compute_c2st_accuracy(df_real: pd.DataFrame, df_synth: pd.DataFrame, sample_cap: int = 500):
+    """
+    Classifier Two-Sample Test: trains a RandomForest to distinguish real (label 0) from
+    synthetic (label 1) rows on a held-out split, and returns its test accuracy.
+    ~0.5 = indistinguishable (high fidelity); higher = the classifier can tell them apart
+    (lower fidelity). Returns None if there are too few rows for a meaningful test.
+    """
+    if len(df_real) < 10 or len(df_synth) < 10:
+        return None
+
+    common_cols = [c for c in df_synth.columns if c in df_real.columns]
+    if not common_cols:
+        return None
+
+    real_sample = df_real[common_cols].sample(min(len(df_real), sample_cap), random_state=42)
+    synth_sample = df_synth[common_cols].sample(min(len(df_synth), sample_cap), random_state=42)
+
+    real_enc, synth_enc = _encode_common_columns(real_sample, synth_sample, common_cols)
+    X = pd.concat([real_enc, synth_enc], ignore_index=True)
+    y = np.array([0] * len(real_enc) + [1] * len(synth_enc))
+
+    try:
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, y, test_size=0.3, random_state=42, stratify=y
+        )
+        if len(np.unique(y_train)) < 2 or len(np.unique(y_test)) < 2:
+            return None
+        clf = RandomForestClassifier(n_estimators=100, max_depth=8, random_state=42)
+        clf.fit(X_train, y_train)
+        return float(accuracy_score(y_test, clf.predict(X_test)))
+    except Exception:
+        return None
+
+
+def compute_mia_attack_auc(df_members: pd.DataFrame, df_nonmembers: pd.DataFrame, df_synth: pd.DataFrame):
+    """
+    Simplified distance-based membership-inference attack. For every real record --
+    members (rows the pipeline used as train/context data) and non-members (the held-out
+    test split it never saw) -- the attacker's score is the negative nearest-neighbour
+    distance to the synthetic corpus: closer to synthetic data => guessed "member". Returns
+    the attack's ROC-AUC (0.5 = no leakage signal; higher = a successful attack, meaning
+    the synthetic data leaks information about which real rows were used to generate it).
+    """
+    if len(df_members) < 5 or len(df_nonmembers) < 5 or len(df_synth) < 5:
+        return None
+
+    common_cols = [c for c in df_synth.columns if c in df_members.columns and c in df_nonmembers.columns]
+    numeric_cols = [c for c in common_cols if pd.api.types.is_numeric_dtype(df_members[c])]
+    if not numeric_cols:
+        return None
+
+    try:
+        combined = pd.concat([
+            df_members[numeric_cols], df_nonmembers[numeric_cols], df_synth[numeric_cols]
+        ]).fillna(0)
+        scaler = MinMaxScaler()
+        scaler.fit(combined)
+
+        members_scaled = scaler.transform(df_members[numeric_cols].fillna(0))
+        nonmembers_scaled = scaler.transform(df_nonmembers[numeric_cols].fillna(0))
+        synth_scaled = scaler.transform(df_synth[numeric_cols].fillna(0))
+
+        member_dist = euclidean_distances(members_scaled, synth_scaled).min(axis=1)
+        nonmember_dist = euclidean_distances(nonmembers_scaled, synth_scaled).min(axis=1)
+
+        labels = np.array([1] * len(member_dist) + [0] * len(nonmember_dist))
+        scores = np.concatenate([-member_dist, -nonmember_dist])
+
+        if len(np.unique(labels)) < 2:
+            return None
+        return float(roc_auc_score(labels, scores))
+    except Exception:
+        return None

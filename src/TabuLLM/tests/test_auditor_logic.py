@@ -1,7 +1,7 @@
 import unittest
 import pandas as pd
 import numpy as np
-from services.auditor import auditor
+from services.auditor import auditor, DatasetAuditor
 
 class TestAuditorLogic(unittest.TestCase):
     def setUp(self):
@@ -62,6 +62,22 @@ class TestAuditorLogic(unittest.TestCase):
         self.assertNotIn("_row_id", df_filtered.columns)
         self.assertNotIn("ai_audit", df_filtered.columns)
         self.assertIn("age", df_filtered.columns)
+
+    def test_detect_sensitive_columns(self):
+        cols = DatasetAuditor.detect_sensitive_columns(self.df)
+        self.assertIn("age", cols)
+        self.assertIn("gender", cols)
+        self.assertIn("income", cols)
+        self.assertNotIn("target", cols)
+        self.assertNotIn("_row_id", cols)
+
+    def test_detect_sensitive_columns_excludes_ui_internal_cols(self):
+        df = self.df.copy()
+        df["is_context"] = False
+        df["is_target"] = False
+        cols = DatasetAuditor.detect_sensitive_columns(df)
+        self.assertNotIn("is_context", cols)
+        self.assertNotIn("is_target", cols)
 
 if __name__ == '__main__':
     unittest.main()
