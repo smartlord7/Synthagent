@@ -12,10 +12,13 @@ This single script has three modes:
   ablation       (--ablation or TABULLM_MODE=ablation) — runs the SAME full batch
                               pipeline once per arm in ABLATION_ARMS + the special
                               arms (module toggles, context-strategy variants, the
-                              SMOTE baseline, the Ponder-hyperparameters arm, and
-                              any cross-model-backend arms), so "ablation" is
-                              literally "run the batch pipeline N times with
-                              different module combinations." Every arm gets full
+                              SMOTE baseline, the Ponder-hyperparameters arm, and a
+                              cross-model-backend arm for every OTHER model currently
+                              loaded on the 'local' server -- discovered live via
+                              GET /v1/models at the start of each run, see
+                              _discover_model_sweep_arms(); nothing to hardcode), so
+                              "ablation" is literally "run the batch pipeline N times
+                              with different module combinations." Every arm gets full
                               JSON/PDF/per-fold-CSV output (arm subfolders under
                               the run dir), plus a combined ablation_summary.csv
                               and an ablation_deltas.csv with paired-significance
@@ -76,11 +79,13 @@ Prerequisites
 """
 
 import os
+import re
 import sys
 import json
 import argparse
 import datetime
 import traceback
+import urllib.request
 
 import numpy as np
 import pandas as pd
@@ -173,20 +178,56 @@ ABLATION_ARMS: dict[str, dict] = {
 }
 
 # Special arms that don't fit the simple "config override on the same LLM" mold and get
-# dispatched separately in run_ablation() (see ALL_ARMS / the arm-dispatch loop below):
+# dispatched separately in run_ablation() (see the arm-dispatch loop below):
 #   "smote"           -- no LLM at all, generates via SMOTE/SMOTENC instead.
 #   "ponder_strategy" -- hyperparameters are chosen by the LLM per dataset (structured
 #                        Ponder call) instead of the fixed PIPELINE defaults.
-#   entries of MODEL_SWEEP_ARMS -- same pipeline, a different LLM backend.
+#   entries discovered by _discover_model_sweep_arms() -- same pipeline, a different LLM
+#   backend, one arm per OTHER model currently loaded on the server (see below).
 SPECIAL_ARMS = ["smote", "ponder_strategy"]
 
-# Cross-model sweep: arm-name -> model id. Populated from whatever else is loaded in the
-# local LM Studio instance (checked via GET /v1/models) alongside PIPELINE["model"].
-MODEL_SWEEP_ARMS: dict[str, str] = {
-    "backend_qwen2_5": "qwen2.5-vl-7b-instruct",
-}
 
-ALL_ARMS: list[str] = list(ABLATION_ARMS) + SPECIAL_ARMS + list(MODEL_SWEEP_ARMS)
+def _slugify_model_id(model_id: str) -> str:
+    """Turns a model id like 'google/gemma-4-e2b' into a filesystem/CSV-safe arm name
+    (used as both the results subfolder name and the 'arm' column value)."""
+    slug = re.sub(r"[^a-zA-Z0-9]+", "_", model_id).strip("_").lower()
+    return f"backend_{slug}"
+
+
+def _discover_model_sweep_arms(exclude_model_id: str) -> "dict[str, str]":
+    """
+    Queries the live 'local' backend's OpenAI-compatible GET /v1/models for every model
+    CURRENTLY LOADED and servable right now, and turns each one -- other than the
+    pipeline's own default model (already covered by every other arm) and anything that
+    looks like an embedding-only model (can't do chat/completion generation, so can't run
+    this pipeline at all) -- into a cross-model sweep arm. This is what makes "--ablation"
+    actually test every model available in the server at run time, instead of relying on
+    a hand-maintained, easily stale list.
+
+    Deliberately scoped to provider == "local": the Gemini provider's model list is a
+    static, cost-bearing catalog rather than "what's currently loaded," so sweeping it
+    automatically would silently multiply paid API calls -- left out on purpose.
+    """
+    if PIPELINE["provider"] != "local":
+        return {}
+
+    models_url = PIPELINE["endpoint_url"].replace("/chat/completions", "/models")
+    try:
+        with urllib.request.urlopen(urllib.request.Request(models_url), timeout=5) as response:
+            data = json.loads(response.read().decode("utf-8"))
+    except Exception as e:
+        print(f"  [WARN] Could not reach {models_url} to discover cross-model sweep arms ({e}); skipping the sweep.")
+        return {}
+
+    sweep_arms: dict[str, str] = {}
+    for m in data.get("data", []):
+        model_id = m.get("id") if isinstance(m, dict) else None
+        if not model_id or model_id == exclude_model_id:
+            continue
+        if "embed" in model_id.lower():
+            continue  # embedding-only models can't do chat/completion generation
+        sweep_arms[_slugify_model_id(model_id)] = model_id
+    return sweep_arms
 
 # ─────────────────────────────────────────────────────────────────────────────
 # METRIC KEYS
@@ -924,14 +965,21 @@ def run_ablation(resume: "str | None" = None) -> None:
         if _datasets_env else set(DATASET_REGISTRY.keys())
     )
 
+    # Discover every OTHER model currently loaded on the server -- one sweep arm each --
+    # instead of relying on a hand-maintained list. See _discover_model_sweep_arms().
+    model_sweep_arms = _discover_model_sweep_arms(exclude_model_id=PIPELINE["model"])
+    all_arms = list(ABLATION_ARMS) + SPECIAL_ARMS + list(model_sweep_arms)
+
     checkpoint = _load_checkpoint(run_dir)
-    total_units = len(ALL_ARMS) * len(dataset_subset)
+    total_units = len(all_arms) * len(dataset_subset)
 
     _print_separator("═")
     print(f"  TabuLLM Ablation Study  —  {timestamp}")
     print(f"  Provider : {PIPELINE['provider']}  |  Model : {PIPELINE['model']}")
     print(f"  Folds    : {ablation_folds}  (same rigor as a standalone batch run)")
-    print(f"  Arms     : {ALL_ARMS}")
+    print(f"  Arms     : {all_arms}")
+    if model_sweep_arms:
+        print(f"  Cross-model sweep (discovered live) : {model_sweep_arms}")
     print(f"  Datasets : {len(dataset_subset)}")
     print(f"  Output   : {run_dir}")
     if resumed:
@@ -949,7 +997,7 @@ def run_ablation(resume: "str | None" = None) -> None:
     model_sweep_libs: dict[str, TabuLLM] = {}
 
     def _lib_for_arm(arm_name: str) -> TabuLLM:
-        model_id = MODEL_SWEEP_ARMS[arm_name]
+        model_id = model_sweep_arms[arm_name]
         if model_id not in model_sweep_libs:
             model_sweep_libs[model_id] = TabuLLM(
                 provider=PIPELINE["provider"],
@@ -962,7 +1010,7 @@ def run_ablation(resume: "str | None" = None) -> None:
     series_by_key: dict[tuple, dict] = {}                 # (dataset, arm) -> per-fold series
     unit_config = {"folds": ablation_folds}               # what fixes each unit's fold seeds
 
-    for arm_name in ALL_ARMS:
+    for arm_name in all_arms:
         overrides = ABLATION_ARMS.get(arm_name, {})
         arm_dir = os.path.join(run_dir, arm_name)
         os.makedirs(arm_dir, exist_ok=True)
@@ -973,8 +1021,8 @@ def run_ablation(resume: "str | None" = None) -> None:
             print(f"  ARM: {arm_name}   (SMOTE/SMOTENC baseline, no LLM)")
         elif arm_name == "ponder_strategy":
             print(f"  ARM: {arm_name}   (LLM-chosen hyperparameters via ponder_hyperparameters())")
-        elif arm_name in MODEL_SWEEP_ARMS:
-            print(f"  ARM: {arm_name}   (cross-model sweep, model={MODEL_SWEEP_ARMS[arm_name]})")
+        elif arm_name in model_sweep_arms:
+            print(f"  ARM: {arm_name}   (cross-model sweep, model={model_sweep_arms[arm_name]})")
         else:
             print(f"  ARM: {arm_name}   overrides={overrides or '(none — full pipeline)'}")
         _print_separator("═")
@@ -1002,7 +1050,7 @@ def run_ablation(resume: "str | None" = None) -> None:
                     lib, filename, ds_cfg, arm_dir,
                     arm_name=arm_name, folds=ablation_folds, ponder=True,
                 )
-            elif arm_name in MODEL_SWEEP_ARMS:
+            elif arm_name in model_sweep_arms:
                 out = _run_dataset_arm(
                     _lib_for_arm(arm_name), filename, ds_cfg, arm_dir,
                     arm_name=arm_name, folds=ablation_folds,
@@ -1055,7 +1103,7 @@ def run_ablation(resume: "str | None" = None) -> None:
         dataset_delta_rows: dict[str, dict] = {}   # arm_name -> delta_row
         raw_pvalues: dict[tuple, float] = {}        # (arm_name, key) -> pvalue
 
-        for arm_name in ALL_ARMS:
+        for arm_name in all_arms:
             if arm_name == "full":
                 continue
             row = next((r for r in all_summary_rows if r["dataset"] == filename and r["arm"] == arm_name), None)
