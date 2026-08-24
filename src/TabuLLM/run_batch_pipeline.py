@@ -31,9 +31,10 @@ This single script has three modes:
 Usage
 ─────
     cd src/TabuLLM
-    python run_batch_pipeline.py                 # normal batch run
-    python run_batch_pipeline.py --ablation       # ablation sweep
-    python run_batch_pipeline.py --stochasticity  # generation-noise decomposition
+    python run_batch_pipeline.py                               # normal batch run
+    python run_batch_pipeline.py --ablation                    # ablation sweep
+    python run_batch_pipeline.py --stochasticity               # generation-noise decomposition
+    python run_batch_pipeline.py --ablation --stochasticity    # run both: ablation first, then stochasticity
 
     # Gemini backend:
     set TABULLM_PROVIDER=gemini
@@ -1295,11 +1296,21 @@ if __name__ == "__main__":
                               "Units already recorded in checkpoint.json are skipped -- UNLESS the "
                               "fold/repeat count now differs from what produced them, in which case "
                               "they're recomputed (fold train/test splits are seeded purely from the "
-                              "fold count, so a mismatched count means different, incomparable seeds).")
+                              "fold count, so a mismatched count means different, incomparable seeds). "
+                              "When both --ablation and --stochasticity are set, --resume applies to "
+                              "whichever mode is resumable (ablation first, then stochasticity).")
     args = parser.parse_args()
 
     try:
-        if args.stochasticity or os.getenv("TABULLM_MODE", "batch").lower() == "stochasticity":
+        if (args.ablation or os.getenv("TABULLM_MODE", "batch").lower() == "ablation") and \
+           (args.stochasticity or os.getenv("TABULLM_MODE", "batch").lower() == "stochasticity"):
+            # Both ablation and stochasticity: run ablation first, then stochasticity
+            print("\n" + "═" * 64)
+            print("  Running BOTH ablation study and stochasticity decomposition")
+            print("═" * 64 + "\n")
+            run_ablation(resume=args.resume)
+            run_stochasticity_study(resume=args.resume)
+        elif args.stochasticity or os.getenv("TABULLM_MODE", "batch").lower() == "stochasticity":
             run_stochasticity_study(resume=args.resume)
         elif args.ablation or os.getenv("TABULLM_MODE", "batch").lower() == "ablation":
             run_ablation(resume=args.resume)
