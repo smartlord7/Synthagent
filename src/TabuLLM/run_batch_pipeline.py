@@ -195,6 +195,34 @@ def _slugify_model_id(model_id: str) -> str:
     return f"backend_{slug}"
 
 
+def _get_available_models() -> "list[str]":
+    """
+    Queries the live 'local' backend's OpenAI-compatible GET /v1/models for every model
+    CURRENTLY LOADED and servable right now. Filters out embedding-only models.
+    Returns a sorted list of usable model IDs.
+    """
+    if PIPELINE["provider"] != "local":
+        return []
+
+    models_url = PIPELINE["endpoint_url"].replace("/chat/completions", "/models")
+    try:
+        with urllib.request.urlopen(urllib.request.Request(models_url), timeout=5) as response:
+            data = json.loads(response.read().decode("utf-8"))
+    except Exception as e:
+        print(f"  [WARN] Could not reach {models_url} to discover available models ({e}).")
+        return []
+
+    available: list[str] = []
+    for m in data.get("data", []):
+        model_id = m.get("id") if isinstance(m, dict) else None
+        if not model_id:
+            continue
+        if "embed" in model_id.lower():
+            continue  # embedding-only models can't do chat/completion generation
+        available.append(model_id)
+    return sorted(available)
+
+
 def _discover_model_sweep_arms(exclude_model_id: str) -> "dict[str, str]":
     """
     Queries the live 'local' backend's OpenAI-compatible GET /v1/models for every model
@@ -209,24 +237,11 @@ def _discover_model_sweep_arms(exclude_model_id: str) -> "dict[str, str]":
     static, cost-bearing catalog rather than "what's currently loaded," so sweeping it
     automatically would silently multiply paid API calls -- left out on purpose.
     """
-    if PIPELINE["provider"] != "local":
-        return {}
-
-    models_url = PIPELINE["endpoint_url"].replace("/chat/completions", "/models")
-    try:
-        with urllib.request.urlopen(urllib.request.Request(models_url), timeout=5) as response:
-            data = json.loads(response.read().decode("utf-8"))
-    except Exception as e:
-        print(f"  [WARN] Could not reach {models_url} to discover cross-model sweep arms ({e}); skipping the sweep.")
-        return {}
-
+    available = _get_available_models()
     sweep_arms: dict[str, str] = {}
-    for m in data.get("data", []):
-        model_id = m.get("id") if isinstance(m, dict) else None
-        if not model_id or model_id == exclude_model_id:
+    for model_id in available:
+        if model_id == exclude_model_id:
             continue
-        if "embed" in model_id.lower():
-            continue  # embedding-only models can't do chat/completion generation
         sweep_arms[_slugify_model_id(model_id)] = model_id
     return sweep_arms
 
@@ -897,9 +912,19 @@ def run_batch(resume: "str | None" = None) -> None:
     run_dir, resumed = _resolve_run_dir(resume, "run", timestamp)
     checkpoint = _load_checkpoint(run_dir)
 
+    # Validate/discover model
+    model_to_use = PIPELINE['model']
+    if PIPELINE['provider'] == "local":
+        available = _get_available_models()
+        if available and model_to_use not in available:
+            print(f"  [WARN] Configured model '{model_to_use}' not found on server.")
+            print(f"  Available models: {available}")
+            model_to_use = available[0]
+            print(f"  Using first available: {model_to_use}")
+
     _print_separator("═")
     print(f"  TabuLLM Batch Pipeline  —  {timestamp}")
-    print(f"  Provider : {PIPELINE['provider']}  |  Model : {PIPELINE['model']}")
+    print(f"  Provider : {PIPELINE['provider']}  |  Model : {model_to_use}")
     print(f"  Folds    : {PIPELINE['folds']}  |  Strategy : {PIPELINE['strategy']}")
     print(f"  Datasets : {len(DATASET_REGISTRY)}")
     print(f"  Output   : {run_dir}")
@@ -909,7 +934,7 @@ def run_batch(resume: "str | None" = None) -> None:
 
     lib = TabuLLM(
         provider=PIPELINE["provider"],
-        model=PIPELINE["model"],
+        model=model_to_use,
         endpoint_url=PIPELINE["endpoint_url"],
     )
 
@@ -966,9 +991,19 @@ def run_ablation(resume: "str | None" = None) -> None:
         if _datasets_env else set(DATASET_REGISTRY.keys())
     )
 
+    # Validate/discover model
+    model_to_use = PIPELINE['model']
+    if PIPELINE['provider'] == "local":
+        available = _get_available_models()
+        if available and model_to_use not in available:
+            print(f"  [WARN] Configured model '{model_to_use}' not found on server.")
+            print(f"  Available models: {available}")
+            model_to_use = available[0]
+            print(f"  Using first available: {model_to_use}")
+
     # Discover every OTHER model currently loaded on the server -- one sweep arm each --
     # instead of relying on a hand-maintained list. See _discover_model_sweep_arms().
-    model_sweep_arms = _discover_model_sweep_arms(exclude_model_id=PIPELINE["model"])
+    model_sweep_arms = _discover_model_sweep_arms(exclude_model_id=model_to_use)
     all_arms = list(ABLATION_ARMS) + SPECIAL_ARMS + list(model_sweep_arms)
 
     checkpoint = _load_checkpoint(run_dir)
@@ -976,7 +1011,7 @@ def run_ablation(resume: "str | None" = None) -> None:
 
     _print_separator("═")
     print(f"  TabuLLM Ablation Study  —  {timestamp}")
-    print(f"  Provider : {PIPELINE['provider']}  |  Model : {PIPELINE['model']}")
+    print(f"  Provider : {PIPELINE['provider']}  |  Model : {model_to_use}")
     print(f"  Folds    : {ablation_folds}  (same rigor as a standalone batch run)")
     print(f"  Arms     : {all_arms}")
     if model_sweep_arms:
@@ -989,7 +1024,7 @@ def run_ablation(resume: "str | None" = None) -> None:
 
     lib = TabuLLM(
         provider=PIPELINE["provider"],
-        model=PIPELINE["model"],
+        model=model_to_use,
         endpoint_url=PIPELINE["endpoint_url"],
     )
 
@@ -1172,11 +1207,21 @@ def run_stochasticity_study(resume: "str | None" = None) -> None:
         if _datasets_env else list(DATASET_REGISTRY.keys())[:2]
     )
 
+    # Validate/discover model
+    model_to_use = PIPELINE['model']
+    if PIPELINE['provider'] == "local":
+        available = _get_available_models()
+        if available and model_to_use not in available:
+            print(f"  [WARN] Configured model '{model_to_use}' not found on server.")
+            print(f"  Available models: {available}")
+            model_to_use = available[0]
+            print(f"  Using first available: {model_to_use}")
+
     checkpoint = _load_checkpoint(run_dir)
 
     _print_separator("═")
     print(f"  TabuLLM Generation-Stochasticity Check  —  {timestamp}")
-    print(f"  Provider : {PIPELINE['provider']}  |  Model : {PIPELINE['model']}")
+    print(f"  Provider : {PIPELINE['provider']}  |  Model : {model_to_use}")
     print(f"  Repeats  : {repeats}  |  Datasets : {dataset_subset}")
     print(f"  Output   : {run_dir}")
     if resumed:
@@ -1185,7 +1230,7 @@ def run_stochasticity_study(resume: "str | None" = None) -> None:
 
     lib = TabuLLM(
         provider=PIPELINE["provider"],
-        model=PIPELINE["model"],
+        model=model_to_use,
         endpoint_url=PIPELINE["endpoint_url"],
     )
 
