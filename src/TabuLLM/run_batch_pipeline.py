@@ -115,6 +115,7 @@ import sys
 import json
 import argparse
 import datetime
+import time
 import traceback
 import urllib.request
 from typing import Callable
@@ -701,7 +702,17 @@ def _save_checkpoint(run_dir: str, checkpoint: dict) -> None:
     tmp_path = path + ".tmp"
     with open(tmp_path, "w", encoding="utf-8") as fh:
         json.dump(checkpoint, fh, indent=2)
-    os.replace(tmp_path, path)
+    # On Windows, os.replace fails with "Access is denied" while another process (an
+    # editor, antivirus, OneDrive, the search indexer) briefly holds checkpoint.json
+    # open. Retry with backoff instead of losing the unit that just finished.
+    for attempt in range(10):
+        try:
+            os.replace(tmp_path, path)
+            return
+        except PermissionError:
+            if attempt == 9:
+                raise
+            time.sleep(0.2 * (attempt + 1))
 
 
 def _mark_unit_done(
