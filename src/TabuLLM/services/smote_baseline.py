@@ -3,6 +3,24 @@ import pandas as pd
 from utils.logging_config import logger
 
 
+def impute_for_baseline(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Mean-imputes numerical and mode-imputes other columns, the same convention the
+    downstream evaluation uses. SMOTE, CTGAN and TVAE cannot fit on NaN, so the
+    baseline generators fit on this imputed copy of the training split.
+    """
+    out = df.copy()
+    for col in out.columns:
+        if not out[col].isna().any():
+            continue
+        if pd.api.types.is_numeric_dtype(out[col]):
+            out[col] = out[col].fillna(out[col].mean())
+        else:
+            mode = out[col].mode(dropna=True)
+            out[col] = out[col].fillna(mode.iloc[0] if not mode.empty else "missing")
+    return out
+
+
 def generate_smote_rows(df_train: pd.DataFrame, target_col: str, categorical_cols: list, random_state: int) -> pd.DataFrame:
     """
     Runs SMOTENC (when `categorical_cols` is non-empty) or plain SMOTE on df_train,
@@ -12,12 +30,14 @@ def generate_smote_rows(df_train: pd.DataFrame, target_col: str, categorical_col
 
     Returns an empty DataFrame (with a logged warning) whenever SMOTE cannot run: the
     target has fewer than 2 classes, or the smallest class has too few rows to support
-    any k_neighbors >= 1.
+    any k_neighbors >= 1. Missing feature values are imputed first (impute_for_baseline),
+    since imblearn rejects NaN.
     """
     from imblearn.over_sampling import SMOTE, SMOTENC
 
     if target_col not in df_train.columns or df_train.empty:
         return pd.DataFrame(columns=df_train.columns)
+    df_train = impute_for_baseline(df_train.dropna(subset=[target_col]))
 
     feature_cols = [c for c in df_train.columns if c != target_col]
     class_counts = df_train[target_col].value_counts()

@@ -135,6 +135,7 @@ class TabuLLM:
         join_context: bool = True,
         inject_inferred_rules: bool = True,
         apply_post_processing: bool = True,
+        raw_prompting: bool = False,
         temperature: float = 0.3,
         resume_fold_results: Optional[dict] = None,
         on_fold_done: Optional[Callable[[int, dict], None]] = None,
@@ -159,6 +160,10 @@ class TabuLLM:
                 the LLM as generation constraints. Default True. Ablation toggle.
             apply_post_processing (bool): Whether code-side rule post-processing (noise,
                 rounding, etc.) is applied to generated rows. Default True. Ablation toggle.
+            raw_prompting (bool): No-controller ablation. The same prompts and context,
+                but strict JSON parsing with no repair, no schema bridge, rule violations
+                counted but not corrected, no overflow retry, no top-up and no
+                post-processing. Default False.
             temperature (float): LLM sampling temperature for generation. Default 0.3.
                 See ponder_hyperparameters() for an LLM-recommended alternative.
             resume_fold_results (dict | None): {fold_num: fold_result} for folds already
@@ -191,6 +196,7 @@ class TabuLLM:
             "join_context": join_context,
             "inject_inferred_rules": inject_inferred_rules,
             "apply_post_processing": apply_post_processing,
+            "raw_prompting": raw_prompting,
             "temperature": temperature,
             "ml_config": {"selected_models": ml_models, "params": {}},
             "na_strategy": na_strategy,

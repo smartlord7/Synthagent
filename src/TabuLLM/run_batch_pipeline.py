@@ -59,6 +59,11 @@ Usage
     set TABULLM_ABLATION_FOLDS=5
     python run_batch_pipeline.py --ablation
 
+    # Run only some arms (e.g. new ones) inside an existing run; the other arms' cached
+    # results still feed the combined summary:
+    set TABULLM_ABLATION_ARMS=raw_prompting,ctgan,tvae
+    python run_batch_pipeline.py --ablation --resume "results/ablation_20260918_114707"
+
     # Ablation cross-model sweep across several OpenAI models in one run (each becomes
     # its own arm, e.g. backend_gpt_4_1_mini, compared against TABULLM_MODEL's "full"
     # baseline with paired significance -- see ablation_deltas.csv):
@@ -249,16 +254,22 @@ ABLATION_ARMS: dict[str, dict] = {
     "no_context_join":    {"join_context": False},
     "strategy_dense":     {"strategy": "dense"},
     "strategy_diverse":   {"strategy": "diverse"},
+    # No-controller ablation: same prompts and context, no repair, bridge, correction,
+    # overflow retry, top-up or post-processing (see LocalOpenAIProvider.generate_bulk_data).
+    "raw_prompting":      {"raw_prompting": True},
 }
 
 # Special arms that don't fit the simple "config override on the same LLM" mold and get
 # dispatched separately in run_ablation() (see the arm-dispatch loop below):
 #   "smote"           -- no LLM at all, generates via SMOTE/SMOTENC instead.
+#   "ctgan", "tvae"   -- no LLM either: deep generative baselines (the `ctgan` package)
+#                        fit per fold on the training split, sampling len(train) rows.
 #   "ponder_strategy" -- hyperparameters are chosen by the LLM per dataset (structured
 #                        Ponder call) instead of the fixed PIPELINE defaults.
 #   entries discovered by _discover_model_sweep_arms() -- same pipeline, a different LLM
 #   backend, one arm per OTHER model currently loaded on the server (see below).
-SPECIAL_ARMS = ["smote", "ponder_strategy"]
+SPECIAL_ARMS = ["smote", "ctgan", "tvae", "ponder_strategy"]
+BASELINE_ARMS = {"smote", "ctgan", "tvae"}
 
 
 def _slugify_model_id(model_id: str) -> str:
@@ -968,6 +979,7 @@ def _run_smote_arm(
     folds: "int | None" = None,
     resume_fold_results: "dict | None" = None,
     on_fold_done: "Callable[[int, dict], None] | None" = None,
+    arm_name: str = "smote",
 ) -> "dict | None":
     """
     Runs one (dataset, "smote") augmentation end to end via the SMOTE baseline path
@@ -985,7 +997,6 @@ def _run_smote_arm(
     ml_models = ds_cfg.get("ml", ["rf"])
     name      = os.path.splitext(filename)[0]
     folds     = folds if folds is not None else PIPELINE["folds"]
-    arm_name  = "smote"
 
     print()
     _print_separator()
@@ -1013,11 +1024,12 @@ def _run_smote_arm(
             "ml_config": {"selected_models": ml_models, "params": {}},
             "_resume_fold_results": resume_fold_results or {},
             "_on_fold_done": on_fold_done,
+            "baseline_method": arm_name,
         }
         if resume_fold_results:
             print(f"  Resuming : {len(resume_fold_results)}/{folds} folds already cached in checkpoint.json")
 
-        print(f"  Running SMOTE baseline ({folds} folds, arm={arm_name}) …")
+        print(f"  Running {arm_name.upper()} baseline ({folds} folds, arm={arm_name}) …")
         results = run_smote_dataset_benchmark(("smote-lib-task", filename, df.to_dict('records'), col_defs, config))
 
         if not results:
@@ -1053,7 +1065,7 @@ def _run_smote_arm(
             "rows":    len(df),
             "cols":    len(df.columns),
             "folds":   folds,
-            "model":   "smote",
+            "model":   arm_name,
             "arm":     arm_name,
         }
         summary_row.update(_flat_fidelity_row(fold_results))
@@ -1179,6 +1191,10 @@ def run_ablation(resume: "str | None" = None) -> None:
     model_sweep_arms = _discover_model_sweep_arms(exclude_model_id=model_to_use)
     all_arms = list(ABLATION_ARMS) + SPECIAL_ARMS + list(model_sweep_arms)
 
+    # Optional: run only these arms (comma-separated). Other arms still contribute their
+    # checkpointed results to the combined summary, but nothing new is generated for them.
+    only_arms = {a.strip() for a in os.getenv("TABULLM_ABLATION_ARMS", "").split(",") if a.strip()}
+
     checkpoint = _load_checkpoint(run_dir)
     total_units = len(all_arms) * len(dataset_subset)
 
@@ -1218,8 +1234,8 @@ def run_ablation(resume: "str | None" = None) -> None:
 
         print()
         _print_separator("═")
-        if arm_name == "smote":
-            print(f"  ARM: {arm_name}   (SMOTE/SMOTENC baseline, no LLM)")
+        if arm_name in BASELINE_ARMS:
+            print(f"  ARM: {arm_name}   ({arm_name.upper()} baseline, no LLM)")
         elif arm_name == "ponder_strategy":
             print(f"  ARM: {arm_name}   (LLM-chosen hyperparameters via ponder_hyperparameters())")
         elif arm_name in model_sweep_arms:
@@ -1261,10 +1277,14 @@ def run_ablation(resume: "str | None" = None) -> None:
                 _save_fold_result(run_dir, checkpoint, _key, unit_config, fold_num, fold_result)
             cached_folds = {} if arm_name == "ponder_strategy" else _resume_fold_results(checkpoint, unit_key, unit_config)
 
-            if arm_name == "smote":
+            if only_arms and arm_name not in only_arms:
+                print(f"  [{arm_name}] {filename}: not selected by TABULLM_ABLATION_ARMS — skipping.")
+                continue
+            if arm_name in BASELINE_ARMS:
                 out = _run_smote_arm(
                     lib, filename, ds_cfg, arm_dir, folds=ablation_folds,
                     resume_fold_results=cached_folds, on_fold_done=on_fold_done,
+                    arm_name=arm_name,
                 )
             elif arm_name == "ponder_strategy":
                 out = _run_dataset_arm(

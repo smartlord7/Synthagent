@@ -170,6 +170,24 @@ def _aggregate_overall_ml(results: list) -> dict:
     return overall_ml
 
 
+def _align_raw_rows(rows: list, df_real: pd.DataFrame) -> "tuple[list, int]":
+    """
+    Evaluation-side alignment for the no-controller arm: keeps only columns whose name
+    matches the real table exactly (others become missing) and coerces numerical columns
+    with pd.to_numeric. Returns the rows and the number of non-empty cells that failed to
+    coerce, which the controlled pipeline would have repaired or flagged.
+    """
+    if not rows:
+        return [], 0
+    df = pd.DataFrame(rows).reindex(columns=df_real.columns)
+    type_errors = 0
+    for col in df_real.select_dtypes(include=[np.number]).columns:
+        before = df[col].notna()
+        df[col] = pd.to_numeric(df[col], errors="coerce")
+        type_errors += int((before & df[col].isna()).sum())
+    return df.to_dict("records"), type_errors
+
+
 def run_single_dataset_benchmark(args):
     """
     Worker function for multiprocessing. 
@@ -192,7 +210,8 @@ def run_single_dataset_benchmark(args):
     enforce_rules = config.get("enforce_rules", True)
     enforce_boundaries = config.get("enforce_boundaries", False)
     inject_inferred_rules = bool(config.get("inject_inferred_rules", True))
-    apply_post_processing = bool(config.get("apply_post_processing", True))
+    raw_prompting = bool(config.get("raw_prompting", False))
+    apply_post_processing = bool(config.get("apply_post_processing", True)) and not raw_prompting
 
     progress_dict = config.get("_progress_dict")
     dataset_id_key = config.get("_dataset_id")
@@ -312,7 +331,7 @@ def run_single_dataset_benchmark(args):
             result_bundle = generate_bulk_data(
                 [], context_dict, all_fields, all_fields, algorithm, instructions, temperature,
                 num_empty=num_empty, chunk_size=chunk_size,
-                rules_metadata=rules_hierarchy, enforce_rules=True
+                rules_metadata=rules_hierarchy, enforce_rules=True, raw_mode=raw_prompting
             )
             generation_seconds = time.time() - gen_start_time
 
@@ -323,6 +342,9 @@ def run_single_dataset_benchmark(args):
                 generated_rows = result_bundle["data"]
                 if apply_post_processing:
                     generated_rows = PostProcessor.apply_active_rules(generated_rows, rules_hierarchy.get("user", []))
+                if raw_prompting:
+                    generated_rows, type_errors = _align_raw_rows(generated_rows, df_orig_all)
+                    result_bundle.setdefault("stats", {})["type_errors"] = type_errors
                 generation_stats = {**result_bundle.get("stats", {}), "generation_seconds": generation_seconds}
                 test_data_list = df_test_orig.to_dict('records')
                 
@@ -460,16 +482,22 @@ def run_smote_dataset_benchmark(args):
 
     args: (dataset_id, filename, orig_data, col_defs, config) -- same shape as
     run_single_dataset_benchmark, so it slots into the same call convention.
+
+    config["baseline_method"] selects the generator: "smote" (default), or "ctgan" /
+    "tvae" (services.deep_baselines.generate_deep_rows, sampling len(train) rows).
     """
     from services.smote_baseline import generate_smote_rows
+    from services.deep_baselines import generate_deep_rows
 
     dataset_id, filename, orig_data, col_defs, config = args
-    logger.info(f"Starting SMOTE baseline benchmark: {filename}")
+    logger.info(f"Starting {config.get('baseline_method', 'smote').upper()} baseline benchmark: {filename}")
 
     folds = config.get("folds", 3)
     ml_config = config.get("ml_config", {})
     targets = config.get("targets", [])
     na_strategy = config.get("na_strategy", "impute")
+    method = config.get("baseline_method", "smote")
+    label = method.upper()
 
     df_orig_all = pd.DataFrame(orig_data)
     if '_row_id' in df_orig_all.columns:
@@ -496,21 +524,23 @@ def run_smote_dataset_benchmark(args):
             m = resume_fold_results[fold_num]
             results.append(m)
             all_synthetic_data.extend(m.get("synthetic_data", []) or [])
-            logger.info(f"[{filename} | Fold {fold_num}] (SMOTE) Reusing cached result from checkpoint -- skipping regeneration.")
+            logger.info(f"[{filename} | Fold {fold_num}] ({label}) Reusing cached result from checkpoint -- skipping regeneration.")
             continue
 
         try:
             fold_start_time = time.time()
             df_train_orig, df_test_orig = train_test_split(df_orig_all, test_size=0.2, random_state=42 + fold_num)
-            logger.info(f"[DATA] [{filename} | Fold {fold_num}] (SMOTE) Split Complete: Train={len(df_train_orig)}, Test={len(df_test_orig)}")
+            logger.info(f"[DATA] [{filename} | Fold {fold_num}] ({label}) Split Complete: Train={len(df_train_orig)}, Test={len(df_test_orig)}")
 
             gen_start_time = time.time()
-            if target_col:
+            if target_col and method == "smote":
                 generated_df = generate_smote_rows(df_train_orig, target_col, categorical_cols, random_state=42 + fold_num)
+            elif target_col:
+                generated_df = generate_deep_rows(df_train_orig, target_col, categorical_cols, random_state=42 + fold_num, method=method)
             else:
                 generated_df = pd.DataFrame(columns=df_train_orig.columns)
             generation_seconds = time.time() - gen_start_time
-            logger.info(f"[{filename} | Fold {fold_num}] (SMOTE) Generated: {len(generated_df)} rows in {generation_seconds:.3f}s")
+            logger.info(f"[{filename} | Fold {fold_num}] ({label}) Generated: {len(generated_df)} rows in {generation_seconds:.3f}s")
 
             generated_rows = generated_df.to_dict('records')
             for row in generated_rows: row["_fold_id"] = fold_num
@@ -543,10 +573,12 @@ def run_smote_dataset_benchmark(args):
 
             ml_fold_results = {}
             if ml_config and targets:
-                df_full_aug = pd.concat([df_train_orig, generated_df], ignore_index=True)
+                # Concatenating an empty frame would recast every column to object dtype
+                # and silently change the downstream preprocessing.
+                df_full_aug = pd.concat([df_train_orig, generated_df], ignore_index=True) if len(generated_df) else df_train_orig.copy()
                 for m_type in ml_config.get("selected_models", []):
                     m_params = ml_config.get("params", {}).get(m_type, {})
-                    logger.info(f"[ML] [{filename} | Fold {fold_num}] (SMOTE) Evaluating {m_type.upper()} (NA Strategy: {na_strategy})")
+                    logger.info(f"[ML] [{filename} | Fold {fold_num}] ({label}) Evaluating {m_type.upper()} (NA Strategy: {na_strategy})")
 
                     orig_perf, _,        orig_err = MLEvaluator.train_and_evaluate(df_train_orig, targets, m_type, m_params, task_type, test_df=df_test_orig, na_strategy=na_strategy)
                     gen_perf,  gen_meta,  gen_err  = MLEvaluator.train_and_evaluate(generated_df,  targets, m_type, m_params, task_type, test_df=df_test_orig, na_strategy=na_strategy)
@@ -579,7 +611,7 @@ def run_smote_dataset_benchmark(args):
                 except Exception as cb_err:
                     logger.warning(f"on_fold_done callback failed for {filename} fold {fold_num}: {cb_err}")
         except Exception as e:
-            logger.error(f"SMOTE pipeline error in {filename} fold {fold_num}: {e}")
+            logger.error(f"{label} pipeline error in {filename} fold {fold_num}: {e}")
             continue
 
     overall_ml = _aggregate_overall_ml(results)

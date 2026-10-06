@@ -16,4 +16,4 @@ scikit-learn
 imbalanced-learn
 numpy
 ucimlrepo
-xgboost
+xgboostctgan>=0.12

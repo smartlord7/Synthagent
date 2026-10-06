@@ -251,7 +251,55 @@ class LocalOpenAIProvider(BaseLLMProvider):
             logger.error(f"Error calling local LLM for target detection: {e}")
             return []
 
-    def generate_bulk_data(self, rows_payload, context, all_columns, all_fields, algorithm, instructions, temperature, num_empty=0, chunk_size=30, rules_metadata=None, enforce_rules=True):
+    @staticmethod
+    def _raw_rows(content, all_columns, stats):
+        """No-controller parse: strict json.loads, rows zipped with whatever column names
+        the model returned (no bridge to the declared schema). Unparseable output yields
+        no rows."""
+        try:
+            parsed = json.loads(content)
+        except Exception:
+            stats["parse_failures"] += 1
+            return []
+        if isinstance(parsed, dict):
+            cols, data = parsed.get("cols"), parsed.get("data", [])
+        else:
+            cols, data = None, parsed
+        if not isinstance(data, list):
+            stats["parse_failures"] += 1
+            return []
+        if cols is not None and list(cols) != list(all_columns):
+            stats["schema_mismatches"] += 1
+        rows = []
+        for row in data:
+            if isinstance(row, dict):
+                rows.append(row)
+            elif isinstance(row, list) and cols is not None:
+                rows.append(dict(zip(cols, row)))
+        return rows
+
+    @staticmethod
+    def _count_invalid_rows(rows, rules_metadata, stats):
+        """Counts (but never corrects or drops) rows that violate the active rules."""
+        if not rules_metadata or not rows:
+            return
+        if isinstance(rules_metadata, dict) and "integrity" in rules_metadata:
+            active_rules = list(rules_metadata.get("integrity", []))
+            if rules_metadata.get("enforce_boundaries"):
+                active_rules.extend(rules_metadata.get("boundaries", []))
+            if rules_metadata.get("enforce_user"):
+                active_rules.extend(rules_metadata.get("user", []))
+        else:
+            active_rules = rules_metadata
+        model = RuleValidator.create_pydantic_model(active_rules)
+        violations = RuleValidator.validate_batch(rows, model)
+        stats["rule_violations"] += len(violations)
+        stats["invalid_rows"] += len({v["row_index"] for v in violations})
+
+    def generate_bulk_data(self, rows_payload, context, all_columns, all_fields, algorithm, instructions, temperature, num_empty=0, chunk_size=30, rules_metadata=None, enforce_rules=True, raw_mode=False):
+        # raw_mode is the no-controller ablation: the same prompts and context, but strict
+        # json.loads with no repair, no schema bridge, rule violations counted but never
+        # corrected, no context-overflow retry, no top-up and no overshoot truncation.
         # 1. Parse dictionary context securely
         meta = context.get("metadata", "Not provided") if isinstance(context, dict) else str(context)
         manual_ctx = context.get("manual_ctx", "[]") if isinstance(context, dict) else "[]"
@@ -317,7 +365,10 @@ class LocalOpenAIProvider(BaseLLMProvider):
 
         final_data = []
         schema_updates = {}
-        accumulated_stats = {"prompt_tokens": 0, "candidates_tokens": 0, "total_tokens": 0, "rule_violations": 0, "repair_attempts": 0}
+        accumulated_stats = {"prompt_tokens": 0, "candidates_tokens": 0, "total_tokens": 0, "rule_violations": 0, "repair_attempts": 0,
+                             "requested_rows": int(num_empty or len(rows_payload or [])), "delivered_rows": 0}
+        if raw_mode:
+            accumulated_stats.update({"parse_failures": 0, "schema_mismatches": 0, "invalid_rows": 0, "request_errors": 0})
         logger.info(f"Budgeting generation context for model {algorithm} (Max: {model_ctx_limit} tok).")
 
         for subset_idx, subset in enumerate(subsets):
@@ -399,6 +450,12 @@ class LocalOpenAIProvider(BaseLLMProvider):
                     accumulated_stats["prompt_tokens"] += usage.get("prompt_tokens", 0)
                     accumulated_stats["candidates_tokens"] += usage.get("completion_tokens", 0)
                     accumulated_stats["total_tokens"] += usage.get("total_tokens", 0)
+
+                    if raw_mode:
+                        raw_rows = self._raw_rows(content, all_columns, accumulated_stats)
+                        self._count_invalid_rows(raw_rows, rules_metadata if enforce_rules else None, accumulated_stats)
+                        final_data.extend(raw_rows)
+                        break
 
                     # Use unified robust_json_loads with repair step
                     try:
@@ -493,6 +550,10 @@ class LocalOpenAIProvider(BaseLLMProvider):
                     break # Success! Continue onto next chunk subset
 
                 except urllib.error.HTTPError as e:
+                    if raw_mode:
+                        accumulated_stats["request_errors"] += 1
+                        logger.warning(f"[raw] Chunk {subset_idx+1} request failed ({e}); no retry.")
+                        break
                     if e.code in [400, 422] and attempt_reduction < max_reductions:
                         attempt_reduction += 1
                         reduction_pct = 0.4 # Reduce context by 40%
@@ -505,13 +566,17 @@ class LocalOpenAIProvider(BaseLLMProvider):
                     else:
                         raise e
                 except Exception as e:
+                    if raw_mode:
+                        accumulated_stats["request_errors"] += 1
+                        logger.warning(f"[raw] Chunk {subset_idx+1} failed ({e}); no retry.")
+                        break
                     logger.error(f"Fatally failed chunk index {subset_idx+1}: {e}")
                     raise e
 
         # --- TOP-UP GUARANTEE ---
         # The LLM may return fewer rows than requested per chunk.
         # Keep requesting the shortfall until we reach num_empty or exhaust retries.
-        if num_empty > 0 and len(final_data) < num_empty:
+        if not raw_mode and num_empty > 0 and len(final_data) < num_empty:
             logger.info(f"Initial bulk generation fell short. Have {len(final_data)}/{num_empty} rows. Transitioning to Top-Up Guarantee loop...")
             max_topups = 50 # High limit to run "until dataset is completed" securely
             topup_round = 0
@@ -591,8 +656,9 @@ class LocalOpenAIProvider(BaseLLMProvider):
                 logger.info(f"Algebraic Guarantee successfully satisfied: {len(final_data)}/{num_empty} rows strictly assembled.")
 
         # Trim to exact count in case of overshoot
-        if num_empty > 0 and len(final_data) > num_empty:
+        if not raw_mode and num_empty > 0 and len(final_data) > num_empty:
             final_data = final_data[:num_empty]
+        accumulated_stats["delivered_rows"] = len(final_data)
 
         return {
             "data": final_data,
@@ -1176,8 +1242,11 @@ def get_dataset_description(df_sample, provided_metadata=None, algorithm=None):
     p = registry.get_provider(algorithm)
     return p.get_dataset_description(df_sample, provided_metadata, algorithm=algorithm)
 
-def generate_bulk_data(rows_payload, context, all_columns, all_fields, algorithm, instructions, temperature, num_empty=0, chunk_size=30, rules_metadata=None, enforce_rules=True):
+def generate_bulk_data(rows_payload, context, all_columns, all_fields, algorithm, instructions, temperature, num_empty=0, chunk_size=30, rules_metadata=None, enforce_rules=True, raw_mode=False):
     p = registry.get_provider(algorithm)
+    if raw_mode:
+        # Only the OpenAI-compatible providers implement the no-controller ablation.
+        return p.generate_bulk_data(rows_payload, context, all_columns, all_fields, algorithm, instructions, temperature, num_empty, chunk_size, rules_metadata, enforce_rules, raw_mode=True)
     return p.generate_bulk_data(rows_payload, context, all_columns, all_fields, algorithm, instructions, temperature, num_empty, chunk_size, rules_metadata, enforce_rules)
 
 def detect_target_columns(df_sample, single_target=False, algorithm=None):
