@@ -1,0 +1,195 @@
+{
+  "dataset_id": "lib-task",
+  "filename": "indian_diabetes.csv",
+  "results": [],
+  "overall_ml": {},
+  "dataset_audit": {
+    "structural": {
+      "sparsity": {
+        "Pregnancies": 0.0,
+        "Glucose": 0.0,
+        "BloodPressure": 0.0,
+        "SkinThickness": 0.0,
+        "Insulin": 0.0,
+        "BMI": 0.0,
+        "DiabetesPedigreeFunction": 0.0,
+        "Age": 0.0,
+        "Outcome": 0.0
+      },
+      "overall_sparsity": 0.0,
+      "skewness": {
+        "Pregnancies": 0.9016739791518588,
+        "Glucose": 0.17375350179188992,
+        "BloodPressure": -1.8436079833551302,
+        "SkinThickness": 0.10937249648187608,
+        "Insulin": 2.272250858431574,
+        "BMI": -0.42898158845356543,
+        "DiabetesPedigreeFunction": 1.919911066307204,
+        "Age": 1.1295967011444805,
+        "Outcome": 0.635016643444986
+      },
+      "stability": 1.0,
+      "row_count": 768,
+      "col_count": 9,
+      "total_cells": 6912,
+      "empty_rows": 0,
+      "density_ratio": 1.0,
+      "sparsity_ratio": 0.0,
+      "memory_readable": "0.05 MB",
+      "type_distribution": {
+        "numeric": 9,
+        "categorical": 0,
+        "object": 0
+      },
+      "avg_cardinality": 139.55555555555554,
+      "constant_columns": []
+    },
+    "outliers": {
+      "total_outliers": 80,
+      "outlier_ratio": 0.10416666666666667
+    },
+    "fairness": {
+      "metrics_per_attr": {
+        "Age": {
+          "majority_group": "22",
+          "minority_group": "72",
+          "disparate_impact": 0.9999999989999999,
+          "parity_gap": 0.0,
+          "representation_ratio": 0.0013020833333333333,
+          "distribution_shift": {
+            "Pregnancies": 0.13189913871785083,
+            "Glucose": 0.33752840009739354,
+            "BloodPressure": 3.2921500848371683,
+            "SkinThickness": 1.2842171330004686,
+            "Insulin": 0.6463339487584178,
+            "BMI": 1.2569153617228075,
+            "DiabetesPedigreeFunction": 1.2114106806058003
+          },
+          "bias_detected": false
+        }
+      },
+      "detected_bias_count": 0,
+      "sensitive_proxies": {
+        "Age": {
+          "Pregnancies": 0.5443412284023392
+        }
+      },
+      "group_sparsity": {
+        "22": 0.0,
+        "72": 0.0
+      },
+      "Age": {
+        "majority_group": "22",
+        "minority_group": "72",
+        "disparate_impact": 0.9999999989999999,
+        "parity_gap": 0.0,
+        "representation_ratio": 0.0013020833333333333,
+        "distribution_shift": {
+          "Pregnancies": 0.13189913871785083,
+          "Glucose": 0.33752840009739354,
+          "BloodPressure": 3.2921500848371683,
+          "SkinThickness": 1.2842171330004686,
+          "Insulin": 0.6463339487584178,
+          "BMI": 1.2569153617228075,
+          "DiabetesPedigreeFunction": 1.2114106806058003
+        },
+        "bias_detected": false
+      }
+    },
+    "privacy": {
+      "risk_level": "High",
+      "uniqueness_ratio": 1.0,
+      "at_risk_record_count": 768,
+      "identity_risk_level": "High",
+      "attr_identifiability": {
+        "Pregnancies": {
+          "entropy": 3.4820480935779323,
+          "uniqueness_signal": 0.022135416666666668,
+          "identifiability": "Low"
+        },
+        "Glucose": {
+          "entropy": 6.751020982089865,
+          "uniqueness_signal": 0.17708333333333334,
+          "identifiability": "Low"
+        },
+        "BloodPressure": {
+          "entropy": 4.79246958080874,
+          "uniqueness_signal": 0.061197916666666664,
+          "identifiability": "Low"
+        },
+        "SkinThickness": {
+          "entropy": 4.585591374120802,
+          "uniqueness_signal": 0.06640625,
+          "identifiability": "Low"
+        },
+        "Insulin": {
+          "entropy": 4.681589516042083,
+          "uniqueness_signal": 0.2421875,
+          "identifiability": "Low"
+        },
+        "BMI": {
+          "entropy": 7.593757314856288,
+          "uniqueness_signal": 0.3229166666666667,
+          "identifiability": "Medium"
+        },
+        "DiabetesPedigreeFunction": {
+          "entropy": 8.828504756936455,
+          "uniqueness_signal": 0.6731770833333334,
+          "identifiability": "Medium"
+        },
+        "Age": {
+          "entropy": 5.028842195772234,
+          "uniqueness_signal": 0.06770833333333333,
+          "identifiability": "Low"
+        },
+        "Outcome": {
+          "entropy": 0.9331343163522441,
+          "uniqueness_signal": 0.0026041666666666665,
+          "identifiability": "Low"
+        }
+      },
+      "avg_k_anonymity": 1.0,
+      "avg_column_entropy": 5.18632868117296,
+      "max_column_entropy": 8.828504756936455,
+      "known_sensitive_patterns": [
+        "Age",
+        "BMI",
+        "BloodPressure",
+        "DiabetesPedigreeFunction",
+        "Glucose",
+        "Insulin",
+        "Pregnancies",
+        "SkinThickness"
+      ]
+    },
+    "proxies": {
+      "Age": {
+        "Pregnancies": 0.5443412284023385
+      }
+    },
+    "quality": {
+      "total_duplicates": 0,
+      "conflicting_labels": 0,
+      "quality_score": 97.91666666666667,
+      "duplicate_count": 0,
+      "duplicate_ratio": 0.0,
+      "outlier_count": 80,
+      "outlier_ratio": 0.10416666666666667,
+      "avg_skewness": 0.5409984083272416,
+      "avg_kurtosis": 2.2891077120425702,
+      "columns_with_missing": 0
+    },
+    "quasi_identifiers": [
+      "Age",
+      "BMI",
+      "BloodPressure",
+      "DiabetesPedigreeFunction",
+      "Glucose",
+      "Insulin",
+      "Pregnancies",
+      "SkinThickness"
+    ]
+  },
+  "avg_fidelity": 0,
+  "dataset_name": "indian_diabetes"
+}

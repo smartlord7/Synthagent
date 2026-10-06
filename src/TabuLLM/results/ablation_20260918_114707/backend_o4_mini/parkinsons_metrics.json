@@ -1,0 +1,234 @@
+{
+  "dataset_id": "lib-task",
+  "filename": "parkinsons.csv",
+  "results": [],
+  "overall_ml": {},
+  "dataset_audit": {
+    "structural": {
+      "sparsity": {
+        "MDVP:Fo": 0.0,
+        "MDVP:Fhi": 0.0,
+        "MDVP:Flo": 0.0,
+        "MDVP:Jitter": 0.0,
+        "MDVP:Jitter.1": 0.0,
+        "MDVP:RAP": 0.0,
+        "MDVP:PPQ": 0.0,
+        "Jitter:DDP": 0.0,
+        "MDVP:Shimmer": 0.0,
+        "MDVP:Shimmer.1": 0.0,
+        "Shimmer:APQ3": 0.0,
+        "Shimmer:APQ5": 0.0,
+        "MDVP:APQ": 0.0,
+        "Shimmer:DDA": 0.0,
+        "NHR": 0.0,
+        "HNR": 0.0,
+        "RPDE": 0.0,
+        "DFA": 0.0,
+        "spread1": 0.0,
+        "spread2": 0.0,
+        "D2": 0.0,
+        "PPE": 0.0,
+        "status": 0.0
+      },
+      "overall_sparsity": 0.0,
+      "skewness": {
+        "MDVP:Fo": 0.5917374636540784,
+        "MDVP:Fhi": 2.542145997588398,
+        "MDVP:Flo": 1.217350448627808,
+        "MDVP:Jitter": 3.0849462014441826,
+        "MDVP:Jitter.1": 3.0849462014441826,
+        "MDVP:RAP": 3.3607084504805544,
+        "MDVP:PPQ": 3.0738924578885167,
+        "Jitter:DDP": 3.36205844788572,
+        "MDVP:Shimmer": 1.6664804101559665,
+        "MDVP:Shimmer.1": 1.6664804101559665,
+        "Shimmer:APQ3": 1.5805763798815669,
+        "Shimmer:APQ5": 1.7986970665376225,
+        "MDVP:APQ": 2.6180465022154227,
+        "Shimmer:DDA": 1.5806179936782254,
+        "NHR": 4.2207091291390615,
+        "HNR": -0.5143174975652068,
+        "RPDE": -0.14340241379821705,
+        "DFA": -0.03321366071383457,
+        "spread1": 0.4321389320131794,
+        "spread2": 0.1444304854927841,
+        "D2": 0.4303838913329285,
+        "PPE": 0.7974910716463577,
+        "status": -1.1877273855919208
+      },
+      "stability": 1.0,
+      "row_count": 195,
+      "col_count": 23,
+      "total_cells": 4485,
+      "empty_rows": 0,
+      "density_ratio": 1.0,
+      "sparsity_ratio": 0.0,
+      "memory_readable": "0.03 MB",
+      "type_distribution": {
+        "numeric": 23,
+        "categorical": 0,
+        "object": 0
+      },
+      "avg_cardinality": 178.65217391304347,
+      "constant_columns": []
+    },
+    "outliers": {
+      "total_outliers": 13,
+      "outlier_ratio": 0.06666666666666667
+    },
+    "fairness": {
+      "status": "Target or sensitive features not selected.",
+      "metrics_per_attr": {},
+      "detected_bias_count": 0,
+      "sensitive_proxies": {},
+      "group_sparsity": {}
+    },
+    "privacy": {
+      "risk_level": "High",
+      "uniqueness_ratio": 1.0,
+      "at_risk_record_count": 195,
+      "identity_risk_level": "High",
+      "attr_identifiability": {
+        "MDVP:Fo": {
+          "entropy": 7.607330285617058,
+          "uniqueness_signal": 1.0,
+          "identifiability": "High"
+        },
+        "MDVP:Fhi": {
+          "entropy": 7.607330285617058,
+          "uniqueness_signal": 1.0,
+          "identifiability": "High"
+        },
+        "MDVP:Flo": {
+          "entropy": 7.607330285617058,
+          "uniqueness_signal": 1.0,
+          "identifiability": "High"
+        },
+        "MDVP:Jitter": {
+          "entropy": 7.370075609270524,
+          "uniqueness_signal": 0.8871794871794871,
+          "identifiability": "High"
+        },
+        "MDVP:Jitter.1": {
+          "entropy": 7.370075609270524,
+          "uniqueness_signal": 0.8871794871794871,
+          "identifiability": "High"
+        },
+        "MDVP:RAP": {
+          "entropy": 7.159206814540381,
+          "uniqueness_signal": 0.7948717948717948,
+          "identifiability": "High"
+        },
+        "MDVP:PPQ": {
+          "entropy": 7.277767918116988,
+          "uniqueness_signal": 0.8461538461538461,
+          "identifiability": "High"
+        },
+        "Jitter:DDP": {
+          "entropy": 7.449612915975134,
+          "uniqueness_signal": 0.9230769230769231,
+          "identifiability": "High"
+        },
+        "MDVP:Shimmer": {
+          "entropy": 7.535535414832072,
+          "uniqueness_signal": 0.9641025641025641,
+          "identifiability": "High"
+        },
+        "MDVP:Shimmer.1": {
+          "entropy": 7.535535414832072,
+          "uniqueness_signal": 0.9641025641025641,
+          "identifiability": "High"
+        },
+        "Shimmer:APQ3": {
+          "entropy": 7.494509774383509,
+          "uniqueness_signal": 0.9435897435897436,
+          "identifiability": "High"
+        },
+        "Shimmer:APQ5": {
+          "entropy": 7.545791824944214,
+          "uniqueness_signal": 0.9692307692307692,
+          "identifiability": "High"
+        },
+        "MDVP:APQ": {
+          "entropy": 7.545791824944214,
+          "uniqueness_signal": 0.9692307692307692,
+          "identifiability": "High"
+        },
+        "Shimmer:DDA": {
+          "entropy": 7.545791824944214,
+          "uniqueness_signal": 0.9692307692307692,
+          "identifiability": "High"
+        },
+        "NHR": {
+          "entropy": 7.504766184495651,
+          "uniqueness_signal": 0.9487179487179487,
+          "identifiability": "High"
+        },
+        "HNR": {
+          "entropy": 7.607330285617058,
+          "uniqueness_signal": 1.0,
+          "identifiability": "High"
+        },
+        "RPDE": {
+          "entropy": 7.607330285617058,
+          "uniqueness_signal": 1.0,
+          "identifiability": "High"
+        },
+        "DFA": {
+          "entropy": 7.607330285617058,
+          "uniqueness_signal": 1.0,
+          "identifiability": "High"
+        },
+        "spread1": {
+          "entropy": 7.607330285617058,
+          "uniqueness_signal": 1.0,
+          "identifiability": "High"
+        },
+        "spread2": {
+          "entropy": 7.5970738755049165,
+          "uniqueness_signal": 0.9948717948717949,
+          "identifiability": "High"
+        },
+        "D2": {
+          "entropy": 7.607330285617058,
+          "uniqueness_signal": 1.0,
+          "identifiability": "High"
+        },
+        "PPE": {
+          "entropy": 7.607330285617058,
+          "uniqueness_signal": 1.0,
+          "identifiability": "High"
+        },
+        "status": {
+          "entropy": 0.8051250071761431,
+          "uniqueness_signal": 0.010256410256410256,
+          "identifiability": "Low"
+        }
+      },
+      "avg_k_anonymity": 1.2580645161290323,
+      "avg_column_entropy": 7.226201416686264,
+      "max_column_entropy": 7.607330285617058,
+      "known_sensitive_patterns": [
+        "MDVP:RAP"
+      ]
+    },
+    "proxies": {},
+    "quality": {
+      "total_duplicates": 0,
+      "conflicting_labels": 0,
+      "quality_score": 98.66666666666667,
+      "duplicate_count": 0,
+      "duplicate_ratio": 0.0,
+      "outlier_count": 13,
+      "outlier_ratio": 0.06666666666666667,
+      "avg_skewness": 1.5380511731997109,
+      "avg_kurtosis": 5.221576159662608,
+      "columns_with_missing": 0
+    },
+    "quasi_identifiers": [
+      "MDVP:RAP"
+    ]
+  },
+  "avg_fidelity": 0,
+  "dataset_name": "parkinsons"
+}

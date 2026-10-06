@@ -1,0 +1,300 @@
+{
+  "dataset_id": "lib-task",
+  "filename": "heart_disease.csv",
+  "results": [],
+  "overall_ml": {},
+  "dataset_audit": {
+    "structural": {
+      "sparsity": {
+        "age": 0.0,
+        "sex": 0.0,
+        "cp": 0.0,
+        "trestbps": 0.0,
+        "chol": 0.0,
+        "fbs": 0.0,
+        "restecg": 0.0,
+        "thalach": 0.0,
+        "exang": 0.0,
+        "oldpeak": 0.0,
+        "slope": 0.0,
+        "ca": 0.013201320132013201,
+        "thal": 0.006600660066006601,
+        "num": 0.0
+      },
+      "overall_sparsity": 0.0014144271570014145,
+      "skewness": {
+        "age": -0.20906046882012877,
+        "sex": -0.77493506152194,
+        "cp": -0.8417538756970184,
+        "trestbps": 0.7060346498131783,
+        "chol": 1.1355031533363453,
+        "fbs": 1.9866519309144517,
+        "restecg": 0.01990027945947886,
+        "thalach": -0.5374486699106463,
+        "exang": 0.7425315444212831,
+        "oldpeak": 1.2697199306019966,
+        "slope": 0.5083156098165441,
+        "ca": 1.189352105415407,
+        "thal": 0.24444723222742099,
+        "num": 1.0584956067826028
+      },
+      "stability": 1.0,
+      "row_count": 303,
+      "col_count": 14,
+      "total_cells": 4242,
+      "empty_rows": 0,
+      "density_ratio": 0.9985855728429985,
+      "sparsity_ratio": 0.0014144271570014145,
+      "memory_readable": "0.03 MB",
+      "type_distribution": {
+        "numeric": 14,
+        "categorical": 0,
+        "object": 0
+      },
+      "avg_cardinality": 28.714285714285715,
+      "constant_columns": []
+    },
+    "outliers": {
+      "total_outliers": 9,
+      "outlier_ratio": 0.0297029702970297
+    },
+    "fairness": {
+      "metrics_per_attr": {
+        "age": {
+          "majority_group": "58",
+          "minority_group": "29",
+          "disparate_impact": 0.9999999989999999,
+          "parity_gap": 0.0,
+          "representation_ratio": 0.0033003300330033004,
+          "distribution_shift": {
+            "sex": 0.6757763003928932,
+            "cp": 1.3156173293227713,
+            "trestbps": 0.11662846595124625,
+            "chol": 0.9758463459492472,
+            "fbs": 0.5910375384496742,
+            "restecg": 0.5818734397368577,
+            "thalach": 2.4112737413217094,
+            "exang": 0.5601553744237145,
+            "oldpeak": 1.196713094850883,
+            "slope": 1.0249142317532236,
+            "ca": 1.126000009250836,
+            "thal": 1.2481545750654448
+          },
+          "bias_detected": false
+        },
+        "sex": {
+          "majority_group": "1",
+          "minority_group": "0",
+          "disparate_impact": 0.9999999989999999,
+          "parity_gap": 0.0,
+          "representation_ratio": 0.3201320132013201,
+          "distribution_shift": {
+            "age": 0.2087364186935984,
+            "cp": 0.0215791001744339,
+            "trestbps": 0.1379329331024824,
+            "chol": 0.4278090821715383,
+            "fbs": 0.10242294246154589,
+            "restecg": 0.04632443436345103,
+            "thalach": 0.10413742461972168,
+            "exang": 0.3128650821636127,
+            "oldpeak": 0.21864519698173698,
+            "slope": 0.08031880079102363,
+            "ca": 0.1987133564189358,
+            "thal": 0.815986844197991
+          },
+          "bias_detected": false
+        }
+      },
+      "detected_bias_count": 0,
+      "sensitive_proxies": {
+        "age": {
+          "thalach": 0.3938058059868211,
+          "ca": 0.3626045261912283
+        },
+        "sex": {
+          "thal": 0.38093583491374805
+        }
+      },
+      "group_sparsity": {
+        "58": 0.0037593984962406013,
+        "29": 0.0,
+        "1": 0.0017337031900138693,
+        "0": 0.0007363770250368188
+      },
+      "age": {
+        "majority_group": "58",
+        "minority_group": "29",
+        "disparate_impact": 0.9999999989999999,
+        "parity_gap": 0.0,
+        "representation_ratio": 0.0033003300330033004,
+        "distribution_shift": {
+          "sex": 0.6757763003928932,
+          "cp": 1.3156173293227713,
+          "trestbps": 0.11662846595124625,
+          "chol": 0.9758463459492472,
+          "fbs": 0.5910375384496742,
+          "restecg": 0.5818734397368577,
+          "thalach": 2.4112737413217094,
+          "exang": 0.5601553744237145,
+          "oldpeak": 1.196713094850883,
+          "slope": 1.0249142317532236,
+          "ca": 1.126000009250836,
+          "thal": 1.2481545750654448
+        },
+        "bias_detected": false
+      },
+      "sex": {
+        "majority_group": "1",
+        "minority_group": "0",
+        "disparate_impact": 0.9999999989999999,
+        "parity_gap": 0.0,
+        "representation_ratio": 0.3201320132013201,
+        "distribution_shift": {
+          "age": 0.2087364186935984,
+          "cp": 0.0215791001744339,
+          "trestbps": 0.1379329331024824,
+          "chol": 0.4278090821715383,
+          "fbs": 0.10242294246154589,
+          "restecg": 0.04632443436345103,
+          "thalach": 0.10413742461972168,
+          "exang": 0.3128650821636127,
+          "oldpeak": 0.21864519698173698,
+          "slope": 0.08031880079102363,
+          "ca": 0.1987133564189358,
+          "thal": 0.815986844197991
+        },
+        "bias_detected": false
+      }
+    },
+    "privacy": {
+      "risk_level": "High",
+      "uniqueness_ratio": 1.0,
+      "at_risk_record_count": 303,
+      "identity_risk_level": "High",
+      "attr_identifiability": {
+        "age": {
+          "entropy": 5.070257763266321,
+          "uniqueness_signal": 0.1353135313531353,
+          "identifiability": "Low"
+        },
+        "sex": {
+          "entropy": 0.9045249591187539,
+          "uniqueness_signal": 0.006600660066006601,
+          "identifiability": "Low"
+        },
+        "cp": {
+          "entropy": 1.7370264462948137,
+          "uniqueness_signal": 0.013201320132013201,
+          "identifiability": "Low"
+        },
+        "trestbps": {
+          "entropy": 4.714198589523955,
+          "uniqueness_signal": 0.16501650165016502,
+          "identifiability": "Low"
+        },
+        "chol": {
+          "entropy": 7.046076077101574,
+          "uniqueness_signal": 0.5016501650165016,
+          "identifiability": "Medium"
+        },
+        "fbs": {
+          "entropy": 0.6061112068344616,
+          "uniqueness_signal": 0.006600660066006601,
+          "identifiability": "Low"
+        },
+        "restecg": {
+          "entropy": 1.0880643666996423,
+          "uniqueness_signal": 0.009900990099009901,
+          "identifiability": "Low"
+        },
+        "thalach": {
+          "entropy": 6.170132365374386,
+          "uniqueness_signal": 0.30033003300330036,
+          "identifiability": "Medium"
+        },
+        "exang": {
+          "entropy": 0.911553273118186,
+          "uniqueness_signal": 0.006600660066006601,
+          "identifiability": "Low"
+        },
+        "oldpeak": {
+          "entropy": 4.128171314868707,
+          "uniqueness_signal": 0.132013201320132,
+          "identifiability": "Low"
+        },
+        "slope": {
+          "entropy": 1.2939912133361353,
+          "uniqueness_signal": 0.009900990099009901,
+          "identifiability": "Low"
+        },
+        "ca": {
+          "entropy": 1.5679024089534104,
+          "uniqueness_signal": 0.013201320132013201,
+          "identifiability": "Low"
+        },
+        "thal": {
+          "entropy": 1.246417457653108,
+          "uniqueness_signal": 0.009900990099009901,
+          "identifiability": "Low"
+        },
+        "num": {
+          "entropy": 1.8459421841309653,
+          "uniqueness_signal": 0.0165016501650165,
+          "identifiability": "Low"
+        }
+      },
+      "avg_k_anonymity": 1.0,
+      "avg_column_entropy": 2.737883544733887,
+      "max_column_entropy": 7.046076077101574,
+      "known_sensitive_patterns": [
+        "age",
+        "ca",
+        "chol",
+        "cp",
+        "num",
+        "oldpeak",
+        "restecg",
+        "slope",
+        "thal",
+        "thalach",
+        "trestbps"
+      ]
+    },
+    "proxies": {
+      "age": {
+        "thalach": 0.3938058059868212,
+        "ca": 0.3626045261912279
+      },
+      "sex": {
+        "thal": 0.380935834913748
+      }
+    },
+    "quality": {
+      "total_duplicates": 0,
+      "conflicting_labels": 0,
+      "quality_score": 99.33521923620934,
+      "duplicate_count": 0,
+      "duplicate_ratio": 0.0,
+      "outlier_count": 9,
+      "outlier_ratio": 0.0297029702970297,
+      "avg_skewness": 0.464125283345641,
+      "avg_kurtosis": 0.04561085240518992,
+      "columns_with_missing": 2
+    },
+    "quasi_identifiers": [
+      "age",
+      "ca",
+      "chol",
+      "cp",
+      "num",
+      "oldpeak",
+      "restecg",
+      "slope",
+      "thal",
+      "thalach",
+      "trestbps"
+    ]
+  },
+  "avg_fidelity": 0,
+  "dataset_name": "heart_disease"
+}

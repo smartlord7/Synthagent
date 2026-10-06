@@ -1,0 +1,291 @@
+{
+  "dataset_id": "lib-task",
+  "filename": "breast_cancer_wisconsin_diagnostic.csv",
+  "results": [],
+  "overall_ml": {},
+  "dataset_audit": {
+    "structural": {
+      "sparsity": {
+        "radius1": 0.0,
+        "texture1": 0.0,
+        "perimeter1": 0.0,
+        "area1": 0.0,
+        "smoothness1": 0.0,
+        "compactness1": 0.0,
+        "concavity1": 0.0,
+        "concave_points1": 0.0,
+        "symmetry1": 0.0,
+        "fractal_dimension1": 0.0,
+        "radius2": 0.0,
+        "texture2": 0.0,
+        "perimeter2": 0.0,
+        "area2": 0.0,
+        "smoothness2": 0.0,
+        "compactness2": 0.0,
+        "concavity2": 0.0,
+        "concave_points2": 0.0,
+        "symmetry2": 0.0,
+        "fractal_dimension2": 0.0,
+        "radius3": 0.0,
+        "texture3": 0.0,
+        "perimeter3": 0.0,
+        "area3": 0.0,
+        "smoothness3": 0.0,
+        "compactness3": 0.0,
+        "concavity3": 0.0,
+        "concave_points3": 0.0,
+        "symmetry3": 0.0,
+        "fractal_dimension3": 0.0,
+        "Diagnosis": 0.0
+      },
+      "overall_sparsity": 0.0,
+      "skewness": {
+        "radius1": 0.9423795716730992,
+        "texture1": 0.6504495420828159,
+        "perimeter1": 0.9906504253930081,
+        "area1": 1.6457321756240424,
+        "smoothness1": 0.45632376481955844,
+        "compactness1": 1.1901230311980404,
+        "concavity1": 1.4011797389486722,
+        "concave_points1": 1.1711800812336282,
+        "symmetry1": 0.7256089733641999,
+        "fractal_dimension1": 1.3044888125755076,
+        "radius2": 3.0886121663847574,
+        "texture2": 1.646443808753053,
+        "perimeter2": 3.443615202194899,
+        "area2": 5.447186284898394,
+        "smoothness2": 2.314450056636759,
+        "compactness2": 1.9022207096378565,
+        "concavity2": 5.110463049043661,
+        "concave_points2": 1.4446781446974786,
+        "symmetry2": 2.1951328995478216,
+        "fractal_dimension2": 3.923968620227413,
+        "radius3": 1.1031152059604372,
+        "texture3": 0.49832130948716474,
+        "perimeter3": 1.1281638713683722,
+        "area3": 1.8593732724433467,
+        "smoothness3": 0.4154259962824678,
+        "compactness3": 1.4735549003297956,
+        "concavity3": 1.1502368219460262,
+        "concave_points3": 0.49261552688550875,
+        "symmetry3": 1.433927765189328,
+        "fractal_dimension3": 1.6625792663955146
+      },
+      "stability": 1.0,
+      "row_count": 569,
+      "col_count": 31,
+      "total_cells": 17639,
+      "empty_rows": 0,
+      "density_ratio": 1.0,
+      "sparsity_ratio": 0.0,
+      "memory_readable": "0.14 MB",
+      "type_distribution": {
+        "numeric": 30,
+        "categorical": 1,
+        "object": 0
+      },
+      "avg_cardinality": 494.9032258064516,
+      "constant_columns": []
+    },
+    "outliers": {
+      "total_outliers": 74,
+      "outlier_ratio": 0.13005272407732865
+    },
+    "fairness": {
+      "status": "Target or sensitive features not selected.",
+      "metrics_per_attr": {},
+      "detected_bias_count": 0,
+      "sensitive_proxies": {},
+      "group_sparsity": {}
+    },
+    "privacy": {
+      "risk_level": "High",
+      "uniqueness_ratio": 1.0,
+      "at_risk_record_count": 569,
+      "identity_risk_level": "High",
+      "attr_identifiability": {
+        "radius1": {
+          "entropy": 8.733008106870672,
+          "uniqueness_signal": 0.8014059753954306,
+          "identifiability": "High"
+        },
+        "texture1": {
+          "entropy": 8.824000085118058,
+          "uniqueness_signal": 0.8418277680140598,
+          "identifiability": "High"
+        },
+        "perimeter1": {
+          "entropy": 8.983102583330957,
+          "uniqueness_signal": 0.9173989455184535,
+          "identifiability": "High"
+        },
+        "area1": {
+          "entropy": 9.045509918320077,
+          "uniqueness_signal": 0.9472759226713533,
+          "identifiability": "High"
+        },
+        "smoothness1": {
+          "entropy": 8.780249904838385,
+          "uniqueness_signal": 0.8330404217926186,
+          "identifiability": "High"
+        },
+        "compactness1": {
+          "entropy": 9.037153350063512,
+          "uniqueness_signal": 0.9437609841827768,
+          "identifiability": "High"
+        },
+        "concavity1": {
+          "entropy": 8.996114986559697,
+          "uniqueness_signal": 0.9437609841827768,
+          "identifiability": "High"
+        },
+        "concave_points1": {
+          "entropy": 9.013689678281231,
+          "uniqueness_signal": 0.9525483304042179,
+          "identifiability": "High"
+        },
+        "symmetry1": {
+          "entropy": 8.623976300109401,
+          "uniqueness_signal": 0.7592267135325131,
+          "identifiability": "High"
+        },
+        "fractal_dimension1": {
+          "entropy": 8.899605618275997,
+          "uniqueness_signal": 0.8769771528998243,
+          "identifiability": "High"
+        },
+        "radius2": {
+          "entropy": 9.047698165096433,
+          "uniqueness_signal": 0.9490333919156415,
+          "identifiability": "High"
+        },
+        "texture2": {
+          "entropy": 8.971231076730085,
+          "uniqueness_signal": 0.9121265377855887,
+          "identifiability": "High"
+        },
+        "perimeter2": {
+          "entropy": 9.022232041333607,
+          "uniqueness_signal": 0.9367311072056239,
+          "identifiability": "High"
+        },
+        "area2": {
+          "entropy": 9.002865521828848,
+          "uniqueness_signal": 0.9279437609841827,
+          "identifiability": "High"
+        },
+        "smoothness2": {
+          "entropy": 9.074956116642483,
+          "uniqueness_signal": 0.961335676625659,
+          "identifiability": "High"
+        },
+        "compactness2": {
+          "entropy": 9.04988641187279,
+          "uniqueness_signal": 0.9507908611599297,
+          "identifiability": "High"
+        },
+        "concavity2": {
+          "entropy": 8.983381924750418,
+          "uniqueness_signal": 0.9367311072056239,
+          "identifiability": "High"
+        },
+        "concave_points2": {
+          "entropy": 8.888013453094587,
+          "uniqueness_signal": 0.8910369068541301,
+          "identifiability": "High"
+        },
+        "symmetry2": {
+          "entropy": 8.888595666739263,
+          "uniqueness_signal": 0.875219683655536,
+          "identifiability": "High"
+        },
+        "fractal_dimension2": {
+          "entropy": 9.067926239953868,
+          "uniqueness_signal": 0.9578207381370826,
+          "identifiability": "High"
+        },
+        "radius3": {
+          "entropy": 8.718704125201944,
+          "uniqueness_signal": 0.8031634446397188,
+          "identifiability": "High"
+        },
+        "texture3": {
+          "entropy": 8.94576495311153,
+          "uniqueness_signal": 0.8980667838312829,
+          "identifiability": "High"
+        },
+        "perimeter3": {
+          "entropy": 8.9549830765765,
+          "uniqueness_signal": 0.9033391915641477,
+          "identifiability": "High"
+        },
+        "area3": {
+          "entropy": 9.064411301609562,
+          "uniqueness_signal": 0.9560632688927944,
+          "identifiability": "High"
+        },
+        "smoothness3": {
+          "entropy": 8.54140960719645,
+          "uniqueness_signal": 0.7223198594024605,
+          "identifiability": "High"
+        },
+        "compactness3": {
+          "entropy": 9.009033843309055,
+          "uniqueness_signal": 0.929701230228471,
+          "identifiability": "High"
+        },
+        "concavity3": {
+          "entropy": 9.001818171680362,
+          "uniqueness_signal": 0.9472759226713533,
+          "identifiability": "High"
+        },
+        "concave_points3": {
+          "entropy": 8.827329228522284,
+          "uniqueness_signal": 0.8646748681898067,
+          "identifiability": "High"
+        },
+        "symmetry3": {
+          "entropy": 8.901793865052355,
+          "uniqueness_signal": 0.8787346221441125,
+          "identifiability": "High"
+        },
+        "fractal_dimension3": {
+          "entropy": 9.031450164942846,
+          "uniqueness_signal": 0.9402460456942003,
+          "identifiability": "High"
+        },
+        "Diagnosis": {
+          "entropy": 0.9526351221133209,
+          "uniqueness_signal": 0.0035149384885764497,
+          "identifiability": "Low"
+        }
+      },
+      "avg_k_anonymity": 1.0017605633802817,
+      "avg_column_entropy": 8.673630019649243,
+      "max_column_entropy": 9.074956116642483,
+      "known_sensitive_patterns": [
+        "smoothness3",
+        "symmetry1"
+      ]
+    },
+    "proxies": {},
+    "quality": {
+      "total_duplicates": 0,
+      "conflicting_labels": 0,
+      "quality_score": 97.39894551845343,
+      "duplicate_count": 0,
+      "duplicate_ratio": 0.0,
+      "outlier_count": 74,
+      "outlier_ratio": 0.13005272407732865,
+      "avg_skewness": 1.7404066998407544,
+      "avg_kurtosis": 7.814735362154533,
+      "columns_with_missing": 0
+    },
+    "quasi_identifiers": [
+      "smoothness3",
+      "symmetry1"
+    ]
+  },
+  "avg_fidelity": 0,
+  "dataset_name": "breast_cancer_wisconsin_diagnostic"
+}
