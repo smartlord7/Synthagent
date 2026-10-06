@@ -213,3 +213,5 @@ src/TabuLLM/workspace_session.json
 *.pdf
 *.json
 *.png
+# Paper figures must be committed so the manuscript builds from a clean clone.
+!Synthagent__An_Agentic_Framework_for_Synthetic_Data_Generation/generated/*.pdf

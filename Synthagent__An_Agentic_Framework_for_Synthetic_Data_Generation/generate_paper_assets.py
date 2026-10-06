@@ -48,12 +48,12 @@ MODEL_LABELS = {
 }
 ARM_LABELS = {
     "full": "Synthagent",
-    "no_rule_injection": "No rule injection",
+    "no_rule_injection": "No inferred type rules",
     "no_post_processing": "No post-processing",
-    "no_context_join": "Synthetic-only context arm",
+    "no_context_join": "No context join",
     "strategy_dense": "Dense context",
     "strategy_diverse": "Diverse context",
-    "ponder_strategy": "LLM-selected strategy",
+    "ponder_strategy": "LLM-selected hyperparameters",
     "smote": "SMOTE",
     "backend_gpt_4_1_mini": "GPT-4.1 mini",
     "backend_gpt_4o": "GPT-4o",
