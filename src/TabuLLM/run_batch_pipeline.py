@@ -13,11 +13,13 @@ This single script has three modes:
                               pipeline once per arm in ABLATION_ARMS + the special
                               arms (module toggles, context-strategy variants, the
                               SMOTE baseline, the Ponder-hyperparameters arm, and a
-                              cross-model-backend arm for every OTHER model currently
-                              loaded on the 'local' server -- discovered live via
-                              GET /v1/models at the start of each run, see
-                              _discover_model_sweep_arms(); nothing to hardcode), so
-                              "ablation" is literally "run the batch pipeline N times
+                              cross-model-backend arm for every OTHER model -- for
+                              'local', every model currently loaded on the server,
+                              discovered live via GET /v1/models; for 'openai', every
+                              model listed in TABULLM_OPENAI_SWEEP_MODELS (opt-in, since
+                              unlike 'local' that's a paid catalog, not "what's loaded")
+                              -- see _discover_model_sweep_arms(); nothing to hardcode
+                              for 'local'), so "ablation" is literally "run the batch pipeline N times
                               with different module combinations." Every arm gets full
                               JSON/PDF/per-fold-CSV output (arm subfolders under
                               the run dir), plus a combined ablation_summary.csv
@@ -41,6 +43,11 @@ Usage
     set GOOGLE_API_KEY=<your-key>
     python run_batch_pipeline.py
 
+    # OpenAI backend (defaults to gpt-4o-mini; set TABULLM_MODEL to override):
+    set TABULLM_PROVIDER=openai
+    set OPENAI_API_KEY=<your-key>
+    python run_batch_pipeline.py
+
     # Override model:
     set TABULLM_MODEL=meta-llama/llama-3-8b
     python run_batch_pipeline.py
@@ -52,6 +59,15 @@ Usage
     set TABULLM_ABLATION_FOLDS=5
     python run_batch_pipeline.py --ablation
 
+    # Ablation cross-model sweep across several OpenAI models in one run (each becomes
+    # its own arm, e.g. backend_gpt_4_1_mini, compared against TABULLM_MODEL's "full"
+    # baseline with paired significance -- see ablation_deltas.csv):
+    set TABULLM_PROVIDER=openai
+    set OPENAI_API_KEY=<your-key>
+    set TABULLM_MODEL=gpt-4o-mini
+    set TABULLM_OPENAI_SWEEP_MODELS=gpt-4.1-mini,gpt-4o,gpt-4.1-nano
+    python run_batch_pipeline.py --ablation
+
     # Stochasticity: repeats and dataset subset (default: first 2 datasets, 5 repeats):
     set TABULLM_STOCHASTICITY_REPEATS=5
     set TABULLM_STOCHASTICITY_DATASETS=heart_disease.csv,parkinsons.csv
@@ -59,24 +75,33 @@ Usage
 
 Resuming an interrupted run
 ────────────────────────────
-Every mode checkpoints progress to {run_dir}/checkpoint.json the moment each unit (a
-dataset in batch/stochasticity mode, an arm+dataset pair in ablation mode) finishes --
-so a crash, a kill, an LLM timeout, or Ctrl-C partway through a long run only ever loses
-the ONE unit that was in flight, never the units already completed:
+batch and ablation checkpoint progress to {run_dir}/checkpoint.json at FOLD granularity --
+every fold's full result is saved to checkpoint["in_progress"] the instant that fold
+finishes, not just when the whole unit (a dataset in batch mode, an arm+dataset pair in
+ablation mode) does. So a crash, a kill, an LLM timeout, or Ctrl-C partway through a long
+run only ever loses the ONE fold that was still generating -- not the whole unit, and
+never the units/folds already done. (stochasticity mode still checkpoints per dataset only
+-- its repeats aren't yet resumable individually.)
 
     python run_batch_pipeline.py --ablation --resume          # resume the latest run
     python run_batch_pipeline.py --ablation --resume "results/ablation_20260101_120000"
 
-Resuming re-checks the fold/repeat count against what produced each cached unit --
+Resuming re-checks the fold/repeat count against what produced each cached unit/fold --
 pipeline_manager seeds every fold's train/test split purely from `42 + fold_num`, so a
-different fold count means a different, non-comparable set of splits. Any unit whose
-count doesn't match the current invocation is recomputed rather than reused.
+different fold count means a different, non-comparable set of splits. Any unit or fold
+whose count doesn't match the current invocation is recomputed rather than reused. The
+one exception is the "ponder_strategy" ablation arm: it calls the LLM fresh each run to
+pick hyperparameters, so its already-computed folds are still saved but never replayed
+back in on resume (to avoid silently mixing folds computed under different LLM-chosen
+hyperparameters within one unit) -- that arm always recomputes fully on resume.
 
 Prerequisites
 ─────────────
 - For 'local' provider: LM Studio (or any OpenAI-compatible server) running at
   http://127.0.0.1:1234  (override with LOCAL_LLM_URL env var).
 - For 'gemini' provider: set GOOGLE_API_KEY.
+- For 'openai' provider: set OPENAI_API_KEY (override the base URL with OPENAI_BASE_URL
+  for Azure OpenAI / OpenRouter / another OpenAI-compatible proxy).
 """
 
 import os
@@ -87,9 +112,25 @@ import argparse
 import datetime
 import traceback
 import urllib.request
+from typing import Callable
 
 import numpy as np
 import pandas as pd
+from dotenv import load_dotenv
+
+# On Windows, stdout/stderr default to the console's legacy codepage (e.g. cp1252) when
+# not attached to a real UTF-8 terminal (piped, redirected to a file/tee, some IDE
+# terminals) -- which can't encode the box-drawing characters (═, ─, ✓) used throughout
+# this script's output and crashes with UnicodeEncodeError. Force UTF-8 unconditionally
+# so the script's own output never depends on the invoking shell's codepage.
+for _stream in (sys.stdout, sys.stderr):
+    if hasattr(_stream, "reconfigure"):
+        _stream.reconfigure(encoding="utf-8", errors="replace")
+
+# Load .env (if present) BEFORE any PIPELINE env-var reads below -- lets API keys
+# (OPENAI_API_KEY, GOOGLE_API_KEY, ...) live in a gitignored .env file instead of
+# needing to be exported in the shell every time.
+load_dotenv()
 
 # Make sure the package root is importable regardless of where you call this from
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -144,16 +185,48 @@ DATASET_REGISTRY: dict[str, dict] = {
 # PIPELINE SETTINGS  (override any via env vars)
 # ─────────────────────────────────────────────────────────────────────────────
 
+# Per-provider default model used when TABULLM_MODEL isn't set -- avoids the footgun
+# of e.g. TABULLM_PROVIDER=openai silently keeping the 'local' provider's default
+# model name (which doesn't exist on OpenAI's API and would just fail every call).
+_DEFAULT_MODEL_BY_PROVIDER = {
+    "local":  "google/gemma-4-e2b",
+    "gemini": "gemini-2.0-flash",
+    "openai": "gpt-4o-mini",
+}
+
+_provider = os.getenv("TABULLM_PROVIDER", "local")
+
 PIPELINE: dict = {
-    "provider":     os.getenv("TABULLM_PROVIDER",   "local"),
-    "model":        os.getenv("TABULLM_MODEL",       "google/gemma-4-e2b"),
+    "provider":     _provider,
+    "model":        os.getenv("TABULLM_MODEL") or _DEFAULT_MODEL_BY_PROVIDER.get(_provider, "google/gemma-4-e2b"),
+    # 'local' provider only -- ignored for 'gemini'/'openai'.
     "endpoint_url": os.getenv("LOCAL_LLM_URL",       "http://127.0.0.1:1234/v1/chat/completions"),
+    # 'openai' provider only -- required unless OPENAI_API_KEY is already set in the
+    # environment (services.llm_client.OpenAIProvider falls back to that env var too).
+    "api_key":      os.getenv("OPENAI_API_KEY"),
     "folds":        int(os.getenv("TABULLM_FOLDS",   "10")),
     "strategy":     os.getenv("TABULLM_STRATEGY",    "random"),   # random | dense | diverse
     "na_strategy":  os.getenv("TABULLM_NA",          "impute"),   # impute | drop
     "ctx_size_pct": int(os.getenv("TABULLM_CTX_PCT", "20")),      # % of train split → LLM context
     "gen_size_pct": int(os.getenv("TABULLM_GEN_PCT", "100")),     # % of train split size to generate
 }
+
+
+def _make_lib(model_id: str) -> TabuLLM:
+    """
+    Builds a TabuLLM instance for `model_id` under the configured PIPELINE["provider"].
+    Centralised so 'endpoint_url' (a 'local'-only setting -- LOCAL_LLM_URL always has a
+    default, so passing it unconditionally would wrongly override OpenAIProvider's own
+    default base URL) and 'api_key' (an 'openai'-only setting) are only forwarded where
+    they actually apply, instead of repeating that logic at every TabuLLM(...) call site.
+    """
+    return TabuLLM(
+        provider=PIPELINE["provider"],
+        model=model_id,
+        endpoint_url=PIPELINE["endpoint_url"] if PIPELINE["provider"] == "local" else None,
+        api_key=PIPELINE["api_key"] if PIPELINE["provider"] == "openai" else None,
+    )
+
 
 # NOTE: the batch pipeline intentionally never calls TabuLLM.ponder_strategy() — that
 # AI-authored augmentation plan is an interactive-UI-only feature (see callbacks/audit.py).
@@ -225,24 +298,35 @@ def _get_available_models() -> "list[str]":
 
 def _discover_model_sweep_arms(exclude_model_id: str) -> "dict[str, str]":
     """
-    Queries the live 'local' backend's OpenAI-compatible GET /v1/models for every model
-    CURRENTLY LOADED and servable right now, and turns each one -- other than the
-    pipeline's own default model (already covered by every other arm) and anything that
-    looks like an embedding-only model (can't do chat/completion generation, so can't run
-    this pipeline at all) -- into a cross-model sweep arm. This is what makes "--ablation"
-    actually test every model available in the server at run time, instead of relying on
-    a hand-maintained, easily stale list.
+    Builds the set of cross-model-backend ablation arms -- same pipeline, a different LLM
+    for generation -- from two sources:
 
-    Deliberately scoped to provider == "local": the Gemini provider's model list is a
-    static, cost-bearing catalog rather than "what's currently loaded," so sweeping it
-    automatically would silently multiply paid API calls -- left out on purpose.
+    - provider == "local": LIVE-discovered via the server's GET /v1/models for every
+      model CURRENTLY LOADED and servable right now (minus the pipeline's own default
+      model, already covered by every other arm, and anything embedding-only). This is
+      what makes "--ablation" test every model available on the server at run time,
+      instead of relying on a hand-maintained, easily stale list.
+
+    - provider == "openai": NOT auto-discovered. OpenAI's model catalog is a static,
+      cost-bearing list rather than "what's currently loaded" -- sweeping every model
+      your API key can reach would silently multiply paid calls. Opt in explicitly via
+      TABULLM_OPENAI_SWEEP_MODELS="gpt-4.1-mini,gpt-4o,gpt-4.1-nano" instead.
+
+    provider == "gemini" gets neither, for the same cost reason -- no opt-in wired up yet.
     """
-    available = _get_available_models()
     sweep_arms: dict[str, str] = {}
-    for model_id in available:
+
+    for model_id in _get_available_models():
         if model_id == exclude_model_id:
             continue
         sweep_arms[_slugify_model_id(model_id)] = model_id
+
+    if PIPELINE["provider"] == "openai":
+        extra_models = os.getenv("TABULLM_OPENAI_SWEEP_MODELS", "")
+        for model_id in (m.strip() for m in extra_models.split(",")):
+            if model_id and model_id != exclude_model_id:
+                sweep_arms[_slugify_model_id(model_id)] = model_id
+
     return sweep_arms
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -550,12 +634,18 @@ def _write_summary_csv(summary_rows: list[dict], out_dir: str, csv_name: str = "
 
 # ─────────────────────────────────────────────────────────────────────────────
 # CHECKPOINT / RESUME
-#   batch/ablation/stochasticity all persist one JSON record per completed unit
-#   (a dataset in batch/stochasticity mode, an arm+dataset pair in ablation mode) to
-#   {run_dir}/checkpoint.json the moment that unit finishes -- so a crash, kill, or
-#   Ctrl-C partway through a long run only ever loses the ONE unit that was in flight,
-#   never the units already done. --resume replays a run dir's checkpoint and skips
-#   any unit already recorded there, recomputing only what's missing/failed.
+#   batch/ablation/stochasticity persist progress to {run_dir}/checkpoint.json at TWO
+#   granularities:
+#     - completed[key]:   a fully-finished unit (a dataset in batch/stochasticity mode,
+#                          an arm+dataset pair in ablation mode) -- the final summary row
+#                          + per-fold series, as before.
+#     - in_progress[key]: FOLD-level progress within a unit that hasn't finished yet --
+#                          each fold's full result dict, saved the instant that fold
+#                          completes (see the on_fold_done callback wired up in
+#                          run_batch()/run_ablation()). So a crash, kill, or Ctrl-C
+#                          partway through a unit only ever loses the ONE fold that was
+#                          in flight, not the whole unit -- --resume replays cached folds
+#                          from in_progress and only computes what's still missing.
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _json_safe(obj):
@@ -585,10 +675,12 @@ def _load_checkpoint(run_dir: str) -> dict:
             with open(path, "r", encoding="utf-8") as fh:
                 data = json.load(fh)
             if isinstance(data, dict) and isinstance(data.get("completed"), dict):
+                # Older checkpoint.json files (pre fold-level resume) won't have this key.
+                data.setdefault("in_progress", {})
                 return data
         except Exception as e:
             print(f"  [WARN] Checkpoint at {path} is unreadable ({e}); treating this run dir as fresh.")
-    return {"completed": {}}
+    return {"completed": {}, "in_progress": {}}
 
 
 def _save_checkpoint(run_dir: str, checkpoint: dict) -> None:
@@ -618,7 +710,38 @@ def _mark_unit_done(
         "summary_row": summary_row,
         "per_fold_series": per_fold_series or {},
     })
+    # The unit is done -- its fold-level in-progress cache (if any) is now redundant;
+    # drop it so checkpoint.json doesn't keep every intermediate fold around forever.
+    checkpoint["in_progress"].pop(key, None)
     _save_checkpoint(run_dir, checkpoint)
+
+
+def _save_fold_result(
+    run_dir: str, checkpoint: dict, key: str, unit_config: dict, fold_num: int, fold_result: dict,
+) -> None:
+    """
+    Persists ONE fold's result the instant it finishes, under checkpoint["in_progress"][key].
+    Called as the on_fold_done callback threaded into TabuLLM.augment() / the SMOTE config
+    (see run_batch()/run_ablation()) -- so a crash mid-unit only loses the one fold that was
+    still generating, not every fold computed so far in this (arm, dataset) unit.
+    """
+    entry = checkpoint["in_progress"].setdefault(key, {"unit_config": unit_config, "folds": {}})
+    entry["unit_config"] = unit_config
+    entry["folds"][str(fold_num)] = _json_safe(fold_result)
+    _save_checkpoint(run_dir, checkpoint)
+
+
+def _resume_fold_results(checkpoint: dict, key: str, expected_unit_config: dict) -> "dict[int, dict]":
+    """
+    Returns {fold_num: fold_result} for folds already cached in checkpoint["in_progress"][key]
+    -- ONLY if they were computed under the same seed-determining unit_config this run is
+    using (same reasoning as _checkpoint_lookup: a different fold count means different,
+    incomparable fold seeds). Empty dict if there's nothing cached or it doesn't match.
+    """
+    entry = checkpoint["in_progress"].get(key)
+    if not entry or entry.get("unit_config") != expected_unit_config:
+        return {}
+    return {int(fold_str): fold_result for fold_str, fold_result in entry.get("folds", {}).items()}
 
 
 def _checkpoint_lookup(checkpoint: dict, key: str, expected_unit_config: dict) -> "dict | None":
@@ -681,6 +804,23 @@ def _resolve_run_dir(resume: "str | None", prefix: str, timestamp: str) -> "tupl
     return run_dir, False
 
 
+def _all_folds_succeeded(results: dict, folds: int, arm_name: str, filename: str) -> bool:
+    """
+    pipeline_manager swallows a failed fold (network drop, 429, ...) and carries on, so
+    `results["results"]` can hold fewer than `folds` entries -- even zero. Without this check
+    that shortfall was saved as a "completed" unit with missing or empty metrics, and resume
+    then skipped it forever. Returning False makes the caller treat the unit as failed instead
+    (not checkpointed as done); the folds that DID succeed are already cached in
+    checkpoint["in_progress"] via on_fold_done, so the next --resume only redoes the failed ones.
+    """
+    got = len(results.get("results", []) or [])
+    if got >= folds:
+        return True
+    print(f"  [WARN] {filename} [arm={arm_name}]: only {got}/{folds} folds succeeded -- NOT marking "
+          f"this unit complete. Re-run with --resume to retry the missing folds.")
+    return False
+
+
 def _run_dataset_arm(
     lib: TabuLLM,
     filename: str,
@@ -690,6 +830,8 @@ def _run_dataset_arm(
     config_overrides: "dict | None" = None,
     folds: "int | None" = None,
     ponder: bool = False,
+    resume_fold_results: "dict | None" = None,
+    on_fold_done: "Callable[[int, dict], None] | None" = None,
 ) -> "dict | None":
     """
     Runs one (dataset, arm) augmentation end to end: loads the CSV, calls the full
@@ -702,6 +844,11 @@ def _run_dataset_arm(
     lib.ponder_hyperparameters(df, ...) for THIS dataset -- the structured, empirically
     testable counterpart to the free-text ponder_strategy(), letting the LLM pick
     ctx_size_pct/strategy/temperature instead of the fixed PIPELINE defaults.
+
+    resume_fold_results / on_fold_done: fold-level checkpoint resume support, threaded
+    straight through to TabuLLM.augment() -- see its docstring. Lets the caller (run_batch()/
+    run_ablation()) skip folds already cached from a prior interrupted run and persist each
+    newly-computed fold immediately, rather than only after every fold in this unit finishes.
 
     Returns {"summary_row": ..., "per_fold_series": ...} or None if skipped/failed.
     """
@@ -738,7 +885,11 @@ def _run_dataset_arm(
             na_strategy=PIPELINE["na_strategy"],
             ctx_size_pct=PIPELINE["ctx_size_pct"],
             gen_size_pct=PIPELINE["gen_size_pct"],
+            resume_fold_results=resume_fold_results,
+            on_fold_done=on_fold_done,
         )
+        if resume_fold_results:
+            print(f"  Resuming : {len(resume_fold_results)}/{folds} folds already cached in checkpoint.json")
         if ponder:
             ponder_theta = lib.ponder_hyperparameters(
                 df, targets=[target],
@@ -758,6 +909,8 @@ def _run_dataset_arm(
 
         if not results:
             print("  [WARN] Pipeline returned empty results.")
+            return None
+        if not _all_folds_succeeded(results, folds, arm_name, filename):
             return None
 
         results["filename"]     = filename
@@ -807,7 +960,15 @@ def _run_dataset_arm(
         return None
 
 
-def _run_smote_arm(lib: TabuLLM, filename: str, ds_cfg: dict, out_dir: str, folds: "int | None" = None) -> "dict | None":
+def _run_smote_arm(
+    lib: TabuLLM,
+    filename: str,
+    ds_cfg: dict,
+    out_dir: str,
+    folds: "int | None" = None,
+    resume_fold_results: "dict | None" = None,
+    on_fold_done: "Callable[[int, dict], None] | None" = None,
+) -> "dict | None":
     """
     Runs one (dataset, "smote") augmentation end to end via the SMOTE baseline path
     (services.pipeline_manager.run_smote_dataset_benchmark) instead of the LLM -- the
@@ -815,6 +976,9 @@ def _run_smote_arm(lib: TabuLLM, filename: str, ds_cfg: dict, out_dir: str, fold
     slots into the exact same dispatch/aggregation code in run_ablation(). `lib` is only
     used for load_df() and generate_pdf_report() (pure I/O, no LLM calls involved) --
     SMOTE never touches the LLM at all.
+
+    resume_fold_results / on_fold_done: same fold-level checkpoint resume support as
+    _run_dataset_arm, passed straight into run_smote_dataset_benchmark()'s config.
     """
     csv_path  = os.path.join(DATA_DIR, filename)
     target    = ds_cfg["target"]
@@ -847,13 +1011,19 @@ def _run_smote_arm(lib: TabuLLM, filename: str, ds_cfg: dict, out_dir: str, fold
             "targets": [target],
             "na_strategy": PIPELINE["na_strategy"],
             "ml_config": {"selected_models": ml_models, "params": {}},
+            "_resume_fold_results": resume_fold_results or {},
+            "_on_fold_done": on_fold_done,
         }
+        if resume_fold_results:
+            print(f"  Resuming : {len(resume_fold_results)}/{folds} folds already cached in checkpoint.json")
 
         print(f"  Running SMOTE baseline ({folds} folds, arm={arm_name}) …")
         results = run_smote_dataset_benchmark(("smote-lib-task", filename, df.to_dict('records'), col_defs, config))
 
         if not results:
             print("  [WARN] Pipeline returned empty results.")
+            return None
+        if not _all_folds_succeeded(results, folds, arm_name, filename):
             return None
 
         results["dataset_name"] = name
@@ -932,11 +1102,7 @@ def run_batch(resume: "str | None" = None) -> None:
         print(f"  Resuming : {len(checkpoint['completed'])}/{len(DATASET_REGISTRY)} datasets already completed")
     _print_separator("═")
 
-    lib = TabuLLM(
-        provider=PIPELINE["provider"],
-        model=model_to_use,
-        endpoint_url=PIPELINE["endpoint_url"],
-    )
+    lib = _make_lib(model_to_use)
 
     unit_config = {"folds": PIPELINE["folds"]}
     summary_rows: list[dict] = []
@@ -949,7 +1115,14 @@ def run_batch(resume: "str | None" = None) -> None:
             summary_rows.append(cached["summary_row"])
             continue
 
-        out = _run_dataset_arm(lib, filename, ds_cfg, run_dir, arm_name="full", folds=PIPELINE["folds"])
+        cached_folds = _resume_fold_results(checkpoint, filename, unit_config)
+        on_fold_done = lambda fold_num, fold_result, _key=filename: \
+            _save_fold_result(run_dir, checkpoint, _key, unit_config, fold_num, fold_result)
+
+        out = _run_dataset_arm(
+            lib, filename, ds_cfg, run_dir, arm_name="full", folds=PIPELINE["folds"],
+            resume_fold_results=cached_folds, on_fold_done=on_fold_done,
+        )
         if out is None:
             failed.append(filename)
         else:
@@ -1022,11 +1195,7 @@ def run_ablation(resume: "str | None" = None) -> None:
         print(f"  Resuming : {len(checkpoint['completed'])}/{total_units} (arm, dataset) units already completed")
     _print_separator("═")
 
-    lib = TabuLLM(
-        provider=PIPELINE["provider"],
-        model=model_to_use,
-        endpoint_url=PIPELINE["endpoint_url"],
-    )
+    lib = _make_lib(model_to_use)
 
     # Cross-model sweep arms each need their own TabuLLM instance (different model id) --
     # built lazily and cached here so every dataset in that arm reuses the same instance.
@@ -1035,11 +1204,7 @@ def run_ablation(resume: "str | None" = None) -> None:
     def _lib_for_arm(arm_name: str) -> TabuLLM:
         model_id = model_sweep_arms[arm_name]
         if model_id not in model_sweep_libs:
-            model_sweep_libs[model_id] = TabuLLM(
-                provider=PIPELINE["provider"],
-                model=model_id,
-                endpoint_url=PIPELINE["endpoint_url"],
-            )
+            model_sweep_libs[model_id] = _make_lib(model_id)
         return model_sweep_libs[model_id]
 
     all_summary_rows: list[dict] = []                    # every (dataset, arm) row
@@ -1079,22 +1244,45 @@ def run_ablation(resume: "str | None" = None) -> None:
                 series_by_key[(filename, arm_name)] = cached["per_fold_series"]
                 continue
 
+            # Fold-level resume: reuse folds already cached from a prior interrupted run of
+            # THIS (arm, dataset) unit, and persist each newly-computed fold immediately (see
+            # _save_fold_result) so a crash mid-unit only loses the one fold in flight.
+            #
+            # Exception: "ponder_strategy" calls lib.ponder_hyperparameters() fresh on every
+            # invocation -- an LLM call that can pick different ctx_size_pct/strategy/
+            # temperature between runs. Reusing folds cached under a DIFFERENT ponder choice
+            # than this run's would silently mix incompatible fold configs within one unit
+            # (unlike every other arm, whose config is static and known upfront). So its
+            # already-computed folds still get saved (on_fold_done), but never read back in
+            # (resume_fold_results omitted) -- a resumed ponder unit recomputes all folds
+            # fresh under whatever hyperparameters this run's ponder call returns, same as
+            # before fold-level resume existed.
+            on_fold_done = lambda fold_num, fold_result, _key=unit_key: \
+                _save_fold_result(run_dir, checkpoint, _key, unit_config, fold_num, fold_result)
+            cached_folds = {} if arm_name == "ponder_strategy" else _resume_fold_results(checkpoint, unit_key, unit_config)
+
             if arm_name == "smote":
-                out = _run_smote_arm(lib, filename, ds_cfg, arm_dir, folds=ablation_folds)
+                out = _run_smote_arm(
+                    lib, filename, ds_cfg, arm_dir, folds=ablation_folds,
+                    resume_fold_results=cached_folds, on_fold_done=on_fold_done,
+                )
             elif arm_name == "ponder_strategy":
                 out = _run_dataset_arm(
                     lib, filename, ds_cfg, arm_dir,
                     arm_name=arm_name, folds=ablation_folds, ponder=True,
+                    on_fold_done=on_fold_done,
                 )
             elif arm_name in model_sweep_arms:
                 out = _run_dataset_arm(
                     _lib_for_arm(arm_name), filename, ds_cfg, arm_dir,
                     arm_name=arm_name, folds=ablation_folds,
+                    resume_fold_results=cached_folds, on_fold_done=on_fold_done,
                 )
             else:
                 out = _run_dataset_arm(
                     lib, filename, ds_cfg, arm_dir,
                     arm_name=arm_name, config_overrides=overrides, folds=ablation_folds,
+                    resume_fold_results=cached_folds, on_fold_done=on_fold_done,
                 )
             if out is None:
                 arm_failed.append(filename)
@@ -1228,11 +1416,7 @@ def run_stochasticity_study(resume: "str | None" = None) -> None:
         print(f"  Resuming : {len(checkpoint['completed'])}/{len(dataset_subset)} datasets already completed")
     _print_separator("═")
 
-    lib = TabuLLM(
-        provider=PIPELINE["provider"],
-        model=model_to_use,
-        endpoint_url=PIPELINE["endpoint_url"],
-    )
+    lib = _make_lib(model_to_use)
 
     unit_config = {"repeats": repeats}   # count of independent repeats -- see _mark_unit_done
     summary_rows: list[dict] = []

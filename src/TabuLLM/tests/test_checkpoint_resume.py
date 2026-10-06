@@ -45,7 +45,7 @@ class TestCheckpointPersistence(unittest.TestCase):
 
     def test_load_checkpoint_missing_file_returns_empty(self):
         cp = rbp._load_checkpoint(self.run_dir)
-        self.assertEqual(cp, {"completed": {}})
+        self.assertEqual(cp, {"completed": {}, "in_progress": {}})
 
     def test_save_then_load_round_trips(self):
         cp = rbp._load_checkpoint(self.run_dir)
@@ -68,7 +68,7 @@ class TestCheckpointPersistence(unittest.TestCase):
         with open(rbp._checkpoint_path(self.run_dir), "w", encoding="utf-8") as fh:
             fh.write("{not valid json")
         cp = rbp._load_checkpoint(self.run_dir)
-        self.assertEqual(cp, {"completed": {}})
+        self.assertEqual(cp, {"completed": {}, "in_progress": {}})
 
     def test_per_fold_series_defaults_to_empty_dict_when_none(self):
         cp = rbp._load_checkpoint(self.run_dir)
@@ -103,6 +103,48 @@ class TestCheckpointLookup(unittest.TestCase):
     def test_missing_key_returns_none(self):
         entry = rbp._checkpoint_lookup(self.checkpoint, "nonexistent::ds.csv", {"folds": 10})
         self.assertIsNone(entry)
+
+
+class TestFoldLevelResume(unittest.TestCase):
+    """Fold-level checkpointing: each fold is saved the instant it finishes (not just when
+    the whole unit does), so a crash mid-unit only loses the one fold in flight."""
+
+    def setUp(self):
+        self.run_dir = tempfile.mkdtemp(prefix="tabullm_checkpoint_test_")
+        self.checkpoint = rbp._load_checkpoint(self.run_dir)
+
+    def tearDown(self):
+        shutil.rmtree(self.run_dir, ignore_errors=True)
+
+    def test_no_cached_folds_returns_empty_dict(self):
+        cached = rbp._resume_fold_results(self.checkpoint, "full::ds.csv", {"folds": 3})
+        self.assertEqual(cached, {})
+
+    def test_saved_folds_are_returned_with_int_keys(self):
+        rbp._save_fold_result(self.run_dir, self.checkpoint, "full::ds.csv", {"folds": 3}, 1, {"acc": 0.9})
+        rbp._save_fold_result(self.run_dir, self.checkpoint, "full::ds.csv", {"folds": 3}, 2, {"acc": 0.8})
+        cached = rbp._resume_fold_results(self.checkpoint, "full::ds.csv", {"folds": 3})
+        self.assertEqual(set(cached.keys()), {1, 2})
+        self.assertEqual(cached[1], {"acc": 0.9})
+
+    def test_survives_a_reload_from_disk(self):
+        rbp._save_fold_result(self.run_dir, self.checkpoint, "full::ds.csv", {"folds": 3}, 1, {"acc": 0.9})
+        reloaded = rbp._load_checkpoint(self.run_dir)
+        cached = rbp._resume_fold_results(reloaded, "full::ds.csv", {"folds": 3})
+        self.assertEqual(cached, {1: {"acc": 0.9}})
+
+    def test_mismatched_unit_config_is_not_reused(self):
+        rbp._save_fold_result(self.run_dir, self.checkpoint, "full::ds.csv", {"folds": 3}, 1, {"acc": 0.9})
+        cached = rbp._resume_fold_results(self.checkpoint, "full::ds.csv", {"folds": 10})
+        self.assertEqual(cached, {}, "a different fold count means different/incomparable seeds")
+
+    def test_mark_unit_done_clears_in_progress_cache(self):
+        rbp._save_fold_result(self.run_dir, self.checkpoint, "full::ds.csv", {"folds": 3}, 1, {"acc": 0.9})
+        self.assertIn("full::ds.csv", self.checkpoint["in_progress"])
+        rbp._mark_unit_done(self.run_dir, self.checkpoint, "full::ds.csv",
+                             {"dataset": "ds.csv"}, {}, {"folds": 3})
+        self.assertNotIn("full::ds.csv", self.checkpoint["in_progress"])
+        self.assertIn("full::ds.csv", self.checkpoint["completed"])
 
 
 class TestFindResumableRunDir(unittest.TestCase):

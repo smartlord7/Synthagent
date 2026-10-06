@@ -226,11 +226,31 @@ def run_single_dataset_benchmark(args):
 
     dataset_audit = _compute_dataset_audit(df_orig_all, targets, filename)
 
+    # Fold-level resume support: `_resume_fold_results` (int fold_num -> that fold's
+    # already-computed result dict, from a prior interrupted run's checkpoint) lets folds
+    # already on disk be reused verbatim instead of re-generating from the LLM. `_on_fold_done`
+    # (fold_num, result_dict) -> None is invoked right after each NEWLY computed fold, so a
+    # caller can persist it immediately -- rather than only after every fold in this dataset
+    # finishes -- so a crash/interrupt mid-dataset only loses the ONE fold in flight. Both are
+    # no-ops (empty dict / None) for a normal run with no resumption in play.
+    resume_fold_results = config.get("_resume_fold_results") or {}
+    on_fold_done = config.get("_on_fold_done")
+
     results = []
     all_synthetic_data = []
     all_augmented_data = []
 
     for fold_num in range(1, folds + 1):
+        if fold_num in resume_fold_results:
+            m = resume_fold_results[fold_num]
+            results.append(m)
+            all_synthetic_data.extend(m.get("synthetic_data", []) or [])
+            all_augmented_data.extend(
+                (m.get("context_data", []) or []) + (m.get("synthetic_data", []) or []) + (m.get("test_data", []) or [])
+            )
+            logger.info(f"[{filename} | Fold {fold_num}] Reusing cached result from checkpoint -- skipping regeneration.")
+            continue
+
         if progress_dict is not None:
              p = progress_dict[dataset_id_key]
              p["status"] = f"Fold {fold_num}/{folds} - Data Prep"
@@ -401,7 +421,13 @@ def run_single_dataset_benchmark(args):
                     "fold_seconds": time.time() - fold_start_time,
                 })
                 results.append(m)
-                
+
+                if on_fold_done:
+                    try:
+                        on_fold_done(fold_num, m)
+                    except Exception as cb_err:
+                        logger.warning(f"on_fold_done callback failed for {filename} fold {fold_num}: {cb_err}")
+
                 if progress_dict is not None and dataset_id_key:
                     # Explicitly update nested manager dict to ensure cross-process visibility
                     try:
@@ -458,10 +484,21 @@ def run_smote_dataset_benchmark(args):
     task_type = MLEvaluator.detect_task_type(df_orig_all, targets) if targets else None
     categorical_cols = [c for c in df_orig_all.select_dtypes(exclude=[np.number]).columns if c != target_col]
 
+    # See the matching block in run_single_dataset_benchmark() for what these do.
+    resume_fold_results = config.get("_resume_fold_results") or {}
+    on_fold_done = config.get("_on_fold_done")
+
     results = []
     all_synthetic_data = []
 
     for fold_num in range(1, folds + 1):
+        if fold_num in resume_fold_results:
+            m = resume_fold_results[fold_num]
+            results.append(m)
+            all_synthetic_data.extend(m.get("synthetic_data", []) or [])
+            logger.info(f"[{filename} | Fold {fold_num}] (SMOTE) Reusing cached result from checkpoint -- skipping regeneration.")
+            continue
+
         try:
             fold_start_time = time.time()
             df_train_orig, df_test_orig = train_test_split(df_orig_all, test_size=0.2, random_state=42 + fold_num)
@@ -535,6 +572,12 @@ def run_smote_dataset_benchmark(args):
                 "fold_seconds": time.time() - fold_start_time,
             })
             results.append(m)
+
+            if on_fold_done:
+                try:
+                    on_fold_done(fold_num, m)
+                except Exception as cb_err:
+                    logger.warning(f"on_fold_done callback failed for {filename} fold {fold_num}: {cb_err}")
         except Exception as e:
             logger.error(f"SMOTE pipeline error in {filename} fold {fold_num}: {e}")
             continue

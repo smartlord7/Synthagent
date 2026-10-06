@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
 from sklearn.linear_model import LogisticRegression, LinearRegression, Ridge
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor, GradientBoostingClassifier, GradientBoostingRegressor, AdaBoostClassifier, AdaBoostRegressor
 from sklearn.neural_network import MLPClassifier, MLPRegressor
@@ -142,10 +143,22 @@ class MLEvaluator:
         if model is None:
             return None, None, f"Invalid model type '{model_type}'"
 
+        # XGBClassifier requires class labels 0..k-1 and rejects e.g. {1, 2}. Encode for fit and
+        # decode predictions back, so metrics stay in the original label space -- f1 with
+        # average='binary' scores pos_label=1, so scoring in encoded space would silently
+        # change which class is "positive" versus every other model.
+        xgb_label_encoder = None
+        y_train_fit = y_train
+        if task_type == "classification" and model_type == "xgb":
+            xgb_label_encoder = LabelEncoder().fit(y_train)
+            y_train_fit = xgb_label_encoder.transform(y_train)
+
         try:
             logger.info(f"[ML] Training {model_type.upper()} Model ({task_type}) on {n_samples} samples x {n_features} features...")
-            model.fit(X_train, y_train)
+            model.fit(X_train, y_train_fit)
             y_pred = model.predict(X_test)
+            if xgb_label_encoder is not None:
+                y_pred = xgb_label_encoder.inverse_transform(np.asarray(y_pred).astype(int))
 
             if task_type == "classification":
                 # Use 'binary' only when BOTH train and test have exactly 2 classes.

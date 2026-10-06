@@ -131,11 +131,14 @@ def get_eda_layout(df_orig, df_aug, dataset_id="base", results_list=None):
         privacy_risk = int((min_dists < 0.05).mean() * 100)
         coverage_score = int((min_dists > 0.1).mean() * 100)
         
-        if len(orig_norm) > 1 and len(aug_sample) > 1:
-            aug_to_aug = euclidean_distances(aug_sample, aug_sample)
-            np.fill_diagonal(aug_to_aug, np.inf)
-            nn_aug = np.min(aug_to_aug, axis=1)
-            nndr = np.mean(min_dists / (nn_aug + 1e-6))
+        if len(orig_norm) >= 2:
+            # Standard NNDR: ratio of 1st- to 2nd-nearest REAL-neighbor distance per synthetic
+            # row -- bounded in [0, 1] by construction. See utils.metrics.compute_privacy_metrics
+            # for why comparing against nearest-OTHER-SYNTHETIC distance (the old formula here)
+            # is wrong: it blows up unboundedly whenever two synthetic rows are near-duplicates.
+            sorted_dists = np.sort(dist_matrix, axis=1)
+            d1, d2 = sorted_dists[:, 0], sorted_dists[:, 1]
+            nndr = np.mean(d1 / (d2 + 1e-9))
 
     if cat_cols:
         for col in cat_cols:

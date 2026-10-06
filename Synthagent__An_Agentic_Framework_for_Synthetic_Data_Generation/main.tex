@@ -1,0 +1,504 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% AAMAS review manuscript. The class and bibliography style are copied
+% unchanged from the official AAMAS 2026 author kit. Update the conference
+% metadata and submission identifier when the target AAMAS cycle is fixed.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\documentclass[sigconf,anonymous,nonacm]{aamas}
+
+\usepackage{balance}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,fit,calc}
+\usepackage{xcolor}
+\usepackage{amsmath}
+\usepackage{siunitx}
+\usepackage{enumitem}
+
+\definecolor{sblue}{HTML}{2B6CB0}
+\definecolor{sgreen}{HTML}{2F855A}
+\definecolor{sorange}{HTML}{C05621}
+\definecolor{sgray}{HTML}{4A5568}
+\newcommand{\system}{\textsc{Synthagent}}
+\newcommand{\best}[1]{\textbf{#1}}
+
+\setcopyright{none}
+\settopmatter{printacmref=false}
+\renewcommand\footnotetextcopyrightpermission[1]{}
+\acmConference[AAMAS]{International Conference on Autonomous Agents and Multiagent Systems}{TBD}{TBD}
+\acmYear{2027}
+\copyrightyear{2027}
+\acmDOI{}
+\acmISBN{}
+\acmSubmissionID{TBD}
+
+\title[Agentic Synthesis for Small Tabular Data]{When Every Row Counts: Verifier-Guided Agentic Synthesis for Small Tabular Data}
+\author{Sancho Amaral Sim\~oes}
+\author{Pedro H. Abreu}
+\author{Jo\~ao P. Vilela}
+
+\begin{abstract}
+Small tabular datasets are common precisely where data are expensive, fragmented, or sensitive. In this regime, losing a few records to a holdout changes the training distribution, minority classes may contain only dozens of examples, and training a dedicated deep generator can be poorly matched to the available evidence. Large language models offer a training-free alternative, but a raw completion is not a reliable data product. It may copy scarce examples, omit minority modes, violate the schema, return too few rows, or consume substantial inference resources without improving prediction. We present \system, a verifier-guided agent designed for this small-data setting. It separates probabilistic row proposal from deterministic control: the controller selects compact demonstrations, budgets limited context, parses and repairs structured output, validates typed constraints, and tracks the exact residual row demand. This decomposition assigns one observable failure mode to each component instead of treating prompting, validation, and recovery as an undifferentiated pipeline.
+
+We evaluate the system on six medical classification datasets containing only 195 to 768 rows. The study covers 11 fully completed configurations, 10 seeded repeated holdouts per configuration, four completed language-model backends, a SMOTE control, and ten downstream classifiers. This yields 660 dataset-configuration repetitions and up to 19,800 model fits. We report every real-only classifier baseline with its repetition standard deviation before measuring augmentation. Generated-only Jensen-Shannon fidelity averages 72.7 out of 100 for the reference configuration, completeness is 99.7\%, and a distance-based membership attack is near chance (AUC 0.526). These properties do not imply universal predictive gains: mean augmented accuracy changes by $-1.19$ percentage points and mean F1 by $-0.14$ points. GPT-4.1 mini gives the strongest observed backend trade-off ($-0.22$ accuracy, $+0.92$ F1), but Friedman and Holm-corrected post-hoc tests find no significant winner across the six datasets. The result is a decision map for small-data synthesis, not a single leaderboard: fidelity, minority coverage, utility, privacy proxies, and inference cost favor different configurations.
+\end{abstract}
+
+\keywords{agentic AI, small data, synthetic tabular data, verifier-guided generation, data augmentation, large language models}
+
+\begin{document}
+\pagestyle{fancy}
+\fancyhead{}
+\maketitle
+
+\section{Introduction}
+Many consequential tabular problems are small-data problems. Clinical cohorts, rare-event registries, pilot studies, local operational databases, and expert-labeled collections often contain hundreds rather than millions of rows. Their small size is not merely an implementation inconvenience. Each train-test split removes a meaningful fraction of the evidence; rare classes may be represented by only a handful of cases; a single anomalous record can move a metric; and a high-capacity generator can learn the sample more easily than the population. Data augmentation is attractive in this setting, but synthetic volume cannot create information that the source table never contained.
+
+This paper studies the narrower question that follows: can an agent turn a small table into a controlled, auditable synthetic-data experiment without pretending that more generated rows are automatically more evidence? A useful system must preserve scarce modes, expose rather than hide uncertainty, and determine whether augmentation helps across several learners. It must also avoid assuming that a dedicated neural generator can be robustly fitted to every small dataset.
+
+Tabular synthesis is commonly presented as a distribution-learning problem. In practice, an LLM-based synthesizer must also behave as a dependable agent: it must decide which scarce examples fit in context, issue bounded actions to a stochastic model, inspect the result, recover from malformed output, enforce user constraints, and know when a requested artifact is complete. These control obligations are distinct from the LLM's ability to imitate a distribution. They become more important when every demonstration represents a non-negligible fraction of the available data.
+
+Prior tabular generators address heterogeneous columns with conditional adversarial training \cite{xu2019ctgan}, diffusion \cite{kotelnikov2023tabddpm,lee2023codi,zhang2024tabsyn}, or autoregressive language modeling \cite{borisov2023great,solatorio2023realtabformer}. They establish that strong generators must be evaluated on several axes, because marginal similarity, downstream utility, and disclosure risk are not interchangeable \cite{qian2023synthcity,lautrup2025syntheval}. What remains underexplored is the control layer around an off-the-shelf LLM. An unconstrained completion has no reason to return the requested number of rows, valid JSON, the correct fields, or values that respect operational policies.
+
+\system addresses this small-data control problem. Its design follows the agentic pattern of alternating action and observation \cite{yao2023react,wang2024agentsurvey}, but replaces free-form reflection with machine-checkable state. The LLM proposes rows from compact, deliberately selected evidence; deterministic tools parse, validate, count, and either accept the proposal or construct a targeted follow-up action. The distinction matters. A model can be statistically expressive yet operationally unreliable, while a controller can guarantee only those properties that it actually verifies. Equally, a valid synthetic table can still be statistically unhelpful, which is why downstream baselines and their variability are first-class results.
+
+This paper makes four contributions:
+\begin{enumerate}[leftmargin=*,itemsep=2pt]
+  \item We formulate small-data tabular synthesis as a verifier-guided agent loop whose state records schema, limited context, accepted rows, residual demand, and diagnostics. The same state boundary supports local execution at federated clients without centralizing raw rows.
+  \item We connect each mechanism to a specific failure mode: context selection to coverage, structured parsing to syntax failure, typed validation to schema failure, and residual top-up to under-generation.
+  \item We report the completed September 2026 ablation study in full, including every real-only baseline with standard deviation, generated-only fidelity, minority-class fidelity, C2ST, a distance-based membership attack, three training regimes, ten classifiers, model backends, latency, and token usage.
+  \item We replace winner-by-mean reporting with matched statistical comparisons and make the negative results explicit. The current evidence supports controllability and diagnostic value, not a claim of universal augmentation benefit or formal privacy.
+\end{enumerate}
+
+\section{Related Work}
+The proposed system sits at the intersection of tabular synthesis, language-model generation, and trustworthy evaluation. We organize the literature around those three roles and use them to clarify what is new: not another fitted generator, but a verifier-guided control layer for producing and testing synthetic rows from limited context.
+
+\paragraph{Tabular synthesis.}
+SMOTE interpolates minority examples and remains a strong low-cost control for imbalance \cite{chawla2002smote}. CTGAN introduced mode-aware normalization and conditional sampling for mixed columns \cite{xu2019ctgan}. TabDDPM and CoDi adapt diffusion to numerical and categorical variables \cite{kotelnikov2023tabddpm,lee2023codi}; TabSyn diffuses in a learned latent space to improve quality and sampling speed \cite{zhang2024tabsyn}. These learned generators optimize a model for each table. In contrast, \system uses an existing instruction-following model and spends inference tokens instead of training a generator.
+
+\paragraph{Language models for tables.}
+GReaT serializes rows and fine-tunes an autoregressive language model \cite{borisov2023great}; REaLTabFormer extends autoregressive generation to relational tables and adds overfitting diagnostics \cite{solatorio2023realtabformer}. \system studies a different point in the design space: in-context generation without dataset-specific fine-tuning, surrounded by explicit control and evaluation. This choice trades training cost for context sensitivity, inference cost, and dependence on the backend.
+
+\paragraph{Evaluation and privacy.}
+Synthcity and SynthEval argue for multi-dimensional evaluation rather than a single fidelity score \cite{qian2023synthcity,lautrup2025syntheval}. Classifier two-sample tests ask whether a held-out classifier can distinguish real from synthetic rows \cite{lopezpaz2017c2st}. Membership inference asks whether an attacker can identify records used by a model \cite{shokri2017mia}; tabular synthesizers can remain vulnerable \cite{hyeong2022tabularmia}. Our distance-based attack is a diagnostic, not a proof of privacy. In particular, \system does not implement differential privacy, whose guarantees require a formally analyzed randomized mechanism \cite{dwork2014dp}.
+
+\section{Verifier-Guided Synthesis}
+This section turns the design intuition into an explicit constrained decision process. Let $D^{\mathrm{tr}}$ and $D^{\mathrm{te}}$ denote a real training and holdout partition, and let controller configuration $\theta$ produce $G_{\theta}$ without observing $D^{\mathrm{te}}$. A valid output belongs to the feasible set $\mathcal{F}(S,R,N)$ induced by schema $S$, active rules $R$, and requested size $N$. Configuration choice is multi-objective:
+\begin{equation}
+\begin{aligned}
+\theta^{\star}\in\arg\min_{\theta:\,G_{\theta}\in\mathcal{F}(S,R,N)}
+\bigl(&L_{\mathrm{fid}}(D^{\mathrm{tr}},G_{\theta}),
+L_{\mathrm{priv}}(D^{\mathrm{tr}},G_{\theta}),\\
+&-\Delta U(G_{\theta}),C(\theta)\bigr).
+\end{aligned}
+\label{eq:multiobjective}
+\end{equation}
+Equation~\ref{eq:multiobjective} is not collapsed to a weighted scalar because fidelity, empirical privacy risk, downstream utility $\Delta U$, and inference cost $C$ encode different deployment preferences. The experiments approximate this decision surface rather than claiming that the controller solves it automatically. We next define the state and transitions that make each feasible generation run auditable.
+
+\subsection{Control State and Agent Loop}
+Let a source table be $D=\{x_i\}_{i=1}^{n}$ with schema $S$, a requested synthetic volume $N$, and optional user rules $R$. The controller maintains
+\begin{equation}
+z_t=(S,R,C_t,A_t,N-|A_t|,B_t,E_t),
+\label{eq:state}
+\end{equation}
+where $C_t$ is the context exposed at step $t$, $A_t$ is the set of accepted rows, $B_t$ is the remaining token budget, and $E_t$ contains parser or validator evidence. Equation~\ref{eq:state} makes residual demand part of state rather than leaving it implicit in a conversational history. The LLM policy $\pi_{\phi}$ proposes a raw batch $Y_t\sim\pi_{\phi}(\cdot\mid z_t)$. If $P_S$ is the parser and schema aligner and $V_{S,R}$ is the active validator, the accepted-set transition is
+\begin{equation}
+\begin{aligned}
+A_{t+1}=A_t\cup\{y:\;&y\in P_S(Y_t)\\
+&\land\ V_{S,R}(y)=1\}.
+\end{aligned}
+\label{eq:acceptance}
+\end{equation}
+Equation~\ref{eq:acceptance} separates stochastic proposal from deterministic admission: malformed, misaligned, or invalid rows never enter $A_{t+1}$. The transition also updates the remaining budget and stores failure evidence in $E_{t+1}$. Generation terminates when $|A_t|=N$ or a bounded recovery limit is reached.
+
+Figure~\ref{fig:architecture} shows why these are components rather than a collection of unrelated techniques. Each verifier converts an ambiguous model failure into a typed observation that determines the next action.
+
+\begin{figure*}[t]
+\centering
+\begin{tikzpicture}[
+  node distance=5mm and 6mm,
+  box/.style={draw,rounded corners=2pt,minimum height=9mm,minimum width=27mm,align=center,font=\small,fill=white},
+  agent/.style={box,draw=sblue,very thick,fill=sblue!7},
+  verify/.style={box,draw=sgreen,very thick,fill=sgreen!7},
+  recover/.style={box,draw=sorange,very thick,fill=sorange!8},
+  arrow/.style={-{Latex[length=2mm]},thick,sgray}
+]
+\node[agent] (profile) {Profile schema\\and rules};
+\node[agent,right=of profile] (select) {Select and budget\\context rows};
+\node[agent,right=of select] (propose) {LLM proposes\\a row batch};
+\node[verify,right=of propose] (parse) {Parse and align\\structured output};
+\node[verify,right=of parse] (validate) {Validate active\\typed constraints};
+\node[verify,right=of validate] (count) {Accept rows and\\measure residual};
+\draw[arrow] (profile)--(select);
+\draw[arrow] (select)--(propose);
+\draw[arrow] (propose)--(parse);
+\draw[arrow] (parse)--(validate);
+\draw[arrow] (validate)--(count);
+\node[recover,below=7mm of parse] (repair) {Focused JSON repair\\or constraint feedback};
+\node[recover,below=7mm of count] (topup) {Request exactly the\\remaining row count};
+\draw[arrow] (parse)--(repair);
+\draw[arrow] (validate)--(repair);
+\draw[arrow] (repair.west) -| ($(propose.south)+(0,-1mm)$);
+\draw[arrow] (count)--(topup);
+\draw[arrow] (topup.west) -| ($(propose.south)+(4mm,-1mm)$);
+\node[draw,dashed,rounded corners,fit=(propose)(parse)(validate)(count)(repair)(topup),inner sep=3mm,label={[font=\small\bfseries]above:Verifier-guided action cycle}] {};
+\end{tikzpicture}
+\caption{\system separates stochastic proposal from deterministic observation and control. Syntax, constraint, and volume failures produce different recovery actions.}
+\label{fig:architecture}
+\end{figure*}
+
+\subsection{Context as an Explicit Resource}
+The generation context is a controlled information interface, not an unstructured dump of the dataset. Table~\ref{tab:prompt-context} lists exactly what enters the model in the reported batch study. The core evidence is a 20\% sample of the real training split serialized as compact row-major JSON. Every selected row contains the ordered feature columns and the observed target value, so the model sees examples of the joint feature-label distribution rather than independent marginal summaries. The target is not separately described as a clinical endpoint. This avoids adding hand-authored domain knowledge that differs by dataset, but it also means the model must infer the role of each column from its name and co-occurrence pattern.
+
+Formally, strategy $q\in\{\text{random},\text{dense},\text{diverse}\}$ defines an ordered candidate pool, while the current token budget determines how much of that pool is visible:
+\begin{equation}
+\begin{aligned}
+C_t&=\operatorname{Slice}_{t}\!\left(\operatorname{Select}_{q}
+(D^{\mathrm{tr}},\lceil0.2|D^{\mathrm{tr}}|\rceil),k_t\right),\\
+k_t&=\max\{k:T(H,I,C_{t,k},O_t)\leq0.85W\}.
+\end{aligned}
+\label{eq:context}
+\end{equation}
+In Equation~\ref{eq:context}, $H$ is the schema and output contract, $I$ is optional instruction text, $O_t$ is the reserved output, $W$ is the backend context window, and $T$ is the token estimator. The slice operator rotates through the selected pool across chunks. This formalization distinguishes the candidate context fraction from the smaller prompt-specific context that may fit beside the requested output.
+
+\begin{table*}[t]
+\centering
+\caption{Information boundary for one generation request in the reported experiment. ``Not supplied'' is intentional: those signals cannot influence the generated rows.}
+\label{tab:prompt-context}
+\small
+\begin{tabular}{p{.19\textwidth}p{.35\textwidth}p{.38\textwidth}}
+\toprule
+Context layer & What the model receives & Why it is included or excluded \\
+\midrule
+Schema & Ordered column names and an exact column-count requirement & Establishes the record interface and prevents invented or omitted fields. \\
+Demonstrations & A compact row-major serialization of 20\% of the training split, including feature and target values & Exposes joint patterns, value formats, label prevalence, missingness, and plausible cross-column combinations without sending the entire local table. \\
+Generation task & Exact number of new rows required in the current chunk, normally at most 30 & Converts an open-ended completion into a bounded action whose output count can be verified. \\
+Output contract & JSON only, fixed column order, complete cells, raw numeric values, no extra metadata & Makes parsing deterministic and reduces interface failures unrelated to statistical quality. \\
+Dynamic feedback & Parser location after malformed JSON or grouped field violations after failed validation & Reveals only the evidence needed for a targeted repair rather than replaying the full history. \\
+Free-text metadata and manual examples & Not supplied in the batch experiment & Prevents unequal dataset-specific prompt engineering from confounding the ablation. \\
+Test and evaluation information & No holdout rows, model predictions, test metrics, or classifier identities & Preserves the evaluation boundary and prevents optimization against the test set. \\
+Global statistical summaries & No separately computed means, quantiles, correlations, or class quotas & Ensures that measured fidelity arises from the selected row context; the consequence is weaker protection against rare-mode omission. \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+The minimal interface is appropriate for the question studied here. Raw demonstrations preserve multivariate combinations that a list of univariate statistics would discard, while the compact row format spends tokens on observations rather than prose. Restricting the evidence to training rows prevents holdout leakage. It also makes the context-selection ablation interpretable: differences arise from which observations are shown, not from different natural-language descriptions. In a hospital, the same boundary limits prompt exposure to an approved local subset rather than the entire clinical table.
+
+The default policy samples demonstrations randomly. Two alternatives target distinct failure modes. \emph{Dense} chooses rows with the most observed cells, reducing ambiguity from missing fields. \emph{Diverse} standardizes numerical features, applies $k$-means, and selects the observed rows nearest to the centroids, increasing geometric coverage. Neither policy is class-stratified, and neither guarantees that a rare diagnosis appears in context. That limitation matters in small healthcare cohorts and motivates a future label-aware policy with minimum per-class coverage.
+
+Context size is jointly determined by evidence and output demand. The controller estimates tokens at 2.8 characters per token, uses at most 85\% of the backend context window, reserves output capacity, and computes the number of demonstration rows that fit after schema and task overhead. It rotates the admissible demonstrations across generation chunks so later requests need not see the same patient profiles. After an HTTP 400 or 422 overflow response, it halves the context up to three times. Thus, ``20\% context'' describes the candidate pool, not a promise that every candidate row appears in every prompt. This mechanism exists because more demonstrations are not always better when generated rows compete for the same finite window.
+
+The verifier remains separate from the model context. Inferred integrity rules are used to inspect returned records; in the reference experiment, they are not embedded as an additional first-pass clinical prompt, boundary enforcement is disabled, and no user-authored rules are present. This separation prevents us from attributing fidelity to constraints that the model never saw. A production hospital deployment can enrich the local context with approved units, coding systems, valid ranges, and temporal relations, but those additions require a dedicated constraint experiment.
+
+\subsection{Parsing, Validation, and Recovery}
+Equations~\ref{eq:context} and~\ref{eq:acceptance} meet at the structured-output boundary. Rows are requested in compact JSON batches of 30. A robust parser first extracts structured content locally. If parsing fails, the agent issues one focused repair request at low temperature with the error location and surrounding text. Column names are bridged back to the declared schema before validation.
+
+Schema profiling creates integrity rules for every column and optional numerical ranges with 10\% tolerance or categorical domains with at most 20 values. Dynamic Pydantic models provide typed validation. A validator report groups failures by field and returns one representative bad value, preventing the correction prompt from growing linearly with repeated errors. User rules may also trigger deterministic noise, rounding, or normalization after generation.
+
+The distinction between available and active controls is important. In the reported reference configuration, integrity typing is active, boundary enforcement is off, and no user post-processing rules are supplied. Therefore, the experiment tests the default system rather than the strongest possible constraint policy. Zero recorded rule violations means that the active type verifier did not intervene; it does not establish zero logical violations.
+
+\subsection{Bounded Exact-Volume Completion}
+An LLM frequently returns fewer rows than requested. The controller therefore derives its next request from accepted state:
+\begin{equation}
+r_t=\max(0,N-|A_t|),\qquad q_t=\min(30,r_t).
+\label{eq:residual}
+\end{equation}
+Equation~\ref{eq:residual} requests only the residual volume $q_t$ and truncates any overshoot. The controller repeats this transition for at most 50 top-up rounds and stops after five consecutive empty or unparsable responses. Thus, successful runs return exactly $N$ rows. This is a bounded completion protocol, not an unconditional mathematical guarantee, because persistent provider failure can still terminate short.
+
+\subsection{Hospital Federated and Distributed Deployment}
+The controller is naturally deployable at the data boundary. Consider a regional healthcare network with $K$ hospitals. Each hospital holds a small EHR-derived table $D_k$ for the same prediction problem, but case mix, coding practice, measurement devices, referral patterns, and minority prevalence differ by site. Legal, governance, or operational constraints prevent raw patient rows from being pooled, a central motivation for federated medical learning \cite{rieke2020digitalhealth,sheller2020medicine}. Federated learning normally keeps $D_k$ local and aggregates locally computed model updates \cite{mcmahan2017fedavg,kairouz2021federated}. In our deployment pattern, each hospital runs the complete \system loop inside its own trust boundary:
+\begin{equation}
+\begin{aligned}
+G_k&=\mathcal{A}(D_k,S_k,R_k,B_k),\\
+\Delta w_k&=\mathcal{U}(w_t,D_k\cup G_k),
+\end{aligned}
+\label{eq:local-federated}
+\end{equation}
+where $S_k$ and $R_k$ are site-specific schema and policy constraints, $B_k$ is the local context and inference budget, and $\mathcal{U}$ is the client training procedure. Equation~\ref{eq:local-federated} keeps both synthesis and training within hospital $k$. Only the permitted update $\Delta w_k$ and aggregate diagnostics leave the site. For a weighted FedAvg-style coordinator, we propose
+\begin{equation}
+\begin{aligned}
+w_{t+1}&=w_t+\sum_{k\in\mathcal{K}_t}
+\frac{n_k}{\sum_{j\in\mathcal{K}_t}n_j}\Delta w_k,\\
+n_k&=|D_k|.
+\end{aligned}
+\label{eq:federated-aggregate}
+\end{equation}
+preferably evaluated through secure aggregation \cite{bonawitz2017secure}. Equation~\ref{eq:federated-aggregate} weights a hospital by its real local sample count, not $|D_k\cup G_k|$. This prevents arbitrary synthetic volume from creating artificial voting power.
+
+Figure~\ref{fig:federated} illustrates the separation. A shared controller specification can distribute parser behavior, metric definitions, common data-model mappings, and policy templates, while the context selector, clinical prompts, accepted rows, and verifier evidence remain inside each hospital. This fits cross-silo healthcare for four reasons. First, hospitals need not expose raw patient rows to obtain a common synthesis workflow. Second, local schema bridges can map site-specific names and units to the shared learning schema without pretending that all EHRs are identical. Third, low-volume hospitals can test whether locally generated rows stabilize a rare-outcome update before contributing it. Fourth, each hospital can reject augmentation when paired local validation does not improve utility or minority behavior, preventing a harmful synthetic corpus from automatically entering the federation.
+
+\begin{figure*}[t]
+\centering
+\begin{tikzpicture}[
+  node distance=5mm and 9mm,
+  site/.style={draw,rounded corners=2pt,minimum height=10mm,minimum width=35mm,align=center,font=\small,fill=sblue!7},
+  local/.style={draw,rounded corners=2pt,minimum height=9mm,minimum width=31mm,align=center,font=\small,fill=sgreen!7},
+  server/.style={draw,rounded corners=2pt,minimum height=11mm,minimum width=38mm,align=center,font=\small,fill=sorange!8,very thick},
+  arrow/.style={-{Latex[length=2mm]},thick,sgray}
+]
+\node[server] (coord) {Coordinator\\policy and global model $w_t$};
+\node[site,below left=11mm and 40mm of coord] (d1) {Site 1\\private table $D_1$};
+\node[site,below=11mm of coord] (d2) {Site 2\\private table $D_2$};
+\node[site,below right=11mm and 40mm of coord] (d3) {Site $K$\\private table $D_K$};
+\node[local,below=of d1] (a1) {Local \system\\verify $G_1$};
+\node[local,below=of d2] (a2) {Local \system\\verify $G_2$};
+\node[local,below=of d3] (a3) {Local \system\\verify $G_K$};
+\node[local,below=of a1] (u1) {Train locally\\$\Delta w_1$};
+\node[local,below=of a2] (u2) {Train locally\\$\Delta w_2$};
+\node[local,below=of a3] (u3) {Train locally\\$\Delta w_K$};
+\draw[arrow] (coord) -- node[above left,font=\scriptsize]{model and policy} (d1);
+\draw[arrow] (coord) -- (d2);
+\draw[arrow] (coord) -- node[above right,font=\scriptsize]{model and policy} (d3);
+\draw[arrow] (d1)--(a1); \draw[arrow] (d2)--(a2); \draw[arrow] (d3)--(a3);
+\draw[arrow] (a1)--(u1); \draw[arrow] (a2)--(u2); \draw[arrow] (a3)--(u3);
+\draw[arrow] (u1.west) -| node[pos=.25,left,font=\scriptsize]{protected update} ($(coord.west)+(-5mm,0)$) -- (coord.west);
+\draw[arrow] (u2.east) -| ($(coord.south)+(0,-3mm)$) -- (coord.south);
+\draw[arrow] (u3.east) -| node[pos=.25,right,font=\scriptsize]{protected update} ($(coord.east)+(5mm,0)$) -- (coord.east);
+\node[font=\small\itshape,sgray,below=4mm of u2] {Raw rows, prompts, generated rows, and verifier traces remain inside each site.};
+\end{tikzpicture}
+\caption{Hospital federated deployment pattern. Verifier-guided synthesis, clinical policy checks, and augmentation admission execute within each hospital. The network coordinator receives protected model updates and approved aggregate diagnostics, not patient rows.}
+\label{fig:federated}
+\end{figure*}
+
+This architecture reduces the need to centralize source data, but it does not by itself provide privacy. A remote commercial LLM would receive prompt content and therefore cross the local trust boundary. A privacy-sensitive deployment requires an on-premises model, a trusted execution arrangement, or an explicit data-processing agreement. Synthetic rows and model updates can both leak information; differential privacy, secure aggregation, access control, and attack evaluation remain separate requirements. The present experiments emulate one client at a time and establish the local synthesis component only. End-to-end federated evaluation under client drift, non-identical schemas, dropout, and adversarial participants is future work rather than a result claimed here.
+
+\section{Experimental Design}
+The formal objectives in Equation~\ref{eq:multiobjective} require an evaluation that keeps fidelity, utility, privacy diagnostics, and cost separate. This section defines the small-data regime, the repeated holdouts, the completed comparison set, and the statistical unit of analysis. Identical real holdouts are used within each repetition so that utility changes are paired rather than inferred from unrelated runs.
+
+\subsection{Small-Data Problem Setting}
+We define the target regime operationally rather than by a universal row-count threshold. A task is small-data when the empirical sample is too limited for asymptotic assumptions to dominate model selection: withholding observations materially changes the training set, minority support is sparse, and estimator variance across reasonable splits is visible. All six tables satisfy this definition. They contain 195 to 768 rows, while the least frequent class ranges from 4.3\% to 37.3\%. After the 80/20 holdout, the LLM sees only a 20\% context sample of the remaining training records. The controller must therefore compress a small and potentially unrepresentative empirical distribution into demonstrations while preserving room for generated output.
+
+This setting creates three linked risks. First, \emph{coverage risk}: random context can miss a rare class or local mode. Second, \emph{estimation risk}: apparent augmentation gains can be ordinary split variability, especially when many classifiers and configurations are inspected. Third, \emph{memorization risk}: high similarity may reflect reproduction of scarce records rather than useful generalization. Our design responds with context-selection ablations, matched repeated holdouts and corrected tests, and both novelty and membership diagnostics. It does not assume that synthetic rows increase the effective sample size merely because they increase the row count.
+
+\subsection{Datasets and Repeated Holdouts}
+Table~\ref{tab:datasets} summarizes six medical classification tables. Five are sourced from the UCI repository \cite{uciheart,ucibreast,uciheartfailure,uciilpd,uciparkinsons}; the diabetes table is the Pima Indians benchmark associated with Smith et al. \cite{smith1988diabetes}. We retain the original five-class heart-disease target. Missing values are mean-imputed for numerical columns and mode-imputed for categorical columns.
+
+\begin{table}[t]
+\centering
+\caption{Evaluation datasets. Minority is the least frequent target class.}
+\label{tab:datasets}
+\small
+\begin{tabular}{lrrrr}
+\toprule
+Dataset & Rows & Features & Classes & Minority \% \\
+\midrule
+Heart disease & 303 & 13 & 5 & 4.3 \\
+Breast cancer & 569 & 30 & 2 & 37.3 \\
+Heart failure & 299 & 12 & 2 & 32.1 \\
+Diabetes & 768 & 8 & 2 & 34.9 \\
+Liver disease & 583 & 10 & 2 & 28.6 \\
+Parkinson's & 195 & 22 & 2 & 24.6 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Each dataset-configuration pair uses ten seeded 80/20 holdouts, with seeds 43 through 52. These are repeated holdouts, not disjoint ten-fold cross-validation. For each repetition, 20\% of the training partition is selected as LLM context and the requested synthetic volume equals 100\% of the real training size. The default temperature is 0.3 and the chunk size is 30. A fixed real test partition is shared by the three training regimes within a repetition: real only, generated only, and real plus generated. The ten downstream classifiers are random forest, decision tree, multilayer perceptron, support vector machine, logistic regression, $k$-nearest neighbors, Gaussian naive Bayes, gradient boosting, AdaBoost, and XGBoost. Binary F1 is used for binary tasks and prevalence-weighted F1 for the multiclass heart-disease task. One XGBoost and liver-disease combination failed, leaving 59 rather than 60 classifier-dataset cells for the reference arm.
+
+\subsection{Completed Configurations}
+The analysis contains only arms for which all six datasets and all ten repetitions completed. The eight architecture and strategy arms are the reference system, no inferred type rules, no post-processing, no context joined to the fidelity corpus, dense context, diverse context, LLM-selected hyperparameters, and SMOTE. Four complete backend conditions are GPT-4o mini, GPT-4.1 mini, GPT-4o, and GPT-4.1. GPT-4.1 nano and o4-mini are excluded because their sweeps are unfinished. In total, the completed set contains 11 unique configurations, 660 dataset-configuration repetitions, and up to 19,800 downstream fits.
+
+Two arms are negative controls in this batch setup. With no user rules, disabling post-processing removes a no-op. The context-join flag changes the legacy blended-fidelity corpus, but not generated-only metrics or the real-plus-generated utility training set. Differences for these arms estimate stochastic run-to-run variation rather than a causal module effect. We retain them to document what the implementation actually evaluated.
+
+\subsection{Metrics and Statistical Analysis}
+We emphasize generated-only metrics to avoid inflating fidelity by mixing real context rows into the evaluated corpus. For numerical columns $j\in\mathcal{J}_{\mathrm{num}}$, marginal fidelity and correlation stability are
+\begin{equation}
+\begin{aligned}
+F_{\mathrm{JSD}}&=100\left(1-\frac{1}{|\mathcal{J}_{\mathrm{num}}|}
+\sum_{j\in\mathcal{J}_{\mathrm{num}}}D_{\mathrm{JS}}(D_j,G_j)\right),\\
+F_{\mathrm{corr}}&=100\left(1-\operatorname{mean}|R_D-R_G|\right).
+\end{aligned}
+\label{eq:fidelity}
+\end{equation}
+Equation~\ref{eq:fidelity} assigns 100 to identical marginals or correlation matrices and decreases as discrepancies grow. Completeness is the percentage of non-null cells. Minority and majority fidelity repeat Equation~\ref{eq:fidelity} within the least and most prevalent target classes.
+
+C2ST trains a depth-limited random forest to distinguish real training rows from generated rows; accuracy near 0.5 is desirable \cite{lopezpaz2017c2st}. The membership diagnostic gives each real row the negative distance to its nearest generated row and reports member-versus-holdout ROC AUC; 0.5 is chance. We also record prompt, completion, and total tokens, LLM generation time, parser repairs, and rule violations.
+
+For metric $m\in\{\mathrm{accuracy},\mathrm{F1}\}$, the paired augmentation effect is
+\begin{equation}
+\begin{aligned}
+\Delta m_{d,c,r}={}&m(D^{\mathrm{tr}}_{d,r}\cup G_{d,r},
+D^{\mathrm{te}}_{d,r};c)\\
+&-m(D^{\mathrm{tr}}_{d,r},D^{\mathrm{te}}_{d,r};c),
+\end{aligned}
+\label{eq:utility}
+\end{equation}
+where $d$, $c$, and $r$ index dataset, classifier, and repetition. Equation~\ref{eq:utility} holds the real holdout fixed within a pair, preventing test-set variation from being mistaken for an augmentation effect. To compare configurations without treating repetitions or classifiers as independent datasets, we average Equation~\ref{eq:utility} over repetitions and classifiers within each dataset.
+
+Let $R_{d,a}$ be the rank of configuration $a$ on dataset $d$, $\bar R_a$ its mean rank, $D$ the number of datasets, and $A$ the number of configurations. The omnibus statistic is
+\begin{equation}
+Q_F=\frac{12D}{A(A+1)}\sum_{a=1}^{A}\bar R_a^2-3D(A+1).
+\label{eq:friedman}
+\end{equation}
+We evaluate Equation~\ref{eq:friedman} with a Friedman test across the six matched datasets, followed by paired Wilcoxon tests against the best average-rank configuration with Holm correction \cite{demsar2006statistical,holm1979procedure}. Per-cell augmented-versus-real Wilcoxon tests based on Equation~\ref{eq:utility} are also Holm-corrected within each metric family. The small number of independent datasets limits power, so we report ranks and effect sizes alongside $p$-values.
+
+\section{Results}
+We present results in the same order as the formal decision problem. First, the real-only baselines establish task difficulty and split variability. Second, the reference configuration is evaluated at dataset and classifier resolution. Third, architecture and backend comparisons expose the trade-offs among the objectives in Equation~\ref{eq:multiobjective}. This ordering prevents a favorable aggregate from obscuring a weak baseline or a dataset-specific failure.
+
+\subsection{Real-Only Baselines and Small-Sample Variability}
+Table~\ref{tab:baselines} reports every real-only baseline used in the study. Each cell is the mean and standard deviation across the ten seeded holdouts, in percentage points. These are not ancillary numbers: they establish the uncertainty against which every synthetic-data change must be judged. Breast-cancer performance is consistently high and stable, leaving little headroom. Heart disease is both multiclass and severely imbalanced, producing lower baselines. The 195-row Parkinson's table exposes marked model sensitivity, with MLP accuracy at $72.3\pm18.2$ despite tree ensembles exceeding 92\%. On heart failure, the default SVM and $k$NN obtain near-zero binary F1 because they frequently fail to recover the minority class, even while accuracy appears moderate. Accuracy alone would therefore conceal precisely the small-data failure that augmentation is intended to address.
+
+\begin{table*}[t]
+\centering
+\caption{Complete real-only baselines over ten repeated 80/20 holdouts. Values are mean $\pm$ standard deviation in percentage points. Heart denotes the five-class heart-disease table; Failure denotes heart failure. The missing XGBoost liver result is an execution failure and is not imputed.}
+\label{tab:baselines}
+\scriptsize
+\setlength{\tabcolsep}{3.2pt}
+\resizebox{\textwidth}{!}{\input{generated/real_only_baselines.tex}}
+\end{table*}
+
+The mean real-only accuracy averaged over classifiers is 75.4\%, but that scalar should not be interpreted as the difficulty of a typical small-data task. Dataset, learner, class imbalance, and split jointly determine the baseline. Consequently, all augmentation effects below are paired against the corresponding classifier, dataset, and holdout rather than against a pooled reference.
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{generated/baseline_landscape.pdf}
+\caption{The small-data baseline landscape. The left panel gives mean real-only accuracy; the right gives its standard deviation over ten holdouts. High accuracy does not imply stability: Parkinson's reaches above 90\% for several ensembles while MLP varies by 18.2 percentage points. Blank cells are failed evaluations.}
+\label{fig:baseline-landscape}
+\end{figure*}
+
+\subsection{Reference Configuration}
+Table~\ref{tab:full} replaces all earlier manuscript values with the completed ablation output. The reference system achieves 72.7 mean JSD fidelity and 99.7\% completeness. The C2ST accuracy of 0.878 indicates that a classifier can readily distinguish generated from real rows. The MIA AUC of 0.526 is near chance for this particular distance attack, but it is not a privacy guarantee.
+
+\begin{table*}[t]
+\centering
+\caption{Reference GPT-4o mini results, averaged over ten repetitions and ten classifiers where available. JSD and correlation are generated-only scores on a 0 to 100 scale. Utility changes are percentage points relative to real-only training.}
+\label{tab:full}
+\small
+\begin{tabular}{lrrrrrrrr}
+\toprule
+Dataset & JSD & Corr. & C2ST & MIA & Acc. real & Acc. aug. & $\Delta$Acc. & $\Delta$F1 \\
+\midrule
+Breast cancer & 77.2 & 74.5 & 0.911 & 0.550 & 0.951 & 0.944 & $-0.66$ & $-0.62$ \\
+Diabetes & 80.2 & 44.0 & 0.897 & 0.504 & 0.742 & 0.741 & $-0.03$ & $+2.39$ \\
+Heart disease & 65.2 & 76.6 & 0.893 & 0.507 & 0.566 & 0.534 & $-3.15$ & $-0.97$ \\
+Heart failure & 71.2 & 81.2 & 0.892 & 0.534 & 0.741 & 0.716 & $-2.53$ & $-1.00$ \\
+Liver disease & 71.8 & 73.8 & 0.883 & 0.495 & 0.674 & 0.676 & $+0.19$ & $+0.13$ \\
+Parkinson's & 70.6 & 85.3 & 0.789 & 0.567 & 0.849 & 0.840 & $-0.97$ & $-0.77$ \\
+\midrule
+Macro mean & 72.7 & 72.6 & 0.878 & 0.526 & 0.754 & 0.742 & $-1.19$ & $-0.14$ \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+Figure~\ref{fig:heatmap} exposes heterogeneity hidden by the macro mean. Accuracy improves in 18 of 59 classifier-dataset cells, decreases in 38, and is unchanged in three. F1 improves in 26, decreases in 31, and is unchanged in two. The largest positive mean is $+15.3$ F1 points for $k$NN on heart failure, while the largest accuracy gain is $+8.2$ points for MLP on Parkinson's. After correcting 59 tests per metric, no individual cell remains significant at 0.05. The evidence therefore rejects the old universal-improvement claim.
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{generated/utility_heatmap.pdf}
+\caption{Change from real-only to real-plus-generated training for the reference configuration. Blank cells denote a failed model-dataset combination. The same generator can help one learner and hurt another, which motivates reporting the full matrix.}
+\label{fig:heatmap}
+\end{figure*}
+
+Figure~\ref{fig:uncertainty} complements the classifier-level heatmap with holdout-level uncertainty. Each point first averages the paired augmentation change over all available classifiers within one seeded holdout. Diamonds show the ten-holdout mean and bars show 95\% $t$ intervals. Accuracy is consistently negative for heart disease and heart failure, while liver disease remains centered close to zero. Diabetes is the only dataset with a clearly positive mean F1 change, but its accuracy remains neutral. Parkinson's contains both a large positive F1 outlier and predominantly negative repetitions, illustrating why a single favorable run would be misleading.
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=.96\textwidth]{generated/augmentation_uncertainty.pdf}
+\caption{Repeated-holdout uncertainty for the reference configuration. Points are the ten seeded holdouts after averaging paired changes across classifiers; diamonds are means and bars are 95\% $t$ intervals. The plot is descriptive because the six datasets, rather than the holdouts, are the independent blocks in the configuration tests.}
+\label{fig:uncertainty}
+\end{figure*}
+
+\subsection{Architecture and Strategy Choices}
+Table~\ref{tab:ablation} shows that all LLM configurations cluster tightly in generated-only JSD fidelity, from 72.4 to 73.3. Diverse context has the largest mean JSD and correlation among the LLM context strategies, but its MIA AUC is also the farthest above chance. No post-processing has the best observed F1 change, $+0.26$ points, although post-processing is inactive without user rules and this difference is therefore generation noise rather than evidence against that module. SMOTE is effectively free and has stronger correlation preservation, but substantially lower JSD and a $-4.70$ point mean F1 change. Its C2ST accuracy is not directly comparable because SMOTE produces only the synthetic minority tail, leading to unequal real and synthetic class priors in the current C2ST implementation.
+
+\begin{table*}[t]
+\centering
+\caption{Completed architecture and strategy arms. Seconds and tokens are means per repetition. Lower is better for C2ST, MIA deviation from 0.5, time, and tokens.}
+\label{tab:ablation}
+\scriptsize
+\begin{tabular}{lrrrrrrrr}
+\toprule
+Configuration & JSD & Corr. & C2ST & MIA & $\Delta$Acc. & $\Delta$F1 & Seconds & Tokens \\
+\midrule
+Reference \system & 72.70 & 72.57 & 0.878 & 0.526 & $-1.19$ & $-0.14$ & 378.7 & 73,510 \\
+No inferred type rules & 72.92 & 72.93 & 0.876 & 0.534 & $-1.80$ & $-0.04$ & 321.6 & 72,188 \\
+No post-processing & 72.43 & 70.83 & 0.883 & 0.523 & $-1.72$ & \best{$+0.26$} & 251.5 & 72,235 \\
+No context join & 72.52 & 71.18 & 0.880 & 0.531 & $-1.30$ & $-0.19$ & 228.1 & 72,576 \\
+Dense context & 72.87 & 70.88 & 0.878 & 0.525 & $-1.24$ & $+0.06$ & 238.8 & 72,600 \\
+Diverse context & \best{73.27} & \best{73.72} & \best{0.872} & 0.544 & $-1.35$ & $-0.13$ & 271.1 & 73,757 \\
+LLM-selected strategy & 72.53 & 70.10 & 0.886 & \best{0.526} & $-1.27$ & $+0.09$ & 310.2 & 115,245 \\
+SMOTE & 46.42 & 82.35 & 0.773$^{\dagger}$ & 0.525 & $-1.84$ & $-4.70$ & \best{0.014} & \best{0} \\
+\bottomrule
+\multicolumn{9}{l}{\footnotesize $^{\dagger}$Unequal C2ST class priors make the SMOTE accuracy diagnostic non-commensurate.}
+\end{tabular}
+\end{table*}
+
+The Friedman tests do not identify a utility winner among the eight arms: $\chi^2_F(7)=3.30$, $p=.856$ for accuracy and $\chi^2_F(7)=4.78$, $p=.687$ for F1. Every Holm-adjusted post-hoc comparison has $p_{\mathrm{Holm}}=1.0$. Figure~\ref{fig:ranks} shows the observed ranks without implying significance. The main ablation conclusion is stability within statistical resolution, not superiority of the full setting.
+
+The broader decision surface is visible in Figure~\ref{fig:scorecard}. Diverse context leads the two fidelity objectives among LLM arms, the no-post-processing negative control leads observed F1 and MIA closeness, and the reference system has the best macro accuracy change. SMOTE dominates cost and correlation but ranks last on JSD and F1. These are descriptive macro ranks, not evidence of statistical separation. The blank SMOTE C2ST cell prevents a misleading comparison because that arm contains only a synthetic minority tail.
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=.96\textwidth]{generated/configuration_scorecard.pdf}
+\caption{Multi-objective rank scorecard for completed architecture arms. Rank 1 is best for the reported macro value; closeness measures distance from 0.5 for C2ST and MIA. The SMOTE C2ST rank is omitted because unequal real and synthetic class priors make its raw accuracy non-commensurate. Ranks summarize trade-offs and do not replace the matched significance tests.}
+\label{fig:scorecard}
+\end{figure*}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{generated/architecture_ranks.pdf}
+\caption{Average ranks across six matched datasets. Lower is better. Neither accuracy nor F1 exhibits a significant configuration effect.}
+\label{fig:ranks}
+\end{figure}
+
+\subsection{Backend Choice}
+Backend choice changes the observed trade-off more than the control toggles (Table~\ref{tab:backend}). GPT-4.1 mini is fastest among completed LLM backends and has the best accuracy rank; GPT-4.1 gives the largest mean F1 gain and highest JSD. GPT-4o mini preserves correlations best. None is a statistically established winner: accuracy gives $\chi^2_F(3)=2.00$, $p=.572$, and F1 gives $\chi^2_F(3)=1.80$, $p=.615$. The closest post-hoc result is GPT-4.1 mini versus GPT-4o mini in accuracy, a $+0.91$ point mean difference with $p_{\mathrm{Holm}}=.188$.
+
+\begin{table}[t]
+\centering
+\caption{Completed model backends. Unfinished GPT-4.1 nano and o4-mini arms are excluded.}
+\label{tab:backend}
+\scriptsize
+\begin{tabular}{lrrrrr}
+\toprule
+Backend & JSD & Corr. & $\Delta$Acc. & $\Delta$F1 & Sec. \\
+\midrule
+GPT-4o mini & 72.70 & \best{72.57} & $-1.19$ & $-0.14$ & 378.7 \\
+GPT-4.1 mini & 73.60 & 62.82 & \best{$-0.22$} & $+0.92$ & \best{168.5} \\
+GPT-4o & 73.95 & 64.32 & $-0.51$ & $+0.25$ & 255.2 \\
+GPT-4.1 & \best{75.72} & 63.30 & $-0.45$ & \best{$+1.09$} & 201.7 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=.92\textwidth]{generated/quality_cost_frontier.pdf}
+\caption{No configuration dominates fidelity, utility, and cost. SMOTE is a useful low-cost control; the LLM arms occupy a narrow fidelity band and a much wider latency band.}
+\label{fig:frontier}
+\end{figure*}
+
+\subsection{What the Components Actually Contribute}
+The evidence supports a narrower and more useful account of the architecture.
+\begin{itemize}[leftmargin=*,itemsep=2pt]
+  \item \textbf{Context selection} changes which distributional modes the LLM sees. Diverse sampling gives the strongest mean JSD and correlation, but no significant utility gain.
+  \item \textbf{Parsing and repair} protect the data interface. The completed runs record no JSON-repair calls, so this study establishes availability, not an empirical repair-rate benefit.
+  \item \textbf{Typed validation} makes violations observable and actionable. The default integrity validator recorded no violations; boundary and user-rule enforcement require a dedicated constraint stress test.
+  \item \textbf{Top-up control} is operationally necessary because the requested volume is external state that a completion cannot be trusted to satisfy. It records residual demand and retries within explicit failure bounds, making shortfalls observable rather than silently accepting them.
+  \item \textbf{Multi-axis evaluation} is empirically essential. SMOTE, diverse context, GPT-4.1, and GPT-4.1 mini are preferred by different metrics, so selecting from a single average would be misleading.
+\end{itemize}
+
+\section{Discussion, Limitations, and Impact}
+The results narrow the contribution while making its practical role clearer. \system provides an auditable control plane and a multi-objective decision process, but neither valid JSON nor high marginal fidelity guarantees useful, private, or clinically appropriate data. We first state the claim supported by the experiments, then separate evaluation limitations from deployment and societal risks.
+
+\paragraph{A defensible claim.}
+\system is best understood as a control plane for LLM synthesis. It does not make an LLM a universally better augmenter. Its value is that syntax, schema, volume, cost, fidelity, privacy diagnostics, and utility become explicit state that can be audited and optimized. This is the agentic contribution: the next action follows from verifier evidence rather than an unconstrained request to ``try again.''
+
+\paragraph{Experimental limitations.}
+Only six small medical datasets are independent statistical blocks, which limits the power of the rank tests. The repeated holdouts are not stratified. The Parkinson's table contains repeated recordings per subject, but the subject identifier is absent; row-level splitting can therefore place one person's recordings in both train and test. Dataset-level schema and ranges are inferred once from the full table before splitting. We treat schema as available metadata, but this also exposes holdout extrema and should be replaced by train-only profiling in a strict predictive evaluation. Test-set imputation is performed separately on each test split. These choices mean the utility results should be read as system diagnostics rather than a final clinical generalization claim.
+
+The evaluation also has measurement constraints. JSD uses fixed histograms and is dominated by numerical columns. C2ST accuracy is affected by unequal class priors in the SMOTE arm. The membership attack is a single distance-based adversary over numerical features. No result establishes differential privacy. The no-post-processing and no-context-join arms are negative controls under the batch configuration, not active-module ablations. Finally, provider-side model revisions are not pinned beyond the model identifiers stored in the outputs.
+
+\paragraph{Societal impact.}
+Synthetic medical rows can reduce friction in development, education, and pipeline testing, but plausible records can also be mistaken for clinically valid evidence. Generated tables must not be used for diagnosis or policy without domain review. Near-chance performance for one membership attack is insufficient to release sensitive source data or synthetic derivatives. A deployment should combine threat modeling, access control, stronger attacks, and a formal privacy mechanism when privacy is a requirement.
+
+\paragraph{Reproducibility.}
+The repository stores per-repetition CSV files, aggregated JSON and CSV reports, and checkpoint state. The script \texttt{generate\_paper\_assets.py} reads the checkpoint to admit only fully completed arms, recomputes utility summaries from per-repetition files, performs the statistical tests, and regenerates all paper figures and tables. This explicit completeness gate is why GPT-4.1 nano and o4-mini do not appear in the results.
+
+\section{Conclusion}
+We presented \system, a verifier-guided agent for the setting in which every source row materially affects the learned distribution. Its contribution is not an amalgam of prompting techniques. It is a control decomposition in which context selection, parsing, validation, recovery, and completion each answer a different observable failure of small-data synthesis. The complete real-only baselines show why this framing matters: performance and variance differ sharply by learner, dataset, and metric before a synthetic row is added. The ablation study then shows high completeness and moderate marginal fidelity, near-chance performance for one distance-based membership attack, strong real-versus-synthetic distinguishability, and heterogeneous downstream effects. No completed configuration is a statistically significant utility winner across six datasets. GPT-4.1 mini offers the strongest observed speed and accuracy trade-off, while GPT-4.1 yields the highest observed F1 gain and JSD. Synthetic volume is therefore not a substitute for evidence. The practical value of an agentic pipeline is to make generation choices, failure states, costs, and paired utility consequences explicit enough to decide when augmentation is warranted.
+
+\balance
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{references}
+\end{document}

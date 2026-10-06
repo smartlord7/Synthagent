@@ -1,6 +1,7 @@
 import os
 import time
 import json
+import urllib.error
 import urllib.request
 from abc import ABC, abstractmethod
 from typing import Optional
@@ -103,6 +104,11 @@ class LocalOpenAIProvider(BaseLLMProvider):
         # --- Stage 3: Final hardcoded safety default ---
         return [{"id": self.default_model, "max_context": 4096}, {"id": "meta/llama-3.1-8b", "max_context": 8192}]
 
+    def _get_headers(self) -> dict:
+        """Request headers for the OpenAI-compatible endpoint. Overridden by
+        subclasses (e.g. OpenAIProvider) that need an Authorization header."""
+        return {'Content-Type': 'application/json'}
+
     def _call_local_llm(self, messages, core_model=None, temperature=0.7, json_mode=False):
         active_model = core_model if core_model else self.default_model
         payload = {
@@ -110,25 +116,66 @@ class LocalOpenAIProvider(BaseLLMProvider):
             "messages": messages,
             "temperature": temperature
         }
-        
+
         logger.info(f"--- [SERVICE] CALLING LOCAL LLM: {active_model} (Timeout: {self.timeout}s) ---")
         data = json.dumps(payload).encode('utf-8')
-        req = urllib.request.Request(self.endpoint_url, data=data, headers={'Content-Type': 'application/json'})
-        
+        req = urllib.request.Request(self.endpoint_url, data=data, headers=self._get_headers())
+
+        max_retries = self._max_retries()
+        attempt = 0
+        while True:
+            try:
+                with urllib.request.urlopen(req, timeout=self.timeout) as response:
+                    raw_response = response.read()
+                    result = json.loads(raw_response.decode('utf-8'))
+                    return result
+            except (OSError, ConnectionResetError) as socket_err:
+                delay = self._retry_delay(socket_err, attempt)
+                if delay is not None and attempt < max_retries:
+                    attempt += 1
+                    logger.warning(f"Transient LLM error ({socket_err}); retry {attempt}/{max_retries} in {delay:.0f}s.")
+                    time.sleep(delay)
+                    continue
+                if "[WinError 10038]" in str(socket_err):
+                    logger.error(f"Critical Socket Failure (WinError 10038). The local server connection was dropped. Error: {socket_err}")
+                else:
+                    logger.error(f"Local LLM Socket Connection Reset: {socket_err}")
+                raise socket_err
+            except Exception as e:
+                logger.error(f"Unexpected error during LLM request: {e}")
+                raise e
+
+    @staticmethod
+    def _max_retries() -> int:
         try:
-            with urllib.request.urlopen(req, timeout=self.timeout) as response:
-                raw_response = response.read()
-                result = json.loads(raw_response.decode('utf-8'))
-                return result
-        except (OSError, ConnectionResetError) as socket_err:
-            if "[WinError 10038]" in str(socket_err):
-                logger.error(f"Critical Socket Failure (WinError 10038). The local server connection was dropped. Error: {socket_err}")
-            else:
-                logger.error(f"Local LLM Socket Connection Reset: {socket_err}")
-            raise socket_err
-        except Exception as e:
-            logger.error(f"Unexpected error during LLM request: {e}")
-            raise e
+            return max(0, int(os.getenv("TABULLM_LLM_MAX_RETRIES", 8)))
+        except (ValueError, TypeError):
+            return 8
+
+    @staticmethod
+    def _retry_delay(err: Exception, attempt: int) -> Optional[float]:
+        """Seconds to wait before retrying `err`, or None if it isn't transient.
+
+        Retried: 429 and 5xx (rate limits / server hiccups, honouring Retry-After) and network-level
+        failures (DNS lookup failed, connection reset). NOT retried: any other HTTP error -- notably
+        400/422, which generate_bulk_data() handles itself by shrinking the context -- and timeouts,
+        since a request that already hung for the full timeout shouldn't be repeated up to N times.
+        Backoff is exponential (2s, 4s, ... capped at 120s), so the default 8 retries ride out
+        roughly 6 minutes of rate limiting or a brief network drop.
+        """
+        backoff = min(2 ** (attempt + 1), 120)
+        if isinstance(err, urllib.error.HTTPError):
+            if err.code in (429, 500, 502, 503, 504):
+                try:
+                    return max(float(err.headers.get("Retry-After", 0)), backoff)
+                except (TypeError, ValueError, AttributeError):
+                    return backoff
+            return None
+        if isinstance(err, TimeoutError) or isinstance(getattr(err, "reason", None), TimeoutError):
+            return None
+        if isinstance(err, (urllib.error.URLError, ConnectionError)):
+            return backoff
+        return None
 
     def call_llm(self, messages: list, model_id: Optional[str] = None, temperature: float = 0.7) -> Optional[str]:
         """Public wrapper for OpenAI-style completions."""
@@ -709,6 +756,91 @@ class LocalOpenAIProvider(BaseLLMProvider):
             return robust_json_loads(response["choices"][0]["message"]["content"])
 
 
+class OpenAIProvider(LocalOpenAIProvider):
+    """Provider connecting to the official OpenAI Chat Completions API (or any
+    OpenAI-compatible endpoint reachable with a Bearer API key, e.g. Azure OpenAI
+    or a proxy, via OPENAI_BASE_URL) using a user-supplied API key. Reuses all of
+    LocalOpenAIProvider's chunking/budgeting/JSON-repair logic since the wire
+    protocol is identical -- only auth and model discovery differ."""
+
+    # OpenAI's /v1/models endpoint doesn't return context length, so known chat
+    # models are enriched with it here (longest/most-specific prefix wins below).
+    # Fallback for anything else discovered live is a conservative 128k.
+    _KNOWN_CONTEXTS = {
+        "gpt-4o-mini": 128000, "gpt-4o": 128000,
+        "gpt-4.1-nano": 1047576, "gpt-4.1-mini": 1047576, "gpt-4.1": 1047576,
+        "gpt-4-turbo": 128000, "gpt-4": 8192, "gpt-3.5-turbo": 16385,
+        "o1-mini": 128000, "o1": 200000,
+        "o3-mini": 200000, "o3": 200000, "o4-mini": 200000,
+    }
+    # Non-chat model families returned by /v1/models that can't serve this
+    # pipeline's chat/completions calls -- filtered out of discovery.
+    _EXCLUDE_SUBSTRINGS = (
+        "embed", "whisper", "tts", "dall-e", "davinci", "babbage", "moderation",
+        "audio", "realtime", "image", "search", "transcribe", "computer-use",
+    )
+
+    def __init__(self, model_name="gpt-4o-mini", api_key=None, endpoint_url=None):
+        super().__init__(
+            endpoint_url=endpoint_url or os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1/chat/completions"),
+            model_name=model_name,
+        )
+        self.api_key = api_key or os.getenv("OPENAI_API_KEY")
+
+    # Reasoning-model families (o1/o3/o4/...) only accept the default temperature (1) via
+    # Chat Completions -- any other value is a 400 invalid_request_error ("Unsupported
+    # value: 'temperature' does not support 0.7 with this model"). This pipeline always
+    # passes an explicit temperature (0.1-0.7 depending on the call), so it has to be
+    # normalized to 1 for these models rather than forwarded as-is -- see _call_local_llm.
+    _REASONING_MODEL_PREFIXES = ("o1", "o3", "o4")
+
+    def _get_headers(self) -> dict:
+        if not self.api_key:
+            logger.warning("OpenAIProvider: no OPENAI_API_KEY set and no api_key supplied -- request will fail.")
+        headers = {'Content-Type': 'application/json'}
+        if self.api_key:
+            headers['Authorization'] = f'Bearer {self.api_key}'
+        return headers
+
+    def _call_local_llm(self, messages, core_model=None, temperature=0.7, json_mode=False):
+        active_model = (core_model or self.default_model).lower()
+        if active_model.startswith(self._REASONING_MODEL_PREFIXES):
+            temperature = 1
+        return super()._call_local_llm(messages, core_model=core_model, temperature=temperature, json_mode=json_mode)
+
+    def get_available_models(self):
+        """Query OpenAI's /v1/models for every model this key can access, filtered
+        to chat-capable ones. Falls back to a hardcoded known-model list if the
+        request fails (bad/missing key, offline, etc.)."""
+        models_url = self.endpoint_url.replace("/chat/completions", "/models")
+        try:
+            req = urllib.request.Request(models_url, headers=self._get_headers())
+            with urllib.request.urlopen(req, timeout=5) as response:
+                data = json.loads(response.read().decode('utf-8'))
+            models = []
+            for m in data.get("data", []):
+                model_id = m.get("id") if isinstance(m, dict) else None
+                if not model_id:
+                    continue
+                name_lower = model_id.lower()
+                if any(x in name_lower for x in self._EXCLUDE_SUBSTRINGS):
+                    continue
+                ctx = next((v for k, v in self._KNOWN_CONTEXTS.items() if model_id.startswith(k)), 128000)
+                models.append({"id": model_id, "max_context": ctx})
+            if models:
+                return sorted(models, key=lambda m: m["id"])
+        except Exception as e:
+            logger.warning(f"Could not reach {models_url} to discover OpenAI models ({e}).")
+        return [{"id": mid, "max_context": ctx} for mid, ctx in self._KNOWN_CONTEXTS.items()]
+
+    def can_handle(self, model_id: Optional[str]) -> bool:
+        """Checks if the model ID belongs to OpenAI (gpt-*/o1/o3/o4/chatgpt families)."""
+        if not model_id:
+            return False
+        name_lower = model_id.lower()
+        return name_lower.startswith(("gpt-", "chatgpt", "o1", "o3", "o4"))
+
+
 class GeminiProvider(BaseLLMProvider):
     """Provider connecting to Google Gemini AI API."""
     
@@ -1015,6 +1147,7 @@ class LLMRegistry:
     def __init__(self):
         self.providers = [
             GeminiProvider(),
+            OpenAIProvider(),
             LocalOpenAIProvider() # Fallback
         ]
 

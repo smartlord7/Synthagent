@@ -2,12 +2,12 @@ import pandas as pd
 import numpy as np
 import sys
 import os
-from typing import Optional
+from typing import Callable, Optional
 
 # Ensure the root services and utils are accessible to the library
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from services.llm_client import BaseLLMProvider, LocalOpenAIProvider, GeminiProvider
+from services.llm_client import BaseLLMProvider, LocalOpenAIProvider, GeminiProvider, OpenAIProvider
 from services.pipeline_manager import PipelineManager
 from services.report_generator import generate_benchmark_pdf
 from services.auditor import DatasetAuditor
@@ -32,14 +32,17 @@ class TabuLLM:
 
     llm: BaseLLMProvider
 
-    def __init__(self, provider: str = "local", model: str = "google/gemma-3-4b", endpoint_url: Optional[str] = None):
+    def __init__(self, provider: str = "local", model: str = "google/gemma-3-4b", endpoint_url: Optional[str] = None, api_key: Optional[str] = None):
         """
         Initialize the TabuLLM engine.
 
         Args:
-            provider (str): LLM provider to use ('local' or 'gemini'). Default 'local'.
+            provider (str): LLM provider to use ('local', 'gemini', or 'openai'). Default 'local'.
             model (str): Model ID to use. Default 'google/gemma-3-4b'.
-            endpoint_url (str, optional): Custom endpoint for local LLM (e.g., LM Studio).
+            endpoint_url (str, optional): Custom endpoint for local LLM (e.g., LM Studio) or an
+                OpenAI-compatible proxy (e.g., Azure OpenAI / OpenRouter) when provider='openai'.
+            api_key (str, optional): API key for provider='openai'. Falls back to OPENAI_API_KEY
+                if not given.
         """
         if provider == "local":
             self.llm = LocalOpenAIProvider(
@@ -48,6 +51,8 @@ class TabuLLM:
             )
         elif provider == "gemini":
             self.llm = GeminiProvider(model_name=model)
+        elif provider == "openai":
+            self.llm = OpenAIProvider(model_name=model, api_key=api_key, endpoint_url=endpoint_url)
         else:
             raise ValueError(f"Unsupported provider: {provider}")
 
@@ -131,6 +136,8 @@ class TabuLLM:
         inject_inferred_rules: bool = True,
         apply_post_processing: bool = True,
         temperature: float = 0.3,
+        resume_fold_results: Optional[dict] = None,
+        on_fold_done: Optional[Callable[[int, dict], None]] = None,
     ) -> dict:
         """
         Runs the full High-Reliability Augmentation pipeline.
@@ -154,6 +161,13 @@ class TabuLLM:
                 rounding, etc.) is applied to generated rows. Default True. Ablation toggle.
             temperature (float): LLM sampling temperature for generation. Default 0.3.
                 See ponder_hyperparameters() for an LLM-recommended alternative.
+            resume_fold_results (dict | None): {fold_num: fold_result} for folds already
+                computed by a prior interrupted call -- those folds are reused as-is instead
+                of being regenerated. Default None (no folds cached).
+            on_fold_done (Callable[[int, dict], None] | None): called with (fold_num,
+                fold_result) immediately after each NEWLY computed fold, so a caller can
+                persist per-fold progress (e.g. to a checkpoint file) without waiting for
+                every fold in this call to finish. Default None.
 
         Returns:
             dict: Results including augmented_data, fidelity scores, and ML benchmarks.
@@ -182,6 +196,8 @@ class TabuLLM:
             "na_strategy": na_strategy,
             "instructions": "",
             "desc_metadata": "",
+            "_resume_fold_results": resume_fold_results or {},
+            "_on_fold_done": on_fold_done,
         }
 
         task = ("lib-task", "dataset.csv", df_clean.to_dict('records'), col_defs, config)

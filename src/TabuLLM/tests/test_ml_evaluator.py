@@ -89,3 +89,36 @@ class TestMLEvaluator(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestXGBNonZeroBasedLabels(unittest.TestCase):
+    """XGBClassifier rejects class labels that don't start at 0 (e.g. the {1, 2} `Selector`
+    target in indian_liver_patient_dataset). The evaluator encodes for fit and decodes
+    predictions back so metrics stay in the original label space."""
+
+    def _frame(self, labels):
+        rng = np.random.RandomState(0)
+        n = 60
+        y = np.array([labels[0]] * 30 + [labels[1]] * 30)
+        x = rng.randn(n) + (y == labels[1]) * 3.0   # separable, so accuracy should be high
+        return pd.DataFrame({"x": x, "target": y})
+
+    def test_xgb_trains_on_labels_1_and_2(self):
+        df = self._frame([1, 2])
+        metrics, _, err = MLEvaluator.train_and_evaluate(df, ["target"], "xgb", {}, "classification", test_df=df)
+        self.assertIsNone(err)
+        self.assertGreater(metrics["accuracy"], 0.9)
+
+    def test_xgb_f1_matches_rf_on_shifted_labels(self):
+        # f1 uses pos_label=1. If XGB were scored in encoded space, pos_label would silently
+        # become original class 2 and f1 would diverge from every other model's.
+        df = self._frame([1, 2])
+        xgb_m, _, _ = MLEvaluator.train_and_evaluate(df, ["target"], "xgb", {}, "classification", test_df=df)
+        rf_m, _, _ = MLEvaluator.train_and_evaluate(df, ["target"], "rf", {}, "classification", test_df=df)
+        self.assertAlmostEqual(xgb_m["f1"], rf_m["f1"], delta=0.1)
+
+    def test_xgb_still_works_on_zero_based_labels(self):
+        df = self._frame([0, 1])
+        metrics, _, err = MLEvaluator.train_and_evaluate(df, ["target"], "xgb", {}, "classification", test_df=df)
+        self.assertIsNone(err)
+        self.assertGreater(metrics["accuracy"], 0.9)

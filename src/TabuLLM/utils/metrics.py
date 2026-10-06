@@ -110,10 +110,17 @@ def compute_correlation_stability(df_orig: pd.DataFrame, df_aug: pd.DataFrame, n
 def compute_privacy_metrics(df_orig: pd.DataFrame, df_aug: pd.DataFrame, numeric_cols: list) -> dict:
     """
     Computes privacy and distance-based structural metrics like Privacy Risk, Coverage Score, and NNDR.
-    
+
     Privacy Risk: % of synthetic records dangerously close to real records.
     Coverage Score: % of synthetic records sufficiently far to provide diversity.
-    Nearest Neighbor Distance Ratio (NNDR): Ratio of distance to closest real vs closest synthetic.
+    Nearest Neighbor Distance Ratio (NNDR): the standard privacy-literature definition -- for
+    each synthetic record, the ratio of its distance to the NEAREST real record over its
+    distance to the SECOND-nearest real record (both distances measured against the real
+    data, not synthetic-vs-synthetic). Bounded in [0, 1] by construction since the 1st-NN
+    distance can never exceed the 2nd-NN distance: near 0 means the synthetic record sits
+    suspiciously close to one specific real record relative to any other (memorization /
+    re-identification risk); near 1 means it's roughly equidistant from multiple real
+    records (safer, more novel).
     
     Args:
         df_orig (pd.DataFrame): The original dataset.
@@ -146,13 +153,17 @@ def compute_privacy_metrics(df_orig: pd.DataFrame, df_aug: pd.DataFrame, numeric
     results["privacy_risk"] = int((min_distances < 0.05).mean() * 100)
     results["coverage_score"] = int((min_distances > 0.1).mean() * 100)
 
-    if len(orig_scaled) > 1 and len(aug_sample) > 1:
-        aug_to_aug = euclidean_distances(aug_sample, aug_sample)
-        np.fill_diagonal(aug_to_aug, np.inf) # Ignore self-distance
-        nn_aug = np.min(aug_to_aug, axis=1)
-        nn_orig = min_distances
-        results["nndr"] = float(np.mean(nn_orig / (nn_aug + 1e-6)))
-        
+    if len(orig_scaled) >= 2:
+        # 1st- and 2nd-nearest REAL neighbor distance for every synthetic sample -- reusing
+        # dist_matrix (aug_sample x orig_scaled) already computed above. This is naturally
+        # bounded in [0, 1] (d1 <= d2 always), unlike comparing distance-to-real against
+        # distance-to-nearest-OTHER-SYNTHETIC: that formulation blows up unboundedly whenever
+        # two synthetic rows happen to be near-duplicates (a near-zero denominator), which is
+        # exactly what was producing Novelty Score values in the thousands.
+        sorted_dists = np.sort(dist_matrix, axis=1)
+        d1, d2 = sorted_dists[:, 0], sorted_dists[:, 1]
+        results["nndr"] = float(np.mean(d1 / (d2 + 1e-9)))
+
     return results
 
 def compute_hellinger_fidelity(a: pd.Series, b: pd.Series) -> float:
@@ -222,7 +233,8 @@ def calculate_metrics(df_orig: pd.DataFrame, df_aug: pd.DataFrame) -> dict:
             - coverage_score: (int) 0-100 diversity coverage representing synthetic novelty.
             - completeness: (float) 0-100 percentage of non-null cells in augmented data.
             - mean_feature_error: (int) 0-100 inverse average mean relative error.
-            - nndr: (float) Nearest Neighbor Distance Ratio.
+            - nndr: (float) Nearest Neighbor Distance Ratio, in [0, 1] -- see
+              compute_privacy_metrics() docstring; near 1 = safer/more novel.
     """
     # Strictly exclude internal metadata columns and only use columns present in both datasets
     internal_cols = ['_fold_id', '_row_id', 'is_context', 'is_target', 'ai_audit']
