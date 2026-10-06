@@ -149,6 +149,21 @@ def refresh_utility_from_per_fold(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
+def mask_failed_generated_metrics(df: pd.DataFrame) -> pd.DataFrame:
+    """Treat generated-only metrics as missing where their computation failed.
+
+    The SMOTE arm reports 0% generated-cell density, 0 JSD and placeholder
+    correlation values on the two tables with missing cells (heart disease and
+    liver disease), although augmented training ran.  Averaging those zeros
+    would understate SMOTE fidelity, so these cells are excluded instead.
+    """
+    df = df.copy()
+    failed = df["Gen Data Density_mean"] == 0
+    gen_cols = [c for c in df.columns if c.startswith("Gen ")]
+    df.loc[failed, gen_cols] = np.nan
+    return df
+
+
 def holm_adjust(pvalues: list[float]) -> list[float]:
     p = np.asarray(pvalues, dtype=float)
     order = np.argsort(p)
@@ -623,6 +638,7 @@ def main():
     if missing:
         raise RuntimeError(f"Required complete arms missing: {sorted(missing)}")
     summary = refresh_utility_from_per_fold(summary[summary.arm.isin(valid)].copy())
+    summary = mask_failed_generated_metrics(summary)
     summary = add_utility_columns(summary)
     summary.to_csv(OUT / "analysis_rows.csv", index=False)
     (OUT / "included_arms.txt").write_text("\n".join(valid) + "\n", encoding="utf-8")

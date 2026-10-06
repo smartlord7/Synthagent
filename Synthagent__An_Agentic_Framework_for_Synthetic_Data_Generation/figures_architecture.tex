@@ -1,0 +1,107 @@
+\begin{tikzpicture}[
+  font=\sffamily\scriptsize,
+  >={Latex[length=1.6mm]},
+  flow/.style={->,thick,sgray},
+  fail/.style={->,thick,sorange},
+  st/.style={->,densely dashed,spurple,semithick},
+  pan/.style={rounded corners=3pt,draw=#1,very thick,fill=#1!6},
+  ttl/.style={font=\sffamily\bfseries\scriptsize,text=#1,anchor=north west},
+  gate/.style={draw=sgreen,very thick,fill=white,rounded corners=2pt,minimum height=8mm,align=center,inner sep=2pt},
+  lab/.style={font=\sffamily\tiny,text=#1,fill=white,inner sep=1pt},
+]
+%======================== panels ========================
+\draw[pan=sblue]   (2.4,0) rectangle (5.4,-2.2);   \node[ttl=sblue]  at (2.45,-0.05) {1\,\,Context budgeter};
+\draw[pan=sblue]   (6.0,0) rectangle (8.9,-2.2);   \node[ttl=sblue]  at (6.05,-0.05) {2\,\,LLM proposal};
+\draw[pan=sgreen]  (9.5,0) rectangle (13.7,-2.2);  \node[ttl=sgreen,anchor=south west] at (9.55,-2.15) {3\,\,Deterministic verifier};
+\draw[pan=sgreen]  (14.3,0) rectangle (17.2,-2.2); \node[ttl=sgreen] at (14.35,-0.05) {4\,\,Admit and count};
+
+%======================== real data =====================
+\foreach \r in {1,...,7}{\foreach \c in {0,...,4}{
+   \ifnum\r=2 \fill[sblue!35] (\c*0.3,-\r*0.2) rectangle ++(0.3,-0.2);\fi
+   \ifnum\r=5 \fill[sblue!35] (\c*0.3,-\r*0.2) rectangle ++(0.3,-0.2);\fi
+   \draw[sgray!70] (\c*0.3,-\r*0.2) rectangle ++(0.3,-0.2);}}
+\fill[sgray!30] (0,0) rectangle (1.5,-0.2); \draw[sgray!70] (0,0) rectangle (1.5,-0.2);
+\node[font=\sffamily\bfseries\scriptsize,text=sgray,anchor=south] at (0.75,0.02) {Real split $D^{\mathrm{tr}}$};
+\node[font=\sffamily\tiny,text=sblue,align=center,anchor=north] at (0.75,-1.65) {shaded: 20\% pool $\mathcal{P}$};
+\draw[flow] (1.55,-0.8) -- (2.4,-0.8);
+
+% profile card
+\node[pan=sgray,anchor=north west,align=left,inner sep=3pt,font=\sffamily\tiny] (prof) at (-0.05,-2.35)
+  {\textbf{Profiled schema $S$}\\\textbf{and rules $R$}\\[1pt]
+   \texttt{age}: int \quad \texttt{sex}: \{0,1\}\\ \texttt{chol}: float \ \texttt{num}: \{0..4\}};
+
+%======================== 1 budgeter ====================
+\begin{scope}[shift={(2.6,-0.65)}]
+  \fill[sgray!35]   (0,0) rectangle (0.4,-0.38);  \node at (0.2,-0.19)  {\tiny $H$};
+  \fill[sblue!45]   (0.4,0) rectangle (1.6,-0.38); \node at (1.0,-0.19) {\tiny rows $C_t$};
+  \fill[sorange!35] (1.6,0) rectangle (2.2,-0.38); \node at (1.9,-0.19) {\tiny $O_t$};
+  \draw[sgray] (0,0) rectangle (2.6,-0.38);
+  \draw[red!70!black,thick] (2.2,0.08) -- (2.2,-0.46);
+  \node[font=\tiny,text=red!70!black,anchor=north] at (2.2,-0.46) {$0.85W$};
+  \node[font=\tiny,anchor=north west,align=left] at (-0.05,-0.62)
+     {strategy: random,\\dense or diverse;\\rotate $\mathcal{P}$ per chunk};
+\end{scope}
+
+%======================== 2 LLM =========================
+\node[anchor=north west,draw=sgray!60,fill=white,rounded corners=1pt,align=left,font=\ttfamily\tiny,inner sep=2pt]
+  at (6.15,-0.45)
+  {\{"cols":["age","sex",..],\\ \ "data":[[63,1,233.0,..],\\ \hphantom{\ "data":[}[41,0,204.0,..],\\ \hphantom{\ "data":[}..]\}};
+\node[font=\tiny,anchor=north west,align=left] at (6.1,-1.55) {$Y_t\sim\pi_\phi(\cdot\mid z_t)$, JSON only,\\ $q_t\le30$ rows per request};
+
+%======================== 3 verifier ====================
+\node[gate,minimum width=10mm] (g1) at (10.25,-0.95) {Parse\\JSON};
+\node[gate,minimum width=12mm] (g2) at (11.6,-0.95)  {Bridge to\\schema $S$};
+\node[gate,minimum width=12mm] (g3) at (13.0,-0.95)  {Validate\\$V_{S,R}$};
+\draw[flow] (g1)--(g2); \draw[flow] (g2)--(g3);
+\draw[flow] (8.9,-0.95) -- (g1.west);
+
+%======================== 4 admit =======================
+\begin{scope}[shift={(14.5,-0.6)}]
+  \fill[sgreen!45]  (0,0) rectangle (1.6,-0.32);
+  \fill[sorange!30] (1.6,0) rectangle (2.2,-0.32);
+  \draw[sgray] (0,0) rectangle (2.2,-0.32);
+  \node at (0.8,-0.16) {\tiny $|A_t|$}; \node at (1.9,-0.16) {\tiny $r_t$};
+  \draw[sgray,|-|] (0,-0.4) -- (2.2,-0.4);
+  \node[font=\tiny,anchor=north] at (1.1,-0.42) {$N$ requested rows};
+  \node[font=\tiny,anchor=north west,align=left] at (-0.05,-0.75)
+    {$A_{t+1}=A_t\cup K_V(P_S(Y_t))$\\$r_t=\max(0,\,N-|A_t|)$\\overshoot truncated to $N$};
+\end{scope}
+\draw[flow] (g3.east) -- node[above,font=\tiny,text=sgreen]{valid} (14.3,-0.95);
+
+%======================== output ========================
+\node[pan=sgray,anchor=north west,align=left,inner sep=3pt,text width=20mm,font=\sffamily\tiny] (out) at (17.8,0)
+  {\textbf{\scriptsize Synthetic table $G$}\\exactly $N$ schema-valid rows\\[4pt]\textbf{\scriptsize Audit trail}\\tokens and latency\\repairs and violations\\shortfall, model id};
+\draw[flow] (17.2,-0.95) -- node[above,font=\tiny]{$r_t{=}0$} (out.west|-0,-0.95);
+
+%======================== recovery loops ================
+% parse error -> focused repair
+\draw[fail] (g1.north) -- (10.25,0.6) -- (8.55,0.6) -- (8.55,0);
+\node[lab=sorange,anchor=south] at (9.4,0.6) {parse error: focused repair};
+% violations -> grouped feedback
+\draw[fail] (g3.north) -- (13.0,1.15) -- (8.05,1.15) -- (8.05,0);
+\node[lab=sorange,anchor=south] at (10.55,1.15) {rule violations: grouped field feedback, $\le$2 rounds};
+% residual -> top-up
+\draw[fail] (16.95,0) -- (16.95,1.7) -- (7.55,1.7) -- (7.55,0);
+\node[lab=sorange,anchor=south] at (12.1,1.7) {$r_t>0$: request exactly $q_t=\min(30,r_t)$ more rows; $\le$50 rounds, stop after 5 empty};
+% overflow -> shrink context (below)
+\draw[fail] (6.6,-2.2) -- (6.6,-2.55) -- (4.6,-2.55) -- (4.6,-2.2);
+\node[lab=sorange,anchor=north,align=center] at (5.6,-2.58) {context overflow (HTTP 400/422):\\shrink $C_t$ by 40\%, at most 3 times};
+
+%======================== state register ================
+\draw[draw=spurple,very thick,fill=spurple!5,rounded corners=3pt] (2.4,-3.15) rectangle (17.2,-3.85);
+\node[font=\sffamily\bfseries\scriptsize,text=spurple,anchor=west] at (2.5,-3.5) {Controller state $z_t$};
+\foreach \lab/\x in {{$S,\,R$}/5.6,{$C_t$}/6.6,{$A_t$}/7.5,{$r_t=N-|A_t|$}/8.9,{$B_t$}/10.3,{$E_t$}/11.2}{
+  \node[draw=spurple!70,fill=white,rounded corners=1pt,minimum height=4.5mm,inner sep=2pt,font=\tiny] at (\x,-3.5) {\lab};}
+\node[font=\tiny,text=spurple,anchor=east,align=right] at (17.1,-3.5) {explicit state, not chat history;\\every transition is logged to $E_t$};
+\draw[st] (prof.south east) ++(0,0.25) to[out=0,in=180] (2.4,-3.5);
+\draw[st] (2.8,-2.2) -- (2.8,-3.15) node[pos=.45,right,font=\tiny]{$C_t,B_t$};
+\draw[st] (8.6,-2.2) -- (8.6,-3.15) node[pos=.6,right,font=\tiny]{tokens};
+\draw[st] (12.4,-2.2) -- (12.4,-3.15) node[pos=.6,right,font=\tiny]{evidence $E_t$};
+\draw[st] (15.6,-2.2) -- (15.6,-3.15) node[pos=.6,right,font=\tiny]{$A_t,r_t$};
+
+%======================== legend ========================
+\node[anchor=north west,font=\tiny,align=left] at (17.8,-2.65) {
+  \tikz\draw[flow](0,0)--(0.45,0); data flow\\[2pt]
+  \tikz\draw[fail](0,0)--(0.45,0); typed recovery action\\[2pt]
+  \tikz\draw[st](0,0)--(0.45,0); state update};
+\end{tikzpicture}
