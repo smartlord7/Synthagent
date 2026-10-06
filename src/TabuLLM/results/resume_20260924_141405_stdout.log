@@ -1,0 +1,533 @@
+DEBUG: TabuLLM logging to C:\Users\SANCHO~1\AppData\Local\Temp\debug_tabullm.log
+════════════════════════════════════════════════════════════════
+  TabuLLM Ablation Study  —  20260924_141414
+  Provider : openai  |  Model : gpt-4o-mini
+  Folds    : 10  (same rigor as a standalone batch run)
+  Arms     : ['full', 'no_rule_injection', 'no_post_processing', 'no_context_join', 'strategy_dense', 'strategy_diverse', 'smote', 'ponder_strategy', 'backend_gpt_4_1_mini', 'backend_gpt_4o', 'backend_gpt_4_1_nano', 'backend_gpt_4_1', 'backend_o4_mini']
+  Cross-model sweep (discovered live) : {'backend_gpt_4_1_mini': 'gpt-4.1-mini', 'backend_gpt_4o': 'gpt-4o', 'backend_gpt_4_1_nano': 'gpt-4.1-nano', 'backend_gpt_4_1': 'gpt-4.1', 'backend_o4_mini': 'o4-mini'}
+  Datasets : 6
+  Output   : results/ablation_20260918_114707
+  Resuming : 53/78 (arm, dataset) units already completed
+════════════════════════════════════════════════════════════════
+
+════════════════════════════════════════════════════════════════
+  ARM: full   overrides=(none — full pipeline)
+════════════════════════════════════════════════════════════════
+  [full] heart_disease.csv: already completed — skipping (resumed from checkpoint).
+  [full] breast_cancer_wisconsin_diagnostic.csv: already completed — skipping (resumed from checkpoint).
+  [full] heart_failure_clinical_records.csv: already completed — skipping (resumed from checkpoint).
+  [full] indian_diabetes.csv: already completed — skipping (resumed from checkpoint).
+  [full] indian_liver_patient_dataset.csv: already completed — skipping (resumed from checkpoint).
+  [full] parkinsons.csv: already completed — skipping (resumed from checkpoint).
+
+  Summary CSV → results/ablation_20260918_114707\full\batch_summary.csv
+                               dataset      target     rows  Synthetic Fidelity (JSD)_mean  Correlation Stability_mean  Privacy Risk_mean  Coverage Score_mean
+                     heart_disease.csv         num 303.0000                        71.3000                     82.0000              24.10              74.8000
+breast_cancer_wisconsin_diagnostic.csv   Diagnosis 569.0000                        76.5000                     76.0000              47.00              48.3000
+    heart_failure_clinical_records.csv death_event 299.0000                        76.0000                     85.4000              23.00              76.0000
+                   indian_diabetes.csv     Outcome 768.0000                        84.3000                     62.2000              61.30              29.1000
+      indian_liver_patient_dataset.csv    Selector 583.0000                        76.6000                     89.2000              49.20              20.0000
+                        parkinsons.csv      status 195.0000                        72.4000                     86.5000              26.70              57.0000
+                            __ROLLUP__  6 datasets 452.8333                        76.1833                     80.2167              38.55              50.8667
+
+════════════════════════════════════════════════════════════════
+  ARM: no_rule_injection   overrides={'inject_inferred_rules': False}
+════════════════════════════════════════════════════════════════
+  [no_rule_injection] heart_disease.csv: already completed — skipping (resumed from checkpoint).
+  [no_rule_injection] breast_cancer_wisconsin_diagnostic.csv: already completed — skipping (resumed from checkpoint).
+  [no_rule_injection] heart_failure_clinical_records.csv: already completed — skipping (resumed from checkpoint).
+  [no_rule_injection] indian_diabetes.csv: already completed — skipping (resumed from checkpoint).
+  [no_rule_injection] indian_liver_patient_dataset.csv: already completed — skipping (resumed from checkpoint).
+  [no_rule_injection] parkinsons.csv: already completed — skipping (resumed from checkpoint).
+
+  Summary CSV → results/ablation_20260918_114707\no_rule_injection\batch_summary.csv
+                               dataset      target     rows  Synthetic Fidelity (JSD)_mean  Correlation Stability_mean  Privacy Risk_mean  Coverage Score_mean
+                     heart_disease.csv         num 303.0000                        70.9000                        81.5            24.0000              75.0000
+breast_cancer_wisconsin_diagnostic.csv   Diagnosis 569.0000                        75.1000                        76.7            45.7000              50.4000
+    heart_failure_clinical_records.csv death_event 299.0000                        76.7000                        85.6            23.0000              75.9000
+                   indian_diabetes.csv     Outcome 768.0000                        83.6000                        61.5            61.1000              29.1000
+      indian_liver_patient_dataset.csv    Selector 583.0000                        79.1000                        87.8            49.3000              22.3000
+                        parkinsons.csv      status 195.0000                        72.8000                        86.9            27.8000              59.2000
+                            __ROLLUP__  6 datasets 452.8333                        76.3667                        80.0            38.4833              51.9833
+
+════════════════════════════════════════════════════════════════
+  ARM: no_post_processing   overrides={'apply_post_processing': False}
+════════════════════════════════════════════════════════════════
+  [no_post_processing] heart_disease.csv: already completed — skipping (resumed from checkpoint).
+  [no_post_processing] breast_cancer_wisconsin_diagnostic.csv: already completed — skipping (resumed from checkpoint).
+  [no_post_processing] heart_failure_clinical_records.csv: already completed — skipping (resumed from checkpoint).
+  [no_post_processing] indian_diabetes.csv: already completed — skipping (resumed from checkpoint).
+  [no_post_processing] indian_liver_patient_dataset.csv: already completed — skipping (resumed from checkpoint).
+  [no_post_processing] parkinsons.csv: already completed — skipping (resumed from checkpoint).
+
+  Summary CSV → results/ablation_20260918_114707\no_post_processing\batch_summary.csv
+                               dataset      target     rows  Synthetic Fidelity (JSD)_mean  Correlation Stability_mean  Privacy Risk_mean  Coverage Score_mean
+                     heart_disease.csv         num 303.0000                        69.7000                      79.800            24.0000               74.800
+breast_cancer_wisconsin_diagnostic.csv   Diagnosis 569.0000                        74.8000                      75.500            47.0000               48.000
+    heart_failure_clinical_records.csv death_event 299.0000                        75.9000                      86.000            23.1000               75.700
+                   indian_diabetes.csv     Outcome 768.0000                        84.0000                      61.000            61.0000               27.200
+      indian_liver_patient_dataset.csv    Selector 583.0000                        77.0000                      86.300            49.5000               19.700
+                        parkinsons.csv      status 195.0000                        70.4440                      86.222            22.7780               57.444
+                            __ROLLUP__  6 datasets 452.8333                        75.3073                      79.137            37.8963               50.474
+
+════════════════════════════════════════════════════════════════
+  ARM: no_context_join   overrides={'join_context': False}
+════════════════════════════════════════════════════════════════
+  [no_context_join] heart_disease.csv: already completed — skipping (resumed from checkpoint).
+  [no_context_join] breast_cancer_wisconsin_diagnostic.csv: already completed — skipping (resumed from checkpoint).
+  [no_context_join] heart_failure_clinical_records.csv: already completed — skipping (resumed from checkpoint).
+  [no_context_join] indian_diabetes.csv: already completed — skipping (resumed from checkpoint).
+  [no_context_join] indian_liver_patient_dataset.csv: already completed — skipping (resumed from checkpoint).
+  [no_context_join] parkinsons.csv: already completed — skipping (resumed from checkpoint).
+
+  Summary CSV → results/ablation_20260918_114707\no_context_join\batch_summary.csv
+                               dataset      target     rows
+                     heart_disease.csv         num 303.0000
+breast_cancer_wisconsin_diagnostic.csv   Diagnosis 569.0000
+    heart_failure_clinical_records.csv death_event 299.0000
+                   indian_diabetes.csv     Outcome 768.0000
+      indian_liver_patient_dataset.csv    Selector 583.0000
+                        parkinsons.csv      status 195.0000
+                            __ROLLUP__  6 datasets 452.8333
+
+════════════════════════════════════════════════════════════════
+  ARM: strategy_dense   overrides={'strategy': 'dense'}
+════════════════════════════════════════════════════════════════
+  [strategy_dense] heart_disease.csv: already completed — skipping (resumed from checkpoint).
+  [strategy_dense] breast_cancer_wisconsin_diagnostic.csv: already completed — skipping (resumed from checkpoint).
+  [strategy_dense] heart_failure_clinical_records.csv: already completed — skipping (resumed from checkpoint).
+  [strategy_dense] indian_diabetes.csv: already completed — skipping (resumed from checkpoint).
+  [strategy_dense] indian_liver_patient_dataset.csv: already completed — skipping (resumed from checkpoint).
+  [strategy_dense] parkinsons.csv: already completed — skipping (resumed from checkpoint).
+
+  Summary CSV → results/ablation_20260918_114707\strategy_dense\batch_summary.csv
+                               dataset      target     rows
+                     heart_disease.csv         num 303.0000
+breast_cancer_wisconsin_diagnostic.csv   Diagnosis 569.0000
+    heart_failure_clinical_records.csv death_event 299.0000
+                   indian_diabetes.csv     Outcome 768.0000
+      indian_liver_patient_dataset.csv    Selector 583.0000
+                        parkinsons.csv      status 195.0000
+                            __ROLLUP__  6 datasets 452.8333
+
+════════════════════════════════════════════════════════════════
+  ARM: strategy_diverse   overrides={'strategy': 'diverse'}
+════════════════════════════════════════════════════════════════
+  [strategy_diverse] heart_disease.csv: already completed — skipping (resumed from checkpoint).
+  [strategy_diverse] breast_cancer_wisconsin_diagnostic.csv: already completed — skipping (resumed from checkpoint).
+  [strategy_diverse] heart_failure_clinical_records.csv: already completed — skipping (resumed from checkpoint).
+  [strategy_diverse] indian_diabetes.csv: already completed — skipping (resumed from checkpoint).
+  [strategy_diverse] indian_liver_patient_dataset.csv: already completed — skipping (resumed from checkpoint).
+  [strategy_diverse] parkinsons.csv: already completed — skipping (resumed from checkpoint).
+
+  Summary CSV → results/ablation_20260918_114707\strategy_diverse\batch_summary.csv
+                               dataset      target     rows
+                     heart_disease.csv         num 303.0000
+breast_cancer_wisconsin_diagnostic.csv   Diagnosis 569.0000
+    heart_failure_clinical_records.csv death_event 299.0000
+                   indian_diabetes.csv     Outcome 768.0000
+      indian_liver_patient_dataset.csv    Selector 583.0000
+                        parkinsons.csv      status 195.0000
+                            __ROLLUP__  6 datasets 452.8333
+
+════════════════════════════════════════════════════════════════
+  ARM: smote   (SMOTE/SMOTENC baseline, no LLM)
+════════════════════════════════════════════════════════════════
+  [smote] heart_disease.csv: already completed — skipping (resumed from checkpoint).
+  [smote] breast_cancer_wisconsin_diagnostic.csv: already completed — skipping (resumed from checkpoint).
+  [smote] heart_failure_clinical_records.csv: already completed — skipping (resumed from checkpoint).
+  [smote] indian_diabetes.csv: already completed — skipping (resumed from checkpoint).
+  [smote] indian_liver_patient_dataset.csv: already completed — skipping (resumed from checkpoint).
+  [smote] parkinsons.csv: already completed — skipping (resumed from checkpoint).
+
+  Summary CSV → results/ablation_20260918_114707\smote\batch_summary.csv
+                               dataset      target     rows  Synthetic Fidelity (JSD)_mean  Correlation Stability_mean  Privacy Risk_mean  Coverage Score_mean
+                     heart_disease.csv         num 303.0000                         0.0000                       82.00               0.00               0.0000
+breast_cancer_wisconsin_diagnostic.csv   Diagnosis 569.0000                        71.6000                       79.90              16.90              67.4000
+    heart_failure_clinical_records.csv death_event 299.0000                        63.0000                       88.30               5.70              88.2000
+                   indian_diabetes.csv     Outcome 768.0000                        81.7000                       87.10              19.40              41.2000
+      indian_liver_patient_dataset.csv    Selector 583.0000                         0.0000                       78.00               0.00               0.0000
+                        parkinsons.csv      status 195.0000                        62.2000                       78.80              29.70              46.0000
+                            __ROLLUP__  6 datasets 452.8333                        46.4167                       82.35              11.95              40.4667
+
+════════════════════════════════════════════════════════════════
+  ARM: ponder_strategy   (LLM-chosen hyperparameters via ponder_hyperparameters())
+════════════════════════════════════════════════════════════════
+  [ponder_strategy] heart_disease.csv: already completed — skipping (resumed from checkpoint).
+  [ponder_strategy] breast_cancer_wisconsin_diagnostic.csv: already completed — skipping (resumed from checkpoint).
+  [ponder_strategy] heart_failure_clinical_records.csv: already completed — skipping (resumed from checkpoint).
+  [ponder_strategy] indian_diabetes.csv: already completed — skipping (resumed from checkpoint).
+  [ponder_strategy] indian_liver_patient_dataset.csv: already completed — skipping (resumed from checkpoint).
+  [ponder_strategy] parkinsons.csv: already completed — skipping (resumed from checkpoint).
+
+  Summary CSV → results/ablation_20260918_114707\ponder_strategy\batch_summary.csv
+                               dataset      target     rows  Synthetic Fidelity (JSD)_mean  Correlation Stability_mean  Privacy Risk_mean  Coverage Score_mean
+                     heart_disease.csv         num 303.0000                        72.1000                     84.2000               48.0              51.1000
+breast_cancer_wisconsin_diagnostic.csv   Diagnosis 569.0000                        72.9000                     76.0000               91.1               8.4000
+    heart_failure_clinical_records.csv death_event 299.0000                        79.6000                     89.6000               47.0              52.0000
+                   indian_diabetes.csv     Outcome 768.0000                        86.9000                     70.2000              100.0               0.0000
+      indian_liver_patient_dataset.csv    Selector 583.0000                        81.0000                     91.4000               93.0               2.6000
+                        parkinsons.csv      status 195.0000                        75.1000                     82.2000               36.7              55.3000
+                            __ROLLUP__  6 datasets 452.8333                        77.9333                     82.2667               69.3              28.2333
+
+════════════════════════════════════════════════════════════════
+  ARM: backend_gpt_4_1_mini   (cross-model sweep, model=gpt-4.1-mini)
+════════════════════════════════════════════════════════════════
+  [backend_gpt_4_1_mini] heart_disease.csv: already completed — skipping (resumed from checkpoint).
+  [backend_gpt_4_1_mini] breast_cancer_wisconsin_diagnostic.csv: already completed — skipping (resumed from checkpoint).
+  [backend_gpt_4_1_mini] heart_failure_clinical_records.csv: already completed — skipping (resumed from checkpoint).
+  [backend_gpt_4_1_mini] indian_diabetes.csv: already completed — skipping (resumed from checkpoint).
+  [backend_gpt_4_1_mini] indian_liver_patient_dataset.csv: already completed — skipping (resumed from checkpoint).
+
+────────────────────────────────────────────────────────────────
+  Dataset  : parkinsons.csv   [arm=backend_gpt_4_1_mini]
+  Target   : status  |  Models : ['rf', 'lr', 'xgb', 'nb', 'dt', 'gb', 'ab', 'knn', 'mlp', 'svm']
+────────────────────────────────────────────────────────────────
+  Loaded   : 195 rows × 23 cols
+  Resuming : 8/10 folds already cached in checkpoint.json
+  Running augmentation (10 folds, arm=backend_gpt_4_1_mini) …
+  Saved JSON  → results/ablation_20260918_114707\backend_gpt_4_1_mini\parkinsons_metrics.json
+  Saved Folds → results/ablation_20260918_114707\backend_gpt_4_1_mini\parkinsons_per_fold.csv
+Audit Report exported to: results/ablation_20260918_114707\backend_gpt_4_1_mini\parkinsons_report.pdf
+  Saved PDF   → results/ablation_20260918_114707\backend_gpt_4_1_mini\parkinsons_report.pdf
+  ✓  Avg Fidelity (JSD): 68.2%  |  DT accuracy aug=-0.023 gen=-0.123 | SVM accuracy aug=+0.010 gen=-0.044 | AB accuracy aug=-0.026 gen=-0.146 | RF accuracy aug=-0.000 gen=-0.154 | GB accuracy aug=-0.031 gen=-0.177 | XGB accuracy aug=-0.018 gen=-0.162 | KNN accuracy aug=-0.010 gen=-0.108 | LR accuracy aug=-0.021 gen=-0.097 | MLP accuracy aug=+0.051 gen=-0.118 | NB accuracy aug=+0.008 gen=+0.013
+
+  Summary CSV → results/ablation_20260918_114707\backend_gpt_4_1_mini\batch_summary.csv
+                               dataset      target     rows  Synthetic Fidelity (JSD)_mean  Correlation Stability_mean  Privacy Risk_mean  Coverage Score_mean
+                     heart_disease.csv         num 303.0000                        73.6000                      70.800            24.2000              73.6000
+breast_cancer_wisconsin_diagnostic.csv   Diagnosis 569.0000                        69.6670                      76.444            49.3330              48.1110
+    heart_failure_clinical_records.csv death_event 299.0000                        83.8000                      69.500            23.0000              75.9000
+                   indian_diabetes.csv     Outcome 768.0000                        82.4000                      57.200            61.1000              30.7000
+      indian_liver_patient_dataset.csv    Selector 583.0000                        79.1000                      81.700            52.3000              13.6000
+                        parkinsons.csv      status 195.0000                        68.2000                      84.300            41.5000              53.7000
+                            __ROLLUP__  6 datasets 452.8333                        76.1278                      73.324            41.9055              49.2685
+
+════════════════════════════════════════════════════════════════
+  ARM: backend_gpt_4o   (cross-model sweep, model=gpt-4o)
+════════════════════════════════════════════════════════════════
+
+────────────────────────────────────────────────────────────────
+  Dataset  : heart_disease.csv   [arm=backend_gpt_4o]
+  Target   : num  |  Models : ['rf', 'lr', 'xgb', 'nb', 'dt', 'gb', 'ab', 'knn', 'mlp', 'svm']
+────────────────────────────────────────────────────────────────
+  Loaded   : 303 rows × 14 cols
+  Running augmentation (10 folds, arm=backend_gpt_4o) …
+  Saved JSON  → results/ablation_20260918_114707\backend_gpt_4o\heart_disease_metrics.json
+  Saved Folds → results/ablation_20260918_114707\backend_gpt_4o\heart_disease_per_fold.csv
+Audit Report exported to: results/ablation_20260918_114707\backend_gpt_4o\heart_disease_report.pdf
+  Saved PDF   → results/ablation_20260918_114707\backend_gpt_4o\heart_disease_report.pdf
+  ✓  Avg Fidelity (JSD): 77.4%  |  DT accuracy aug=-0.028 gen=-0.030 | SVM accuracy aug=-0.002 gen=-0.021 | AB accuracy aug=-0.021 gen=-0.170 | RF accuracy aug=+0.007 gen=-0.000 | GB accuracy aug=+0.021 gen=-0.018 | XGB accuracy aug=+0.008 gen=+0.023 | KNN accuracy aug=-0.033 gen=-0.059 | LR accuracy aug=-0.011 gen=-0.110 | MLP accuracy aug=+0.054 gen=-0.054 | NB accuracy aug=-0.044 gen=-0.092
+
+────────────────────────────────────────────────────────────────
+  Dataset  : breast_cancer_wisconsin_diagnostic.csv   [arm=backend_gpt_4o]
+  Target   : Diagnosis  |  Models : ['rf', 'lr', 'xgb', 'nb', 'dt', 'gb', 'ab', 'knn', 'mlp', 'svm']
+────────────────────────────────────────────────────────────────
+  Loaded   : 569 rows × 31 cols
+  Running augmentation (10 folds, arm=backend_gpt_4o) …
+  Saved JSON  → results/ablation_20260918_114707\backend_gpt_4o\breast_cancer_wisconsin_diagnostic_metrics.json
+  Saved Folds → results/ablation_20260918_114707\backend_gpt_4o\breast_cancer_wisconsin_diagnostic_per_fold.csv
+Audit Report exported to: results/ablation_20260918_114707\backend_gpt_4o\breast_cancer_wisconsin_diagnostic_report.pdf
+  Saved PDF   → results/ablation_20260918_114707\backend_gpt_4o\breast_cancer_wisconsin_diagnostic_report.pdf
+  ✓  Avg Fidelity (JSD): 76.0%  |  DT accuracy aug=-0.003 gen=-0.023 | SVM accuracy aug=-0.015 gen=-0.038 | AB accuracy aug=-0.020 gen=-0.058 | RF accuracy aug=+0.003 gen=-0.044 | GB accuracy aug=+0.000 gen=-0.047 | XGB accuracy aug=-0.012 gen=-0.044 | KNN accuracy aug=-0.012 gen=-0.050 | LR accuracy aug=-0.047 gen=-0.085 | MLP accuracy aug=-0.032 gen=-0.012 | NB accuracy aug=+0.000 gen=-0.006
+
+────────────────────────────────────────────────────────────────
+  Dataset  : heart_failure_clinical_records.csv   [arm=backend_gpt_4o]
+  Target   : death_event  |  Models : ['rf', 'lr', 'xgb', 'nb', 'dt', 'gb', 'ab', 'knn', 'mlp', 'svm']
+────────────────────────────────────────────────────────────────
+  Loaded   : 299 rows × 13 cols
+  Running augmentation (10 folds, arm=backend_gpt_4o) …
+  Saved JSON  → results/ablation_20260918_114707\backend_gpt_4o\heart_failure_clinical_records_metrics.json
+  Saved Folds → results/ablation_20260918_114707\backend_gpt_4o\heart_failure_clinical_records_per_fold.csv
+Audit Report exported to: results/ablation_20260918_114707\backend_gpt_4o\heart_failure_clinical_records_report.pdf
+  Saved PDF   → results/ablation_20260918_114707\backend_gpt_4o\heart_failure_clinical_records_report.pdf
+  ✓  Avg Fidelity (JSD): 80.0%  |  DT accuracy aug=-0.012 gen=-0.078 | SVM accuracy aug=+0.002 gen=-0.028 | AB accuracy aug=-0.012 gen=-0.092 | RF accuracy aug=+0.012 gen=-0.055 | GB accuracy aug=-0.002 gen=-0.095 | XGB accuracy aug=-0.008 gen=-0.095 | KNN accuracy aug=-0.052 gen=-0.082 | LR accuracy aug=-0.030 gen=-0.065 | MLP accuracy aug=+0.030 gen=+0.095 | NB accuracy aug=+0.027 gen=-0.037
+
+────────────────────────────────────────────────────────────────
+  Dataset  : indian_diabetes.csv   [arm=backend_gpt_4o]
+  Target   : Outcome  |  Models : ['rf', 'lr', 'xgb', 'nb', 'dt', 'gb', 'ab', 'knn', 'mlp', 'svm']
+────────────────────────────────────────────────────────────────
+  Loaded   : 768 rows × 9 cols
+  Running augmentation (10 folds, arm=backend_gpt_4o) …
+  Saved JSON  → results/ablation_20260918_114707\backend_gpt_4o\indian_diabetes_metrics.json
+  Saved Folds → results/ablation_20260918_114707\backend_gpt_4o\indian_diabetes_per_fold.csv
+Audit Report exported to: results/ablation_20260918_114707\backend_gpt_4o\indian_diabetes_report.pdf
+  Saved PDF   → results/ablation_20260918_114707\backend_gpt_4o\indian_diabetes_report.pdf
+  ✓  Avg Fidelity (JSD): 83.5%  |  DT accuracy aug=-0.014 gen=-0.063 | SVM accuracy aug=+0.006 gen=-0.034 | AB accuracy aug=+0.006 gen=-0.032 | RF accuracy aug=+0.002 gen=-0.028 | GB accuracy aug=+0.003 gen=-0.031 | XGB accuracy aug=+0.003 gen=-0.010 | KNN accuracy aug=-0.004 gen=-0.034 | LR accuracy aug=-0.029 gen=-0.086 | MLP accuracy aug=+0.006 gen=-0.044 | NB accuracy aug=-0.014 gen=-0.049
+
+────────────────────────────────────────────────────────────────
+  Dataset  : indian_liver_patient_dataset.csv   [arm=backend_gpt_4o]
+  Target   : Selector  |  Models : ['rf', 'lr', 'xgb', 'nb', 'dt', 'gb', 'ab', 'knn', 'mlp', 'svm']
+────────────────────────────────────────────────────────────────
+  Loaded   : 583 rows × 11 cols
+  Running augmentation (10 folds, arm=backend_gpt_4o) …
+  Saved JSON  → results/ablation_20260918_114707\backend_gpt_4o\indian_liver_patient_dataset_metrics.json
+  Saved Folds → results/ablation_20260918_114707\backend_gpt_4o\indian_liver_patient_dataset_per_fold.csv
+Audit Report exported to: results/ablation_20260918_114707\backend_gpt_4o\indian_liver_patient_dataset_report.pdf
+  Saved PDF   → results/ablation_20260918_114707\backend_gpt_4o\indian_liver_patient_dataset_report.pdf
+  ✓  Avg Fidelity (JSD): 78.0%  |  DT accuracy aug=+0.026 gen=-0.066 | SVM accuracy aug=-0.026 gen=+0.006 | AB accuracy aug=+0.020 gen=+0.028 | RF accuracy aug=+0.031 gen=-0.028 | GB accuracy aug=+0.006 gen=-0.014 | XGB accuracy aug=+0.003 gen=+0.017 | KNN accuracy aug=+0.006 gen=+0.017 | LR accuracy aug=-0.009 gen=-0.009 | MLP accuracy aug=-0.028 gen=-0.046 | NB accuracy aug=+0.057 gen=+0.125
+
+────────────────────────────────────────────────────────────────
+  Dataset  : parkinsons.csv   [arm=backend_gpt_4o]
+  Target   : status  |  Models : ['rf', 'lr', 'xgb', 'nb', 'dt', 'gb', 'ab', 'knn', 'mlp', 'svm']
+────────────────────────────────────────────────────────────────
+  Loaded   : 195 rows × 23 cols
+  Running augmentation (10 folds, arm=backend_gpt_4o) …
+  Saved JSON  → results/ablation_20260918_114707\backend_gpt_4o\parkinsons_metrics.json
+Audit Report exported to: results/ablation_20260918_114707\backend_gpt_4o\parkinsons_report.pdf
+  Saved PDF   → results/ablation_20260918_114707\backend_gpt_4o\parkinsons_report.pdf
+  ✓  Avg Fidelity (JSD): 0.0%  |  (no ML results)
+
+  Summary CSV → results/ablation_20260918_114707\backend_gpt_4o\batch_summary.csv
+                               dataset      target     rows  Synthetic Fidelity (JSD)_mean  Correlation Stability_mean  Privacy Risk_mean  Coverage Score_mean
+                     heart_disease.csv         num 303.0000                          77.40                     72.3000            24.0000              70.7000
+breast_cancer_wisconsin_diagnostic.csv   Diagnosis 569.0000                          76.00                     79.6670            63.6670              35.0000
+    heart_failure_clinical_records.csv death_event 299.0000                          80.00                     82.5000            23.0000              76.0000
+                   indian_diabetes.csv     Outcome 768.0000                          83.50                     59.9000            61.7000              29.9000
+      indian_liver_patient_dataset.csv    Selector 583.0000                          78.00                     82.6670            50.0000              12.3330
+                        parkinsons.csv      status 195.0000                            NaN                         NaN                NaN                  NaN
+                            __ROLLUP__  6 datasets 452.8333                          78.98                     75.4068            44.4734              44.7866
+
+════════════════════════════════════════════════════════════════
+  ARM: backend_gpt_4_1_nano   (cross-model sweep, model=gpt-4.1-nano)
+════════════════════════════════════════════════════════════════
+
+────────────────────────────────────────────────────────────────
+  Dataset  : heart_disease.csv   [arm=backend_gpt_4_1_nano]
+  Target   : num  |  Models : ['rf', 'lr', 'xgb', 'nb', 'dt', 'gb', 'ab', 'knn', 'mlp', 'svm']
+────────────────────────────────────────────────────────────────
+  Loaded   : 303 rows × 14 cols
+  Running augmentation (10 folds, arm=backend_gpt_4_1_nano) …
+  Saved JSON  → results/ablation_20260918_114707\backend_gpt_4_1_nano\heart_disease_metrics.json
+Audit Report exported to: results/ablation_20260918_114707\backend_gpt_4_1_nano\heart_disease_report.pdf
+  Saved PDF   → results/ablation_20260918_114707\backend_gpt_4_1_nano\heart_disease_report.pdf
+  ✓  Avg Fidelity (JSD): 0.0%  |  (no ML results)
+
+────────────────────────────────────────────────────────────────
+  Dataset  : breast_cancer_wisconsin_diagnostic.csv   [arm=backend_gpt_4_1_nano]
+  Target   : Diagnosis  |  Models : ['rf', 'lr', 'xgb', 'nb', 'dt', 'gb', 'ab', 'knn', 'mlp', 'svm']
+────────────────────────────────────────────────────────────────
+  Loaded   : 569 rows × 31 cols
+  Running augmentation (10 folds, arm=backend_gpt_4_1_nano) …
+  Saved JSON  → results/ablation_20260918_114707\backend_gpt_4_1_nano\breast_cancer_wisconsin_diagnostic_metrics.json
+Audit Report exported to: results/ablation_20260918_114707\backend_gpt_4_1_nano\breast_cancer_wisconsin_diagnostic_report.pdf
+  Saved PDF   → results/ablation_20260918_114707\backend_gpt_4_1_nano\breast_cancer_wisconsin_diagnostic_report.pdf
+  ✓  Avg Fidelity (JSD): 0.0%  |  (no ML results)
+
+────────────────────────────────────────────────────────────────
+  Dataset  : heart_failure_clinical_records.csv   [arm=backend_gpt_4_1_nano]
+  Target   : death_event  |  Models : ['rf', 'lr', 'xgb', 'nb', 'dt', 'gb', 'ab', 'knn', 'mlp', 'svm']
+────────────────────────────────────────────────────────────────
+  Loaded   : 299 rows × 13 cols
+  Running augmentation (10 folds, arm=backend_gpt_4_1_nano) …
+  Saved JSON  → results/ablation_20260918_114707\backend_gpt_4_1_nano\heart_failure_clinical_records_metrics.json
+Audit Report exported to: results/ablation_20260918_114707\backend_gpt_4_1_nano\heart_failure_clinical_records_report.pdf
+  Saved PDF   → results/ablation_20260918_114707\backend_gpt_4_1_nano\heart_failure_clinical_records_report.pdf
+  ✓  Avg Fidelity (JSD): 0.0%  |  (no ML results)
+
+────────────────────────────────────────────────────────────────
+  Dataset  : indian_diabetes.csv   [arm=backend_gpt_4_1_nano]
+  Target   : Outcome  |  Models : ['rf', 'lr', 'xgb', 'nb', 'dt', 'gb', 'ab', 'knn', 'mlp', 'svm']
+────────────────────────────────────────────────────────────────
+  Loaded   : 768 rows × 9 cols
+  Running augmentation (10 folds, arm=backend_gpt_4_1_nano) …
+  Saved JSON  → results/ablation_20260918_114707\backend_gpt_4_1_nano\indian_diabetes_metrics.json
+Audit Report exported to: results/ablation_20260918_114707\backend_gpt_4_1_nano\indian_diabetes_report.pdf
+  Saved PDF   → results/ablation_20260918_114707\backend_gpt_4_1_nano\indian_diabetes_report.pdf
+  ✓  Avg Fidelity (JSD): 0.0%  |  (no ML results)
+
+────────────────────────────────────────────────────────────────
+  Dataset  : indian_liver_patient_dataset.csv   [arm=backend_gpt_4_1_nano]
+  Target   : Selector  |  Models : ['rf', 'lr', 'xgb', 'nb', 'dt', 'gb', 'ab', 'knn', 'mlp', 'svm']
+────────────────────────────────────────────────────────────────
+  Loaded   : 583 rows × 11 cols
+  Running augmentation (10 folds, arm=backend_gpt_4_1_nano) …
+  Saved JSON  → results/ablation_20260918_114707\backend_gpt_4_1_nano\indian_liver_patient_dataset_metrics.json
+Audit Report exported to: results/ablation_20260918_114707\backend_gpt_4_1_nano\indian_liver_patient_dataset_report.pdf
+  Saved PDF   → results/ablation_20260918_114707\backend_gpt_4_1_nano\indian_liver_patient_dataset_report.pdf
+  ✓  Avg Fidelity (JSD): 0.0%  |  (no ML results)
+
+────────────────────────────────────────────────────────────────
+  Dataset  : parkinsons.csv   [arm=backend_gpt_4_1_nano]
+  Target   : status  |  Models : ['rf', 'lr', 'xgb', 'nb', 'dt', 'gb', 'ab', 'knn', 'mlp', 'svm']
+────────────────────────────────────────────────────────────────
+  Loaded   : 195 rows × 23 cols
+  Running augmentation (10 folds, arm=backend_gpt_4_1_nano) …
+  Saved JSON  → results/ablation_20260918_114707\backend_gpt_4_1_nano\parkinsons_metrics.json
+Audit Report exported to: results/ablation_20260918_114707\backend_gpt_4_1_nano\parkinsons_report.pdf
+  Saved PDF   → results/ablation_20260918_114707\backend_gpt_4_1_nano\parkinsons_report.pdf
+  ✓  Avg Fidelity (JSD): 0.0%  |  (no ML results)
+
+  Summary CSV → results/ablation_20260918_114707\backend_gpt_4_1_nano\batch_summary.csv
+                               dataset      target     rows
+                     heart_disease.csv         num 303.0000
+breast_cancer_wisconsin_diagnostic.csv   Diagnosis 569.0000
+    heart_failure_clinical_records.csv death_event 299.0000
+                   indian_diabetes.csv     Outcome 768.0000
+      indian_liver_patient_dataset.csv    Selector 583.0000
+                        parkinsons.csv      status 195.0000
+                            __ROLLUP__  6 datasets 452.8333
+
+════════════════════════════════════════════════════════════════
+  ARM: backend_gpt_4_1   (cross-model sweep, model=gpt-4.1)
+════════════════════════════════════════════════════════════════
+
+────────────────────────────────────────────────────────────────
+  Dataset  : heart_disease.csv   [arm=backend_gpt_4_1]
+  Target   : num  |  Models : ['rf', 'lr', 'xgb', 'nb', 'dt', 'gb', 'ab', 'knn', 'mlp', 'svm']
+────────────────────────────────────────────────────────────────
+  Loaded   : 303 rows × 14 cols
+  Running augmentation (10 folds, arm=backend_gpt_4_1) …
+  Saved JSON  → results/ablation_20260918_114707\backend_gpt_4_1\heart_disease_metrics.json
+Audit Report exported to: results/ablation_20260918_114707\backend_gpt_4_1\heart_disease_report.pdf
+  Saved PDF   → results/ablation_20260918_114707\backend_gpt_4_1\heart_disease_report.pdf
+  ✓  Avg Fidelity (JSD): 0.0%  |  (no ML results)
+
+────────────────────────────────────────────────────────────────
+  Dataset  : breast_cancer_wisconsin_diagnostic.csv   [arm=backend_gpt_4_1]
+  Target   : Diagnosis  |  Models : ['rf', 'lr', 'xgb', 'nb', 'dt', 'gb', 'ab', 'knn', 'mlp', 'svm']
+────────────────────────────────────────────────────────────────
+  Loaded   : 569 rows × 31 cols
+  Running augmentation (10 folds, arm=backend_gpt_4_1) …
+  Saved JSON  → results/ablation_20260918_114707\backend_gpt_4_1\breast_cancer_wisconsin_diagnostic_metrics.json
+Audit Report exported to: results/ablation_20260918_114707\backend_gpt_4_1\breast_cancer_wisconsin_diagnostic_report.pdf
+  Saved PDF   → results/ablation_20260918_114707\backend_gpt_4_1\breast_cancer_wisconsin_diagnostic_report.pdf
+  ✓  Avg Fidelity (JSD): 0.0%  |  (no ML results)
+
+────────────────────────────────────────────────────────────────
+  Dataset  : heart_failure_clinical_records.csv   [arm=backend_gpt_4_1]
+  Target   : death_event  |  Models : ['rf', 'lr', 'xgb', 'nb', 'dt', 'gb', 'ab', 'knn', 'mlp', 'svm']
+────────────────────────────────────────────────────────────────
+  Loaded   : 299 rows × 13 cols
+  Running augmentation (10 folds, arm=backend_gpt_4_1) …
+  Saved JSON  → results/ablation_20260918_114707\backend_gpt_4_1\heart_failure_clinical_records_metrics.json
+Audit Report exported to: results/ablation_20260918_114707\backend_gpt_4_1\heart_failure_clinical_records_report.pdf
+  Saved PDF   → results/ablation_20260918_114707\backend_gpt_4_1\heart_failure_clinical_records_report.pdf
+  ✓  Avg Fidelity (JSD): 0.0%  |  (no ML results)
+
+────────────────────────────────────────────────────────────────
+  Dataset  : indian_diabetes.csv   [arm=backend_gpt_4_1]
+  Target   : Outcome  |  Models : ['rf', 'lr', 'xgb', 'nb', 'dt', 'gb', 'ab', 'knn', 'mlp', 'svm']
+────────────────────────────────────────────────────────────────
+  Loaded   : 768 rows × 9 cols
+  Running augmentation (10 folds, arm=backend_gpt_4_1) …
+  Saved JSON  → results/ablation_20260918_114707\backend_gpt_4_1\indian_diabetes_metrics.json
+Audit Report exported to: results/ablation_20260918_114707\backend_gpt_4_1\indian_diabetes_report.pdf
+  Saved PDF   → results/ablation_20260918_114707\backend_gpt_4_1\indian_diabetes_report.pdf
+  ✓  Avg Fidelity (JSD): 0.0%  |  (no ML results)
+
+────────────────────────────────────────────────────────────────
+  Dataset  : indian_liver_patient_dataset.csv   [arm=backend_gpt_4_1]
+  Target   : Selector  |  Models : ['rf', 'lr', 'xgb', 'nb', 'dt', 'gb', 'ab', 'knn', 'mlp', 'svm']
+────────────────────────────────────────────────────────────────
+  Loaded   : 583 rows × 11 cols
+  Running augmentation (10 folds, arm=backend_gpt_4_1) …
+  Saved JSON  → results/ablation_20260918_114707\backend_gpt_4_1\indian_liver_patient_dataset_metrics.json
+Audit Report exported to: results/ablation_20260918_114707\backend_gpt_4_1\indian_liver_patient_dataset_report.pdf
+  Saved PDF   → results/ablation_20260918_114707\backend_gpt_4_1\indian_liver_patient_dataset_report.pdf
+  ✓  Avg Fidelity (JSD): 0.0%  |  (no ML results)
+
+────────────────────────────────────────────────────────────────
+  Dataset  : parkinsons.csv   [arm=backend_gpt_4_1]
+  Target   : status  |  Models : ['rf', 'lr', 'xgb', 'nb', 'dt', 'gb', 'ab', 'knn', 'mlp', 'svm']
+────────────────────────────────────────────────────────────────
+  Loaded   : 195 rows × 23 cols
+  Running augmentation (10 folds, arm=backend_gpt_4_1) …
+  Saved JSON  → results/ablation_20260918_114707\backend_gpt_4_1\parkinsons_metrics.json
+Audit Report exported to: results/ablation_20260918_114707\backend_gpt_4_1\parkinsons_report.pdf
+  Saved PDF   → results/ablation_20260918_114707\backend_gpt_4_1\parkinsons_report.pdf
+  ✓  Avg Fidelity (JSD): 0.0%  |  (no ML results)
+
+  Summary CSV → results/ablation_20260918_114707\backend_gpt_4_1\batch_summary.csv
+                               dataset      target     rows
+                     heart_disease.csv         num 303.0000
+breast_cancer_wisconsin_diagnostic.csv   Diagnosis 569.0000
+    heart_failure_clinical_records.csv death_event 299.0000
+                   indian_diabetes.csv     Outcome 768.0000
+      indian_liver_patient_dataset.csv    Selector 583.0000
+                        parkinsons.csv      status 195.0000
+                            __ROLLUP__  6 datasets 452.8333
+
+════════════════════════════════════════════════════════════════
+  ARM: backend_o4_mini   (cross-model sweep, model=o4-mini)
+════════════════════════════════════════════════════════════════
+
+────────────────────────────────────────────────────────────────
+  Dataset  : heart_disease.csv   [arm=backend_o4_mini]
+  Target   : num  |  Models : ['rf', 'lr', 'xgb', 'nb', 'dt', 'gb', 'ab', 'knn', 'mlp', 'svm']
+────────────────────────────────────────────────────────────────
+  Loaded   : 303 rows × 14 cols
+  Running augmentation (10 folds, arm=backend_o4_mini) …
+  Saved JSON  → results/ablation_20260918_114707\backend_o4_mini\heart_disease_metrics.json
+Audit Report exported to: results/ablation_20260918_114707\backend_o4_mini\heart_disease_report.pdf
+  Saved PDF   → results/ablation_20260918_114707\backend_o4_mini\heart_disease_report.pdf
+  ✓  Avg Fidelity (JSD): 0.0%  |  (no ML results)
+
+────────────────────────────────────────────────────────────────
+  Dataset  : breast_cancer_wisconsin_diagnostic.csv   [arm=backend_o4_mini]
+  Target   : Diagnosis  |  Models : ['rf', 'lr', 'xgb', 'nb', 'dt', 'gb', 'ab', 'knn', 'mlp', 'svm']
+────────────────────────────────────────────────────────────────
+  Loaded   : 569 rows × 31 cols
+  Running augmentation (10 folds, arm=backend_o4_mini) …
+  Saved JSON  → results/ablation_20260918_114707\backend_o4_mini\breast_cancer_wisconsin_diagnostic_metrics.json
+Audit Report exported to: results/ablation_20260918_114707\backend_o4_mini\breast_cancer_wisconsin_diagnostic_report.pdf
+  Saved PDF   → results/ablation_20260918_114707\backend_o4_mini\breast_cancer_wisconsin_diagnostic_report.pdf
+  ✓  Avg Fidelity (JSD): 0.0%  |  (no ML results)
+
+────────────────────────────────────────────────────────────────
+  Dataset  : heart_failure_clinical_records.csv   [arm=backend_o4_mini]
+  Target   : death_event  |  Models : ['rf', 'lr', 'xgb', 'nb', 'dt', 'gb', 'ab', 'knn', 'mlp', 'svm']
+────────────────────────────────────────────────────────────────
+  Loaded   : 299 rows × 13 cols
+  Running augmentation (10 folds, arm=backend_o4_mini) …
+  Saved JSON  → results/ablation_20260918_114707\backend_o4_mini\heart_failure_clinical_records_metrics.json
+Audit Report exported to: results/ablation_20260918_114707\backend_o4_mini\heart_failure_clinical_records_report.pdf
+  Saved PDF   → results/ablation_20260918_114707\backend_o4_mini\heart_failure_clinical_records_report.pdf
+  ✓  Avg Fidelity (JSD): 0.0%  |  (no ML results)
+
+────────────────────────────────────────────────────────────────
+  Dataset  : indian_diabetes.csv   [arm=backend_o4_mini]
+  Target   : Outcome  |  Models : ['rf', 'lr', 'xgb', 'nb', 'dt', 'gb', 'ab', 'knn', 'mlp', 'svm']
+────────────────────────────────────────────────────────────────
+  Loaded   : 768 rows × 9 cols
+  Running augmentation (10 folds, arm=backend_o4_mini) …
+  Saved JSON  → results/ablation_20260918_114707\backend_o4_mini\indian_diabetes_metrics.json
+Audit Report exported to: results/ablation_20260918_114707\backend_o4_mini\indian_diabetes_report.pdf
+  Saved PDF   → results/ablation_20260918_114707\backend_o4_mini\indian_diabetes_report.pdf
+  ✓  Avg Fidelity (JSD): 0.0%  |  (no ML results)
+
+────────────────────────────────────────────────────────────────
+  Dataset  : indian_liver_patient_dataset.csv   [arm=backend_o4_mini]
+  Target   : Selector  |  Models : ['rf', 'lr', 'xgb', 'nb', 'dt', 'gb', 'ab', 'knn', 'mlp', 'svm']
+────────────────────────────────────────────────────────────────
+  Loaded   : 583 rows × 11 cols
+  Running augmentation (10 folds, arm=backend_o4_mini) …
+  Saved JSON  → results/ablation_20260918_114707\backend_o4_mini\indian_liver_patient_dataset_metrics.json
+Audit Report exported to: results/ablation_20260918_114707\backend_o4_mini\indian_liver_patient_dataset_report.pdf
+  Saved PDF   → results/ablation_20260918_114707\backend_o4_mini\indian_liver_patient_dataset_report.pdf
+  ✓  Avg Fidelity (JSD): 0.0%  |  (no ML results)
+
+────────────────────────────────────────────────────────────────
+  Dataset  : parkinsons.csv   [arm=backend_o4_mini]
+  Target   : status  |  Models : ['rf', 'lr', 'xgb', 'nb', 'dt', 'gb', 'ab', 'knn', 'mlp', 'svm']
+────────────────────────────────────────────────────────────────
+  Loaded   : 195 rows × 23 cols
+  Running augmentation (10 folds, arm=backend_o4_mini) …
+  Saved JSON  → results/ablation_20260918_114707\backend_o4_mini\parkinsons_metrics.json
+Audit Report exported to: results/ablation_20260918_114707\backend_o4_mini\parkinsons_report.pdf
+  Saved PDF   → results/ablation_20260918_114707\backend_o4_mini\parkinsons_report.pdf
+  ✓  Avg Fidelity (JSD): 0.0%  |  (no ML results)
+
+  Summary CSV → results/ablation_20260918_114707\backend_o4_mini\batch_summary.csv
+                               dataset      target     rows
+                     heart_disease.csv         num 303.0000
+breast_cancer_wisconsin_diagnostic.csv   Diagnosis 569.0000
+    heart_failure_clinical_records.csv death_event 299.0000
+                   indian_diabetes.csv     Outcome 768.0000
+      indian_liver_patient_dataset.csv    Selector 583.0000
+                        parkinsons.csv      status 195.0000
+                            __ROLLUP__  6 datasets 452.8333
+
+════════════════════════════════════════════════════════════════
+  Combined arm × dataset summary → results/ablation_20260918_114707\ablation_summary.csv
+  Ablation deltas (marginal contribution per module) → results/ablation_20260918_114707\ablation_deltas.csv
+════════════════════════════════════════════════════════════════

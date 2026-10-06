@@ -1,0 +1,244 @@
+{
+  "dataset_id": "lib-task",
+  "filename": "indian_liver_patient_dataset.csv",
+  "results": [],
+  "overall_ml": {},
+  "dataset_audit": {
+    "structural": {
+      "sparsity": {
+        "Age": 0.0,
+        "Gender": 0.0,
+        "TB": 0.0,
+        "DB": 0.0,
+        "Alkphos": 0.0,
+        "Sgpt": 0.0,
+        "Sgot": 0.0,
+        "TP": 0.0,
+        "ALB": 0.0,
+        "A/G Ratio": 0.00686106346483705,
+        "Selector": 0.0
+      },
+      "overall_sparsity": 0.0006237330422579137,
+      "skewness": {
+        "Age": -0.029385312710346265,
+        "TB": 4.90747399372197,
+        "DB": 3.21240286208773,
+        "Alkphos": 3.7651063973073766,
+        "Sgpt": 6.549191929444977,
+        "Sgot": 10.54617721691247,
+        "TP": -0.28567218643573844,
+        "ALB": -0.04368472854683253,
+        "A/G Ratio": 0.9922994479668144,
+        "Selector": 0.9471397933038577
+      },
+      "stability": 1.0,
+      "row_count": 583,
+      "col_count": 11,
+      "total_cells": 6413,
+      "empty_rows": 0,
+      "density_ratio": 0.9993762669577421,
+      "sparsity_ratio": 0.0006237330422579137,
+      "memory_readable": "0.05 MB",
+      "type_distribution": {
+        "numeric": 10,
+        "categorical": 1,
+        "object": 0
+      },
+      "avg_cardinality": 93.45454545454545,
+      "constant_columns": []
+    },
+    "outliers": {
+      "total_outliers": 47,
+      "outlier_ratio": 0.08061749571183534
+    },
+    "fairness": {
+      "metrics_per_attr": {
+        "Age": {
+          "majority_group": "60",
+          "minority_group": "84",
+          "disparate_impact": 0.9999999989999999,
+          "parity_gap": 0.0,
+          "representation_ratio": 0.0017152658662092624,
+          "distribution_shift": {
+            "TB": 0.6503295215864361,
+            "DB": 0.7205024488256196,
+            "Alkphos": 0.8817306962803844,
+            "Sgpt": 0.46689595691028596,
+            "Sgot": 0.5077759561975483,
+            "TP": 0.1625780522392296,
+            "ALB": 0.5471826861118366,
+            "A/G Ratio": 0.9699864032556451
+          },
+          "bias_detected": false
+        },
+        "Gender": {
+          "majority_group": "Male",
+          "minority_group": "Female",
+          "disparate_impact": 0.9999999989999999,
+          "parity_gap": 0.0,
+          "representation_ratio": 0.24356775300171526,
+          "distribution_shift": {
+            "Age": 0.1316569025326446,
+            "TB": 0.2078447862612001,
+            "DB": 0.23378874240490014,
+            "Alkphos": 0.06400362732570787,
+            "Sgpt": 0.1916470834808278,
+            "Sgot": 0.18700095643084355,
+            "TP": 0.20744958081095824,
+            "ALB": 0.21833921440753792,
+            "A/G Ratio": 0.007989968095007776
+          },
+          "bias_detected": false
+        }
+      },
+      "detected_bias_count": 0,
+      "sensitive_proxies": {},
+      "group_sparsity": {
+        "60": 0.0,
+        "84": 0.0,
+        "Male": 0.0004122861265718409,
+        "Female": 0.0012804097311139564
+      },
+      "Age": {
+        "majority_group": "60",
+        "minority_group": "84",
+        "disparate_impact": 0.9999999989999999,
+        "parity_gap": 0.0,
+        "representation_ratio": 0.0017152658662092624,
+        "distribution_shift": {
+          "TB": 0.6503295215864361,
+          "DB": 0.7205024488256196,
+          "Alkphos": 0.8817306962803844,
+          "Sgpt": 0.46689595691028596,
+          "Sgot": 0.5077759561975483,
+          "TP": 0.1625780522392296,
+          "ALB": 0.5471826861118366,
+          "A/G Ratio": 0.9699864032556451
+        },
+        "bias_detected": false
+      },
+      "Gender": {
+        "majority_group": "Male",
+        "minority_group": "Female",
+        "disparate_impact": 0.9999999989999999,
+        "parity_gap": 0.0,
+        "representation_ratio": 0.24356775300171526,
+        "distribution_shift": {
+          "Age": 0.1316569025326446,
+          "TB": 0.2078447862612001,
+          "DB": 0.23378874240490014,
+          "Alkphos": 0.06400362732570787,
+          "Sgpt": 0.1916470834808278,
+          "Sgot": 0.18700095643084355,
+          "TP": 0.20744958081095824,
+          "ALB": 0.21833921440753792,
+          "A/G Ratio": 0.007989968095007776
+        },
+        "bias_detected": false
+      }
+    },
+    "privacy": {
+      "risk_level": "High",
+      "uniqueness_ratio": 0.9554030874785592,
+      "at_risk_record_count": 557,
+      "identity_risk_level": "High",
+      "attr_identifiability": {
+        "Age": {
+          "entropy": 5.69337274072131,
+          "uniqueness_signal": 0.1234991423670669,
+          "identifiability": "Low"
+        },
+        "Gender": {
+          "entropy": 0.8009231571992106,
+          "uniqueness_signal": 0.003430531732418525,
+          "identifiability": "Low"
+        },
+        "TB": {
+          "entropy": 5.097334020511106,
+          "uniqueness_signal": 0.19382504288164665,
+          "identifiability": "Low"
+        },
+        "DB": {
+          "entropy": 4.259041950803763,
+          "uniqueness_signal": 0.137221269296741,
+          "identifiability": "Low"
+        },
+        "Alkphos": {
+          "entropy": 7.553015471739448,
+          "uniqueness_signal": 0.451114922813036,
+          "identifiability": "Medium"
+        },
+        "Sgpt": {
+          "entropy": 6.474543405009198,
+          "uniqueness_signal": 0.2607204116638079,
+          "identifiability": "Low"
+        },
+        "Sgot": {
+          "entropy": 6.846067813322783,
+          "uniqueness_signal": 0.30360205831903947,
+          "identifiability": "Medium"
+        },
+        "TP": {
+          "entropy": 5.350063502977833,
+          "uniqueness_signal": 0.09948542024013722,
+          "identifiability": "Low"
+        },
+        "ALB": {
+          "entropy": 4.926521335048805,
+          "uniqueness_signal": 0.0686106346483705,
+          "identifiability": "Low"
+        },
+        "A/G Ratio": {
+          "entropy": 4.287403438274078,
+          "uniqueness_signal": 0.1183533447684391,
+          "identifiability": "Low"
+        },
+        "Selector": {
+          "entropy": 0.8640904269602232,
+          "uniqueness_signal": 0.003430531732418525,
+          "identifiability": "Low"
+        }
+      },
+      "avg_k_anonymity": 1.0229681978798586,
+      "avg_column_entropy": 4.741125205687978,
+      "max_column_entropy": 7.553015471739448,
+      "known_sensitive_patterns": [
+        "A/G Ratio",
+        "ALB",
+        "Age",
+        "Alkphos",
+        "DB",
+        "Sgot",
+        "Sgpt",
+        "TB",
+        "TP"
+      ]
+    },
+    "proxies": {},
+    "quality": {
+      "total_duplicates": 13,
+      "conflicting_labels": 0,
+      "quality_score": 97.91049430843599,
+      "duplicate_count": 13,
+      "duplicate_ratio": 0.022298456260720412,
+      "outlier_count": 47,
+      "outlier_ratio": 0.08061749571183534,
+      "avg_skewness": 3.056104941305228,
+      "avg_kurtosis": 26.922871528215058,
+      "columns_with_missing": 1
+    },
+    "quasi_identifiers": [
+      "A/G Ratio",
+      "ALB",
+      "Age",
+      "Alkphos",
+      "DB",
+      "Sgot",
+      "Sgpt",
+      "TB",
+      "TP"
+    ]
+  },
+  "avg_fidelity": 0,
+  "dataset_name": "indian_liver_patient_dataset"
+}

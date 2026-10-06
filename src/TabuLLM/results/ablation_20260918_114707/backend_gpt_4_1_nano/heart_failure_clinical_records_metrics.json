@@ -1,0 +1,273 @@
+{
+  "dataset_id": "lib-task",
+  "filename": "heart_failure_clinical_records.csv",
+  "results": [],
+  "overall_ml": {},
+  "dataset_audit": {
+    "structural": {
+      "sparsity": {
+        "age": 0.0,
+        "anaemia": 0.0,
+        "creatinine_phosphokinase": 0.0,
+        "diabetes": 0.0,
+        "ejection_fraction": 0.0,
+        "high_blood_pressure": 0.0,
+        "platelets": 0.0,
+        "serum_creatinine": 0.0,
+        "serum_sodium": 0.0,
+        "sex": 0.0,
+        "smoking": 0.0,
+        "time": 0.0,
+        "death_event": 0.0
+      },
+      "overall_sparsity": 0.0,
+      "skewness": {
+        "age": 0.42306190672863536,
+        "anaemia": 0.2782606644055605,
+        "creatinine_phosphokinase": 4.463110084653752,
+        "diabetes": 0.3339286842537603,
+        "ejection_fraction": 0.5553827516973211,
+        "high_blood_pressure": 0.6267318547287857,
+        "platelets": 1.4623208382757793,
+        "serum_creatinine": 4.455995882049026,
+        "serum_sodium": -1.0481360160574988,
+        "sex": -0.6267318547287857,
+        "smoking": 0.770348815438949,
+        "time": 0.12780264559841184,
+        "death_event": 0.7703488154389491
+      },
+      "stability": 1.0,
+      "row_count": 299,
+      "col_count": 13,
+      "total_cells": 3887,
+      "empty_rows": 0,
+      "density_ratio": 1.0,
+      "sparsity_ratio": 0.0,
+      "memory_readable": "0.03 MB",
+      "type_distribution": {
+        "numeric": 13,
+        "categorical": 0,
+        "object": 0
+      },
+      "avg_cardinality": 51.92307692307692,
+      "constant_columns": []
+    },
+    "outliers": {
+      "total_outliers": 19,
+      "outlier_ratio": 0.06354515050167224
+    },
+    "fairness": {
+      "metrics_per_attr": {
+        "age": {
+          "majority_group": "60.0",
+          "minority_group": "87.0",
+          "disparate_impact": 0.9999999989999999,
+          "parity_gap": 0.0,
+          "representation_ratio": 0.0033444816053511705,
+          "distribution_shift": {
+            "anaemia": 0.9773057461861654,
+            "creatinine_phosphokinase": 0.584019112193802,
+            "diabetes": 1.1653429569758769,
+            "ejection_fraction": 0.025604932895623544,
+            "high_blood_pressure": 0.5703964059197573,
+            "platelets": 0.1274295480032631,
+            "serum_creatinine": 0.9651765431572898,
+            "serum_sodium": 0.8927850921446662,
+            "sex": 0.8239059196618717,
+            "smoking": 0.7127526407979692,
+            "time": 1.2169749321389736
+          },
+          "bias_detected": false
+        },
+        "sex": {
+          "majority_group": "1",
+          "minority_group": "0",
+          "disparate_impact": 0.9999999989999999,
+          "parity_gap": 0.0,
+          "representation_ratio": 0.3511705685618729,
+          "distribution_shift": {
+            "age": 0.13684280574406504,
+            "anaemia": 0.19820487394808348,
+            "creatinine_phosphokinase": 0.16687838915170786,
+            "diabetes": 0.3298839220894429,
+            "ejection_fraction": 0.3103423454301706,
+            "high_blood_pressure": 0.21879663150327333,
+            "platelets": 0.2616836707854063,
+            "serum_creatinine": 0.014576967538165451,
+            "serum_sodium": 0.057653263648384946,
+            "smoking": 0.9325617762664445,
+            "time": 0.03264386703183649
+          },
+          "bias_detected": false
+        }
+      },
+      "detected_bias_count": 0,
+      "sensitive_proxies": {
+        "sex": {
+          "smoking": 0.44589171190979066
+        }
+      },
+      "group_sparsity": {
+        "60.0": 0.0,
+        "87.0": 0.0,
+        "1": 0.0,
+        "0": 0.0
+      },
+      "age": {
+        "majority_group": "60.0",
+        "minority_group": "87.0",
+        "disparate_impact": 0.9999999989999999,
+        "parity_gap": 0.0,
+        "representation_ratio": 0.0033444816053511705,
+        "distribution_shift": {
+          "anaemia": 0.9773057461861654,
+          "creatinine_phosphokinase": 0.584019112193802,
+          "diabetes": 1.1653429569758769,
+          "ejection_fraction": 0.025604932895623544,
+          "high_blood_pressure": 0.5703964059197573,
+          "platelets": 0.1274295480032631,
+          "serum_creatinine": 0.9651765431572898,
+          "serum_sodium": 0.8927850921446662,
+          "sex": 0.8239059196618717,
+          "smoking": 0.7127526407979692,
+          "time": 1.2169749321389736
+        },
+        "bias_detected": false
+      },
+      "sex": {
+        "majority_group": "1",
+        "minority_group": "0",
+        "disparate_impact": 0.9999999989999999,
+        "parity_gap": 0.0,
+        "representation_ratio": 0.3511705685618729,
+        "distribution_shift": {
+          "age": 0.13684280574406504,
+          "anaemia": 0.19820487394808348,
+          "creatinine_phosphokinase": 0.16687838915170786,
+          "diabetes": 0.3298839220894429,
+          "ejection_fraction": 0.3103423454301706,
+          "high_blood_pressure": 0.21879663150327333,
+          "platelets": 0.2616836707854063,
+          "serum_creatinine": 0.014576967538165451,
+          "serum_sodium": 0.057653263648384946,
+          "smoking": 0.9325617762664445,
+          "time": 0.03264386703183649
+        },
+        "bias_detected": false
+      }
+    },
+    "privacy": {
+      "risk_level": "High",
+      "uniqueness_ratio": 1.0,
+      "at_risk_record_count": 299,
+      "identity_risk_level": "High",
+      "attr_identifiability": {
+        "age": {
+          "entropy": 4.797367291401423,
+          "uniqueness_signal": 0.15719063545150502,
+          "identifiability": "Low"
+        },
+        "anaemia": {
+          "entropy": 0.9863937304546861,
+          "uniqueness_signal": 0.006688963210702341,
+          "identifiability": "Low"
+        },
+        "creatinine_phosphokinase": {
+          "entropy": 7.013768655734131,
+          "uniqueness_signal": 0.6956521739130435,
+          "identifiability": "Medium"
+        },
+        "diabetes": {
+          "entropy": 0.9805394536405373,
+          "uniqueness_signal": 0.006688963210702341,
+          "identifiability": "Low"
+        },
+        "ejection_fraction": {
+          "entropy": 3.348049938414202,
+          "uniqueness_signal": 0.056856187290969896,
+          "identifiability": "Low"
+        },
+        "high_blood_pressure": {
+          "entropy": 0.9351091296311524,
+          "uniqueness_signal": 0.006688963210702341,
+          "identifiability": "Low"
+        },
+        "platelets": {
+          "entropy": 7.07039130672926,
+          "uniqueness_signal": 0.5886287625418061,
+          "identifiability": "Medium"
+        },
+        "serum_creatinine": {
+          "entropy": 4.226891464609175,
+          "uniqueness_signal": 0.13377926421404682,
+          "identifiability": "Low"
+        },
+        "serum_sodium": {
+          "entropy": 3.945219231676531,
+          "uniqueness_signal": 0.0903010033444816,
+          "identifiability": "Low"
+        },
+        "sex": {
+          "entropy": 0.9351091296311524,
+          "uniqueness_signal": 0.006688963210702341,
+          "identifiability": "Low"
+        },
+        "smoking": {
+          "entropy": 0.905541502478724,
+          "uniqueness_signal": 0.006688963210702341,
+          "identifiability": "Low"
+        },
+        "time": {
+          "entropy": 6.906252827760028,
+          "uniqueness_signal": 0.49498327759197325,
+          "identifiability": "Medium"
+        },
+        "death_event": {
+          "entropy": 0.905541502478724,
+          "uniqueness_signal": 0.006688963210702341,
+          "identifiability": "Low"
+        }
+      },
+      "avg_k_anonymity": 1.0,
+      "avg_column_entropy": 3.3043211665107486,
+      "max_column_entropy": 7.07039130672926,
+      "known_sensitive_patterns": [
+        "age",
+        "creatinine_phosphokinase",
+        "ejection_fraction",
+        "platelets",
+        "serum_creatinine",
+        "serum_sodium",
+        "time"
+      ]
+    },
+    "proxies": {
+      "sex": {
+        "smoking": 0.4458917119097909
+      }
+    },
+    "quality": {
+      "total_duplicates": 0,
+      "conflicting_labels": 0,
+      "quality_score": 98.72909698996655,
+      "duplicate_count": 0,
+      "duplicate_ratio": 0.0,
+      "outlier_count": 19,
+      "outlier_ratio": 0.06354515050167224,
+      "avg_skewness": 0.9686480824986652,
+      "avg_kurtosis": 3.849662611499282,
+      "columns_with_missing": 0
+    },
+    "quasi_identifiers": [
+      "age",
+      "creatinine_phosphokinase",
+      "ejection_fraction",
+      "platelets",
+      "serum_creatinine",
+      "serum_sodium",
+      "time"
+    ]
+  },
+  "avg_fidelity": 0,
+  "dataset_name": "heart_failure_clinical_records"
+}
