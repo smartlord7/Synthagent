@@ -17,7 +17,7 @@
 \usepackage{array}
 \usepackage{graphicx}
 \usepackage{tikz}
-\usetikzlibrary{arrows.meta,positioning,fit,calc}
+\usetikzlibrary{arrows.meta,positioning,fit,calc,shapes.geometric}
 \usepackage{xcolor}
 \usepackage{enumitem}
 \usepackage{xspace}
@@ -246,7 +246,6 @@ Every run records prompt, completion and total tokens, LLM generation time, pars
 
 \subsection{Deployment at the Data Boundary}
 \label{sec:deployment}
-The components above need only local inputs, which makes the loop easy to place where the data already lives.
 Because the controller needs only a local table, a local schema and an inference endpoint, it can run inside each site of a cross-silo network. Consider $K$ hospitals, each holding a small table $D_k$ for the same prediction problem, with different case mix, coding practice and minority prevalence. Governance constraints prevent pooling raw rows~\cite{rieke2020digitalhealth,sheller2020medicine}. Each hospital runs the complete \system loop inside its own trust boundary and trains locally,
 \begin{equation}
 G_k=\mathcal{A}(D_k,S_k,R_k,B_k),\qquad
@@ -258,40 +257,20 @@ where $S_k$ and $R_k$ are site-specific schema and policy constraints, $B_k$ the
 w_{t+1}=w_t+\sum_{k\in\mathcal{K}_t}\frac{n_k}{\sum_{j\in\mathcal{K}_t}n_j}\,\Delta w_k,\qquad n_k=|D_k|,
 \label{eq:federated-aggregate}
 \end{equation}
-preferably under secure aggregation~\cite{bonawitz2017secure}. Weighting by the \emph{real} sample count $|D_k|$ rather than $|D_k\cup G_k|$ prevents a site from gaining voting power by generating more rows. Figure~\ref{fig:federated} illustrates the separation. Unlike SiloFuse, which coordinates a shared latent generator across silos~\cite{shankar2024silofuse}, this pattern needs no cross-site generator training; each site can also reject augmentation when paired local validation does not improve utility.
+preferably under secure aggregation~\cite{bonawitz2017secure}. Weighting by the \emph{real} count $|D_k|$ rather than $|D_k\cup G_k|$ gives a site no extra vote for generating rows (Figure~\ref{fig:federated}). Unlike SiloFuse, which coordinates a shared latent generator across silos~\cite{shankar2024silofuse}, this pattern needs no cross-site generator training; each site can also reject augmentation when paired local validation does not improve utility.
 
-\begin{figure}[t]
+\begin{figure*}[t]
 \centering
-\resizebox{\columnwidth}{!}{%
-\begin{tikzpicture}[
-  node distance=4mm and 5mm,
-  site/.style={draw,rounded corners=2pt,minimum height=9mm,minimum width=24mm,align=center,font=\small,fill=sblue!7},
-  local/.style={draw,rounded corners=2pt,minimum height=8mm,minimum width=24mm,align=center,font=\small,fill=sgreen!7},
-  server/.style={draw,rounded corners=2pt,minimum height=9mm,minimum width=38mm,align=center,font=\small,fill=sorange!8,very thick},
-  arrow/.style={-{Latex[length=2mm]},thick,sgray}
-]
-\node[site] (d2) {Site 2\\private $D_2$};
-\node[site,left=of d2] (d1) {Site 1\\private $D_1$};
-\node[site,right=of d2] (d3) {Site $K$\\private $D_K$};
-\node[server,above=9mm of d2] (coord) {Coordinator: policy,\\global model $w_t$};
-\node[local,below=of d1] (a1) {Local \system\\verify $G_1$};
-\node[local,below=of d2] (a2) {Local \system\\verify $G_2$};
-\node[local,below=of d3] (a3) {Local \system\\verify $G_K$};
-\node[local,below=of a1] (u1) {Train locally\\$\Delta w_1$};
-\node[local,below=of a2] (u2) {Train locally\\$\Delta w_2$};
-\node[local,below=of a3] (u3) {Train locally\\$\Delta w_K$};
-\draw[arrow] (coord) -- (d1); \draw[arrow] (coord) -- (d2); \draw[arrow] (coord) -- (d3);
-\draw[arrow] (d1)--(a1); \draw[arrow] (d2)--(a2); \draw[arrow] (d3)--(a3);
-\draw[arrow] (a1)--(u1); \draw[arrow] (a2)--(u2); \draw[arrow] (a3)--(u3);
-\draw[arrow,dashed] (u1.west) -- ++(-3mm,0) |- node[pos=.25,left,font=\scriptsize,align=center]{protected\\update} (coord.west);
-\draw[arrow,dashed] (u3.east) -- ++(3mm,0) |- (coord.east);
-\node[font=\scriptsize\itshape,sgray,below=2mm of u2] {Raw rows, prompts, generated rows and verifier traces stay inside each site.};
-\end{tikzpicture}}
-\caption{Cross-silo deployment pattern. Synthesis, policy checks and the decision to admit augmented data run within each hospital; the coordinator receives protected model updates and approved aggregate diagnostics, never patient rows.}
+\begin{minipage}[c]{0.6\textwidth}
+\resizebox{\linewidth}{!}{\input{figures_federated.tex}}
+\end{minipage}\hfill
+\begin{minipage}[c]{0.37\textwidth}
+\caption{Cross-silo deployment. Each hospital runs the complete \system loop (budget, on-premises LLM, verifier with retry) inside its own trust boundary, then decides with paired local validation whether to admit the verified rows $G_k$ (Hospital~1) or to train on real data only (Hospital~$K$). Only the protected update $\Delta w_k$ and approved aggregate diagnostics cross the boundary. The coordinator weights each update by the real sample count $n_k=|D_k|$ (Equation~\eqref{eq:federated-aggregate}), so generating more rows buys a site no extra vote.}
 \label{fig:federated}
-\end{figure}
+\end{minipage}
+\end{figure*}
 
-This architecture reduces the need to centralize data but does not by itself provide privacy. A remote commercial LLM receives prompt content and therefore crosses the trust boundary, so a privacy-sensitive deployment needs an on-premises model, a trusted execution arrangement or a data-processing agreement. Synthetic rows and model updates can both leak information. Our experiments emulate one site at a time and establish the local synthesis component; end-to-end federated evaluation under client drift and heterogeneous schemas is future work.
+This pattern avoids centralizing data but is not by itself a privacy guarantee: a remote LLM receives prompt content, so a sensitive deployment needs an on-premises model or a data-processing agreement, and synthetic rows and updates can both leak information. Our experiments evaluate the local synthesis component one site at a time; end-to-end federated evaluation is future work.
 
 %======================================================================
 \section{Experimental Methodology}
@@ -524,8 +503,6 @@ Its utility depends on which class F1 scores. Where the scored class is the rare
 \section{Discussion and Limitations}
 \label{sec:discussion}
 %======================================================================
-Taken together, the five answers draw a consistent picture. We first state the claim the evidence supports, then distill lessons for practitioners, and finally list the threats to validity and the broader implications.
-
 \paragraph*{What the evidence supports}
 \system is best understood as a control plane for LLM synthesis. It does not make an LLM a universally better augmenter, and our data say so plainly. What it does is make syntax, schema, volume, cost, fidelity, privacy diagnostics and utility explicit, inspectable state. This has three practical consequences. Generated tables arrive complete and at the requested size. Their properties are measured on the same paired protocol as the real-only baseline, so a team can see whether augmentation helps a given learner before using it. And design decisions can be checked against a measured noise floor rather than against a single favorable run.
 
@@ -536,16 +513,16 @@ Taken together, the five answers draw a consistent picture. We first state the c
 Only six small medical datasets act as independent blocks, which limits the power of the rank tests. The repeated holdouts are not stratified. The Parkinson's table contains repeated recordings per subject without a subject identifier, so one person's recordings can appear in both train and test. Schema and value ranges are inferred once from the full table; this exposes holdout extrema to the profiler and should be replaced by train-only profiling in a strict predictive evaluation. JSD uses fixed histograms and is dominated by numerical columns. The membership attack is a single distance-based adversary over numerical features, and no result establishes differential privacy. The reported runs never triggered the repair and correction paths, so their benefit under weaker models remains to be measured; in the current implementation, the output of the last correction round is admitted without a further validation pass, and rows obtained in top-up rounds are parsed but not re-validated. Context selection is not class-stratified, so rare classes can be absent from a prompt; a label-aware policy with minimum per-class coverage is a natural next step. All backends come from a single provider, so the results may not transfer to other model families; in particular, locally served open-weight models, which matter most for on-premises clinical deployment, remain to be evaluated through the same OpenAI-compatible interface. Two further OpenAI models, GPT-4.1 nano and o4-mini, were started but did not complete every dataset and are excluded by the completeness gate. Finally, provider-side model revisions are not pinned beyond the model identifiers stored with each run.
 
 \paragraph*{Societal impact}
-Synthetic medical rows can reduce friction in development, education and pipeline testing, but plausible records can be mistaken for clinical evidence. Generated tables must not be used for diagnosis or policy without domain review, and near-chance performance against one membership attack is not sufficient to release sensitive data or synthetic derivatives. Privacy-critical deployments need threat modeling, access control, stronger attacks and a formal privacy mechanism.
+Synthetic medical rows can ease development, teaching and pipeline testing, but plausible records can be mistaken for clinical evidence and must not inform diagnosis or policy without domain review. Near-chance performance against one membership attack does not justify releasing sensitive data; privacy-critical deployments need threat modeling, stronger attacks and a formal privacy mechanism.
 
 \paragraph*{Reproducibility}
-The implementation, the ablation runner and the asset generator are publicly available.\footnote{TODO(authors): add the public repository URL required by the ICDE artifact policy.} The runner stores per-repetition CSV files, aggregated reports and a resumable checkpoint. The script \texttt{generate\_paper\_assets.py} reads the checkpoint, admits only configurations that completed every dataset and repetition, recomputes utility from the per-repetition files, runs the statistical tests and regenerates every table and figure in this paper.
+The implementation, the ablation runner and the asset generator are publicly available.\footnote{TODO(authors): add the public repository URL required by the ICDE artifact policy.} The script \texttt{generate\_paper\_assets.py} reads the checkpoint, admits only configurations that completed every dataset and repetition, recomputes utility from the per-repetition files, runs the statistical tests and regenerates every table and figure in this paper.
 
 %======================================================================
 \section{Conclusion}
 \label{sec:conclusion}
 %======================================================================
-We presented \system, a verifier-guided control plane for LLM-based synthesis of small tables. It turns an untrusted completion into a dependable data product by making context, output validity, volume and cost explicit state, and it records an audit trail for every synthetic table. On six medical tables, 11 configurations and 660 repetitions, the system produces complete tables with stable fidelity and near-chance membership-attack performance. A noise floor built from functionally equivalent runs shows that context and control toggles stay within run-to-run variation, while the LLM backend is the factor that moves fidelity and utility, with GPT-4.1 turning the mean F1 change positive at the price of weaker correlation preservation. SMOTE remains a strong, nearly free baseline for a rare positive class but fails badly when the scored class is the majority, and no configuration is a statistically significant utility winner across six datasets. Synthetic volume is therefore not a substitute for evidence. The value of an agentic synthesis system is to make generation choices, failure states, costs and their paired downstream consequences explicit enough to decide, per task and per learner, when augmentation is warranted.
+We presented \system, a verifier-guided control plane that turns untrusted LLM completions into complete, schema-valid and auditable small tables. On six medical tables and 660 repetitions, it produced complete tables with stable fidelity and near-chance membership-attack performance. A noise floor built from functionally equivalent runs shows that context and control toggles stay within run-to-run variation, while the LLM backend is the factor that moves fidelity and utility. No configuration, SMOTE included, is a significant utility winner across datasets, so synthetic volume is not a substitute for evidence; the value of the control plane is to make generation choices, failures, costs and their paired downstream consequences explicit enough to decide, per task and per learner, when augmentation is warranted.
 
 %======================================================================
 \section*{Acknowledgment of AI-Generated Content}

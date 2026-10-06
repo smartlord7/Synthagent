@@ -1,0 +1,132 @@
+% Cross-silo deployment figure (Fig. fig:federated). Requires TikZ libraries
+% arrows.meta, calc, shapes.geometric and the s* colours from main.tex.
+\begin{tikzpicture}[
+  font=\sffamily\scriptsize,
+  >={Latex[length=1.5mm]},
+  flow/.style={->,thick,sgray},
+  down/.style={->,very thick,sblue},
+  up/.style={->,very thick,sorange},
+  pan/.style={rounded corners=3pt,draw=#1,very thick,fill=#1!6},
+  ttl/.style={font=\sffamily\bfseries\scriptsize,text=#1},
+  lab/.style={font=\sffamily\tiny,text=#1,inner sep=1pt},
+  nd/.style={circle,draw=#1,very thick,fill=white,minimum size=6.5mm,inner sep=0pt,font=\sffamily\tiny,align=center},
+  diam/.style={diamond,aspect=1.5,draw=sgreen,very thick,fill=white,inner sep=0.5pt,font=\sffamily\tiny,align=center},
+]
+%---------------------------------------------------------------- icons
+\def\lock#1#2{% padlock at (#1), colour #2
+  \begin{scope}[shift={(#1)}]
+    \draw[#2,thick] (-0.07,0.05) arc[start angle=180,end angle=0,radius=0.07];
+    \fill[#2] (-0.11,-0.11) rectangle (0.11,0.06);
+    \fill[white] (0,-0.02) circle (0.025);
+  \end{scope}}
+\def\hospital#1{% small hospital building at (#1)
+  \begin{scope}[shift={(#1)}]
+    \fill[white,draw=sgray,thick] (-0.28,-0.22) rectangle (0.28,0.16);
+    \fill[white,draw=sgray,thick] (-0.13,0.16) rectangle (0.13,0.32);
+    \fill[red!75!black] (-0.025,0.17) rectangle (0.025,0.31);
+    \fill[red!75!black] (-0.065,0.215) rectangle (0.065,0.265);
+    \foreach \x in {-0.19,-0.06,0.07,0.19}{\fill[sblue!40] (\x-0.035,0.0) rectangle ++(0.07,0.09);}
+    \fill[sgray!60] (-0.05,-0.22) rectangle (0.05,-0.08);
+  \end{scope}}
+\def\tabl#1#2#3#4{% table glyph at (#1): #2 rows, row fill #3, highlighted row #4
+  \begin{scope}[shift={(#1)}]
+    \fill[sgray!35] (0,0) rectangle (0.9,-0.13);
+    \foreach \r in {1,...,#2}{
+      \ifnum\r=#4 \fill[sorange!45] (0,-0.13*\r) rectangle (0.9,-0.13*\r-0.13);
+      \else \fill[#3] (0,-0.13*\r) rectangle (0.9,-0.13*\r-0.13);\fi}
+    \foreach \c in {0,0.18,...,0.73}{\draw[sgray!70] (\c,0) rectangle ++(0.18,-0.13*#2-0.13);}
+    \foreach \r in {0,...,#2}{\draw[sgray!70] (0,-0.13*\r) -- (0.9,-0.13*\r);}
+  \end{scope}}
+%---------------------------------------------------------------- one hospital site
+% #1 x-offset, #2 site index label, #3 real rows (n_k), #4 generated rows,
+% #5 admit decision text, #6 admit colour
+\def\site#1#2#3#4#5#6{%
+\begin{scope}[shift={(#1,0)}]
+  % trust boundary
+  \draw[pan=sblue,dashed] (0,0) rectangle (5.3,-5.15);
+  \hospital{0.45,-0.42}
+  \node[ttl=sblue,anchor=west] at (0.85,-0.32) {Hospital #2};
+  \node[lab=sblue,anchor=west] at (0.85,-0.58) {trust boundary};
+  % private data
+  \tabl{0.25,-1.05}{#3}{sblue!25}{0}
+  \node[lab=sgray,anchor=north] at (0.7,-1.05-0.13*#3-0.17) {real $D_#2$};
+  \node[lab=sgray,anchor=north] at (0.7,-1.05-0.13*#3-0.42) {$n_#2=|D_#2|$};
+  % local Synthagent loop
+  \fill[sgreen!8,draw=sgreen,rounded corners=3pt,thick] (1.55,-0.9) rectangle (3.95,-3.35);
+  \node[ttl=sgreen,anchor=north] at (2.75,-0.95) {\system{} (local)};
+  \node[nd=sblue]  (b#2) at (2.05,-1.95) {budget\\$C_t$};
+  \node[nd=spurple](l#2) at (3.45,-1.95) {LLM\\$\pi_\phi$};
+  \node[nd=sgreen] (v#2) at (2.75,-2.85) {verify\\$V_{S,R}$};
+  \draw[flow,bend left=25] (b#2) to (l#2);
+  \draw[flow,bend left=25] (l#2) to (v#2);
+  \draw[->,thick,sorange,bend left=25] (v#2) to node[lab=sorange,left,pos=.5]{retry} (b#2);
+  \node[lab=spurple,anchor=south] at (3.45,-1.62) {on-prem};
+  \draw[flow] (1.2,-1.6) -- (1.55,-1.6);
+  % generated rows
+  \tabl{4.2,-1.05}{#4}{sgreen!30}{0}
+  \node[lab=sgray,anchor=north] at (4.65,-1.05-0.13*#4-0.17) {verified $G_#2$};
+  \draw[flow] (3.95,-1.6) -- (4.2,-1.6);
+  % admission gate
+  \node[diam] (g#2) at (2.75,-4.05) {admit\\$G_#2$?};
+  \draw[flow] (4.65,-1.05-0.13*#4-0.45) |- (g#2.east);
+  \draw[flow] (0.7,-1.05-0.13*#3-0.7) |- (g#2.west);
+  \node[lab=sgreen,anchor=north west,align=left] at (3.35,-3.62) {paired local\\validation};
+  % local training and protected update
+  \node[draw=sgray,thick,fill=white,rounded corners=2pt,font=\sffamily\tiny,align=center,inner sep=2pt]
+       (t#2) at (2.75,-4.82) {train on #5};
+  \draw[flow,#6] (g#2.south) -- (t#2.north);
+  \node[lab=sgray,anchor=west] at (3.75,-4.82) {$\Delta w_#2$};
+  \lock{4.6,-4.84}{sorange}
+\end{scope}}
+%================================================================ coordinator
+\draw[pan=sorange] (0,2.65) rectangle (11.4,0.85);
+\node[ttl=sorange,anchor=north west] at (0.08,2.62) {Coordinator (sees no rows, prompts or traces)};
+% global model glyph
+\begin{scope}[shift={(0.55,1.12),yscale=0.85}]
+  \foreach \i/\y in {1/0.15,2/0.55,3/0.95}{\coordinate (a\i) at (0,\y);}
+  \foreach \i/\y in {1/0.05,2/0.4,3/0.75,4/1.1}{\coordinate (h\i) at (0.55,\y);}
+  \foreach \i/\y in {1/0.35,2/0.75}{\coordinate (o\i) at (1.1,\y);}
+  \foreach \a in {1,2,3}{\foreach \h in {1,2,3,4}{\draw[sgray!50] (a\a)--(h\h);}}
+  \foreach \h in {1,2,3,4}{\foreach \o in {1,2}{\draw[sgray!50] (h\h)--(o\o);}}
+  \foreach \p in {a1,a2,a3,h1,h2,h3,h4,o1,o2}{\fill[white,draw=sorange,thick] (\p) circle (0.07);}
+  \node[lab=sorange,anchor=north] at (0.55,-0.04) {global model $w_t$};
+\end{scope}
+% secure aggregation
+\node[draw=sorange,very thick,fill=white,rounded corners=2pt,align=center,inner sep=3pt,font=\sffamily\tiny]
+  (agg) at (4.35,1.62) {secure aggregation\\[1pt]
+  $w_{t+1}=w_t+\sum_k \frac{n_k}{\sum_j n_j}\Delta w_k$};
+\lock{5.75,2.07}{sorange}
+\draw[flow,sorange] (agg.west) -- (1.85,1.62);
+% weights bars
+\begin{scope}[shift={(7.35,1.2)}]
+  \node[lab=sgray,anchor=south west] at (-0.1,0.95) {weight $\propto n_k=|D_k|$ (real rows only)};
+  \fill[sblue!55] (0,0) rectangle (0.35,0.75);   \node[lab=sgray,anchor=north] at (0.18,0) {$n_1$};
+  \fill[sblue!55] (0.6,0) rectangle (0.95,0.45); \node[lab=sgray,anchor=north] at (0.78,0) {$n_2$};
+  \fill[sblue!55] (1.45,0) rectangle (1.8,0.3);  \node[lab=sgray,anchor=north] at (1.63,0) {$n_K$};
+  \node[lab=sgray] at (1.2,0.15) {$\cdots$};
+  % ghost bar: generated rows do not count
+  \draw[sgreen,dashed,thick] (2.25,0) rectangle (2.6,0.85);
+  \draw[red!70!black,thick] (2.18,-0.05) -- (2.67,0.9);
+  \node[lab=sgreen,anchor=north,align=center] at (2.43,0) {$|G_k|$};
+  \node[lab=sgreen,anchor=west,align=left] at (2.7,0.45) {no extra\\vote for\\generating};
+\end{scope}
+\draw[flow,sorange] (6.1,1.62) -- (7.2,1.62);
+%================================================================ sites
+\site{0}{1}{7}{5}{$D_1\cup G_1$}{sgreen}
+\node[font=\sffamily\bfseries\large,text=sgray] at (5.7,-2.6) {$\cdots$};
+\site{6.1}{K}{4}{6}{$D_K$ only}{sgray}
+\node[lab=red!70!black,anchor=west,align=left] at (6.1+3.25,-4.38) {rejected:\\no gain};
+\node[lab=sgreen,anchor=east,align=right] at (2.25,-4.38) {accepted};
+%================================================================ boundary crossings
+\draw[down] (2.0,0.85) -- node[lab=sblue,left,align=right]{$w_t$} (2.0,0.0);
+\draw[up]   (4.6,-4.66) -- (4.6,-4.3) -- (5.15,-4.3) -- (5.15,0.0) -- (5.15,0.85);
+\draw[down] (8.1,0.85) -- node[lab=sblue,left,align=right]{$w_t$} (8.1,0.0);
+\draw[up]   (6.1+4.6,-4.66) -- (6.1+4.6,-4.3) -- (6.1+5.15,-4.3) -- (6.1+5.15,0.85);
+\node[lab=sorange,anchor=west,align=left,fill=white] at (5.18,0.42) {$\Delta w_k$,\\aggregate\\diagnostics};
+%================================================================ legend
+\begin{scope}[shift={(0,-5.45)}]
+  \fill[sblue!6,draw=sblue,dashed,rounded corners=2pt] (0,0) rectangle (11.4,-0.62);
+  \node[lab=sblue,anchor=west,align=left] at (0.1,-0.31)
+    {\textbf{Stays inside each site:} real rows, prompts and completions, generated rows $G_k$, verifier traces, the admit decision.};
+\end{scope}
+\end{tikzpicture}
