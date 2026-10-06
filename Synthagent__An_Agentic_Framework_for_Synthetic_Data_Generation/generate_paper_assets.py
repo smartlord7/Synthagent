@@ -55,6 +55,9 @@ ARM_LABELS = {
     "strategy_diverse": "Diverse context",
     "ponder_strategy": "LLM-selected hyperparameters",
     "smote": "SMOTE",
+    "ctgan": "CTGAN",
+    "tvae": "TVAE",
+    "raw_prompting": "Raw prompting",
     "backend_gpt_4_1_mini": "GPT-4.1 mini",
     "backend_gpt_4o": "GPT-4o",
     "backend_gpt_4_1": "GPT-4.1",
@@ -64,6 +67,10 @@ ARCH_ARMS = [
     "strategy_dense", "strategy_diverse", "ponder_strategy", "smote",
 ]
 BACKEND_ARMS = ["full", "backend_gpt_4_1_mini", "backend_gpt_4o", "backend_gpt_4_1"]
+# Non-LLM generators against the reference and the strongest backend.
+BASELINE_ARMS = ["full", "backend_gpt_4_1", "smote", "ctgan", "tvae"]
+# Reported only once all six datasets and ten repetitions are complete.
+OPTIONAL_ARMS = ["raw_prompting"]
 
 
 def completed_arms(summary: pd.DataFrame) -> list[str]:
@@ -149,6 +156,20 @@ def refresh_utility_from_per_fold(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
+def mask_unrun_cells(df: pd.DataFrame) -> pd.DataFrame:
+    """Drop XGBoost on liver disease from every arm.
+
+    The LLM arms ran before XGBoost label re-encoding was added and have no XGBoost
+    result on liver disease; later baseline runs do. Masking the cell everywhere
+    keeps every arm averaged over the same 59 classifier-dataset cells.
+    """
+    df = df.copy()
+    liver = df.dataset == "indian_liver_patient_dataset.csv"
+    cols = [c for c in df.columns if c.startswith("xgb_")]
+    df.loc[liver, cols] = np.nan
+    return df
+
+
 def mask_failed_generated_metrics(df: pd.DataFrame) -> pd.DataFrame:
     """Treat generated-only metrics as missing where their computation failed.
 
@@ -221,6 +242,262 @@ def rank_and_test(df: pd.DataFrame, arms: list[str], metric: str, family: str):
     return avg_ranks, omnibus, comparisons
 
 
+# ---------------------------------------------------------------- print styling
+# Figures are drawn at their printed size (IEEE column 3.5 in, text 7.16 in) and
+# included at 100% scale, so the font sizes below are the sizes on paper.
+COL_W, TEXT_W = 3.5, 7.16
+SHORT_DS = {
+    "heart_disease.csv": "Heart dis.",
+    "breast_cancer_wisconsin_diagnostic.csv": "Breast",
+    "heart_failure_clinical_records.csv": "Heart fail.",
+    "indian_diabetes.csv": "Diabetes",
+    "indian_liver_patient_dataset.csv": "Liver",
+    "parkinsons.csv": "Parkinson's",
+}
+SHORT_ARM = {
+    "full": "Synthagent (ref.)",
+    "no_rule_injection": "No type rules",
+    "no_post_processing": "No post-proc.",
+    "no_context_join": "No context join",
+    "strategy_dense": "Dense context",
+    "strategy_diverse": "Diverse context",
+    "ponder_strategy": "LLM-set hyperparams",
+    "smote": "SMOTE",
+    "ctgan": "CTGAN",
+    "tvae": "TVAE",
+    "raw_prompting": "Raw prompting",
+    "backend_gpt_4_1_mini": "GPT-4.1 mini",
+    "backend_gpt_4o": "GPT-4o",
+    "backend_gpt_4_1": "GPT-4.1",
+}
+NON_LLM = {"smote", "ctgan", "tvae"}
+C_REF, C_LLM, C_BASE, C_BACK = "#1f4e79", "#7fb3d5", "#e67e22", "#2e8b57"
+
+
+def print_style():
+    sns.set_theme(style="whitegrid", context="paper")
+    plt.rcParams.update({
+        "font.family": "DejaVu Sans", "font.size": 7,
+        "axes.titlesize": 7.5, "axes.titleweight": "bold", "axes.labelsize": 7,
+        "xtick.labelsize": 6.5, "ytick.labelsize": 6.5, "legend.fontsize": 6.5,
+        "axes.linewidth": .6, "grid.linewidth": .4, "lines.linewidth": 1.0,
+        "xtick.major.pad": 1.5, "ytick.major.pad": 1.5,
+        "savefig.dpi": 300, "pdf.fonttype": 42,
+    })
+
+
+def arm_color(arm: str) -> str:
+    if arm == "full":
+        return C_REF
+    if arm in NON_LLM:
+        return C_BASE
+    if arm.startswith("backend_"):
+        return C_BACK
+    return C_LLM
+
+
+def save(fig, name: str):
+    fig.savefig(OUT / f"{name}.pdf", bbox_inches="tight", pad_inches=.02)
+    fig.savefig(OUT / f"{name}.png", dpi=220, bbox_inches="tight", pad_inches=.02)
+    plt.close(fig)
+
+
+def save_real_baselines(df: pd.DataFrame):
+    """Real-only baselines: one row per classifier, Acc./F1 pairs per dataset."""
+    full = df[df.arm == "full"].set_index("dataset")
+    records = []
+    body = []
+    for model in MODELS:
+        cells = []
+        for dataset in DATASET_LABELS:
+            for metric in ("accuracy", "f1"):
+                mean = full.loc[dataset, f"{model}_{metric}_real"]
+                std = full.loc[dataset, f"{model}_{metric}_real_sd"]
+                records.append({"model": MODEL_LABELS[model], "metric": metric,
+                                "dataset": DATASET_LABELS[dataset], "mean": mean, "std": std})
+                cells.append("\\multicolumn{1}{c}{--}" if pd.isna(mean)
+                             else f"{100 * mean:.1f}\\sd{{{100 * std:.1f}}}")
+        body.append(f"{MODEL_LABELS[model]} & " + " & ".join(cells) + r" \\")
+    pd.DataFrame(records).to_csv(OUT / "real_only_baselines.csv", index=False)
+    groups = " & ".join(f"\\multicolumn{{2}}{{c}}{{{SHORT_DS[d]}}}" for d in DATASET_LABELS)
+    rules = " ".join(f"\\cmidrule(lr){{{2 + 2 * i}-{3 + 2 * i}}}" for i in range(len(DATASET_LABELS)))
+    sub = " & ".join(["Acc.", "F1"] * len(DATASET_LABELS))
+    tex = "\n".join([
+        r"\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}l" + "rr" * len(DATASET_LABELS) + "@{}}",
+        r"\toprule", f" & {groups} \\\\", rules, f"Classifier & {sub} \\\\", r"\midrule",
+        *body, r"\bottomrule", r"\end{tabular*}", "",
+    ])
+    (OUT / "real_only_baselines.tex").write_text(tex, encoding="utf-8")
+
+
+def plot_utility_heatmap(df: pd.DataFrame):
+    full = df[df.arm == "full"].set_index("dataset")
+    mats = {}
+    for metric, title in (("accuracy", "Accuracy change (pp)"), ("f1", "F1 change (pp)")):
+        mat = pd.DataFrame({SHORT_DS[d]: [100 * full.loc[d, f"{m}_{metric}_delta"] for m in MODELS]
+                            for d in DATASET_LABELS}, index=[MODEL_LABELS[m] for m in MODELS])
+        mats[title] = mat
+    vmax = max(np.nanmax(np.abs(m.to_numpy())) for m in mats.values())
+    fig, axes = plt.subplots(1, 2, figsize=(TEXT_W, 2.45), sharey=True,
+                             gridspec_kw={"wspace": .04})
+    cbar_ax = fig.add_axes([.915, .2, .012, .62])
+    for i, (ax, (title, mat)) in enumerate(zip(axes, mats.items())):
+        sns.heatmap(mat, ax=ax, cmap="RdBu_r", center=0, vmin=-vmax, vmax=vmax,
+                    annot=True, fmt=".1f", annot_kws={"size": 6.3}, linewidths=.4,
+                    linecolor="white", cbar=i == 1, cbar_ax=cbar_ax if i == 1 else None,
+                    cbar_kws={"label": "percentage points"})
+        for (r, c), v in np.ndenumerate(mat.to_numpy()):
+            if np.isnan(v):
+                ax.add_patch(plt.Rectangle((c, r), 1, 1, fill=True, facecolor="0.93",
+                                           hatch="////", edgecolor="0.75", lw=0))
+                ax.text(c + .5, r + .5, "n/a", ha="center", va="center", fontsize=6, color="0.4")
+        ax.set_title(title, loc="left", pad=3)
+        ax.set(xlabel="", ylabel="")
+        ax.tick_params(axis="x", rotation=0, length=0)
+        ax.tick_params(axis="y", rotation=0, length=0)
+    cbar_ax.tick_params(labelsize=6, length=2)
+    cbar_ax.yaxis.label.set_size(6.5)
+    fig.subplots_adjust(left=.07, right=.9, top=.9, bottom=.1)
+    save(fig, "utility_heatmap")
+
+
+def plot_augmentation_uncertainty():
+    """Holdout-level utility changes after averaging over classifiers."""
+    records = []
+    for dataset in DATASET_LABELS:
+        fold = pd.read_csv(RUN / "full" / f"{Path(dataset).stem}_per_fold.csv")
+        for metric in ("accuracy", "f1"):
+            for _, row in fold.iterrows():
+                deltas = [row[f"{m}_{metric}_augmented"] - row[f"{m}_{metric}_original"]
+                          for m in MODELS
+                          if pd.notna(row.get(f"{m}_{metric}_augmented"))
+                          and pd.notna(row.get(f"{m}_{metric}_original"))]
+                records.append({"dataset": SHORT_DS[dataset], "metric": metric,
+                                "delta": 100 * np.mean(deltas)})
+    values = pd.DataFrame(records)
+    order = [SHORT_DS[d] for d in DATASET_LABELS]
+    fig, axes = plt.subplots(1, 2, figsize=(COL_W, 2.15), sharey=True, gridspec_kw={"wspace": .08})
+    palette = sns.color_palette("colorblind", len(order))
+    for ax, metric, title in zip(axes, ("accuracy", "f1"), ("Accuracy", "F1")):
+        sub = values[values.metric == metric]
+        for y, (dataset, color) in enumerate(zip(order, palette)):
+            x = sub[sub.dataset == dataset].delta.to_numpy()
+            ci = t.ppf(.975, len(x) - 1) * x.std(ddof=1) / np.sqrt(len(x))
+            ax.scatter(x, y + np.linspace(-.18, .18, len(x)), s=7, color=color, alpha=.45, lw=0)
+            ax.errorbar(x.mean(), y, xerr=ci, fmt="D", ms=3.6, color=color, mec="white",
+                        mew=.5, capsize=2, lw=1.1)
+        ax.axvline(0, color="0.3", lw=.7)
+        ax.set_title(title, loc="left", pad=3)
+        ax.set_xlabel("change vs. real only (pp)")
+        ax.grid(axis="y", visible=False)
+    axes[0].set_yticks(range(len(order)), order)
+    axes[0].invert_yaxis()
+    fig.subplots_adjust(left=.2, right=.99, top=.9, bottom=.2)
+    save(fig, "augmentation_uncertainty")
+
+
+def plot_configuration_scorecard(df: pd.DataFrame):
+    """Rank each architecture arm on every reported objective."""
+    rows = []
+    for arm in ARCH_ARMS:
+        g = df[df.arm == arm]
+        rows.append({
+            "arm": SHORT_ARM[arm],
+            "JSD": g["Gen Synthetic Fidelity (JSD)_mean"].mean(),
+            "Corr.": g["Gen Correlation Stability_mean"].mean(),
+            "C2ST": -abs(g["Gen C2ST Accuracy_mean"].mean() - .5),
+            "MIA": -abs(g["Gen MIA Attack AUC_mean"].mean() - .5),
+            "ΔAcc.": g["mean_accuracy_delta"].mean(),
+            "ΔF1": g["mean_f1_delta"].mean(),
+            "Time": -g["gen_stats_generation_seconds_mean"].mean(),
+            "Tokens": -g["gen_stats_total_tokens_mean"].mean(),
+        })
+    raw = pd.DataFrame(rows).set_index("arm")
+    # SMOTE emits only a synthetic minority tail; its raw C2ST is not commensurate.
+    raw.loc[SHORT_ARM["smote"], "C2ST"] = np.nan
+    ranks = raw.rank(axis=0, ascending=False, method="average")
+    fig, ax = plt.subplots(figsize=(COL_W, 2.25))
+    sns.heatmap(ranks, ax=ax, cmap="Blues_r", vmin=1, vmax=len(ARCH_ARMS), annot=True,
+                fmt=".1f", annot_kws={"size": 6.3}, linewidths=.4, cbar=False)
+    for (r, c), v in np.ndenumerate(ranks.to_numpy()):
+        if np.isnan(v):
+            ax.text(c + .5, r + .5, "n/a", ha="center", va="center", fontsize=6, color="0.4")
+    ax.set(xlabel="", ylabel="")
+    ax.grid(False)
+    ax.xaxis.tick_top()
+    ax.tick_params(axis="both", length=0, rotation=0)
+    save(fig, "configuration_scorecard")
+
+
+def plot_ranks(rank_results):
+    acc, f1 = rank_results["accuracy"], rank_results["f1"]
+    order = ((acc + f1) / 2).sort_values().index[::-1]
+    fig, ax = plt.subplots(figsize=(COL_W, 1.95))
+    y = np.arange(len(order))
+    ax.hlines(y, [min(acc[a], f1[a]) for a in order], [max(acc[a], f1[a]) for a in order],
+              color="0.75", lw=1.2, zorder=1)
+    ax.scatter([acc[a] for a in order], y, marker="o", s=22, color=C_REF, label="Accuracy", zorder=2)
+    ax.scatter([f1[a] for a in order], y, marker="s", s=20, facecolor="white",
+               edgecolor=C_BASE, lw=1.1, label="F1", zorder=3)
+    ax.set_yticks(y, [SHORT_ARM[a] for a in order])
+    for lab, arm in zip(ax.get_yticklabels(), order):
+        if arm == "full":
+            lab.set_fontweight("bold")
+        if arm in NON_LLM:
+            lab.set_color(C_BASE)
+    ax.set_xlim(.8, len(order) + .2)
+    ax.set_xlabel("Average rank over six datasets (1 = best)")
+    ax.grid(axis="y", visible=False)
+    ax.legend(loc="lower right", frameon=True, framealpha=.95, borderpad=.3, handletextpad=.2)
+    fig.subplots_adjust(left=.3, right=.98, top=.97, bottom=.2)
+    save(fig, "architecture_ranks")
+
+
+def plot_frontier(df: pd.DataFrame):
+    """Fidelity, utility and token cost of every complete LLM arm; baselines noted."""
+    llm_arms = [a for a in ARCH_ARMS + BACKEND_ARMS[1:] if a not in NON_LLM]
+    rows = []
+    for arm in llm_arms + [a for a in BASELINE_ARMS if a in NON_LLM]:
+        g = df[df.arm == arm]
+        rows.append({"arm": arm, "JSD": g["Gen Synthetic Fidelity (JSD)_mean"].mean(),
+                     "F1": 100 * g["mean_f1_delta"].mean(),
+                     "tokens": g["gen_stats_total_tokens_mean"].mean()})
+    p = pd.DataFrame(rows).set_index("arm")
+    fig, axes = plt.subplots(1, 2, figsize=(COL_W, 2.0), sharey=True, gridspec_kw={"wspace": .08})
+    for arm in llm_arms:
+        r = p.loc[arm]
+        kw = dict(s=24, color=arm_color(arm), edgecolor="white", lw=.5, zorder=3)
+        axes[0].scatter(r.JSD, r.F1, **kw)
+        axes[1].scatter(r.tokens / 1000, r.F1, **kw)
+    for ax in axes:
+        ax.axhline(0, color="0.4", lw=.6)
+    # Direct labels for the points that matter; the rest are the noise-floor cloud.
+    left = {"backend_gpt_4_1"}
+    for arm in ("full", "backend_gpt_4_1", "backend_gpt_4_1_mini", "backend_gpt_4o", "ponder_strategy"):
+        r = p.loc[arm]
+        name = SHORT_ARM[arm].replace(" (ref.)", "")
+        axes[0].annotate(name, (r.JSD, r.F1), xytext=(-3 if arm in left else 3, 1),
+                         textcoords="offset points", ha="right" if arm in left else "left",
+                         va="center", fontsize=5.8, color=arm_color(arm))
+    r = p.loc["ponder_strategy"]
+    axes[1].annotate("LLM-set\nhyperparams", (r.tokens / 1000, r.F1), xytext=(0, 5),
+                     textcoords="offset points", ha="center", va="bottom", fontsize=5.8,
+                     color=arm_color("ponder_strategy"))
+    for ax in axes:
+        ax.margins(x=.12, y=.12)
+    axes[0].set(xlabel="Generated-only JSD (0–100)", ylabel="Mean ΔF1 (pp)")
+    axes[1].set(xlabel="Tokens per repetition (thousands)")
+    handles = [plt.Line2D([], [], marker="o", ls="", color=c, ms=4, label=l)
+               for c, l in ((C_REF, "Reference"), (C_LLM, "Control variants"), (C_BACK, "Backends"))]
+    fig.legend(handles=handles, loc="upper center", ncol=3, frameon=False,
+               bbox_to_anchor=(.55, 1.04), handletextpad=.1, columnspacing=1.0)
+    base = "; ".join(f"{SHORT_ARM[a]} JSD {p.loc[a, 'JSD']:.1f}, ΔF1 {p.loc[a, 'F1']:+.2f}"
+                     for a in BASELINE_ARMS if a in NON_LLM and a in p.index)
+    fig.text(.5, -.04, f"Non-LLM baselines (0 tokens): {base}", ha="center", fontsize=5.8, color="0.3")
+    fig.subplots_adjust(left=.14, right=.99, top=.92, bottom=.22)
+    save(fig, "quality_cost_frontier")
+
+
 def save_dataset_table():
     rows = []
     for filename, label in DATASET_LABELS.items():
@@ -265,43 +542,6 @@ def save_full_results(df: pd.DataFrame):
         out.to_latex(index=False, escape=False, float_format=lambda x: f"{x:.3f}"), encoding="utf-8")
 
 
-def save_real_baselines(df: pd.DataFrame):
-    """Export every real-only classifier baseline with repetition variability."""
-    full = df[df.arm == "full"].set_index("dataset")
-    dataset_order = list(DATASET_LABELS)
-    short = {
-        "heart_disease.csv": "Heart",
-        "breast_cancer_wisconsin_diagnostic.csv": "Breast",
-        "heart_failure_clinical_records.csv": "Failure",
-        "indian_diabetes.csv": "Diabetes",
-        "indian_liver_patient_dataset.csv": "Liver",
-        "parkinsons.csv": "Parkinson",
-    }
-    records = []
-    tex_rows = []
-    for model in MODELS:
-        for metric, metric_label in (("accuracy", "Acc."), ("f1", "F1")):
-            cells = []
-            for dataset in dataset_order:
-                mean = full.loc[dataset, f"{model}_{metric}_real"]
-                std = full.loc[dataset, f"{model}_{metric}_real_sd"]
-                records.append({
-                    "model": MODEL_LABELS[model], "metric": metric,
-                    "dataset": DATASET_LABELS[dataset], "mean": mean, "std": std,
-                })
-                cells.append("n/a" if pd.isna(mean) else f"{100 * mean:.1f} $\\pm$ {100 * std:.1f}")
-            tex_rows.append(
-                f"{MODEL_LABELS[model]} & {metric_label} & " + " & ".join(cells) + r" \\"
-            )
-        if model != MODELS[-1]:
-            tex_rows.append(r"\addlinespace[1pt]")
-    pd.DataFrame(records).to_csv(OUT / "real_only_baselines.csv", index=False)
-    header = "Model & Metric & " + " & ".join(short[d] for d in dataset_order) + r" \\"
-    tex = "\n".join([
-        r"\begin{tabular}{llrrrrrr}", r"\toprule", header, r"\midrule",
-        *tex_rows, r"\bottomrule", r"\end{tabular}", "",
-    ])
-    (OUT / "real_only_baselines.tex").write_text(tex, encoding="utf-8")
 
 
 def save_arm_tables(df: pd.DataFrame):
@@ -324,6 +564,8 @@ def save_arm_tables(df: pd.DataFrame):
     (OUT / "ablation_summary.tex").write_text(
         out.to_latex(index=False, escape=False, float_format=lambda x: f"{x:.2f}"), encoding="utf-8")
 
+    save_baseline_table(df)
+
     rows = []
     for arm in BACKEND_ARMS:
         g = df[df.arm == arm]
@@ -344,24 +586,43 @@ def save_arm_tables(df: pd.DataFrame):
         out.to_latex(index=False, escape=False, float_format=lambda x: f"{x:.2f}"), encoding="utf-8")
 
 
-def plot_utility_heatmap(df: pd.DataFrame):
-    full = df[df.arm == "full"].set_index("dataset")
-    acc = pd.DataFrame({MODEL_LABELS[m]: 100 * full[f"{m}_accuracy_delta"] for m in MODELS}).T
-    f1 = pd.DataFrame({MODEL_LABELS[m]: 100 * full[f"{m}_f1_delta"] for m in MODELS}).T
-    acc.columns = [DATASET_LABELS[c] for c in acc.columns]
-    f1.columns = [DATASET_LABELS[c] for c in f1.columns]
-    vmax = np.nanmax(np.abs(np.r_[acc.to_numpy().ravel(), f1.to_numpy().ravel()]))
-    fig, axes = plt.subplots(2, 1, figsize=(9.2, 7.3), constrained_layout=True)
-    for ax, mat, title in zip(axes, (acc, f1), ("Accuracy change", "F1 change")):
-        sns.heatmap(mat, cmap="RdBu_r", center=0, vmin=-vmax, vmax=vmax,
-                    annot=True, fmt=".1f", linewidths=.5, cbar_kws={"label": "percentage points"}, ax=ax)
-        ax.set_title(title, loc="left", fontweight="bold")
-        ax.set_xlabel("")
-        ax.set_ylabel("")
-        ax.tick_params(axis="x", rotation=25)
-    fig.savefig(OUT / "utility_heatmap.pdf", bbox_inches="tight")
-    fig.savefig(OUT / "utility_heatmap.png", dpi=220, bbox_inches="tight")
-    plt.close(fig)
+def baseline_label(arm: str) -> str:
+    if arm == "full":
+        return "Synthagent (GPT-4o mini)"
+    if arm == "backend_gpt_4_1":
+        return "Synthagent (GPT-4.1)"
+    return ARM_LABELS[arm]
+
+
+def save_baseline_table(df: pd.DataFrame):
+    """Summary and per-dataset F1 change for the generator comparison (RQ5)."""
+    arms = BASELINE_ARMS + [a for a in OPTIONAL_ARMS if a in set(df.arm)]
+    rows, per_ds = [], []
+    for arm in arms:
+        g = df[df.arm == arm]
+        rows.append({
+            "Generator": baseline_label(arm),
+            "JSD": g["Gen Synthetic Fidelity (JSD)_mean"].mean(),
+            "Corr.": g["Gen Correlation Stability_mean"].mean(),
+            "C2ST": g["Gen C2ST Accuracy_mean"].mean(),
+            "MIA": g["Gen MIA Attack AUC_mean"].mean(),
+            "$\\Delta$Acc. (pp)": 100 * g["mean_accuracy_delta"].mean(),
+            "$\\Delta$F1 (pp)": 100 * g["mean_f1_delta"].mean(),
+            "Seconds": g["gen_stats_generation_seconds_mean"].mean(),
+            "Tokens": g["gen_stats_total_tokens_mean"].mean(),
+        })
+        rec = {"Generator": baseline_label(arm)}
+        for dataset, label in DATASET_LABELS.items():
+            cell = g[g.dataset == dataset]
+            rec[label] = 100 * cell["mean_f1_delta"].iloc[0] if len(cell) else np.nan
+        per_ds.append(rec)
+    out = pd.DataFrame(rows)
+    out.to_csv(OUT / "baseline_summary.csv", index=False)
+    (OUT / "baseline_summary.tex").write_text(
+        out.to_latex(index=False, escape=False, float_format=lambda x: f"{x:.2f}"), encoding="utf-8")
+    pd.DataFrame(per_ds).to_csv(OUT / "baseline_f1_by_dataset.csv", index=False)
+
+
 
 
 def plot_baseline_landscape(df: pd.DataFrame):
@@ -392,147 +653,12 @@ def plot_baseline_landscape(df: pd.DataFrame):
     plt.close(fig)
 
 
-def plot_augmentation_uncertainty():
-    """Plot holdout-level utility changes after averaging over classifiers."""
-    records = []
-    for dataset, label in DATASET_LABELS.items():
-        fold = pd.read_csv(RUN / "full" / f"{Path(dataset).stem}_per_fold.csv")
-        for metric in ("accuracy", "f1"):
-            for _, row in fold.iterrows():
-                deltas = [
-                    row[f"{m}_{metric}_augmented"] - row[f"{m}_{metric}_original"]
-                    for m in MODELS
-                    if pd.notna(row.get(f"{m}_{metric}_augmented"))
-                    and pd.notna(row.get(f"{m}_{metric}_original"))
-                ]
-                records.append({
-                    "dataset": label, "metric": metric,
-                    "fold": int(row["fold"]), "delta": 100 * np.mean(deltas),
-                })
-    values = pd.DataFrame(records)
-    order = list(DATASET_LABELS.values())
-    fig, axes = plt.subplots(1, 2, figsize=(10.8, 4.2), constrained_layout=True, sharey=True)
-    palette = sns.color_palette("colorblind", len(order))
-    for ax, metric, title in zip(axes, ("accuracy", "f1"), ("Accuracy", "F1")):
-        subset = values[values.metric == metric]
-        for y, (dataset, color) in enumerate(zip(order, palette)):
-            x = subset[subset.dataset == dataset].delta.to_numpy()
-            mean = x.mean()
-            ci = t.ppf(.975, len(x) - 1) * x.std(ddof=1) / np.sqrt(len(x))
-            jitter = np.linspace(-.12, .12, len(x))
-            ax.scatter(x, y + jitter, s=18, color=color, alpha=.38, linewidth=0)
-            ax.errorbar(mean, y, xerr=ci, fmt="D", markersize=5.5, color=color,
-                        markeredgecolor="white", markeredgewidth=.7, capsize=3, lw=1.7)
-        ax.axvline(0, color="0.35", lw=1)
-        ax.set_title(title, loc="left", fontweight="bold")
-        ax.set_xlabel("real + generated minus real only (pp)")
-        ax.grid(axis="x", alpha=.25)
-        ax.grid(axis="y", visible=False)
-    axes[0].set_yticks(range(len(order)), order)
-    axes[0].invert_yaxis()
-    fig.savefig(OUT / "augmentation_uncertainty.pdf", bbox_inches="tight")
-    fig.savefig(OUT / "augmentation_uncertainty.png", dpi=220, bbox_inches="tight")
-    plt.close(fig)
 
 
-def plot_configuration_scorecard(df: pd.DataFrame):
-    """Rank each completed architecture arm on every reported objective."""
-    rows = []
-    for arm in ARCH_ARMS:
-        g = df[df.arm == arm]
-        rows.append({
-            "arm": ARM_LABELS[arm],
-            "JSD fidelity": g["Gen Synthetic Fidelity (JSD)_mean"].mean(),
-            "Correlation": g["Gen Correlation Stability_mean"].mean(),
-            "C2ST closeness": -abs(g["Gen C2ST Accuracy_mean"].mean() - .5),
-            "MIA closeness": -abs(g["Gen MIA Attack AUC_mean"].mean() - .5),
-            "Accuracy change": g["mean_accuracy_delta"].mean(),
-            "F1 change": g["mean_f1_delta"].mean(),
-            "Speed": -g["gen_stats_generation_seconds_mean"].mean(),
-            "Token economy": -g["gen_stats_total_tokens_mean"].mean(),
-        })
-    raw = pd.DataFrame(rows).set_index("arm")
-    # The SMOTE arm contains only a synthetic minority tail, so its raw C2ST
-    # accuracy has unequal class priors and must not be ranked against full-table
-    # generators.
-    raw.loc[ARM_LABELS["smote"], "C2ST closeness"] = np.nan
-    ranks = raw.rank(axis=0, ascending=False, method="average")
-    fig, ax = plt.subplots(figsize=(9.8, 4.3), constrained_layout=True)
-    sns.heatmap(ranks, ax=ax, cmap="Blues_r", vmin=1, vmax=len(ARCH_ARMS),
-                annot=True, fmt=".1f", linewidths=.6,
-                cbar_kws={"label": "rank (1 = best)", "shrink": .8})
-    ax.set(xlabel="Evaluation objective", ylabel="")
-    ax.tick_params(axis="x", rotation=30)
-    ax.set_title("No single configuration wins every objective", loc="left", fontweight="bold")
-    fig.savefig(OUT / "configuration_scorecard.pdf", bbox_inches="tight")
-    fig.savefig(OUT / "configuration_scorecard.png", dpi=220, bbox_inches="tight")
-    plt.close(fig)
 
 
-def plot_ranks(rank_results):
-    fig, axes = plt.subplots(1, 2, figsize=(10, 4.7), constrained_layout=True)
-    for ax, (metric, ranks) in zip(axes, rank_results.items()):
-        ranks = ranks.sort_values(ascending=False)
-        labels = [ARM_LABELS[a] for a in ranks.index]
-        colors = ["#1f77b4" if a == "full" else "#9ecae1" if a != "smote" else "#fdae6b" for a in ranks.index]
-        ax.barh(labels, ranks.values, color=colors, edgecolor="white")
-        ax.set_xlabel("Average rank (lower is better)")
-        ax.set_title(metric.upper(), loc="left", fontweight="bold")
-        ax.set_xlim(1, len(ranks))
-        ax.grid(axis="x", alpha=.25)
-    fig.savefig(OUT / "architecture_ranks.pdf", bbox_inches="tight")
-    fig.savefig(OUT / "architecture_ranks.png", dpi=220, bbox_inches="tight")
-    plt.close(fig)
 
 
-def plot_frontier(df: pd.DataFrame):
-    rows = []
-    for arm in ARCH_ARMS:
-        g = df[df.arm == arm]
-        rows.append({
-            "arm": arm,
-            "JSD": g["Gen Synthetic Fidelity (JSD)_mean"].mean(),
-            "F1": 100 * g["mean_f1_delta"].mean(),
-            "C2ST": g["Gen C2ST Accuracy_mean"].mean(),
-            "seconds": g["gen_stats_generation_seconds_mean"].mean(),
-        })
-    p = pd.DataFrame(rows)
-    smote = p[p.arm == "smote"].iloc[0]
-    p = p[p.arm != "smote"].reset_index(drop=True)
-    fig, axes = plt.subplots(1, 2, figsize=(10.5, 4.4), constrained_layout=True)
-    palette = sns.color_palette("colorblind", len(p))
-    handles = []
-    for i, row in p.iterrows():
-        label = ARM_LABELS[row.arm]
-        h = axes[0].scatter(row.JSD, row.F1, s=85, color=palette[i], edgecolor="white",
-                            linewidth=.8, label=label)
-        handles.append(h)
-        axes[1].scatter(row.seconds, row.F1, s=85, color=palette[i], edgecolor="white", linewidth=.8)
-    axes[0].set(xlabel="Generated-only JSD fidelity (0-100)", ylabel="Mean augmented F1 change (pp)")
-    axes[1].set(xlabel="Mean generation time per repetition (s)", ylabel="Mean augmented F1 change (pp)")
-    axes[0].set_xlim(p.JSD.min() - .12, p.JSD.max() + .12)
-    axes[1].set_xlim(p.seconds.min() - 15, p.seconds.max() + 15)
-    ymin, ymax = p.F1.min() - .18, p.F1.max() + .18
-    for ax in axes:
-        ax.set_ylim(ymin, ymax)
-    axes[0].text(.02, .04,
-                 f"SMOTE reference: JSD {smote.JSD:.1f}, ΔF1 {smote.F1:+.2f} pp",
-                 transform=axes[0].transAxes, fontsize=8, color="0.30",
-                 bbox=dict(boxstyle="round,pad=.3", facecolor="white", edgecolor="0.75"))
-    axes[1].text(.02, .04,
-                 f"SMOTE reference: {smote.seconds:.3f} s, ΔF1 {smote.F1:+.2f} pp",
-                 transform=axes[1].transAxes, fontsize=8, color="0.30",
-                 bbox=dict(boxstyle="round,pad=.3", facecolor="white", edgecolor="0.75"))
-    for ax, title in zip(axes, ("Quality and utility", "Cost and utility")):
-        ax.axhline(0, color="0.5", lw=.8)
-        ax.grid(alpha=.25)
-        ax.set_title(title, loc="left", fontweight="bold")
-    fig.legend(handles=handles, labels=[ARM_LABELS[a] for a in p.arm], loc="outside lower center",
-               ncol=4, frameon=False, fontsize=8)
-    fig.set_constrained_layout_pads(h_pad=.13)
-    fig.savefig(OUT / "quality_cost_frontier.pdf", bbox_inches="tight")
-    fig.savefig(OUT / "quality_cost_frontier.png", dpi=220, bbox_inches="tight")
-    plt.close(fig)
 
 
 def plot_backends(df: pd.DataFrame):
@@ -630,15 +756,16 @@ def full_cell_tests():
 
 
 def main():
-    sns.set_theme(style="whitegrid", context="paper", font_scale=1.05)
+    print_style()
     summary = pd.read_csv(RUN / "ablation_summary.csv")
     valid = completed_arms(summary)
-    expected = set(ARCH_ARMS + BACKEND_ARMS)
+    expected = set(ARCH_ARMS + BACKEND_ARMS + BASELINE_ARMS)
     missing = expected - set(valid)
     if missing:
         raise RuntimeError(f"Required complete arms missing: {sorted(missing)}")
     summary = refresh_utility_from_per_fold(summary[summary.arm.isin(valid)].copy())
     summary = mask_failed_generated_metrics(summary)
+    summary = mask_unrun_cells(summary)
     summary = add_utility_columns(summary)
     summary.to_csv(OUT / "analysis_rows.csv", index=False)
     (OUT / "included_arms.txt").write_text("\n".join(valid) + "\n", encoding="utf-8")
@@ -653,7 +780,8 @@ def main():
     comparison_rows = []
     architecture_ranks = {}
     rank_rows = []
-    for family, arms in (("architecture", ARCH_ARMS), ("backend", BACKEND_ARMS)):
+    for family, arms in (("architecture", ARCH_ARMS), ("backend", BACKEND_ARMS),
+                         ("baseline", BASELINE_ARMS)):
         for metric in ("accuracy", "f1"):
             ranks, omnibus, comparisons = rank_and_test(summary, arms, metric, family)
             omnibus_rows.append(omnibus)

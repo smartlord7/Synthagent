@@ -32,6 +32,7 @@
 \definecolor{spurple}{HTML}{6B46C1}
 \newcommand{\system}{\textsc{Synthagent}\xspace}
 \newcommand{\best}[1]{\textbf{#1}}
+\newcommand{\sd}[1]{\,{\tiny$\pm$#1}}
 \newcommand{\resq}[1]{\textbf{RQ#1}}
 
 % Figures are produced by generate_paper_assets.py from the ablation run.
@@ -294,7 +295,7 @@ Table~\ref{tab:datasets} summarizes the six medical classification tables. Five 
 \label{tab:datasets}
 \small
 \setlength{\tabcolsep}{4pt}
-\begin{tabular}{lrrrrr}
+\begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}lrrrrr@{}}
 \toprule
 Dataset & Rows & Feat. & Classes & Min.\ (\%) & Miss.\ (\%) \\
 \midrule
@@ -305,7 +306,7 @@ Diabetes & 768 & 8 & 2 & 34.9 & 0.0 \\
 Liver disease & 583 & 10 & 2 & 28.6 & 0.1 \\
 Parkinson's & 195 & 22 & 2 & 24.6 & 0.0 \\
 \bottomrule
-\end{tabular}
+\end{tabular*}
 \end{table}
 
 Each dataset-configuration pair uses ten seeded 80/20 holdouts (seeds 43 to 52). These are repeated holdouts, not disjoint folds. In each repetition, 20\% of the training partition is sampled as candidate LLM context and the requested synthetic volume equals the real training size. Generation uses temperature 0.3 and chunks of 30 rows. The same real test partition is shared by three training regimes within a repetition: real only, generated only, and real plus generated. The ten downstream classifiers are random forest (RF), decision tree (DT), multilayer perceptron (MLP), support vector machine (SVM), logistic regression (LR), $k$-nearest neighbors ($k$NN), Gaussian naive Bayes (NB), gradient boosting (GB), AdaBoost and XGBoost. We use binary F1 for binary tasks and prevalence-weighted F1 for the multiclass heart-disease task. Binary F1 scores the class coded 1, which is the minority class for heart failure and diabetes but the majority class for liver disease and Parkinson's. The XGBoost evaluation on liver disease failed in every repetition because XGBoost requires class labels $0,\dots,k-1$ and the liver target is coded $\{1,2\}$. The released code now re-encodes labels for XGBoost, but filling the cell retroactively would require regenerating the synthetic tables of every configuration, so we report 59 of 60 classifier-dataset cells rather than mix runs from different code versions.
@@ -353,11 +354,11 @@ Table~\ref{tab:baselines} reports every real-only baseline as mean and standard 
 
 \begin{table*}[t]
 \centering
-\caption{Real-only baselines (RQ1) over ten repeated 80/20 holdouts, as mean $\pm$ standard deviation in percent. Heart is the five-class heart-disease table; Failure is heart failure. XGBoost on liver disease is n/a because that target is coded $\{1,2\}$ while the XGBoost version used requires labels $\{0,1\}$, so all ten fits failed; we report the gap rather than impute it.}
+\caption{Real-only baselines (RQ1) over ten repeated 80/20 holdouts, as mean in percent with the standard deviation in small type. XGBoost on liver disease (--) is missing because that target is coded $\{1,2\}$ while the XGBoost version used requires labels $\{0,1\}$, so all ten fits failed; we report the gap rather than impute it.}
 \label{tab:baselines}
-\scriptsize
-\setlength{\tabcolsep}{3.2pt}
-\resizebox{\textwidth}{!}{\input{generated/real_only_baselines.tex}}
+\footnotesize
+\setlength{\tabcolsep}{2pt}
+\input{generated/real_only_baselines.tex}
 \end{table*}
 
 Averaged over classifiers and datasets, real-only accuracy is 75.4\%, but this scalar hides that dataset, learner, class balance and split jointly determine the baseline. All augmentation effects below are therefore paired with the matching classifier, dataset and holdout.
@@ -368,33 +369,36 @@ Averaged over classifiers and datasets, real-only accuracy is 75.4\%, but this s
 \subsection{RQ2: Reference Configuration}
 Table~\ref{tab:full} reports the reference configuration (GPT-4o mini). The generated tables are 99.7\% complete, and generated-only marginal fidelity averages 72.7 out of 100, ranging from 65.2 on the five-class heart-disease table to 80.2 on diabetes. The membership attack is near chance on average (AUC 0.526) and stays at or below 0.567 on every dataset; it is a diagnostic for this attack, not a privacy guarantee. The C2ST accuracy of 0.878 shows that a classifier can still separate real from generated rows, which is expected for in-context generation from a few dozen demonstrations and is one reason we do not claim that the generated rows are interchangeable with real ones.
 
-\begin{table*}[t]
+\begin{table}[t]
 \centering
 \caption{Reference configuration (RQ2): GPT-4o mini, averaged over ten repetitions and all available classifiers. JSD and correlation are generated-only scores on a 0--100 scale. Accuracies are in percent; utility changes are in percentage points relative to real-only training.}
 \label{tab:full}
-\small
-\begin{tabular}{lrrrrrrrr}
+\footnotesize
+\setlength{\tabcolsep}{2.2pt}
+\begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}lrrrrrrrr@{}}
 \toprule
-Dataset & JSD & Corr. & C2ST & MIA AUC & Acc.\ real & Acc.\ aug. & $\Delta$Acc. & $\Delta$F1 \\
+& \multicolumn{4}{c}{Generated only} & \multicolumn{2}{c}{Acc.\ (\%)} & \multicolumn{2}{c}{Change (pp)} \\
+\cmidrule(lr){2-5}\cmidrule(lr){6-7}\cmidrule(l){8-9}
+Dataset & JSD & Corr. & C2ST & MIA & Real & Aug. & Acc. & F1 \\
 \midrule
-Breast cancer & 77.2 & 74.5 & 0.911 & 0.550 & 95.1 & 94.4 & $-0.66$ & $-0.62$ \\
+Breast & 77.2 & 74.5 & 0.911 & 0.550 & 95.1 & 94.4 & $-0.66$ & $-0.62$ \\
 Diabetes & 80.2 & 44.0 & 0.897 & 0.504 & 74.2 & 74.1 & $-0.03$ & $+2.39$ \\
-Heart disease & 65.2 & 76.6 & 0.893 & 0.507 & 56.6 & 53.4 & $-3.15$ & $-0.97$ \\
-Heart failure & 71.2 & 81.2 & 0.892 & 0.534 & 74.1 & 71.6 & $-2.53$ & $-1.00$ \\
-Liver disease & 71.8 & 73.8 & 0.883 & 0.495 & 67.4 & 67.6 & $+0.19$ & $+0.13$ \\
+Heart dis. & 65.2 & 76.6 & 0.893 & 0.507 & 56.6 & 53.4 & $-3.15$ & $-0.97$ \\
+Heart fail. & 71.2 & 81.2 & 0.892 & 0.534 & 74.1 & 71.6 & $-2.53$ & $-1.00$ \\
+Liver & 71.8 & 73.8 & 0.883 & 0.495 & 67.4 & 67.6 & $+0.19$ & $+0.13$ \\
 Parkinson's & 70.6 & 85.3 & 0.789 & 0.567 & 84.9 & 84.0 & $-0.97$ & $-0.77$ \\
 \midrule
-Macro mean & 72.7 & 72.6 & 0.878 & 0.526 & 75.4 & 74.2 & $-1.19$ & $-0.14$ \\
+Mean & 72.7 & 72.6 & 0.878 & 0.526 & 75.4 & 74.2 & $-1.19$ & $-0.14$ \\
 \bottomrule
-\end{tabular}
-\end{table*}
+\end{tabular*}
+\end{table}
 
 Downstream utility is heterogeneous. Averaged over classifiers, augmentation leaves liver disease and diabetes accuracy essentially unchanged ($+0.19$ and $-0.03$ points), raises diabetes F1 by $+2.39$ points and lowers accuracy on the two heart tables. Figure~\ref{fig:heatmap} resolves this by classifier. Accuracy improves in 18 of 59 classifier-dataset cells, decreases in 38 and is unchanged in three; F1 improves in 26, decreases in 31 and is unchanged in two. The largest gains are concentrated where real-only training fails on the minority class: $k$NN on heart failure, whose real-only F1 is 0.7\%, gains $+15.3$ F1 points, and MLP on Parkinson's, the most unstable baseline, gains $+8.2$ accuracy points. After Holm correction over 59 tests per metric, no individual cell is significant at 0.05.
 
 \begin{figure*}[t]
 \centering
-\assetfigure{.82\textwidth}{generated/utility_heatmap.pdf}
-\caption{Change from real-only to real-plus-generated training for the reference configuration (RQ2), per classifier and dataset. Blank cells denote a failed evaluation. The same generator can help one learner and hurt another, which is why we report the full matrix.}
+\assetfigure{\textwidth}{generated/utility_heatmap.pdf}
+\caption{Change from real-only to real-plus-generated training for the reference configuration (RQ2), per classifier and dataset. Hatched cells (n/a) were not evaluated. The same generator can help one learner and hurt another, which is why we report the full matrix.}
 \label{fig:heatmap}
 \end{figure*}
 
@@ -402,12 +406,12 @@ Figure~\ref{fig:uncertainty} adds holdout-level uncertainty. Each point averages
 
 \noindent\textit{Takeaway.} The reference system delivers complete tables with near-chance membership-attack performance, but its utility effect is learner-specific: it helps most where real-only training ignores the minority class and slightly hurts already strong learners. The next question is which design choices move these numbers.
 
-\begin{figure*}[t]
+\begin{figure}[t]
 \centering
-\assetfigure{.8\textwidth}{generated/augmentation_uncertainty.pdf}
+\assetfigure{\columnwidth}{generated/augmentation_uncertainty.pdf}
 \caption{Repeated-holdout uncertainty for the reference configuration (RQ2). Points are seeded holdouts after averaging paired changes over classifiers; diamonds are means and bars are 95\% $t$ intervals. The plot is descriptive: the six datasets, not the holdouts, are the independent blocks in the configuration tests.}
 \label{fig:uncertainty}
-\end{figure*}
+\end{figure}
 
 \subsection{RQ3: Control Components and the Noise Floor}
 \label{sec:ablation}
@@ -417,10 +421,12 @@ Table~\ref{tab:ablation} compares the eight architecture arms. The first four ro
 \centering
 \caption{Architecture arms (RQ3, RQ5), all with the GPT-4o mini backend. The first four rows are functionally equivalent and define the noise floor. Seconds and tokens are means per repetition. Bold marks the best value among the LLM arms; lower is better for C2ST, for the distance of MIA AUC from 0.5, and for cost.}
 \label{tab:ablation}
-\small
-\begin{tabular}{lrrrrrrrr}
+\footnotesize
+\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}lrrrrrrrr@{}}
 \toprule
-Configuration & JSD & Corr. & C2ST & MIA AUC & $\Delta$Acc. & $\Delta$F1 & Seconds & Tokens \\
+& \multicolumn{4}{c}{Generated-only fidelity and privacy} & \multicolumn{2}{c}{Utility change (pp)} & \multicolumn{2}{c}{Cost per repetition} \\
+\cmidrule(lr){2-5}\cmidrule(lr){6-7}\cmidrule(l){8-9}
+Configuration & JSD & Corr. & C2ST & MIA AUC & Acc. & F1 & Seconds & Tokens \\
 \midrule
 \multicolumn{9}{l}{\textit{Noise floor: functionally equivalent runs of the reference pipeline}}\\
 Reference \system & 72.70 & 72.57 & 0.878 & 0.526 & \best{$-1.19$} & $-0.14$ & 378.7 & 73,510 \\
@@ -435,8 +441,8 @@ LLM-selected hyperparameters & 72.53 & 70.10 & 0.886 & 0.526 & $-1.27$ & $+0.09$
 \midrule
 SMOTE$^{\dagger}$ & 69.62 & 83.52 & 0.773 & 0.525 & $-1.84$ & $-4.70$ & 0.014 & 0 \\
 \bottomrule
-\multicolumn{9}{p{.95\textwidth}}{\footnotesize $^{\dagger}$SMOTE generates only minority-class rows, so its generated-only metrics are not commensurate with the LLM arms. They failed to compute on heart disease and liver disease (0\% generated-cell density) and are averaged over the remaining four tables; utility columns cover all six.}
-\end{tabular}
+\end{tabular*}
+\par\vspace{2pt}\raggedright \footnotesize $^{\dagger}$SMOTE generates only minority-class rows, so its generated-only metrics are not commensurate with the LLM arms. They failed to compute on heart disease and liver disease (0\% generated-cell density) and are averaged over the remaining four tables; utility columns cover all six.
 \end{table*}
 
 Against this floor, the context strategies have small effects. Dense context stays inside the floor on every metric. Diverse context is the only control choice that leaves the floor on fidelity: it gives the highest JSD (73.27) and correlation (73.72) and the lowest C2ST accuracy (0.872), but also the highest MIA AUC (0.544). This is the trade-off one would expect from selecting demonstrations that cover the feature space: generated rows land closer to more real records, which helps fidelity and slightly helps the membership attack. LLM-selected hyperparameters stay inside the floor on fidelity and utility, fall below it on correlation (70.10) and cost 57\% more tokens (115,245 versus 73,510), so delegating configuration to the LLM does not pay off in this study.
@@ -450,12 +456,12 @@ The Friedman tests confirm that the architecture arms are indistinguishable in u
 \label{fig:ranks}
 \end{figure}
 
-\begin{figure*}[t]
+\begin{figure}[t]
 \centering
-\assetfigure{.75\textwidth}{generated/configuration_scorecard.pdf}
+\assetfigure{\columnwidth}{generated/configuration_scorecard.pdf}
 \caption{Multi-objective rank scorecard for the architecture arms (rank 1 is best). C2ST and MIA are ranked by distance from 0.5. The SMOTE C2ST rank is omitted because its minority-only output makes raw C2ST accuracy non-commensurate. Ranks describe trade-offs and do not replace the significance tests.}
 \label{fig:scorecard}
-\end{figure*}
+\end{figure}
 
 What, then, do the control components contribute? Their value lies in reliability and observability rather than in shifting the fidelity mean, and the experiment reflects this. Context budgeting and rotation let the same 20\% candidate pool fit every backend's window without manual tuning. The parser, repair path and validator are safety mechanisms, and the backends exercise them differently. The reference GPT-4o mini runs recorded no JSON repair and no rule violation. GPT-4.1 mini, the fastest backend, recorded on average 7.4 typed-rule violations per repetition on breast cancer, all routed to targeted correction, and needed one JSON repair across its ten diabetes repetitions. Its tables were still 100\% complete with the best mean accuracy change of any configuration, which is the behavior the verifier is designed to provide: a faster but less disciplined backend can be used safely because its defects are caught and repaired rather than silently admitted. Exact-volume completion turns under-generation from a silent defect into recorded state. A dedicated stress test with weaker or local models, stricter rules and boundary enforcement is needed to measure how often each safeguard fires.
 
@@ -470,9 +476,9 @@ Backend choice moves the outcome more than any control toggle (Table~\ref{tab:ba
 \centering
 \caption{LLM backends (RQ4) under the reference configuration. Seconds and tokens are means per repetition.}
 \label{tab:backend}
-\small
+\footnotesize
 \setlength{\tabcolsep}{3pt}
-\begin{tabular}{lrrrrrr}
+\begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}lrrrrrr@{}}
 \toprule
 Backend & JSD & Corr. & $\Delta$Acc. & $\Delta$F1 & Sec. & Tokens \\
 \midrule
@@ -481,15 +487,15 @@ GPT-4.1 mini & 73.60 & 62.82 & \best{$-0.22$} & $+0.92$ & \best{168.5} & 72,069 
 GPT-4o & 73.95 & 64.32 & $-0.51$ & $+0.25$ & 255.2 & 80,046 \\
 GPT-4.1 & \best{75.72} & 63.30 & $-0.45$ & \best{$+1.09$} & 201.7 & 80,652 \\
 \bottomrule
-\end{tabular}
+\end{tabular*}
 \end{table}
 
-\begin{figure*}[t]
+\begin{figure}[t]
 \centering
-\assetfigure{.75\textwidth}{generated/quality_cost_frontier.pdf}
+\assetfigure{\columnwidth}{generated/quality_cost_frontier.pdf}
 \caption{Quality-cost frontier (RQ4, RQ5). No configuration dominates fidelity, utility and cost. SMOTE is a near-free control; the LLM arms occupy a narrow fidelity band and a much wider latency band.}
 \label{fig:frontier}
-\end{figure*}
+\end{figure}
 
 \subsection{RQ5: Cost and the SMOTE Baseline}
 \label{sec:rq5}
