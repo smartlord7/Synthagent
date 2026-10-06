@@ -1,0 +1,7 @@
+Dataset,Rows,Features,Target,Classes,Minority (\%),Missing (\%)
+Heart disease,303,13,num,5,4.29042904290429,0.14144271570014144
+Breast cancer,569,30,Diagnosis,2,37.25834797891037,0.0
+Heart failure,299,12,death\_event,2,32.10702341137124,0.0
+Diabetes,768,8,Outcome,2,34.895833333333336,0.0
+Liver disease,583,10,Selector,2,28.644939965694682,0.06237330422579136
+Parkinson's,195,22,status,2,24.615384615384617,0.0
