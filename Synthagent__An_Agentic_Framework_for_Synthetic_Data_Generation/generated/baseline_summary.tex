@@ -1,11 +1,11 @@
-\begin{tabular}{lrrrrrrrr}
+\begin{tabular}{lrrrrrrrrr}
 \toprule
-Generator & JSD & Corr. & C2ST & MIA & $\Delta$Acc. (pp) & $\Delta$F1 (pp) & Seconds & Tokens \\
+Generator & JSD & Corr. & C2ST & MIA & Valid (%) & $\Delta$Acc. (pp) & $\Delta$F1 (pp) & Seconds & Tokens \\
 \midrule
-Synthagent (GPT-4o mini) & 72.70 & 72.57 & 0.88 & 0.53 & -1.19 & -0.14 & 378.71 & 73509.52 \\
-Synthagent (GPT-4.1) & 75.72 & 63.30 & 0.88 & 0.53 & -0.44 & 1.09 & 201.70 & 80652.17 \\
-SMOTE & 69.95 & 85.02 & 0.79 & 0.53 & -3.15 & 0.50 & 0.02 & 0.00 \\
-CTGAN & 77.40 & 75.12 & 0.95 & 0.50 & -1.31 & -3.15 & 16.95 & 0.00 \\
-TVAE & 71.23 & 85.58 & 0.89 & 0.51 & -0.06 & -0.22 & 6.71 & 0.00 \\
+Synthagent (GPT-4o mini) & 72.70 & 72.57 & 0.88 & 0.53 & NaN & -1.19 & -0.14 & 378.71 & 73509.52 \\
+Synthagent (GPT-4.1) & 75.72 & 63.30 & 0.88 & 0.53 & NaN & -0.44 & 1.09 & 201.70 & 80652.17 \\
+SMOTE & 69.93 & 85.02 & 0.79 & 0.53 & 85.73 & -3.08 & 0.33 & 0.01 & 0.00 \\
+CTGAN & 77.62 & 75.18 & 0.94 & 0.50 & 29.58 & -1.40 & -3.37 & 14.61 & 0.00 \\
+TVAE & 71.85 & 85.63 & 0.87 & 0.51 & 75.59 & -0.09 & -0.21 & 5.60 & 0.00 \\
 \bottomrule
 \end{tabular}

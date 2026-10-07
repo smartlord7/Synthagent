@@ -88,7 +88,7 @@ Small data makes evaluation as important as generation. With six datasets of a f
 \end{enumerate}
 
 \paragraph*{Key findings}
-(i)~The control layer makes LLM synthesis dependable: generated tables are 99.7\% complete, and fidelity is stable across every control variant (JSD 72.4--73.3 out of 100). (ii)~Backend choice is the only factor that clearly exceeds the noise floor: GPT-4.1 raises marginal fidelity to 75.7 and turns the mean F1 change positive ($+1.09$ points), and GPT-4.1 mini brings the mean accuracy change to $-0.23$ points, but stronger backends preserve pairwise correlations less well. (iii)~Against SMOTE, CTGAN and TVAE, no generator dominates. GPT-4.1 under \system gives the largest mean F1 gain; TVAE gives the best mean accuracy change in a few seconds of CPU time; CTGAN reaches the highest marginal fidelity but produces the most detectable rows; SMOTE gives the largest F1 gains on the two rare-positive tables but loses 8.1 F1 points where the scored class is the majority. The LLM arms never shift a dataset's mean F1 by more than 6.4 points in either direction. (iv)~No configuration is a statistically significant utility winner across six datasets, and augmentation helps some learner-dataset pairs while hurting others. Synthetic volume is therefore not a substitute for evidence; the value of the control plane is that it makes the trade-off measurable before augmented data is used.
+(i)~The control layer makes LLM synthesis dependable: generated tables are 99.7\% complete, and fidelity is stable across every control variant (JSD 72.4--73.3 out of 100). (ii)~Backend choice is the only factor that clearly exceeds the noise floor: GPT-4.1 raises marginal fidelity to 75.7 and turns the mean F1 change positive ($+1.09$ points), and GPT-4.1 mini brings the mean accuracy change to $-0.23$ points, but stronger backends preserve pairwise correlations less well. (iii)~Against SMOTE, CTGAN and TVAE, no generator dominates. GPT-4.1 under \system gives the largest mean F1 gain; TVAE gives the best mean accuracy change in a few seconds of CPU time; CTGAN reaches the highest marginal fidelity but produces the most detectable rows; SMOTE gives the largest F1 gains on the two rare-positive tables but loses 8.2 F1 points where the scored class is the majority. The LLM arms never shift a dataset's mean F1 by more than 6.4 points in either direction. (iv)~No configuration is a statistically significant utility winner across six datasets, and augmentation helps some learner-dataset pairs while hurting others. Synthetic volume is therefore not a substitute for evidence; the value of the control plane is that it makes the trade-off measurable before augmented data is used.
 
 \paragraph*{Paper organization} Section~\ref{sec:related} positions \system against tabular generators, LLM-based data preparation, privacy evaluation and cross-silo learning. Section~\ref{sec:problem} defines the small-data regime and states synthesis as a constrained multi-objective problem. Section~\ref{sec:system} presents the system: its explicit control state, context budgeting, verification and recovery, exact-volume completion and a cross-silo deployment pattern. Section~\ref{sec:method} describes the datasets, configurations, metrics and statistical protocol, organized around five research questions, which Section~\ref{sec:results} answers in turn. Section~\ref{sec:discussion} discusses what the evidence supports, its limitations and its implications, and Section~\ref{sec:conclusion} concludes.
 
@@ -437,7 +437,7 @@ Dense context & 72.87 & 70.88 & 0.878 & 0.525 & $-1.24$ & $+0.07$ & 238.8 & 72,6
 Diverse context & \best{73.27} & \best{73.72} & \best{0.872} & 0.544 & $-1.34$ & $-0.13$ & 271.1 & 73,757 \\
 LLM-selected hyperparameters & 72.53 & 70.10 & 0.886 & 0.526 & $-1.25$ & $+0.11$ & 310.2 & 115,245 \\
 \midrule
-SMOTE$^{\dagger}$ & 69.95 & 85.02 & 0.795 & 0.532 & $-3.15$ & $+0.50$ & 0.015 & 0 \\
+SMOTE$^{\dagger}$ & 69.93 & 85.02 & 0.795 & 0.532 & $-3.08$ & $+0.33$ & 0.015 & 0 \\
 \bottomrule
 \end{tabular*}
 \par\vspace{2pt}\raggedright \footnotesize $^{\dagger}$SMOTE emits only non-majority rows, so its generated-only metrics describe that tail and are not directly commensurate with full-table generators. Table~\ref{tab:generators} compares it with CTGAN and TVAE.
@@ -445,7 +445,7 @@ SMOTE$^{\dagger}$ & 69.95 & 85.02 & 0.795 & 0.532 & $-3.15$ & $+0.50$ & 0.015 & 
 
 Against this floor, the context strategies have small effects. Dense context stays inside the floor on every metric. Diverse context is the only control choice that leaves the floor on fidelity: it gives the highest JSD (73.27) and correlation (73.72) and the lowest C2ST accuracy (0.872), but also the highest MIA AUC (0.544). This is the trade-off one would expect from selecting demonstrations that cover the feature space: generated rows land closer to more real records, which helps fidelity and slightly helps the membership attack. LLM-selected hyperparameters stay inside the floor on fidelity and utility, fall below it on correlation (70.10) and cost 57\% more tokens (115,245 versus 73,510), so delegating configuration to the LLM does not pay off in this study.
 
-The Friedman tests confirm that the architecture arms are indistinguishable in utility: $\chi^2_F(7)=5.25$, $p=.629$ for accuracy and $\chi^2_F(7)=3.83$, $p=.799$ for F1, and every Holm-adjusted post-hoc comparison has $p_{\mathrm{Holm}}=1.0$. Figure~\ref{fig:ranks} shows the average ranks. LLM-selected hyperparameters rank best on accuracy (3.42) and the inert no-post-processing arm best on F1 (3.33), which itself illustrates how little the ranks separate: an arm that changes nothing ranks first. SMOTE ranks last on accuracy (5.67) but ties for third on F1 (4.17). Figure~\ref{fig:scorecard} summarizes the multi-objective picture: diverse context leads on fidelity, the reference leads on mean accuracy change among the LLM arms, and SMOTE leads on cost, correlation and mean F1 change but ranks last on JSD and accuracy.
+The Friedman tests confirm that the architecture arms are indistinguishable in utility: $\chi^2_F(7)=3.10$, $p=.875$ for accuracy and $\chi^2_F(7)=4.39$, $p=.734$ for F1, and every Holm-adjusted post-hoc comparison has $p_{\mathrm{Holm}}=1.0$. Figure~\ref{fig:ranks} shows the average ranks. LLM-selected hyperparameters rank best on accuracy (3.75) and the inert no-post-processing arm best on F1 (3.33), which itself illustrates how little the ranks separate: an arm that changes nothing ranks first. SMOTE ranks sixth of eight on accuracy (5.00) but second on F1 (3.67). Figure~\ref{fig:scorecard} summarizes the multi-objective picture: diverse context leads on fidelity, the reference leads on mean accuracy change among the LLM arms, and SMOTE leads on cost, correlation and mean F1 change but ranks last on JSD and accuracy.
 
 \begin{figure}[t]
 \centering
@@ -497,31 +497,31 @@ GPT-4.1 & \best{75.72} & 63.30 & $-0.44$ & \best{$+1.09$} & 201.7 & 80,652 \\
 
 \subsection{RQ5: LLM Synthesis Versus Non-LLM Generators}
 \label{sec:rq5}
-Table~\ref{tab:generators} places the reference and the strongest backend next to three generators that need no LLM. Cost separates them first. SMOTE needs 0.015 seconds per repetition; TVAE and CTGAN fit in 6.7 and 16.9 seconds of CPU time; the LLM arms spend 73,000 to 81,000 tokens and several minutes of API time, but no per-table training.
+Table~\ref{tab:generators} places the reference and the strongest backend next to three generators that need no LLM. Cost separates them first. SMOTE needs 0.015 seconds per repetition; TVAE and CTGAN fit in 5.6 and 14.6 seconds of CPU time; the LLM arms spend 73,000 to 81,000 tokens and several minutes of API time, but no per-table training.
 
 \begin{table}[t]
 \centering
 \caption{Generators compared on the same holdouts (RQ5). Generated-only JSD and correlation are on a 0--100 scale; utility changes are in percentage points. Seconds are API wall-clock for the LLM arms and CPU fit-and-sample time for the others.}
 \label{tab:generators}
-\footnotesize
-\setlength{\tabcolsep}{2pt}
-\begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}lrrrrrrrr@{}}
+\scriptsize
+\setlength{\tabcolsep}{1.5pt}
+\begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}lrrrrrrrrr@{}}
 \toprule
-Generator & JSD & Corr. & C2ST & MIA & $\Delta$Acc. & $\Delta$F1 & Sec. & Tok. \\
+Generator & JSD & Corr. & C2ST & MIA & Valid & $\Delta$Acc. & $\Delta$F1 & Sec. & Tok. \\
 \midrule
-\system, 4o mini & 72.7 & 72.6 & 0.878 & 0.526 & $-1.19$ & $-0.14$ & 379 & 73.5k \\
-\system, 4.1 & 75.7 & 63.3 & 0.877 & 0.527 & $-0.44$ & \best{$+1.09$} & 202 & 80.7k \\
-SMOTE$^{\dagger}$ & 70.0 & 85.0 & 0.795 & 0.532 & $-3.15$ & $+0.50$ & \best{0.02} & 0 \\
-CTGAN & \best{77.4} & 75.1 & 0.951 & \best{0.501} & $-1.31$ & $-3.15$ & 16.9 & 0 \\
-TVAE & 71.2 & \best{85.6} & 0.886 & 0.514 & \best{$-0.06$} & $-0.22$ & 6.7 & 0 \\
+\system, 4o mini & 72.7 & 72.6 & 0.878 & 0.526 & --$^{\ddagger}$ & $-1.19$ & $-0.14$ & 379 & 73.5k \\
+\system, 4.1 & 75.7 & 63.3 & 0.877 & 0.527 & --$^{\ddagger}$ & $-0.44$ & \best{$+1.09$} & 202 & 80.7k \\
+SMOTE$^{\dagger}$ & 69.9 & 85.0 & 0.795 & 0.532 & \best{85.7} & $-3.08$ & $+0.33$ & \best{0.01} & 0 \\
+CTGAN & \best{77.6} & 75.2 & 0.936 & \best{0.503} & 29.6 & $-1.40$ & $-3.37$ & 14.6 & 0 \\
+TVAE & 71.9 & \best{85.6} & 0.868 & 0.515 & 75.6 & \best{$-0.09$} & $-0.21$ & 5.6 & 0 \\
 \bottomrule
 \end{tabular*}
-\par\vspace{2pt}\raggedright\scriptsize $^{\dagger}$Non-majority rows only; its C2ST is not commensurate.
+\par\vspace{2pt}\raggedright\scriptsize $^{\dagger}$Non-majority rows only; its C2ST is not commensurate. Valid: \% of generated rows inside the observed schema (all columns present, numbers integral where the column is and within the observed range, categories observed). $^{\ddagger}$Not logged for the LLM runs.
 \end{table}
 
-No generator wins on every axis. CTGAN reaches the highest marginal fidelity (JSD 77.4) but produces the most detectable rows: a classifier separates them from real rows with 0.951 accuracy, against 0.877 for the LLM arms. TVAE and SMOTE preserve correlations best (85.6 and 85.0), as expected from models that stay close to the training rows, and GPT-4.1 trades correlation (63.3) for marginal fidelity (75.7). All five stay near chance for the membership attack (0.501--0.532).
+No generator wins on every axis. CTGAN reaches the highest marginal fidelity (JSD 77.6) but produces the most detectable rows: a classifier separates them from real rows with 0.936 accuracy, against 0.877 for the LLM arms. TVAE and SMOTE preserve correlations best (85.6 and 85.0), as expected from models that stay close to the training rows, and GPT-4.1 trades correlation (63.3) for marginal fidelity (75.7). All five stay near chance for the membership attack (0.503--0.532). Schema validity separates the fitted generators sharply. Only 29.6\% of CTGAN rows fall inside the observed schema (1.0\% on Parkinson's, whose 22 continuous columns each give a chance to leave the observed range); TVAE keeps 75.6\% (58.2--88.0\% per table). SMOTE is fully valid on five tables but only 14.4\% valid on heart disease, where interpolation produces fractional values in integer-coded columns such as \texttt{ca} and \texttt{thal}.
 
-Utility follows the class structure of each table. SMOTE gives the largest gains where the scored class is a rare outcome, $+12.07$ F1 points on heart failure and $+3.91$ on diabetes, but rebalancing costs accuracy everywhere ($-3.15$ points on average, $-7.08$ on the five-class heart-disease table) and loses 8.08 F1 points on liver disease, where the scored class is the majority. CTGAN loses F1 on average ($-3.15$), driven by heart failure ($-10.50$). TVAE is the most conservative generator: it gives the best mean accuracy change ($-0.06$) and moves no dataset's mean F1 by more than 3 points. Under \system, GPT-4.1 gives the largest mean F1 gain of all five ($+1.09$, with $+6.35$ on heart failure) while keeping every dataset within 6.4 F1 points. Across datasets, the differences are not significant: $\chi^2_F(4)=6.80$, $p=.147$ for accuracy and $\chi^2_F(4)=5.60$, $p=.231$ for F1, with every Holm-adjusted comparison at $p\ge.25$; TVAE has the best accuracy rank (2.00) and the two LLM arms share the best F1 rank (2.50).
+Utility follows the class structure of each table. SMOTE gives the largest gains where the scored class is a rare outcome, $+10.91$ F1 points on heart failure and $+4.11$ on diabetes, but rebalancing costs accuracy everywhere ($-3.08$ points on average, $-7.43$ on the five-class heart-disease table) and loses 8.20 F1 points on liver disease, where the scored class is the majority. CTGAN loses F1 on average ($-3.37$), driven by heart failure ($-10.65$). TVAE is the most conservative generator: it gives the best mean accuracy change ($-0.09$) and moves no dataset's mean F1 by more than 3 points. Under \system, GPT-4.1 gives the largest mean F1 gain of all five ($+1.09$, with $+6.35$ on heart failure) while keeping every dataset within 6.4 F1 points. Across datasets, the differences are not significant: $\chi^2_F(4)=6.80$, $p=.147$ for accuracy and $\chi^2_F(4)=5.60$, $p=.231$ for F1, with every Holm-adjusted comparison at $p\ge.25$; TVAE has the best accuracy rank (2.00) and the two LLM arms share the best F1 rank (2.50).
 
 \noindent\textit{Takeaway.} The LLM path is not a free improvement over classical generators: TVAE matches it on accuracy in seconds, and SMOTE remains the cheapest fix for a known rare positive class. What the LLM path adds is training-free synthesis with the best mean F1 change, rows that are harder to tell from real ones than CTGAN's, no large per-dataset failures, and, through the control plane, schema validity, exact volume and an audit trail that none of the fitted generators provides.
 

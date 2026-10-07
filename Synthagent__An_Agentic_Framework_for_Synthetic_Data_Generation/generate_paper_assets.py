@@ -119,7 +119,7 @@ def refresh_utility_from_per_fold(df: pd.DataFrame) -> pd.DataFrame:
             "Gen Mean Z Score Drift", "Gen Categorical Fidelity",
             "Gen Privacy Risk", "Gen Data Density", "Gen Coverage Score",
             "Gen Feature Accuracy", "Gen Novelty Score", "Gen C2ST Accuracy",
-            "Gen MIA Attack AUC",
+            "Gen MIA Attack AUC", "Gen Valid Rows",
             "Gen Synthetic Fidelity (JSD) (minority)",
             "Gen Synthetic Fidelity (JSD) (majority)",
         ]
@@ -594,7 +594,7 @@ def baseline_label(arm: str) -> str:
 def save_baseline_table(df: pd.DataFrame):
     """Summary and per-dataset F1 change for the generator comparison (RQ5)."""
     arms = BASELINE_ARMS + [a for a in OPTIONAL_ARMS if a in set(df.arm)]
-    rows, per_ds = [], []
+    rows, per_ds, valid_ds = [], [], []
     for arm in arms:
         g = df[df.arm == arm]
         rows.append({
@@ -603,6 +603,10 @@ def save_baseline_table(df: pd.DataFrame):
             "Corr.": g["Gen Correlation Stability_mean"].mean(),
             "C2ST": g["Gen C2ST Accuracy_mean"].mean(),
             "MIA": g["Gen MIA Attack AUC_mean"].mean(),
+            # Logged only for runs made after the metric was added (the
+            # non-LLM generators); NaN for the LLM arms.
+            "Valid (%)": (g["Gen Valid Rows_mean"].mean()
+                          if "Gen Valid Rows_mean" in g else np.nan),
             "$\\Delta$Acc. (pp)": 100 * g["mean_accuracy_delta"].mean(),
             "$\\Delta$F1 (pp)": 100 * g["mean_f1_delta"].mean(),
             "Seconds": g["gen_stats_generation_seconds_mean"].mean(),
@@ -613,7 +617,14 @@ def save_baseline_table(df: pd.DataFrame):
             cell = g[g.dataset == dataset]
             rec[label] = 100 * cell["mean_f1_delta"].iloc[0] if len(cell) else np.nan
         per_ds.append(rec)
+        vrec = {"Generator": baseline_label(arm)}
+        for dataset, label in DATASET_LABELS.items():
+            cell = g[g.dataset == dataset]
+            vrec[label] = (cell["Gen Valid Rows_mean"].iloc[0]
+                           if len(cell) and "Gen Valid Rows_mean" in cell else np.nan)
+        valid_ds.append(vrec)
     out = pd.DataFrame(rows)
+    pd.DataFrame(valid_ds).to_csv(OUT / "baseline_validity_by_dataset.csv", index=False)
     out.to_csv(OUT / "baseline_summary.csv", index=False)
     (OUT / "baseline_summary.tex").write_text(
         out.to_latex(index=False, escape=False, float_format=lambda x: f"{x:.2f}"), encoding="utf-8")
