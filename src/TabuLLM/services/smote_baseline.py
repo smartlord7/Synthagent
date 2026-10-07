@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 
 from utils.logging_config import logger
@@ -5,8 +6,8 @@ from utils.logging_config import logger
 
 def impute_for_baseline(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Mean-imputes numerical and mode-imputes other columns, the same convention the
-    downstream evaluation uses. SMOTE, CTGAN and TVAE cannot fit on NaN, so the
+    Mean-imputes continuous columns, median-imputes integer-coded ones and
+    mode-imputes the rest. SMOTE, CTGAN and TVAE cannot fit on NaN, so the
     baseline generators fit on this imputed copy of the training split.
     """
     out = df.copy()
@@ -14,7 +15,13 @@ def impute_for_baseline(df: pd.DataFrame) -> pd.DataFrame:
         if not out[col].isna().any():
             continue
         if pd.api.types.is_numeric_dtype(out[col]):
-            out[col] = out[col].fillna(out[col].mean())
+            observed = out[col].dropna()
+            # Integer-coded columns (counts, category codes) keep an integer fill so
+            # imputation does not invent a value outside the column's domain.
+            if len(observed) and np.allclose(observed, observed.round()):
+                out[col] = out[col].fillna(observed.median().round())
+            else:
+                out[col] = out[col].fillna(observed.mean())
         else:
             mode = out[col].mode(dropna=True)
             out[col] = out[col].fillna(mode.iloc[0] if not mode.empty else "missing")

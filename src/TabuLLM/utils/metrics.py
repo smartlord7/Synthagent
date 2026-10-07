@@ -438,3 +438,32 @@ def compute_mia_attack_auc(df_members: pd.DataFrame, df_nonmembers: pd.DataFrame
         return float(roc_auc_score(labels, scores))
     except Exception:
         return None
+
+
+def compute_schema_validity(df_real: pd.DataFrame, df_gen: pd.DataFrame) -> "float | None":
+    """
+    Percentage of generated rows that are schema-valid against the real table's
+    observed domain, judged identically for every generator:
+      - every real column is present and non-empty;
+      - numerical columns parse as numbers inside the observed [min, max];
+      - columns whose observed values are all integers receive integers;
+      - non-numerical columns take a value observed in the real table.
+    Returns None when nothing was generated.
+    """
+    if df_gen is None or len(df_gen) == 0:
+        return None
+    valid = pd.Series(True, index=df_gen.index)
+    for col in df_real.columns:
+        if col not in df_gen.columns:
+            return 0.0
+        real = df_real[col].dropna()
+        gen = df_gen[col]
+        if pd.api.types.is_numeric_dtype(real):
+            num = pd.to_numeric(gen, errors="coerce")
+            ok = num.notna() & (num >= real.min()) & (num <= real.max())
+            if np.allclose(real, np.round(real)):
+                ok &= np.isclose(num, np.round(num))
+        else:
+            ok = gen.notna() & gen.astype(str).isin(set(real.astype(str)))
+        valid &= ok.fillna(False).astype(bool)
+    return 100.0 * float(valid.mean())

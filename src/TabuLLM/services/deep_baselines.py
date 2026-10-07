@@ -57,8 +57,14 @@ def generate_deep_rows(
         logger.warning(f"{method.upper()} failed ({e}); skipping.")
         return pd.DataFrame(columns=df_train.columns)
 
-    # Restore integer dtypes so discrete codes compare equal to the real values.
+    # Restore integer-valued columns (int dtypes, and float columns such as codes that
+    # only hold whole numbers) so discrete codes compare equal to the real values.
     for col in data.columns:
+        if not pd.api.types.is_numeric_dtype(data[col]):
+            continue
+        observed = data[col].dropna()
         if pd.api.types.is_integer_dtype(data[col]):
             synth[col] = pd.to_numeric(synth[col], errors="coerce").round().astype("Int64").astype(data[col].dtype, errors="ignore")
+        elif len(observed) and np.allclose(observed, observed.round()):
+            synth[col] = pd.to_numeric(synth[col], errors="coerce").round()
     return synth[list(df_train.columns)]

@@ -373,6 +373,9 @@ ML_METRICS = ["accuracy", "f1", "rmse", "r2"]
 GENERATION_STATS_FIELDS = [
     "prompt_tokens", "candidates_tokens", "total_tokens",
     "rule_violations", "repair_attempts", "generation_seconds",
+    # Volume accounting, and the failure counts the raw_prompting arm records.
+    "requested_rows", "delivered_rows", "parse_failures", "schema_mismatches",
+    "invalid_rows", "type_errors", "request_errors",
 ]
 
 # Non-metric identity columns present in every summary row — excluded when computing
@@ -387,7 +390,7 @@ CLASS_FIDELITY_ROLES = ("minority", "majority")
 # Privacy/discriminability attacks against the generated-only corpus (see
 # utils.metrics.compute_c2st_accuracy / compute_mia_attack_auc). ~0.5 on both = no
 # distinguishability / no membership-leakage signal.
-PRIVACY_ATTACK_METRICS = ["Gen C2ST Accuracy", "Gen MIA Attack AUC"]
+PRIVACY_ATTACK_METRICS = ["Gen C2ST Accuracy", "Gen MIA Attack AUC", "Gen Valid Rows"]
 
 
 # ─────────────────────────────────────────────────────────────────────────────

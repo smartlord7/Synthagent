@@ -6,7 +6,7 @@ from scipy.stats import wilcoxon, false_discovery_control
 from sklearn.model_selection import train_test_split
 from services.llm_client import generate_bulk_data
 from services.data_manager import select_context_rows
-from utils.metrics import calculate_metrics, calculate_metrics_by_class, compute_c2st_accuracy, compute_mia_attack_auc
+from utils.metrics import calculate_metrics, calculate_metrics_by_class, compute_c2st_accuracy, compute_mia_attack_auc, compute_schema_validity
 from utils.logging_config import logger
 from services.ml_evaluator import MLEvaluator
 from services.rule_inference import RuleInference
@@ -397,6 +397,9 @@ def run_single_dataset_benchmark(args):
                     m["Gen C2ST Accuracy"] = c2st_accuracy
                 if mia_auc is not None:
                     m["Gen MIA Attack AUC"] = mia_auc
+                validity = compute_schema_validity(df_orig_all, generated_df)
+                if validity is not None:
+                    m["Gen Valid Rows"] = validity
 
                 # ML Downstream Metrics: three arms, always evaluated on the fold's fixed
                 # 20% holdout (df_test_orig) so ablation arms that toggle join_context
@@ -570,6 +573,9 @@ def run_smote_dataset_benchmark(args):
                 m["Gen C2ST Accuracy"] = c2st_accuracy
             if mia_auc is not None:
                 m["Gen MIA Attack AUC"] = mia_auc
+            validity = compute_schema_validity(df_orig_all, generated_df)
+            if validity is not None:
+                m["Gen Valid Rows"] = validity
 
             ml_fold_results = {}
             if ml_config and targets:
@@ -727,6 +733,9 @@ def run_stochasticity_check(args, repeats: int = 5) -> dict:
                 m["Gen C2ST Accuracy"] = c2st_accuracy
             if mia_auc is not None:
                 m["Gen MIA Attack AUC"] = mia_auc
+            validity = compute_schema_validity(df_orig_all, generated_df)
+            if validity is not None:
+                m["Gen Valid Rows"] = validity
 
             ml_repeat_results = {}
             if ml_config and targets:
