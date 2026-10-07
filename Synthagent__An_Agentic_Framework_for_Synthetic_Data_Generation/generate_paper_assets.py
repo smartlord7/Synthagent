@@ -491,10 +491,7 @@ def plot_frontier(df: pd.DataFrame):
                for c, l in ((C_REF, "Reference"), (C_LLM, "Control variants"), (C_BACK, "Backends"))]
     fig.legend(handles=handles, loc="upper center", ncol=3, frameon=False,
                bbox_to_anchor=(.55, 1.04), handletextpad=.1, columnspacing=1.0)
-    base = "; ".join(f"{SHORT_ARM[a]} JSD {p.loc[a, 'JSD']:.1f}, ΔF1 {p.loc[a, 'F1']:+.2f}"
-                     for a in BASELINE_ARMS if a in NON_LLM and a in p.index)
-    fig.text(.5, -.04, f"Non-LLM baselines (0 tokens): {base}", ha="center", fontsize=5.8, color="0.3")
-    fig.subplots_adjust(left=.14, right=.99, top=.92, bottom=.22)
+    fig.subplots_adjust(left=.14, right=.99, top=.9, bottom=.18)
     save(fig, "quality_cost_frontier")
 
 

@@ -1,6 +1,7 @@
 backend_gpt_4_1
 backend_gpt_4_1_mini
 backend_gpt_4o
+ctgan
 full
 no_context_join
 no_post_processing
@@ -9,3 +10,4 @@ ponder_strategy
 smote
 strategy_dense
 strategy_diverse
+tvae

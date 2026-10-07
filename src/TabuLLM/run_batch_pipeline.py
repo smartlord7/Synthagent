@@ -1207,6 +1207,15 @@ def run_ablation(resume: "str | None" = None) -> None:
     only_arms = {a.strip() for a in os.getenv("TABULLM_ABLATION_ARMS", "").split(",") if a.strip()}
 
     checkpoint = _load_checkpoint(run_dir)
+    # Arms completed in an earlier session but not configured now (e.g. an OpenAI model
+    # sweep resumed without TABULLM_OPENAI_SWEEP_MODELS) still feed the combined summary
+    # from the checkpoint; they are never re-run under the wrong configuration.
+    cached_only_arms = []
+    for key in checkpoint["completed"]:
+        arm = key.split("::", 1)[0]
+        if arm not in all_arms and arm not in cached_only_arms:
+            cached_only_arms.append(arm)
+    all_arms += cached_only_arms
     total_units = len(all_arms) * len(dataset_subset)
 
     _print_separator("═")
@@ -1288,6 +1297,8 @@ def run_ablation(resume: "str | None" = None) -> None:
                 _save_fold_result(run_dir, checkpoint, _key, unit_config, fold_num, fold_result)
             cached_folds = {} if arm_name == "ponder_strategy" else _resume_fold_results(checkpoint, unit_key, unit_config)
 
+            if arm_name in cached_only_arms:
+                continue
             if only_arms and arm_name not in only_arms:
                 print(f"  [{arm_name}] {filename}: not selected by TABULLM_ABLATION_ARMS — skipping.")
                 continue

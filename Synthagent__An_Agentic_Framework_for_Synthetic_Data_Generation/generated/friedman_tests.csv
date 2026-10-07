@@ -1,5 +1,7 @@
 family,metric,n_blocks,n_arms,friedman_chi2,friedman_p,best
-architecture,accuracy,6,8,3.297405189620752,0.8561951539688637,smote
-architecture,f1,6,8,4.7777777777777715,0.6870607542210185,no_post_processing
+architecture,accuracy,6,8,5.253493013972034,0.6290588437622464,ponder_strategy
+architecture,f1,6,8,3.8333333333333144,0.7987616575680541,no_post_processing
 backend,accuracy,6,4,2.0,0.5724067044708798,backend_gpt_4_1_mini
 backend,f1,6,4,1.8000000000000114,0.6149349357825349,backend_gpt_4_1_mini
+baseline,accuracy,6,5,6.799999999999997,0.1468423878254349,tvae
+baseline,f1,6,5,5.599999999999994,0.23107823797582877,full
