@@ -212,3 +212,7 @@ src/TabuLLM/dataset_sessions/d04de13f35a4fcb1843a7b7be240e5c02bd4777c4d89b40dd23
 src/TabuLLM/workspace_session.json
 !src/TabuLLM/results/**
 !src/TabuLLM/ablation_live_test.log
+
+# LaTeX build files
+Synthagent__An_Agentic_Framework_for_Synthetic_Data_Generation/main.*
+!Synthagent__An_Agentic_Framework_for_Synthetic_Data_Generation/main.tex
