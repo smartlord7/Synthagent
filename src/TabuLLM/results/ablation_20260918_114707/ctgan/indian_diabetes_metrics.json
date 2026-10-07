@@ -57,6 +57,7 @@
       },
       "Gen C2ST Accuracy": 0.9366666666666666,
       "Gen MIA Attack AUC": 0.5325944413892296,
+      "Gen Valid Rows": 39.25081433224756,
       "ml_eval": {
         "rf": {
           "original": {
@@ -963,9 +964,9 @@
         "total_tokens": 0,
         "rule_violations": 0,
         "repair_attempts": 0,
-        "generation_seconds": 29.89770269393921
+        "generation_seconds": 16.81255793571472
       },
-      "fold_seconds": 34.055460929870605
+      "fold_seconds": 20.879849195480347
     },
     {
       "Synthetic Fidelity (JSD)": 85,
@@ -1022,6 +1023,7 @@
       },
       "Gen C2ST Accuracy": 0.9366666666666666,
       "Gen MIA Attack AUC": 0.4735183383391852,
+      "Gen Valid Rows": 21.172638436482085,
       "ml_eval": {
         "rf": {
           "original": {
@@ -1997,9 +1999,9 @@
         "total_tokens": 0,
         "rule_violations": 0,
         "repair_attempts": 0,
-        "generation_seconds": 24.18437886238098
+        "generation_seconds": 12.460074424743652
       },
-      "fold_seconds": 28.651005744934082
+      "fold_seconds": 16.753838062286377
     },
     {
       "Synthetic Fidelity (JSD)": 79,
@@ -2056,6 +2058,7 @@
       },
       "Gen C2ST Accuracy": 0.9133333333333333,
       "Gen MIA Attack AUC": 0.4739202165912264,
+      "Gen Valid Rows": 31.758957654723126,
       "ml_eval": {
         "rf": {
           "original": {
@@ -2962,9 +2965,9 @@
         "total_tokens": 0,
         "rule_violations": 0,
         "repair_attempts": 0,
-        "generation_seconds": 13.266605138778687
+        "generation_seconds": 12.497143745422363
       },
-      "fold_seconds": 17.490403175354004
+      "fold_seconds": 16.49789333343506
     },
     {
       "Synthetic Fidelity (JSD)": 83,
@@ -3021,6 +3024,7 @@
       },
       "Gen C2ST Accuracy": 0.9366666666666666,
       "Gen MIA Attack AUC": 0.4923220102373197,
+      "Gen Valid Rows": 46.74267100977198,
       "ml_eval": {
         "rf": {
           "original": {
@@ -3921,9 +3925,9 @@
         "total_tokens": 0,
         "rule_violations": 0,
         "repair_attempts": 0,
-        "generation_seconds": 17.739115476608276
+        "generation_seconds": 10.893359899520874
       },
-      "fold_seconds": 22.2095205783844
+      "fold_seconds": 14.898900270462036
     },
     {
       "Synthetic Fidelity (JSD)": 80,
@@ -3980,6 +3984,7 @@
       },
       "Gen C2ST Accuracy": 0.94,
       "Gen MIA Attack AUC": 0.46590380303735357,
+      "Gen Valid Rows": 40.87947882736157,
       "ml_eval": {
         "rf": {
           "original": {
@@ -4883,9 +4888,9 @@
         "total_tokens": 0,
         "rule_violations": 0,
         "repair_attempts": 0,
-        "generation_seconds": 17.073201894760132
+        "generation_seconds": 10.966248989105225
       },
-      "fold_seconds": 21.42121911048889
+      "fold_seconds": 15.741504430770874
     },
     {
       "Synthetic Fidelity (JSD)": 81,
@@ -4942,6 +4947,7 @@
       },
       "Gen C2ST Accuracy": 0.91,
       "Gen MIA Attack AUC": 0.48088963154109743,
+      "Gen Valid Rows": 31.433224755700323,
       "ml_eval": {
         "rf": {
           "original": {
@@ -5938,9 +5944,9 @@
         "total_tokens": 0,
         "rule_violations": 0,
         "repair_attempts": 0,
-        "generation_seconds": 15.977466821670532
+        "generation_seconds": 11.878695964813232
       },
-      "fold_seconds": 20.630261421203613
+      "fold_seconds": 16.514070510864258
     },
     {
       "Synthetic Fidelity (JSD)": 77,
@@ -5997,6 +6003,7 @@
       },
       "Gen C2ST Accuracy": 0.9266666666666666,
       "Gen MIA Attack AUC": 0.5291467490164559,
+      "Gen Valid Rows": 31.433224755700323,
       "ml_eval": {
         "rf": {
           "original": {
@@ -6911,9 +6918,9 @@
         "total_tokens": 0,
         "rule_violations": 0,
         "repair_attempts": 0,
-        "generation_seconds": 14.366549730300903
+        "generation_seconds": 15.022276878356934
       },
-      "fold_seconds": 19.031371116638184
+      "fold_seconds": 19.30994439125061
     },
     {
       "Synthetic Fidelity (JSD)": 75,
@@ -6970,6 +6977,7 @@
       },
       "Gen C2ST Accuracy": 0.9733333333333334,
       "Gen MIA Attack AUC": 0.4933690088413215,
+      "Gen Valid Rows": 34.039087947882734,
       "ml_eval": {
         "rf": {
           "original": {
@@ -7879,9 +7887,9 @@
         "total_tokens": 0,
         "rule_violations": 0,
         "repair_attempts": 0,
-        "generation_seconds": 13.560632705688477
+        "generation_seconds": 12.707141876220703
       },
-      "fold_seconds": 17.77591609954834
+      "fold_seconds": 17.134122848510742
     },
     {
       "Synthetic Fidelity (JSD)": 80,
@@ -7938,6 +7946,7 @@
       },
       "Gen C2ST Accuracy": 0.91,
       "Gen MIA Attack AUC": 0.48754177418672534,
+      "Gen Valid Rows": 57.32899022801303,
       "ml_eval": {
         "rf": {
           "original": {
@@ -8858,9 +8867,9 @@
         "total_tokens": 0,
         "rule_violations": 0,
         "repair_attempts": 0,
-        "generation_seconds": 13.488557577133179
+        "generation_seconds": 12.57283616065979
       },
-      "fold_seconds": 18.01412272453308
+      "fold_seconds": 17.701404094696045
     },
     {
       "Synthetic Fidelity (JSD)": 81,
@@ -8917,6 +8926,7 @@
       },
       "Gen C2ST Accuracy": 0.9233333333333333,
       "Gen MIA Attack AUC": 0.5019565125428318,
+      "Gen Valid Rows": 27.850162866449512,
       "ml_eval": {
         "rf": {
           "original": {
@@ -9856,403 +9866,297 @@
         "total_tokens": 0,
         "rule_violations": 0,
         "repair_attempts": 0,
-        "generation_seconds": 13.94650411605835
+        "generation_seconds": 12.255802392959595
       },
-      "fold_seconds": 18.430320262908936
+      "fold_seconds": 16.30115056037903
     }
   ],
   "overall_ml": {
-    "ab": {
+    "lr": {
       "accuracy": {
-        "real": 0.7493506493506492,
-        "real_sd": 0.021963031851023072,
-        "display_real": "0.749 \u00b1 0.02",
-        "gen": 0.562987012987013,
-        "gen_sd": 0.06181122409824553,
-        "display_gen": "0.563 \u00b1 0.06",
-        "aug": 0.7344155844155844,
-        "aug_sd": 0.030102148016881217,
-        "display_aug": "0.734 \u00b1 0.03",
-        "delta": -0.014935064935064923,
-        "delta_sd": 0.039289738980274935,
-        "display_delta": "-0.015 \u00b1 0.04",
-        "pvalue_aug_vs_real": 0.44140625,
-        "delta_gen": -0.18636363636363634,
-        "delta_gen_sd": 0.06847802079570112,
-        "display_delta_gen": "-0.186 \u00b1 0.07",
+        "real": 0.772077922077922,
+        "real_sd": 0.021031343819093065,
+        "display_real": "0.772 \u00b1 0.02",
+        "gen": 0.5766233766233766,
+        "gen_sd": 0.08171504528176297,
+        "display_gen": "0.577 \u00b1 0.08",
+        "aug": 0.7272727272727273,
+        "aug_sd": 0.033237620498882424,
+        "display_aug": "0.727 \u00b1 0.03",
+        "delta": -0.044805194805194806,
+        "delta_sd": 0.03813518664941826,
+        "display_delta": "-0.045 \u00b1 0.04",
+        "pvalue_aug_vs_real": 0.01171875,
+        "delta_gen": -0.1954545454545455,
+        "delta_gen_sd": 0.07641673655183079,
+        "display_delta_gen": "-0.195 \u00b1 0.08",
         "pvalue_gen_vs_real": 0.001953125,
-        "qvalue_aug_vs_real": 0.46463815789473684,
+        "qvalue_aug_vs_real": 0.02232142857142857,
         "qvalue_gen_vs_real": 0.004595588235294118
       },
       "folds_metadata": [
         {
-          "model_type": "ab",
+          "model_type": "lr",
           "params": {
-            "estimator": null,
-            "learning_rate": 1.0,
-            "n_estimators": 150,
-            "random_state": null
-          },
-          "feature_importances": [
-            0.16610052328732547,
-            0.17686146624638666,
-            0.08878088183377982,
-            0.1866830259973015,
-            0.0945252286202531,
-            0.12287066406471377,
-            0.06342227063425206,
-            0.10075593931598764
-          ],
-          "feature_names": [
-            "Pregnancies",
-            "Glucose",
-            "BloodPressure",
-            "SkinThickness",
-            "Insulin",
-            "BMI",
-            "DiabetesPedigreeFunction",
-            "Age"
-          ]
+            "C": 1.0,
+            "class_weight": null,
+            "dual": false,
+            "fit_intercept": true,
+            "intercept_scaling": 1,
+            "l1_ratio": 0.0,
+            "max_iter": 100,
+            "n_jobs": null,
+            "penalty": "deprecated",
+            "random_state": null,
+            "solver": "lbfgs",
+            "tol": 0.0001,
+            "verbose": 0,
+            "warm_start": false
+          }
         },
         {
-          "model_type": "ab",
+          "model_type": "lr",
           "params": {
-            "estimator": null,
-            "learning_rate": 1.0,
-            "n_estimators": 150,
-            "random_state": null
-          },
-          "feature_importances": [
-            0.01610940641231247,
-            0.3402770532140116,
-            0.11555442834320422,
-            0.012665056392045742,
-            0.12869617420658533,
-            0.19522135747662514,
-            0.10578812707450375,
-            0.0856883968807118
-          ],
-          "feature_names": [
-            "Pregnancies",
-            "Glucose",
-            "BloodPressure",
-            "SkinThickness",
-            "Insulin",
-            "BMI",
-            "DiabetesPedigreeFunction",
-            "Age"
-          ]
+            "C": 1.0,
+            "class_weight": null,
+            "dual": false,
+            "fit_intercept": true,
+            "intercept_scaling": 1,
+            "l1_ratio": 0.0,
+            "max_iter": 100,
+            "n_jobs": null,
+            "penalty": "deprecated",
+            "random_state": null,
+            "solver": "lbfgs",
+            "tol": 0.0001,
+            "verbose": 0,
+            "warm_start": false
+          }
         },
         {
-          "model_type": "ab",
+          "model_type": "lr",
           "params": {
-            "estimator": null,
-            "learning_rate": 1.0,
-            "n_estimators": 150,
-            "random_state": null
-          },
-          "feature_importances": [
-            0.06026418067282411,
-            0.17299156470901317,
-            0.05544564452533802,
-            0.05485595422767811,
-            0.046137204387706646,
-            0.15659469007721327,
-            0.37567841861218837,
-            0.07803234278803833
-          ],
-          "feature_names": [
-            "Pregnancies",
-            "Glucose",
-            "BloodPressure",
-            "SkinThickness",
-            "Insulin",
-            "BMI",
-            "DiabetesPedigreeFunction",
-            "Age"
-          ]
+            "C": 1.0,
+            "class_weight": null,
+            "dual": false,
+            "fit_intercept": true,
+            "intercept_scaling": 1,
+            "l1_ratio": 0.0,
+            "max_iter": 100,
+            "n_jobs": null,
+            "penalty": "deprecated",
+            "random_state": null,
+            "solver": "lbfgs",
+            "tol": 0.0001,
+            "verbose": 0,
+            "warm_start": false
+          }
         },
         {
-          "model_type": "ab",
+          "model_type": "lr",
           "params": {
-            "estimator": null,
-            "learning_rate": 1.0,
-            "n_estimators": 150,
-            "random_state": null
-          },
-          "feature_importances": [
-            0.07007669120850898,
-            0.17009665195526033,
-            0.11161988702248153,
-            0.1939068788691938,
-            0.02060684406388173,
-            0.06581956146828954,
-            0.19425004600291854,
-            0.17362343940946554
-          ],
-          "feature_names": [
-            "Pregnancies",
-            "Glucose",
-            "BloodPressure",
-            "SkinThickness",
-            "Insulin",
-            "BMI",
-            "DiabetesPedigreeFunction",
-            "Age"
-          ]
+            "C": 1.0,
+            "class_weight": null,
+            "dual": false,
+            "fit_intercept": true,
+            "intercept_scaling": 1,
+            "l1_ratio": 0.0,
+            "max_iter": 100,
+            "n_jobs": null,
+            "penalty": "deprecated",
+            "random_state": null,
+            "solver": "lbfgs",
+            "tol": 0.0001,
+            "verbose": 0,
+            "warm_start": false
+          }
         },
         {
-          "model_type": "ab",
+          "model_type": "lr",
           "params": {
-            "estimator": null,
-            "learning_rate": 1.0,
-            "n_estimators": 150,
-            "random_state": null
-          },
-          "feature_importances": [
-            0.05567083933705673,
-            0.20178248215657976,
-            0.06347307239664342,
-            0.24136214648528934,
-            0.09936109539184942,
-            0.13061805203958607,
-            0.07636174199997034,
-            0.1313705701930248
-          ],
-          "feature_names": [
-            "Pregnancies",
-            "Glucose",
-            "BloodPressure",
-            "SkinThickness",
-            "Insulin",
-            "BMI",
-            "DiabetesPedigreeFunction",
-            "Age"
-          ]
+            "C": 1.0,
+            "class_weight": null,
+            "dual": false,
+            "fit_intercept": true,
+            "intercept_scaling": 1,
+            "l1_ratio": 0.0,
+            "max_iter": 100,
+            "n_jobs": null,
+            "penalty": "deprecated",
+            "random_state": null,
+            "solver": "lbfgs",
+            "tol": 0.0001,
+            "verbose": 0,
+            "warm_start": false
+          }
         },
         {
-          "model_type": "ab",
+          "model_type": "lr",
           "params": {
-            "estimator": null,
-            "learning_rate": 1.0,
-            "n_estimators": 150,
-            "random_state": null
-          },
-          "feature_importances": [
-            0.0,
-            0.2074592327005815,
-            0.11412603585155245,
-            0.056515698340750334,
-            0.08616736651890487,
-            0.1698093357620797,
-            0.04886661696675064,
-            0.3170557138593807
-          ],
-          "feature_names": [
-            "Pregnancies",
-            "Glucose",
-            "BloodPressure",
-            "SkinThickness",
-            "Insulin",
-            "BMI",
-            "DiabetesPedigreeFunction",
-            "Age"
-          ]
+            "C": 1.0,
+            "class_weight": null,
+            "dual": false,
+            "fit_intercept": true,
+            "intercept_scaling": 1,
+            "l1_ratio": 0.0,
+            "max_iter": 100,
+            "n_jobs": null,
+            "penalty": "deprecated",
+            "random_state": null,
+            "solver": "lbfgs",
+            "tol": 0.0001,
+            "verbose": 0,
+            "warm_start": false
+          }
         },
         {
-          "model_type": "ab",
+          "model_type": "lr",
           "params": {
-            "estimator": null,
-            "learning_rate": 1.0,
-            "n_estimators": 150,
-            "random_state": null
-          },
-          "feature_importances": [
-            0.060445981380957595,
-            0.09191364491107971,
-            0.055233292589172374,
-            0.06623502928798394,
-            0.0795736756985053,
-            0.09769233592084312,
-            0.19673555380549904,
-            0.35217048640595916
-          ],
-          "feature_names": [
-            "Pregnancies",
-            "Glucose",
-            "BloodPressure",
-            "SkinThickness",
-            "Insulin",
-            "BMI",
-            "DiabetesPedigreeFunction",
-            "Age"
-          ]
+            "C": 1.0,
+            "class_weight": null,
+            "dual": false,
+            "fit_intercept": true,
+            "intercept_scaling": 1,
+            "l1_ratio": 0.0,
+            "max_iter": 100,
+            "n_jobs": null,
+            "penalty": "deprecated",
+            "random_state": null,
+            "solver": "lbfgs",
+            "tol": 0.0001,
+            "verbose": 0,
+            "warm_start": false
+          }
         },
         {
-          "model_type": "ab",
+          "model_type": "lr",
           "params": {
-            "estimator": null,
-            "learning_rate": 1.0,
-            "n_estimators": 150,
-            "random_state": null
-          },
-          "feature_importances": [
-            0.025962844167615982,
-            0.10819898257328994,
-            0.14612224082704892,
-            0.08570744110833398,
-            0.24476442974604345,
-            0.04793804838398012,
-            0.11247337314491533,
-            0.22883264004877224
-          ],
-          "feature_names": [
-            "Pregnancies",
-            "Glucose",
-            "BloodPressure",
-            "SkinThickness",
-            "Insulin",
-            "BMI",
-            "DiabetesPedigreeFunction",
-            "Age"
-          ]
+            "C": 1.0,
+            "class_weight": null,
+            "dual": false,
+            "fit_intercept": true,
+            "intercept_scaling": 1,
+            "l1_ratio": 0.0,
+            "max_iter": 100,
+            "n_jobs": null,
+            "penalty": "deprecated",
+            "random_state": null,
+            "solver": "lbfgs",
+            "tol": 0.0001,
+            "verbose": 0,
+            "warm_start": false
+          }
         },
         {
-          "model_type": "ab",
+          "model_type": "lr",
           "params": {
-            "estimator": null,
-            "learning_rate": 1.0,
-            "n_estimators": 150,
-            "random_state": null
-          },
-          "feature_importances": [
-            0.1520919544769129,
-            0.11236189797028545,
-            0.17202148878230175,
-            0.1934894486357692,
-            0.033590891076529975,
-            0.11400478404813992,
-            0.11945639788213352,
-            0.10298313712792732
-          ],
-          "feature_names": [
-            "Pregnancies",
-            "Glucose",
-            "BloodPressure",
-            "SkinThickness",
-            "Insulin",
-            "BMI",
-            "DiabetesPedigreeFunction",
-            "Age"
-          ]
+            "C": 1.0,
+            "class_weight": null,
+            "dual": false,
+            "fit_intercept": true,
+            "intercept_scaling": 1,
+            "l1_ratio": 0.0,
+            "max_iter": 100,
+            "n_jobs": null,
+            "penalty": "deprecated",
+            "random_state": null,
+            "solver": "lbfgs",
+            "tol": 0.0001,
+            "verbose": 0,
+            "warm_start": false
+          }
         },
         {
-          "model_type": "ab",
+          "model_type": "lr",
           "params": {
-            "estimator": null,
-            "learning_rate": 1.0,
-            "n_estimators": 150,
-            "random_state": null
-          },
-          "feature_importances": [
-            0.01407149891848308,
-            0.16340521934263036,
-            0.1729227963810133,
-            0.07961271774808272,
-            0.1503032048882749,
-            0.1460125810702297,
-            0.08646894740712753,
-            0.18720303424415838
-          ],
-          "feature_names": [
-            "Pregnancies",
-            "Glucose",
-            "BloodPressure",
-            "SkinThickness",
-            "Insulin",
-            "BMI",
-            "DiabetesPedigreeFunction",
-            "Age"
-          ]
+            "C": 1.0,
+            "class_weight": null,
+            "dual": false,
+            "fit_intercept": true,
+            "intercept_scaling": 1,
+            "l1_ratio": 0.0,
+            "max_iter": 100,
+            "n_jobs": null,
+            "penalty": "deprecated",
+            "random_state": null,
+            "solver": "lbfgs",
+            "tol": 0.0001,
+            "verbose": 0,
+            "warm_start": false
+          }
         }
       ],
       "f1": {
-        "real": 0.6076604413342895,
-        "real_sd": 0.04720157386470729,
-        "display_real": "0.608 \u00b1 0.05",
-        "gen": 0.3368309070461554,
-        "gen_sd": 0.1204201845499588,
-        "display_gen": "0.337 \u00b1 0.12",
-        "aug": 0.5602498080593403,
-        "aug_sd": 0.060866580020684305,
-        "display_aug": "0.560 \u00b1 0.06",
-        "delta": -0.0474106332749491,
-        "delta_sd": 0.07249124706627537,
-        "display_delta": "-0.047 \u00b1 0.07",
-        "pvalue_aug_vs_real": 0.064453125,
-        "delta_gen": -0.27082953428813406,
-        "delta_gen_sd": 0.13898156891984845,
-        "display_delta_gen": "-0.271 \u00b1 0.14",
+        "real": 0.6262914445612621,
+        "real_sd": 0.056373979937524896,
+        "display_real": "0.626 \u00b1 0.06",
+        "gen": 0.4334933716334569,
+        "gen_sd": 0.12265869498994053,
+        "display_gen": "0.433 \u00b1 0.12",
+        "aug": 0.5173007071279148,
+        "aug_sd": 0.12335702709717765,
+        "display_aug": "0.517 \u00b1 0.12",
+        "delta": -0.10899073743334724,
+        "delta_sd": 0.11721848082293897,
+        "display_delta": "-0.109 \u00b1 0.12",
+        "pvalue_aug_vs_real": 0.02734375,
+        "delta_gen": -0.19279807292780518,
+        "delta_gen_sd": 0.09848103552928746,
+        "display_delta_gen": "-0.193 \u00b1 0.10",
         "pvalue_gen_vs_real": 0.001953125,
-        "qvalue_aug_vs_real": 0.09207589285714286,
+        "qvalue_aug_vs_real": 0.043750000000000004,
         "qvalue_gen_vs_real": 0.004595588235294118
       }
     },
-    "rf": {
+    "dt": {
       "accuracy": {
-        "real": 0.753896103896104,
-        "real_sd": 0.023672371602023633,
-        "display_real": "0.754 \u00b1 0.02",
-        "gen": 0.5707792207792208,
-        "gen_sd": 0.07669213291996202,
-        "display_gen": "0.571 \u00b1 0.08",
-        "aug": 0.7467532467532468,
-        "aug_sd": 0.029039843863633643,
-        "display_aug": "0.747 \u00b1 0.03",
-        "delta": -0.0071428571428571504,
-        "delta_sd": 0.027770655558887147,
-        "display_delta": "-0.007 \u00b1 0.03",
-        "pvalue_aug_vs_real": 0.390625,
-        "delta_gen": -0.18311688311688315,
-        "delta_gen_sd": 0.07565980085002341,
-        "display_delta_gen": "-0.183 \u00b1 0.08",
+        "real": 0.714935064935065,
+        "real_sd": 0.040076036686258365,
+        "display_real": "0.715 \u00b1 0.04",
+        "gen": 0.5597402597402598,
+        "gen_sd": 0.06956239865372509,
+        "display_gen": "0.560 \u00b1 0.07",
+        "aug": 0.6876623376623376,
+        "aug_sd": 0.047757080540771144,
+        "display_aug": "0.688 \u00b1 0.05",
+        "delta": -0.02727272727272726,
+        "delta_sd": 0.061038961038961045,
+        "display_delta": "-0.027 \u00b1 0.06",
+        "pvalue_aug_vs_real": 0.1953125,
+        "delta_gen": -0.1551948051948052,
+        "delta_gen_sd": 0.06365292654849865,
+        "display_delta_gen": "-0.155 \u00b1 0.06",
         "pvalue_gen_vs_real": 0.001953125,
-        "qvalue_aug_vs_real": 0.4222972972972973,
+        "qvalue_aug_vs_real": 0.23674242424242425,
         "qvalue_gen_vs_real": 0.004595588235294118
       },
       "folds_metadata": [
         {
-          "model_type": "rf",
+          "model_type": "dt",
           "params": {
-            "bootstrap": true,
             "ccp_alpha": 0.0,
             "class_weight": null,
             "criterion": "gini",
             "max_depth": 10,
-            "max_features": "sqrt",
+            "max_features": null,
             "max_leaf_nodes": null,
-            "max_samples": null,
             "min_impurity_decrease": 0.0,
             "min_samples_leaf": 1,
             "min_samples_split": 2,
             "min_weight_fraction_leaf": 0.0,
             "monotonic_cst": null,
-            "n_estimators": 245,
-            "n_jobs": null,
-            "oob_score": false,
             "random_state": null,
-            "verbose": 0,
-            "warm_start": false
+            "splitter": "best"
           },
           "feature_importances": [
-            0.09483736971450776,
-            0.20241422973641002,
-            0.11803546616296642,
-            0.11761442531252439,
-            0.10755138498590741,
-            0.1374532772169454,
-            0.12181972090070411,
-            0.10027412597003443
+            0.11804457921488216,
+            0.19936591253254032,
+            0.12496157056872034,
+            0.14617134951109365,
+            0.06125178118351374,
+            0.16793289731441782,
+            0.10606379918011888,
+            0.07620811049471303
           ],
           "feature_names": [
             "Pregnancies",
@@ -10266,37 +10170,31 @@
           ]
         },
         {
-          "model_type": "rf",
+          "model_type": "dt",
           "params": {
-            "bootstrap": true,
             "ccp_alpha": 0.0,
             "class_weight": null,
             "criterion": "gini",
             "max_depth": 10,
-            "max_features": "sqrt",
+            "max_features": null,
             "max_leaf_nodes": null,
-            "max_samples": null,
             "min_impurity_decrease": 0.0,
             "min_samples_leaf": 1,
             "min_samples_split": 2,
             "min_weight_fraction_leaf": 0.0,
             "monotonic_cst": null,
-            "n_estimators": 245,
-            "n_jobs": null,
-            "oob_score": false,
             "random_state": null,
-            "verbose": 0,
-            "warm_start": false
+            "splitter": "best"
           },
           "feature_importances": [
-            0.07265292910336987,
-            0.18884637223859263,
-            0.10779030185187312,
-            0.1016592583350105,
-            0.1402492047373969,
-            0.14699696685218594,
-            0.12284790870788222,
-            0.11895705817368876
+            0.07440708068582497,
+            0.2176114964151175,
+            0.1050950924300628,
+            0.09014030970222034,
+            0.12882534600642478,
+            0.16248134822775967,
+            0.0841814275906928,
+            0.13725789894189705
           ],
           "feature_names": [
             "Pregnancies",
@@ -10310,37 +10208,31 @@
           ]
         },
         {
-          "model_type": "rf",
+          "model_type": "dt",
           "params": {
-            "bootstrap": true,
             "ccp_alpha": 0.0,
             "class_weight": null,
             "criterion": "gini",
             "max_depth": 10,
-            "max_features": "sqrt",
+            "max_features": null,
             "max_leaf_nodes": null,
-            "max_samples": null,
             "min_impurity_decrease": 0.0,
             "min_samples_leaf": 1,
             "min_samples_split": 2,
             "min_weight_fraction_leaf": 0.0,
             "monotonic_cst": null,
-            "n_estimators": 245,
-            "n_jobs": null,
-            "oob_score": false,
             "random_state": null,
-            "verbose": 0,
-            "warm_start": false
+            "splitter": "best"
           },
           "feature_importances": [
-            0.07773447367634298,
-            0.1817058808172068,
-            0.11539384122162186,
-            0.10388124018139944,
-            0.11717642340308008,
-            0.16115161474045223,
-            0.13727897909483822,
-            0.10567754686505836
+            0.07385168756812015,
+            0.19096920200951015,
+            0.15873828600871395,
+            0.10308357489572388,
+            0.11134721844155131,
+            0.15378968552105748,
+            0.12383448898704627,
+            0.08438585656827682
           ],
           "feature_names": [
             "Pregnancies",
@@ -10354,37 +10246,31 @@
           ]
         },
         {
-          "model_type": "rf",
+          "model_type": "dt",
           "params": {
-            "bootstrap": true,
             "ccp_alpha": 0.0,
             "class_weight": null,
             "criterion": "gini",
             "max_depth": 10,
-            "max_features": "sqrt",
+            "max_features": null,
             "max_leaf_nodes": null,
-            "max_samples": null,
             "min_impurity_decrease": 0.0,
             "min_samples_leaf": 1,
             "min_samples_split": 2,
             "min_weight_fraction_leaf": 0.0,
             "monotonic_cst": null,
-            "n_estimators": 245,
-            "n_jobs": null,
-            "oob_score": false,
             "random_state": null,
-            "verbose": 0,
-            "warm_start": false
+            "splitter": "best"
           },
           "feature_importances": [
-            0.0918058828337958,
-            0.17847755398288845,
-            0.11111741248798013,
-            0.11017752282631814,
-            0.09409745184393167,
-            0.11841762754437583,
-            0.1617688112874817,
-            0.13413773719322836
+            0.07849117818778312,
+            0.2063126450620203,
+            0.042927948608445045,
+            0.12347415982360946,
+            0.08267865847831969,
+            0.1291821378408924,
+            0.19780106756959448,
+            0.13913220442933558
           ],
           "feature_names": [
             "Pregnancies",
@@ -10398,37 +10284,31 @@
           ]
         },
         {
-          "model_type": "rf",
+          "model_type": "dt",
           "params": {
-            "bootstrap": true,
             "ccp_alpha": 0.0,
             "class_weight": null,
             "criterion": "gini",
             "max_depth": 10,
-            "max_features": "sqrt",
+            "max_features": null,
             "max_leaf_nodes": null,
-            "max_samples": null,
             "min_impurity_decrease": 0.0,
             "min_samples_leaf": 1,
             "min_samples_split": 2,
             "min_weight_fraction_leaf": 0.0,
             "monotonic_cst": null,
-            "n_estimators": 245,
-            "n_jobs": null,
-            "oob_score": false,
             "random_state": null,
-            "verbose": 0,
-            "warm_start": false
+            "splitter": "best"
           },
           "feature_importances": [
-            0.09400233813319699,
-            0.13677485621631152,
-            0.12492859473321327,
-            0.11258367411158159,
-            0.12031219259095499,
-            0.1665855806911252,
-            0.12231263797000126,
-            0.12250012555361521
+            0.07435762122947437,
+            0.18267488929168035,
+            0.10339487745438793,
+            0.11089738132351788,
+            0.138208749128492,
+            0.17496386760329785,
+            0.09960264770144052,
+            0.1158999662677091
           ],
           "feature_names": [
             "Pregnancies",
@@ -10442,37 +10322,31 @@
           ]
         },
         {
-          "model_type": "rf",
+          "model_type": "dt",
           "params": {
-            "bootstrap": true,
             "ccp_alpha": 0.0,
             "class_weight": null,
             "criterion": "gini",
             "max_depth": 10,
-            "max_features": "sqrt",
+            "max_features": null,
             "max_leaf_nodes": null,
-            "max_samples": null,
             "min_impurity_decrease": 0.0,
             "min_samples_leaf": 1,
             "min_samples_split": 2,
             "min_weight_fraction_leaf": 0.0,
             "monotonic_cst": null,
-            "n_estimators": 245,
-            "n_jobs": null,
-            "oob_score": false,
             "random_state": null,
-            "verbose": 0,
-            "warm_start": false
+            "splitter": "best"
           },
           "feature_importances": [
-            0.07366812061946479,
-            0.17875717183760662,
-            0.12241263832739925,
-            0.09650971483331747,
-            0.12669636466846954,
-            0.14700327788280454,
-            0.12140641029764054,
-            0.1335463015332973
+            0.10196013310785705,
+            0.20733114525599583,
+            0.09953873899591961,
+            0.07577224389566989,
+            0.1412187585714588,
+            0.11886617095031035,
+            0.15328771798412136,
+            0.10202509123866718
           ],
           "feature_names": [
             "Pregnancies",
@@ -10486,37 +10360,31 @@
           ]
         },
         {
-          "model_type": "rf",
+          "model_type": "dt",
           "params": {
-            "bootstrap": true,
             "ccp_alpha": 0.0,
             "class_weight": null,
             "criterion": "gini",
             "max_depth": 10,
-            "max_features": "sqrt",
+            "max_features": null,
             "max_leaf_nodes": null,
-            "max_samples": null,
             "min_impurity_decrease": 0.0,
             "min_samples_leaf": 1,
             "min_samples_split": 2,
             "min_weight_fraction_leaf": 0.0,
             "monotonic_cst": null,
-            "n_estimators": 245,
-            "n_jobs": null,
-            "oob_score": false,
             "random_state": null,
-            "verbose": 0,
-            "warm_start": false
+            "splitter": "best"
           },
           "feature_importances": [
-            0.08038871772694446,
-            0.1435577610043295,
-            0.11371654081431831,
-            0.1337967183585733,
-            0.11098495447773292,
-            0.1237578869464051,
-            0.14306194355912813,
-            0.15073547711256835
+            0.07679509791193248,
+            0.14342970848878955,
+            0.10617733073247099,
+            0.10775870527218999,
+            0.12316493768506669,
+            0.12947866251679427,
+            0.16424200002435022,
+            0.1489535573684058
           ],
           "feature_names": [
             "Pregnancies",
@@ -10530,37 +10398,31 @@
           ]
         },
         {
-          "model_type": "rf",
+          "model_type": "dt",
           "params": {
-            "bootstrap": true,
             "ccp_alpha": 0.0,
             "class_weight": null,
             "criterion": "gini",
             "max_depth": 10,
-            "max_features": "sqrt",
+            "max_features": null,
             "max_leaf_nodes": null,
-            "max_samples": null,
             "min_impurity_decrease": 0.0,
             "min_samples_leaf": 1,
             "min_samples_split": 2,
             "min_weight_fraction_leaf": 0.0,
             "monotonic_cst": null,
-            "n_estimators": 245,
-            "n_jobs": null,
-            "oob_score": false,
             "random_state": null,
-            "verbose": 0,
-            "warm_start": false
+            "splitter": "best"
           },
           "feature_importances": [
-            0.08248493567226858,
-            0.2137370734847525,
-            0.1264124128071565,
-            0.09097107827727806,
-            0.10492264290296613,
-            0.12276127303136859,
-            0.10854351138821576,
-            0.15016707243599392
+            0.07145162454919111,
+            0.25214289545108637,
+            0.1387850040242462,
+            0.08795222919761105,
+            0.08830087006187158,
+            0.13477929500207872,
+            0.08594089422200334,
+            0.14064718749191166
           ],
           "feature_names": [
             "Pregnancies",
@@ -10574,37 +10436,31 @@
           ]
         },
         {
-          "model_type": "rf",
+          "model_type": "dt",
           "params": {
-            "bootstrap": true,
             "ccp_alpha": 0.0,
             "class_weight": null,
             "criterion": "gini",
             "max_depth": 10,
-            "max_features": "sqrt",
+            "max_features": null,
             "max_leaf_nodes": null,
-            "max_samples": null,
             "min_impurity_decrease": 0.0,
             "min_samples_leaf": 1,
             "min_samples_split": 2,
             "min_weight_fraction_leaf": 0.0,
             "monotonic_cst": null,
-            "n_estimators": 245,
-            "n_jobs": null,
-            "oob_score": false,
             "random_state": null,
-            "verbose": 0,
-            "warm_start": false
+            "splitter": "best"
           },
           "feature_importances": [
-            0.07949915001484298,
-            0.19392597014477947,
-            0.1242254940467707,
-            0.10946766910573696,
-            0.1062387967709473,
-            0.1439750817228875,
-            0.12503859671836284,
-            0.1176292414756723
+            0.07219324708772287,
+            0.18872885382535143,
+            0.1403815157449737,
+            0.11688922105465949,
+            0.08227877110155904,
+            0.12683519699737214,
+            0.1546970566351643,
+            0.11799613755319699
           ],
           "feature_names": [
             "Pregnancies",
@@ -10618,37 +10474,31 @@
           ]
         },
         {
-          "model_type": "rf",
+          "model_type": "dt",
           "params": {
-            "bootstrap": true,
             "ccp_alpha": 0.0,
             "class_weight": null,
             "criterion": "gini",
             "max_depth": 10,
-            "max_features": "sqrt",
+            "max_features": null,
             "max_leaf_nodes": null,
-            "max_samples": null,
             "min_impurity_decrease": 0.0,
             "min_samples_leaf": 1,
             "min_samples_split": 2,
             "min_weight_fraction_leaf": 0.0,
             "monotonic_cst": null,
-            "n_estimators": 245,
-            "n_jobs": null,
-            "oob_score": false,
             "random_state": null,
-            "verbose": 0,
-            "warm_start": false
+            "splitter": "best"
           },
           "feature_importances": [
-            0.07385927052420069,
-            0.1874026078931874,
-            0.1412764160515573,
-            0.09212874393186585,
-            0.12026981383616153,
-            0.14472188631857685,
-            0.12086452437118476,
-            0.11947673707326557
+            0.0586710967115377,
+            0.192348164938401,
+            0.1618212310312632,
+            0.08636562135279245,
+            0.09649382533765583,
+            0.12866165086740747,
+            0.10367198909209183,
+            0.17196642066885054
           ],
           "feature_names": [
             "Pregnancies",
@@ -10663,24 +10513,720 @@
         }
       ],
       "f1": {
-        "real": 0.6155511296147973,
-        "real_sd": 0.04548865149675521,
-        "display_real": "0.616 \u00b1 0.05",
-        "gen": 0.3918510612034914,
-        "gen_sd": 0.08091099407066729,
-        "display_gen": "0.392 \u00b1 0.08",
-        "aug": 0.592050060894001,
-        "aug_sd": 0.06974811462005753,
-        "display_aug": "0.592 \u00b1 0.07",
-        "delta": -0.02350106872079611,
-        "delta_sd": 0.045921275452409614,
-        "display_delta": "-0.024 \u00b1 0.05",
-        "pvalue_aug_vs_real": 0.232421875,
-        "delta_gen": -0.2237000684113058,
-        "delta_gen_sd": 0.08318397804120985,
-        "display_delta_gen": "-0.224 \u00b1 0.08",
+        "real": 0.574864956627473,
+        "real_sd": 0.07036589240958031,
+        "display_real": "0.575 \u00b1 0.07",
+        "gen": 0.40105931482130597,
+        "gen_sd": 0.08980898186383425,
+        "display_gen": "0.401 \u00b1 0.09",
+        "aug": 0.531825100899625,
+        "aug_sd": 0.0809823876462238,
+        "display_aug": "0.532 \u00b1 0.08",
+        "delta": -0.04303985572784801,
+        "delta_sd": 0.09751921719049148,
+        "display_delta": "-0.043 \u00b1 0.10",
+        "pvalue_aug_vs_real": 0.16015625,
+        "delta_gen": -0.17380564180616695,
+        "delta_gen_sd": 0.09636320852247511,
+        "display_delta_gen": "-0.174 \u00b1 0.10",
         "pvalue_gen_vs_real": 0.001953125,
-        "qvalue_aug_vs_real": 0.2734375,
+        "qvalue_aug_vs_real": 0.2001953125,
+        "qvalue_gen_vs_real": 0.004595588235294118
+      }
+    },
+    "xgb": {
+      "accuracy": {
+        "real": 0.7292207792207792,
+        "real_sd": 0.02324094827035493,
+        "display_real": "0.729 \u00b1 0.02",
+        "gen": 0.5766233766233767,
+        "gen_sd": 0.07135769801462938,
+        "display_gen": "0.577 \u00b1 0.07",
+        "aug": 0.7194805194805194,
+        "aug_sd": 0.04084203946367893,
+        "display_aug": "0.719 \u00b1 0.04",
+        "delta": -0.009740259740259749,
+        "delta_sd": 0.023990848314170348,
+        "display_delta": "-0.010 \u00b1 0.02",
+        "pvalue_aug_vs_real": 0.375,
+        "delta_gen": -0.15259740259740256,
+        "delta_gen_sd": 0.07085067285843637,
+        "display_delta_gen": "-0.153 \u00b1 0.07",
+        "pvalue_gen_vs_real": 0.001953125,
+        "qvalue_aug_vs_real": 0.4166666666666667,
+        "qvalue_gen_vs_real": 0.004595588235294118
+      },
+      "folds_metadata": [
+        {
+          "model_type": "xgb",
+          "params": {
+            "objective": "binary:logistic",
+            "base_score": null,
+            "booster": null,
+            "callbacks": null,
+            "colsample_bylevel": null,
+            "colsample_bynode": null,
+            "colsample_bytree": null,
+            "device": null,
+            "early_stopping_rounds": null,
+            "enable_categorical": true,
+            "eval_metric": null,
+            "feature_types": null,
+            "feature_weights": null,
+            "gamma": null,
+            "grow_policy": null,
+            "importance_type": null,
+            "interaction_constraints": null,
+            "learning_rate": null,
+            "max_bin": null,
+            "max_cat_threshold": null,
+            "max_cat_to_onehot": null,
+            "max_delta_step": null,
+            "max_depth": 3,
+            "max_leaves": null,
+            "min_child_weight": null,
+            "missing": NaN,
+            "monotone_constraints": null,
+            "multi_strategy": null,
+            "n_estimators": 245,
+            "n_jobs": null,
+            "num_parallel_tree": null,
+            "random_state": null,
+            "reg_alpha": null,
+            "reg_lambda": null,
+            "sampling_method": null,
+            "scale_pos_weight": null,
+            "subsample": null,
+            "tree_method": null,
+            "validate_parameters": null,
+            "verbosity": null
+          },
+          "feature_importances": [
+            0.13647116720676422,
+            0.1612304151058197,
+            0.12046340107917786,
+            0.1408429741859436,
+            0.12085127830505371,
+            0.10783038288354874,
+            0.1120763048529625,
+            0.10023407638072968
+          ],
+          "feature_names": [
+            "Pregnancies",
+            "Glucose",
+            "BloodPressure",
+            "SkinThickness",
+            "Insulin",
+            "BMI",
+            "DiabetesPedigreeFunction",
+            "Age"
+          ]
+        },
+        {
+          "model_type": "xgb",
+          "params": {
+            "objective": "binary:logistic",
+            "base_score": null,
+            "booster": null,
+            "callbacks": null,
+            "colsample_bylevel": null,
+            "colsample_bynode": null,
+            "colsample_bytree": null,
+            "device": null,
+            "early_stopping_rounds": null,
+            "enable_categorical": true,
+            "eval_metric": null,
+            "feature_types": null,
+            "feature_weights": null,
+            "gamma": null,
+            "grow_policy": null,
+            "importance_type": null,
+            "interaction_constraints": null,
+            "learning_rate": null,
+            "max_bin": null,
+            "max_cat_threshold": null,
+            "max_cat_to_onehot": null,
+            "max_delta_step": null,
+            "max_depth": 3,
+            "max_leaves": null,
+            "min_child_weight": null,
+            "missing": NaN,
+            "monotone_constraints": null,
+            "multi_strategy": null,
+            "n_estimators": 245,
+            "n_jobs": null,
+            "num_parallel_tree": null,
+            "random_state": null,
+            "reg_alpha": null,
+            "reg_lambda": null,
+            "sampling_method": null,
+            "scale_pos_weight": null,
+            "subsample": null,
+            "tree_method": null,
+            "validate_parameters": null,
+            "verbosity": null
+          },
+          "feature_importances": [
+            0.10330341011285782,
+            0.15938426554203033,
+            0.11756115406751633,
+            0.1038295105099678,
+            0.1488993763923645,
+            0.13584144413471222,
+            0.10882438719272614,
+            0.12235645949840546
+          ],
+          "feature_names": [
+            "Pregnancies",
+            "Glucose",
+            "BloodPressure",
+            "SkinThickness",
+            "Insulin",
+            "BMI",
+            "DiabetesPedigreeFunction",
+            "Age"
+          ]
+        },
+        {
+          "model_type": "xgb",
+          "params": {
+            "objective": "binary:logistic",
+            "base_score": null,
+            "booster": null,
+            "callbacks": null,
+            "colsample_bylevel": null,
+            "colsample_bynode": null,
+            "colsample_bytree": null,
+            "device": null,
+            "early_stopping_rounds": null,
+            "enable_categorical": true,
+            "eval_metric": null,
+            "feature_types": null,
+            "feature_weights": null,
+            "gamma": null,
+            "grow_policy": null,
+            "importance_type": null,
+            "interaction_constraints": null,
+            "learning_rate": null,
+            "max_bin": null,
+            "max_cat_threshold": null,
+            "max_cat_to_onehot": null,
+            "max_delta_step": null,
+            "max_depth": 3,
+            "max_leaves": null,
+            "min_child_weight": null,
+            "missing": NaN,
+            "monotone_constraints": null,
+            "multi_strategy": null,
+            "n_estimators": 245,
+            "n_jobs": null,
+            "num_parallel_tree": null,
+            "random_state": null,
+            "reg_alpha": null,
+            "reg_lambda": null,
+            "sampling_method": null,
+            "scale_pos_weight": null,
+            "subsample": null,
+            "tree_method": null,
+            "validate_parameters": null,
+            "verbosity": null
+          },
+          "feature_importances": [
+            0.10087927430868149,
+            0.14688056707382202,
+            0.1135212853550911,
+            0.12583523988723755,
+            0.1327076107263565,
+            0.14084573090076447,
+            0.11822091042995453,
+            0.12110933661460876
+          ],
+          "feature_names": [
+            "Pregnancies",
+            "Glucose",
+            "BloodPressure",
+            "SkinThickness",
+            "Insulin",
+            "BMI",
+            "DiabetesPedigreeFunction",
+            "Age"
+          ]
+        },
+        {
+          "model_type": "xgb",
+          "params": {
+            "objective": "binary:logistic",
+            "base_score": null,
+            "booster": null,
+            "callbacks": null,
+            "colsample_bylevel": null,
+            "colsample_bynode": null,
+            "colsample_bytree": null,
+            "device": null,
+            "early_stopping_rounds": null,
+            "enable_categorical": true,
+            "eval_metric": null,
+            "feature_types": null,
+            "feature_weights": null,
+            "gamma": null,
+            "grow_policy": null,
+            "importance_type": null,
+            "interaction_constraints": null,
+            "learning_rate": null,
+            "max_bin": null,
+            "max_cat_threshold": null,
+            "max_cat_to_onehot": null,
+            "max_delta_step": null,
+            "max_depth": 3,
+            "max_leaves": null,
+            "min_child_weight": null,
+            "missing": NaN,
+            "monotone_constraints": null,
+            "multi_strategy": null,
+            "n_estimators": 245,
+            "n_jobs": null,
+            "num_parallel_tree": null,
+            "random_state": null,
+            "reg_alpha": null,
+            "reg_lambda": null,
+            "sampling_method": null,
+            "scale_pos_weight": null,
+            "subsample": null,
+            "tree_method": null,
+            "validate_parameters": null,
+            "verbosity": null
+          },
+          "feature_importances": [
+            0.143804669380188,
+            0.15040841698646545,
+            0.11331385374069214,
+            0.13687247037887573,
+            0.08912552893161774,
+            0.09625865519046783,
+            0.1505247801542282,
+            0.11969161778688431
+          ],
+          "feature_names": [
+            "Pregnancies",
+            "Glucose",
+            "BloodPressure",
+            "SkinThickness",
+            "Insulin",
+            "BMI",
+            "DiabetesPedigreeFunction",
+            "Age"
+          ]
+        },
+        {
+          "model_type": "xgb",
+          "params": {
+            "objective": "binary:logistic",
+            "base_score": null,
+            "booster": null,
+            "callbacks": null,
+            "colsample_bylevel": null,
+            "colsample_bynode": null,
+            "colsample_bytree": null,
+            "device": null,
+            "early_stopping_rounds": null,
+            "enable_categorical": true,
+            "eval_metric": null,
+            "feature_types": null,
+            "feature_weights": null,
+            "gamma": null,
+            "grow_policy": null,
+            "importance_type": null,
+            "interaction_constraints": null,
+            "learning_rate": null,
+            "max_bin": null,
+            "max_cat_threshold": null,
+            "max_cat_to_onehot": null,
+            "max_delta_step": null,
+            "max_depth": 3,
+            "max_leaves": null,
+            "min_child_weight": null,
+            "missing": NaN,
+            "monotone_constraints": null,
+            "multi_strategy": null,
+            "n_estimators": 245,
+            "n_jobs": null,
+            "num_parallel_tree": null,
+            "random_state": null,
+            "reg_alpha": null,
+            "reg_lambda": null,
+            "sampling_method": null,
+            "scale_pos_weight": null,
+            "subsample": null,
+            "tree_method": null,
+            "validate_parameters": null,
+            "verbosity": null
+          },
+          "feature_importances": [
+            0.1272735744714737,
+            0.13545648753643036,
+            0.11927199363708496,
+            0.1297094225883484,
+            0.10958539694547653,
+            0.13983429968357086,
+            0.11007580906152725,
+            0.12879303097724915
+          ],
+          "feature_names": [
+            "Pregnancies",
+            "Glucose",
+            "BloodPressure",
+            "SkinThickness",
+            "Insulin",
+            "BMI",
+            "DiabetesPedigreeFunction",
+            "Age"
+          ]
+        },
+        {
+          "model_type": "xgb",
+          "params": {
+            "objective": "binary:logistic",
+            "base_score": null,
+            "booster": null,
+            "callbacks": null,
+            "colsample_bylevel": null,
+            "colsample_bynode": null,
+            "colsample_bytree": null,
+            "device": null,
+            "early_stopping_rounds": null,
+            "enable_categorical": true,
+            "eval_metric": null,
+            "feature_types": null,
+            "feature_weights": null,
+            "gamma": null,
+            "grow_policy": null,
+            "importance_type": null,
+            "interaction_constraints": null,
+            "learning_rate": null,
+            "max_bin": null,
+            "max_cat_threshold": null,
+            "max_cat_to_onehot": null,
+            "max_delta_step": null,
+            "max_depth": 3,
+            "max_leaves": null,
+            "min_child_weight": null,
+            "missing": NaN,
+            "monotone_constraints": null,
+            "multi_strategy": null,
+            "n_estimators": 245,
+            "n_jobs": null,
+            "num_parallel_tree": null,
+            "random_state": null,
+            "reg_alpha": null,
+            "reg_lambda": null,
+            "sampling_method": null,
+            "scale_pos_weight": null,
+            "subsample": null,
+            "tree_method": null,
+            "validate_parameters": null,
+            "verbosity": null
+          },
+          "feature_importances": [
+            0.09979893267154694,
+            0.1573633849620819,
+            0.1291198879480362,
+            0.11807975172996521,
+            0.12534868717193604,
+            0.125795379281044,
+            0.11032039672136307,
+            0.13417357206344604
+          ],
+          "feature_names": [
+            "Pregnancies",
+            "Glucose",
+            "BloodPressure",
+            "SkinThickness",
+            "Insulin",
+            "BMI",
+            "DiabetesPedigreeFunction",
+            "Age"
+          ]
+        },
+        {
+          "model_type": "xgb",
+          "params": {
+            "objective": "binary:logistic",
+            "base_score": null,
+            "booster": null,
+            "callbacks": null,
+            "colsample_bylevel": null,
+            "colsample_bynode": null,
+            "colsample_bytree": null,
+            "device": null,
+            "early_stopping_rounds": null,
+            "enable_categorical": true,
+            "eval_metric": null,
+            "feature_types": null,
+            "feature_weights": null,
+            "gamma": null,
+            "grow_policy": null,
+            "importance_type": null,
+            "interaction_constraints": null,
+            "learning_rate": null,
+            "max_bin": null,
+            "max_cat_threshold": null,
+            "max_cat_to_onehot": null,
+            "max_delta_step": null,
+            "max_depth": 3,
+            "max_leaves": null,
+            "min_child_weight": null,
+            "missing": NaN,
+            "monotone_constraints": null,
+            "multi_strategy": null,
+            "n_estimators": 245,
+            "n_jobs": null,
+            "num_parallel_tree": null,
+            "random_state": null,
+            "reg_alpha": null,
+            "reg_lambda": null,
+            "sampling_method": null,
+            "scale_pos_weight": null,
+            "subsample": null,
+            "tree_method": null,
+            "validate_parameters": null,
+            "verbosity": null
+          },
+          "feature_importances": [
+            0.10549905151128769,
+            0.12689481675624847,
+            0.11046600341796875,
+            0.14878928661346436,
+            0.11018570512533188,
+            0.11247146129608154,
+            0.12731604278087616,
+            0.15837764739990234
+          ],
+          "feature_names": [
+            "Pregnancies",
+            "Glucose",
+            "BloodPressure",
+            "SkinThickness",
+            "Insulin",
+            "BMI",
+            "DiabetesPedigreeFunction",
+            "Age"
+          ]
+        },
+        {
+          "model_type": "xgb",
+          "params": {
+            "objective": "binary:logistic",
+            "base_score": null,
+            "booster": null,
+            "callbacks": null,
+            "colsample_bylevel": null,
+            "colsample_bynode": null,
+            "colsample_bytree": null,
+            "device": null,
+            "early_stopping_rounds": null,
+            "enable_categorical": true,
+            "eval_metric": null,
+            "feature_types": null,
+            "feature_weights": null,
+            "gamma": null,
+            "grow_policy": null,
+            "importance_type": null,
+            "interaction_constraints": null,
+            "learning_rate": null,
+            "max_bin": null,
+            "max_cat_threshold": null,
+            "max_cat_to_onehot": null,
+            "max_delta_step": null,
+            "max_depth": 3,
+            "max_leaves": null,
+            "min_child_weight": null,
+            "missing": NaN,
+            "monotone_constraints": null,
+            "multi_strategy": null,
+            "n_estimators": 245,
+            "n_jobs": null,
+            "num_parallel_tree": null,
+            "random_state": null,
+            "reg_alpha": null,
+            "reg_lambda": null,
+            "sampling_method": null,
+            "scale_pos_weight": null,
+            "subsample": null,
+            "tree_method": null,
+            "validate_parameters": null,
+            "verbosity": null
+          },
+          "feature_importances": [
+            0.10785521566867828,
+            0.18706193566322327,
+            0.1330530196428299,
+            0.10357315838336945,
+            0.09207379817962646,
+            0.12220976501703262,
+            0.0889936313033104,
+            0.16517947614192963
+          ],
+          "feature_names": [
+            "Pregnancies",
+            "Glucose",
+            "BloodPressure",
+            "SkinThickness",
+            "Insulin",
+            "BMI",
+            "DiabetesPedigreeFunction",
+            "Age"
+          ]
+        },
+        {
+          "model_type": "xgb",
+          "params": {
+            "objective": "binary:logistic",
+            "base_score": null,
+            "booster": null,
+            "callbacks": null,
+            "colsample_bylevel": null,
+            "colsample_bynode": null,
+            "colsample_bytree": null,
+            "device": null,
+            "early_stopping_rounds": null,
+            "enable_categorical": true,
+            "eval_metric": null,
+            "feature_types": null,
+            "feature_weights": null,
+            "gamma": null,
+            "grow_policy": null,
+            "importance_type": null,
+            "interaction_constraints": null,
+            "learning_rate": null,
+            "max_bin": null,
+            "max_cat_threshold": null,
+            "max_cat_to_onehot": null,
+            "max_delta_step": null,
+            "max_depth": 3,
+            "max_leaves": null,
+            "min_child_weight": null,
+            "missing": NaN,
+            "monotone_constraints": null,
+            "multi_strategy": null,
+            "n_estimators": 245,
+            "n_jobs": null,
+            "num_parallel_tree": null,
+            "random_state": null,
+            "reg_alpha": null,
+            "reg_lambda": null,
+            "sampling_method": null,
+            "scale_pos_weight": null,
+            "subsample": null,
+            "tree_method": null,
+            "validate_parameters": null,
+            "verbosity": null
+          },
+          "feature_importances": [
+            0.09428951889276505,
+            0.17708629369735718,
+            0.14271286129951477,
+            0.12836720049381256,
+            0.1125810518860817,
+            0.11580287665128708,
+            0.10967203974723816,
+            0.11948812752962112
+          ],
+          "feature_names": [
+            "Pregnancies",
+            "Glucose",
+            "BloodPressure",
+            "SkinThickness",
+            "Insulin",
+            "BMI",
+            "DiabetesPedigreeFunction",
+            "Age"
+          ]
+        },
+        {
+          "model_type": "xgb",
+          "params": {
+            "objective": "binary:logistic",
+            "base_score": null,
+            "booster": null,
+            "callbacks": null,
+            "colsample_bylevel": null,
+            "colsample_bynode": null,
+            "colsample_bytree": null,
+            "device": null,
+            "early_stopping_rounds": null,
+            "enable_categorical": true,
+            "eval_metric": null,
+            "feature_types": null,
+            "feature_weights": null,
+            "gamma": null,
+            "grow_policy": null,
+            "importance_type": null,
+            "interaction_constraints": null,
+            "learning_rate": null,
+            "max_bin": null,
+            "max_cat_threshold": null,
+            "max_cat_to_onehot": null,
+            "max_delta_step": null,
+            "max_depth": 3,
+            "max_leaves": null,
+            "min_child_weight": null,
+            "missing": NaN,
+            "monotone_constraints": null,
+            "multi_strategy": null,
+            "n_estimators": 245,
+            "n_jobs": null,
+            "num_parallel_tree": null,
+            "random_state": null,
+            "reg_alpha": null,
+            "reg_lambda": null,
+            "sampling_method": null,
+            "scale_pos_weight": null,
+            "subsample": null,
+            "tree_method": null,
+            "validate_parameters": null,
+            "verbosity": null
+          },
+          "feature_importances": [
+            0.09661918878555298,
+            0.1535746455192566,
+            0.16289854049682617,
+            0.10937542468309402,
+            0.13438917696475983,
+            0.11275576800107956,
+            0.10157087445259094,
+            0.1288164108991623
+          ],
+          "feature_names": [
+            "Pregnancies",
+            "Glucose",
+            "BloodPressure",
+            "SkinThickness",
+            "Insulin",
+            "BMI",
+            "DiabetesPedigreeFunction",
+            "Age"
+          ]
+        }
+      ],
+      "f1": {
+        "real": 0.592152063889281,
+        "real_sd": 0.051749811985616394,
+        "display_real": "0.592 \u00b1 0.05",
+        "gen": 0.41940131880570036,
+        "gen_sd": 0.08359982843611988,
+        "display_gen": "0.419 \u00b1 0.08",
+        "aug": 0.5801400872191316,
+        "aug_sd": 0.07566974597131934,
+        "display_aug": "0.580 \u00b1 0.08",
+        "delta": -0.012011976670149466,
+        "delta_sd": 0.04414024951791701,
+        "display_delta": "-0.012 \u00b1 0.04",
+        "pvalue_aug_vs_real": 0.6953125,
+        "delta_gen": -0.17275074508358063,
+        "delta_gen_sd": 0.0844953752168485,
+        "display_delta_gen": "-0.173 \u00b1 0.08",
+        "pvalue_gen_vs_real": 0.001953125,
+        "qvalue_aug_vs_real": 0.6953125,
         "qvalue_gen_vs_real": 0.004595588235294118
       }
     },
@@ -11177,6 +11723,634 @@
         "display_delta_gen": "-0.214 \u00b1 0.10",
         "pvalue_gen_vs_real": 0.001953125,
         "qvalue_aug_vs_real": 0.05709134615384616,
+        "qvalue_gen_vs_real": 0.004595588235294118
+      }
+    },
+    "ab": {
+      "accuracy": {
+        "real": 0.7493506493506492,
+        "real_sd": 0.021963031851023072,
+        "display_real": "0.749 \u00b1 0.02",
+        "gen": 0.562987012987013,
+        "gen_sd": 0.06181122409824553,
+        "display_gen": "0.563 \u00b1 0.06",
+        "aug": 0.7344155844155844,
+        "aug_sd": 0.030102148016881217,
+        "display_aug": "0.734 \u00b1 0.03",
+        "delta": -0.014935064935064923,
+        "delta_sd": 0.039289738980274935,
+        "display_delta": "-0.015 \u00b1 0.04",
+        "pvalue_aug_vs_real": 0.44140625,
+        "delta_gen": -0.18636363636363634,
+        "delta_gen_sd": 0.06847802079570112,
+        "display_delta_gen": "-0.186 \u00b1 0.07",
+        "pvalue_gen_vs_real": 0.001953125,
+        "qvalue_aug_vs_real": 0.46463815789473684,
+        "qvalue_gen_vs_real": 0.004595588235294118
+      },
+      "folds_metadata": [
+        {
+          "model_type": "ab",
+          "params": {
+            "estimator": null,
+            "learning_rate": 1.0,
+            "n_estimators": 150,
+            "random_state": null
+          },
+          "feature_importances": [
+            0.16610052328732547,
+            0.17686146624638666,
+            0.08878088183377982,
+            0.1866830259973015,
+            0.0945252286202531,
+            0.12287066406471377,
+            0.06342227063425206,
+            0.10075593931598764
+          ],
+          "feature_names": [
+            "Pregnancies",
+            "Glucose",
+            "BloodPressure",
+            "SkinThickness",
+            "Insulin",
+            "BMI",
+            "DiabetesPedigreeFunction",
+            "Age"
+          ]
+        },
+        {
+          "model_type": "ab",
+          "params": {
+            "estimator": null,
+            "learning_rate": 1.0,
+            "n_estimators": 150,
+            "random_state": null
+          },
+          "feature_importances": [
+            0.01610940641231247,
+            0.3402770532140116,
+            0.11555442834320422,
+            0.012665056392045742,
+            0.12869617420658533,
+            0.19522135747662514,
+            0.10578812707450375,
+            0.0856883968807118
+          ],
+          "feature_names": [
+            "Pregnancies",
+            "Glucose",
+            "BloodPressure",
+            "SkinThickness",
+            "Insulin",
+            "BMI",
+            "DiabetesPedigreeFunction",
+            "Age"
+          ]
+        },
+        {
+          "model_type": "ab",
+          "params": {
+            "estimator": null,
+            "learning_rate": 1.0,
+            "n_estimators": 150,
+            "random_state": null
+          },
+          "feature_importances": [
+            0.06026418067282411,
+            0.17299156470901317,
+            0.05544564452533802,
+            0.05485595422767811,
+            0.046137204387706646,
+            0.15659469007721327,
+            0.37567841861218837,
+            0.07803234278803833
+          ],
+          "feature_names": [
+            "Pregnancies",
+            "Glucose",
+            "BloodPressure",
+            "SkinThickness",
+            "Insulin",
+            "BMI",
+            "DiabetesPedigreeFunction",
+            "Age"
+          ]
+        },
+        {
+          "model_type": "ab",
+          "params": {
+            "estimator": null,
+            "learning_rate": 1.0,
+            "n_estimators": 150,
+            "random_state": null
+          },
+          "feature_importances": [
+            0.07007669120850898,
+            0.17009665195526033,
+            0.11161988702248153,
+            0.1939068788691938,
+            0.02060684406388173,
+            0.06581956146828954,
+            0.19425004600291854,
+            0.17362343940946554
+          ],
+          "feature_names": [
+            "Pregnancies",
+            "Glucose",
+            "BloodPressure",
+            "SkinThickness",
+            "Insulin",
+            "BMI",
+            "DiabetesPedigreeFunction",
+            "Age"
+          ]
+        },
+        {
+          "model_type": "ab",
+          "params": {
+            "estimator": null,
+            "learning_rate": 1.0,
+            "n_estimators": 150,
+            "random_state": null
+          },
+          "feature_importances": [
+            0.05567083933705673,
+            0.20178248215657976,
+            0.06347307239664342,
+            0.24136214648528934,
+            0.09936109539184942,
+            0.13061805203958607,
+            0.07636174199997034,
+            0.1313705701930248
+          ],
+          "feature_names": [
+            "Pregnancies",
+            "Glucose",
+            "BloodPressure",
+            "SkinThickness",
+            "Insulin",
+            "BMI",
+            "DiabetesPedigreeFunction",
+            "Age"
+          ]
+        },
+        {
+          "model_type": "ab",
+          "params": {
+            "estimator": null,
+            "learning_rate": 1.0,
+            "n_estimators": 150,
+            "random_state": null
+          },
+          "feature_importances": [
+            0.0,
+            0.2074592327005815,
+            0.11412603585155245,
+            0.056515698340750334,
+            0.08616736651890487,
+            0.1698093357620797,
+            0.04886661696675064,
+            0.3170557138593807
+          ],
+          "feature_names": [
+            "Pregnancies",
+            "Glucose",
+            "BloodPressure",
+            "SkinThickness",
+            "Insulin",
+            "BMI",
+            "DiabetesPedigreeFunction",
+            "Age"
+          ]
+        },
+        {
+          "model_type": "ab",
+          "params": {
+            "estimator": null,
+            "learning_rate": 1.0,
+            "n_estimators": 150,
+            "random_state": null
+          },
+          "feature_importances": [
+            0.060445981380957595,
+            0.09191364491107971,
+            0.055233292589172374,
+            0.06623502928798394,
+            0.0795736756985053,
+            0.09769233592084312,
+            0.19673555380549904,
+            0.35217048640595916
+          ],
+          "feature_names": [
+            "Pregnancies",
+            "Glucose",
+            "BloodPressure",
+            "SkinThickness",
+            "Insulin",
+            "BMI",
+            "DiabetesPedigreeFunction",
+            "Age"
+          ]
+        },
+        {
+          "model_type": "ab",
+          "params": {
+            "estimator": null,
+            "learning_rate": 1.0,
+            "n_estimators": 150,
+            "random_state": null
+          },
+          "feature_importances": [
+            0.025962844167615982,
+            0.10819898257328994,
+            0.14612224082704892,
+            0.08570744110833398,
+            0.24476442974604345,
+            0.04793804838398012,
+            0.11247337314491533,
+            0.22883264004877224
+          ],
+          "feature_names": [
+            "Pregnancies",
+            "Glucose",
+            "BloodPressure",
+            "SkinThickness",
+            "Insulin",
+            "BMI",
+            "DiabetesPedigreeFunction",
+            "Age"
+          ]
+        },
+        {
+          "model_type": "ab",
+          "params": {
+            "estimator": null,
+            "learning_rate": 1.0,
+            "n_estimators": 150,
+            "random_state": null
+          },
+          "feature_importances": [
+            0.1520919544769129,
+            0.11236189797028545,
+            0.17202148878230175,
+            0.1934894486357692,
+            0.033590891076529975,
+            0.11400478404813992,
+            0.11945639788213352,
+            0.10298313712792732
+          ],
+          "feature_names": [
+            "Pregnancies",
+            "Glucose",
+            "BloodPressure",
+            "SkinThickness",
+            "Insulin",
+            "BMI",
+            "DiabetesPedigreeFunction",
+            "Age"
+          ]
+        },
+        {
+          "model_type": "ab",
+          "params": {
+            "estimator": null,
+            "learning_rate": 1.0,
+            "n_estimators": 150,
+            "random_state": null
+          },
+          "feature_importances": [
+            0.01407149891848308,
+            0.16340521934263036,
+            0.1729227963810133,
+            0.07961271774808272,
+            0.1503032048882749,
+            0.1460125810702297,
+            0.08646894740712753,
+            0.18720303424415838
+          ],
+          "feature_names": [
+            "Pregnancies",
+            "Glucose",
+            "BloodPressure",
+            "SkinThickness",
+            "Insulin",
+            "BMI",
+            "DiabetesPedigreeFunction",
+            "Age"
+          ]
+        }
+      ],
+      "f1": {
+        "real": 0.6076604413342895,
+        "real_sd": 0.04720157386470729,
+        "display_real": "0.608 \u00b1 0.05",
+        "gen": 0.3368309070461554,
+        "gen_sd": 0.1204201845499588,
+        "display_gen": "0.337 \u00b1 0.12",
+        "aug": 0.5602498080593403,
+        "aug_sd": 0.060866580020684305,
+        "display_aug": "0.560 \u00b1 0.06",
+        "delta": -0.0474106332749491,
+        "delta_sd": 0.07249124706627537,
+        "display_delta": "-0.047 \u00b1 0.07",
+        "pvalue_aug_vs_real": 0.064453125,
+        "delta_gen": -0.27082953428813406,
+        "delta_gen_sd": 0.13898156891984845,
+        "display_delta_gen": "-0.271 \u00b1 0.14",
+        "pvalue_gen_vs_real": 0.001953125,
+        "qvalue_aug_vs_real": 0.09207589285714286,
+        "qvalue_gen_vs_real": 0.004595588235294118
+      }
+    },
+    "knn": {
+      "accuracy": {
+        "real": 0.7545454545454545,
+        "real_sd": 0.01785419101930848,
+        "display_real": "0.755 \u00b1 0.02",
+        "gen": 0.5694805194805196,
+        "gen_sd": 0.05764610161030179,
+        "display_gen": "0.569 \u00b1 0.06",
+        "aug": 0.7428571428571428,
+        "aug_sd": 0.020369333949815743,
+        "display_aug": "0.743 \u00b1 0.02",
+        "delta": -0.011688311688311692,
+        "delta_sd": 0.017131046699055758,
+        "display_delta": "-0.012 \u00b1 0.02",
+        "pvalue_aug_vs_real": 0.140625,
+        "delta_gen": -0.18506493506493507,
+        "delta_gen_sd": 0.057733809689338264,
+        "display_delta_gen": "-0.185 \u00b1 0.06",
+        "pvalue_gen_vs_real": 0.001953125,
+        "qvalue_aug_vs_real": 0.1814516129032258,
+        "qvalue_gen_vs_real": 0.004595588235294118
+      },
+      "folds_metadata": [
+        {
+          "model_type": "knn",
+          "params": {
+            "algorithm": "auto",
+            "leaf_size": 30,
+            "metric": "minkowski",
+            "metric_params": null,
+            "n_jobs": null,
+            "n_neighbors": 15,
+            "p": 2,
+            "weights": "uniform"
+          }
+        },
+        {
+          "model_type": "knn",
+          "params": {
+            "algorithm": "auto",
+            "leaf_size": 30,
+            "metric": "minkowski",
+            "metric_params": null,
+            "n_jobs": null,
+            "n_neighbors": 15,
+            "p": 2,
+            "weights": "uniform"
+          }
+        },
+        {
+          "model_type": "knn",
+          "params": {
+            "algorithm": "auto",
+            "leaf_size": 30,
+            "metric": "minkowski",
+            "metric_params": null,
+            "n_jobs": null,
+            "n_neighbors": 15,
+            "p": 2,
+            "weights": "uniform"
+          }
+        },
+        {
+          "model_type": "knn",
+          "params": {
+            "algorithm": "auto",
+            "leaf_size": 30,
+            "metric": "minkowski",
+            "metric_params": null,
+            "n_jobs": null,
+            "n_neighbors": 15,
+            "p": 2,
+            "weights": "uniform"
+          }
+        },
+        {
+          "model_type": "knn",
+          "params": {
+            "algorithm": "auto",
+            "leaf_size": 30,
+            "metric": "minkowski",
+            "metric_params": null,
+            "n_jobs": null,
+            "n_neighbors": 15,
+            "p": 2,
+            "weights": "uniform"
+          }
+        },
+        {
+          "model_type": "knn",
+          "params": {
+            "algorithm": "auto",
+            "leaf_size": 30,
+            "metric": "minkowski",
+            "metric_params": null,
+            "n_jobs": null,
+            "n_neighbors": 15,
+            "p": 2,
+            "weights": "uniform"
+          }
+        },
+        {
+          "model_type": "knn",
+          "params": {
+            "algorithm": "auto",
+            "leaf_size": 30,
+            "metric": "minkowski",
+            "metric_params": null,
+            "n_jobs": null,
+            "n_neighbors": 15,
+            "p": 2,
+            "weights": "uniform"
+          }
+        },
+        {
+          "model_type": "knn",
+          "params": {
+            "algorithm": "auto",
+            "leaf_size": 30,
+            "metric": "minkowski",
+            "metric_params": null,
+            "n_jobs": null,
+            "n_neighbors": 15,
+            "p": 2,
+            "weights": "uniform"
+          }
+        },
+        {
+          "model_type": "knn",
+          "params": {
+            "algorithm": "auto",
+            "leaf_size": 30,
+            "metric": "minkowski",
+            "metric_params": null,
+            "n_jobs": null,
+            "n_neighbors": 15,
+            "p": 2,
+            "weights": "uniform"
+          }
+        },
+        {
+          "model_type": "knn",
+          "params": {
+            "algorithm": "auto",
+            "leaf_size": 30,
+            "metric": "minkowski",
+            "metric_params": null,
+            "n_jobs": null,
+            "n_neighbors": 15,
+            "p": 2,
+            "weights": "uniform"
+          }
+        }
+      ],
+      "f1": {
+        "real": 0.5998259463389416,
+        "real_sd": 0.032606447272949986,
+        "display_real": "0.600 \u00b1 0.03",
+        "gen": 0.38434965493463386,
+        "gen_sd": 0.09459334890234067,
+        "display_gen": "0.384 \u00b1 0.09",
+        "aug": 0.5824504486933532,
+        "aug_sd": 0.044913338537159994,
+        "display_aug": "0.582 \u00b1 0.04",
+        "delta": -0.017375497645588413,
+        "delta_sd": 0.030651127017891244,
+        "display_delta": "-0.017 \u00b1 0.03",
+        "pvalue_aug_vs_real": 0.09765625,
+        "delta_gen": -0.21547629140430774,
+        "delta_gen_sd": 0.1006310612204712,
+        "display_delta_gen": "-0.215 \u00b1 0.10",
+        "pvalue_gen_vs_real": 0.00390625,
+        "qvalue_aug_vs_real": 0.13020833333333331,
+        "qvalue_gen_vs_real": 0.008223684210526315
+      }
+    },
+    "nb": {
+      "accuracy": {
+        "real": 0.7636363636363636,
+        "real_sd": 0.024157240568491258,
+        "display_real": "0.764 \u00b1 0.02",
+        "gen": 0.524025974025974,
+        "gen_sd": 0.10709562122867208,
+        "display_gen": "0.524 \u00b1 0.11",
+        "aug": 0.7389610389610389,
+        "aug_sd": 0.02130028502189185,
+        "display_aug": "0.739 \u00b1 0.02",
+        "delta": -0.024675324675324684,
+        "delta_sd": 0.028125204971048985,
+        "display_delta": "-0.025 \u00b1 0.03",
+        "pvalue_aug_vs_real": 0.0390625,
+        "delta_gen": -0.2396103896103896,
+        "delta_gen_sd": 0.1033039129531824,
+        "display_delta_gen": "-0.240 \u00b1 0.10",
+        "pvalue_gen_vs_real": 0.001953125,
+        "qvalue_aug_vs_real": 0.057870370370370364,
+        "qvalue_gen_vs_real": 0.004595588235294118
+      },
+      "folds_metadata": [
+        {
+          "model_type": "nb",
+          "params": {
+            "priors": null,
+            "var_smoothing": 1e-09
+          }
+        },
+        {
+          "model_type": "nb",
+          "params": {
+            "priors": null,
+            "var_smoothing": 1e-09
+          }
+        },
+        {
+          "model_type": "nb",
+          "params": {
+            "priors": null,
+            "var_smoothing": 1e-09
+          }
+        },
+        {
+          "model_type": "nb",
+          "params": {
+            "priors": null,
+            "var_smoothing": 1e-09
+          }
+        },
+        {
+          "model_type": "nb",
+          "params": {
+            "priors": null,
+            "var_smoothing": 1e-09
+          }
+        },
+        {
+          "model_type": "nb",
+          "params": {
+            "priors": null,
+            "var_smoothing": 1e-09
+          }
+        },
+        {
+          "model_type": "nb",
+          "params": {
+            "priors": null,
+            "var_smoothing": 1e-09
+          }
+        },
+        {
+          "model_type": "nb",
+          "params": {
+            "priors": null,
+            "var_smoothing": 1e-09
+          }
+        },
+        {
+          "model_type": "nb",
+          "params": {
+            "priors": null,
+            "var_smoothing": 1e-09
+          }
+        },
+        {
+          "model_type": "nb",
+          "params": {
+            "priors": null,
+            "var_smoothing": 1e-09
+          }
+        }
+      ],
+      "f1": {
+        "real": 0.6399852354635025,
+        "real_sd": 0.049328033088906605,
+        "display_real": "0.640 \u00b1 0.05",
+        "gen": 0.3915869413201914,
+        "gen_sd": 0.09540090655688054,
+        "display_gen": "0.392 \u00b1 0.10",
+        "aug": 0.5626362739546098,
+        "aug_sd": 0.08550746554627234,
+        "display_aug": "0.563 \u00b1 0.09",
+        "delta": -0.07734896150889248,
+        "delta_sd": 0.07775922100783675,
+        "display_delta": "-0.077 \u00b1 0.08",
+        "pvalue_aug_vs_real": 0.01953125,
+        "delta_gen": -0.24839829414331102,
+        "delta_gen_sd": 0.08164548670172225,
+        "display_delta_gen": "-0.248 \u00b1 0.08",
+        "pvalue_gen_vs_real": 0.001953125,
+        "qvalue_aug_vs_real": 0.033967391304347824,
         "qvalue_gen_vs_real": 0.004595588235294118
       }
     },
@@ -12315,242 +13489,6 @@
         "qvalue_gen_vs_real": 0.11584051724137932
       }
     },
-    "lr": {
-      "accuracy": {
-        "real": 0.772077922077922,
-        "real_sd": 0.021031343819093065,
-        "display_real": "0.772 \u00b1 0.02",
-        "gen": 0.5766233766233766,
-        "gen_sd": 0.08171504528176297,
-        "display_gen": "0.577 \u00b1 0.08",
-        "aug": 0.7272727272727273,
-        "aug_sd": 0.033237620498882424,
-        "display_aug": "0.727 \u00b1 0.03",
-        "delta": -0.044805194805194806,
-        "delta_sd": 0.03813518664941826,
-        "display_delta": "-0.045 \u00b1 0.04",
-        "pvalue_aug_vs_real": 0.01171875,
-        "delta_gen": -0.1954545454545455,
-        "delta_gen_sd": 0.07641673655183079,
-        "display_delta_gen": "-0.195 \u00b1 0.08",
-        "pvalue_gen_vs_real": 0.001953125,
-        "qvalue_aug_vs_real": 0.02232142857142857,
-        "qvalue_gen_vs_real": 0.004595588235294118
-      },
-      "folds_metadata": [
-        {
-          "model_type": "lr",
-          "params": {
-            "C": 1.0,
-            "class_weight": null,
-            "dual": false,
-            "fit_intercept": true,
-            "intercept_scaling": 1,
-            "l1_ratio": 0.0,
-            "max_iter": 100,
-            "n_jobs": null,
-            "penalty": "deprecated",
-            "random_state": null,
-            "solver": "lbfgs",
-            "tol": 0.0001,
-            "verbose": 0,
-            "warm_start": false
-          }
-        },
-        {
-          "model_type": "lr",
-          "params": {
-            "C": 1.0,
-            "class_weight": null,
-            "dual": false,
-            "fit_intercept": true,
-            "intercept_scaling": 1,
-            "l1_ratio": 0.0,
-            "max_iter": 100,
-            "n_jobs": null,
-            "penalty": "deprecated",
-            "random_state": null,
-            "solver": "lbfgs",
-            "tol": 0.0001,
-            "verbose": 0,
-            "warm_start": false
-          }
-        },
-        {
-          "model_type": "lr",
-          "params": {
-            "C": 1.0,
-            "class_weight": null,
-            "dual": false,
-            "fit_intercept": true,
-            "intercept_scaling": 1,
-            "l1_ratio": 0.0,
-            "max_iter": 100,
-            "n_jobs": null,
-            "penalty": "deprecated",
-            "random_state": null,
-            "solver": "lbfgs",
-            "tol": 0.0001,
-            "verbose": 0,
-            "warm_start": false
-          }
-        },
-        {
-          "model_type": "lr",
-          "params": {
-            "C": 1.0,
-            "class_weight": null,
-            "dual": false,
-            "fit_intercept": true,
-            "intercept_scaling": 1,
-            "l1_ratio": 0.0,
-            "max_iter": 100,
-            "n_jobs": null,
-            "penalty": "deprecated",
-            "random_state": null,
-            "solver": "lbfgs",
-            "tol": 0.0001,
-            "verbose": 0,
-            "warm_start": false
-          }
-        },
-        {
-          "model_type": "lr",
-          "params": {
-            "C": 1.0,
-            "class_weight": null,
-            "dual": false,
-            "fit_intercept": true,
-            "intercept_scaling": 1,
-            "l1_ratio": 0.0,
-            "max_iter": 100,
-            "n_jobs": null,
-            "penalty": "deprecated",
-            "random_state": null,
-            "solver": "lbfgs",
-            "tol": 0.0001,
-            "verbose": 0,
-            "warm_start": false
-          }
-        },
-        {
-          "model_type": "lr",
-          "params": {
-            "C": 1.0,
-            "class_weight": null,
-            "dual": false,
-            "fit_intercept": true,
-            "intercept_scaling": 1,
-            "l1_ratio": 0.0,
-            "max_iter": 100,
-            "n_jobs": null,
-            "penalty": "deprecated",
-            "random_state": null,
-            "solver": "lbfgs",
-            "tol": 0.0001,
-            "verbose": 0,
-            "warm_start": false
-          }
-        },
-        {
-          "model_type": "lr",
-          "params": {
-            "C": 1.0,
-            "class_weight": null,
-            "dual": false,
-            "fit_intercept": true,
-            "intercept_scaling": 1,
-            "l1_ratio": 0.0,
-            "max_iter": 100,
-            "n_jobs": null,
-            "penalty": "deprecated",
-            "random_state": null,
-            "solver": "lbfgs",
-            "tol": 0.0001,
-            "verbose": 0,
-            "warm_start": false
-          }
-        },
-        {
-          "model_type": "lr",
-          "params": {
-            "C": 1.0,
-            "class_weight": null,
-            "dual": false,
-            "fit_intercept": true,
-            "intercept_scaling": 1,
-            "l1_ratio": 0.0,
-            "max_iter": 100,
-            "n_jobs": null,
-            "penalty": "deprecated",
-            "random_state": null,
-            "solver": "lbfgs",
-            "tol": 0.0001,
-            "verbose": 0,
-            "warm_start": false
-          }
-        },
-        {
-          "model_type": "lr",
-          "params": {
-            "C": 1.0,
-            "class_weight": null,
-            "dual": false,
-            "fit_intercept": true,
-            "intercept_scaling": 1,
-            "l1_ratio": 0.0,
-            "max_iter": 100,
-            "n_jobs": null,
-            "penalty": "deprecated",
-            "random_state": null,
-            "solver": "lbfgs",
-            "tol": 0.0001,
-            "verbose": 0,
-            "warm_start": false
-          }
-        },
-        {
-          "model_type": "lr",
-          "params": {
-            "C": 1.0,
-            "class_weight": null,
-            "dual": false,
-            "fit_intercept": true,
-            "intercept_scaling": 1,
-            "l1_ratio": 0.0,
-            "max_iter": 100,
-            "n_jobs": null,
-            "penalty": "deprecated",
-            "random_state": null,
-            "solver": "lbfgs",
-            "tol": 0.0001,
-            "verbose": 0,
-            "warm_start": false
-          }
-        }
-      ],
-      "f1": {
-        "real": 0.6262914445612621,
-        "real_sd": 0.056373979937524896,
-        "display_real": "0.626 \u00b1 0.06",
-        "gen": 0.4334933716334569,
-        "gen_sd": 0.12265869498994053,
-        "display_gen": "0.433 \u00b1 0.12",
-        "aug": 0.5173007071279148,
-        "aug_sd": 0.12335702709717765,
-        "display_aug": "0.517 \u00b1 0.12",
-        "delta": -0.10899073743334724,
-        "delta_sd": 0.11721848082293897,
-        "display_delta": "-0.109 \u00b1 0.12",
-        "pvalue_aug_vs_real": 0.02734375,
-        "delta_gen": -0.19279807292780518,
-        "delta_gen_sd": 0.09848103552928746,
-        "display_delta_gen": "-0.193 \u00b1 0.10",
-        "pvalue_gen_vs_real": 0.001953125,
-        "qvalue_aug_vs_real": 0.043750000000000004,
-        "qvalue_gen_vs_real": 0.004595588235294118
-      }
-    },
     "svm": {
       "accuracy": {
         "real": 0.7564935064935064,
@@ -12797,82 +13735,61 @@
         "qvalue_gen_vs_real": 0.004595588235294118
       }
     },
-    "xgb": {
+    "rf": {
       "accuracy": {
-        "real": 0.7292207792207792,
-        "real_sd": 0.02324094827035493,
-        "display_real": "0.729 \u00b1 0.02",
-        "gen": 0.5766233766233767,
-        "gen_sd": 0.07135769801462938,
-        "display_gen": "0.577 \u00b1 0.07",
-        "aug": 0.7194805194805194,
-        "aug_sd": 0.04084203946367893,
-        "display_aug": "0.719 \u00b1 0.04",
-        "delta": -0.009740259740259749,
-        "delta_sd": 0.023990848314170348,
-        "display_delta": "-0.010 \u00b1 0.02",
-        "pvalue_aug_vs_real": 0.375,
-        "delta_gen": -0.15259740259740256,
-        "delta_gen_sd": 0.07085067285843637,
-        "display_delta_gen": "-0.153 \u00b1 0.07",
+        "real": 0.753896103896104,
+        "real_sd": 0.023672371602023633,
+        "display_real": "0.754 \u00b1 0.02",
+        "gen": 0.5707792207792208,
+        "gen_sd": 0.07669213291996202,
+        "display_gen": "0.571 \u00b1 0.08",
+        "aug": 0.7467532467532468,
+        "aug_sd": 0.029039843863633643,
+        "display_aug": "0.747 \u00b1 0.03",
+        "delta": -0.0071428571428571504,
+        "delta_sd": 0.027770655558887147,
+        "display_delta": "-0.007 \u00b1 0.03",
+        "pvalue_aug_vs_real": 0.390625,
+        "delta_gen": -0.18311688311688315,
+        "delta_gen_sd": 0.07565980085002341,
+        "display_delta_gen": "-0.183 \u00b1 0.08",
         "pvalue_gen_vs_real": 0.001953125,
-        "qvalue_aug_vs_real": 0.4166666666666667,
+        "qvalue_aug_vs_real": 0.4222972972972973,
         "qvalue_gen_vs_real": 0.004595588235294118
       },
       "folds_metadata": [
         {
-          "model_type": "xgb",
+          "model_type": "rf",
           "params": {
-            "objective": "binary:logistic",
-            "base_score": null,
-            "booster": null,
-            "callbacks": null,
-            "colsample_bylevel": null,
-            "colsample_bynode": null,
-            "colsample_bytree": null,
-            "device": null,
-            "early_stopping_rounds": null,
-            "enable_categorical": true,
-            "eval_metric": null,
-            "feature_types": null,
-            "feature_weights": null,
-            "gamma": null,
-            "grow_policy": null,
-            "importance_type": null,
-            "interaction_constraints": null,
-            "learning_rate": null,
-            "max_bin": null,
-            "max_cat_threshold": null,
-            "max_cat_to_onehot": null,
-            "max_delta_step": null,
-            "max_depth": 3,
-            "max_leaves": null,
-            "min_child_weight": null,
-            "missing": NaN,
-            "monotone_constraints": null,
-            "multi_strategy": null,
+            "bootstrap": true,
+            "ccp_alpha": 0.0,
+            "class_weight": null,
+            "criterion": "gini",
+            "max_depth": 10,
+            "max_features": "sqrt",
+            "max_leaf_nodes": null,
+            "max_samples": null,
+            "min_impurity_decrease": 0.0,
+            "min_samples_leaf": 1,
+            "min_samples_split": 2,
+            "min_weight_fraction_leaf": 0.0,
+            "monotonic_cst": null,
             "n_estimators": 245,
             "n_jobs": null,
-            "num_parallel_tree": null,
+            "oob_score": false,
             "random_state": null,
-            "reg_alpha": null,
-            "reg_lambda": null,
-            "sampling_method": null,
-            "scale_pos_weight": null,
-            "subsample": null,
-            "tree_method": null,
-            "validate_parameters": null,
-            "verbosity": null
+            "verbose": 0,
+            "warm_start": false
           },
           "feature_importances": [
-            0.13647116720676422,
-            0.1612304151058197,
-            0.12046340107917786,
-            0.1408429741859436,
-            0.12085127830505371,
-            0.10783038288354874,
-            0.1120763048529625,
-            0.10023407638072968
+            0.09483736971450776,
+            0.20241422973641002,
+            0.11803546616296642,
+            0.11761442531252439,
+            0.10755138498590741,
+            0.1374532772169454,
+            0.12181972090070411,
+            0.10027412597003443
           ],
           "feature_names": [
             "Pregnancies",
@@ -12886,58 +13803,37 @@
           ]
         },
         {
-          "model_type": "xgb",
+          "model_type": "rf",
           "params": {
-            "objective": "binary:logistic",
-            "base_score": null,
-            "booster": null,
-            "callbacks": null,
-            "colsample_bylevel": null,
-            "colsample_bynode": null,
-            "colsample_bytree": null,
-            "device": null,
-            "early_stopping_rounds": null,
-            "enable_categorical": true,
-            "eval_metric": null,
-            "feature_types": null,
-            "feature_weights": null,
-            "gamma": null,
-            "grow_policy": null,
-            "importance_type": null,
-            "interaction_constraints": null,
-            "learning_rate": null,
-            "max_bin": null,
-            "max_cat_threshold": null,
-            "max_cat_to_onehot": null,
-            "max_delta_step": null,
-            "max_depth": 3,
-            "max_leaves": null,
-            "min_child_weight": null,
-            "missing": NaN,
-            "monotone_constraints": null,
-            "multi_strategy": null,
+            "bootstrap": true,
+            "ccp_alpha": 0.0,
+            "class_weight": null,
+            "criterion": "gini",
+            "max_depth": 10,
+            "max_features": "sqrt",
+            "max_leaf_nodes": null,
+            "max_samples": null,
+            "min_impurity_decrease": 0.0,
+            "min_samples_leaf": 1,
+            "min_samples_split": 2,
+            "min_weight_fraction_leaf": 0.0,
+            "monotonic_cst": null,
             "n_estimators": 245,
             "n_jobs": null,
-            "num_parallel_tree": null,
+            "oob_score": false,
             "random_state": null,
-            "reg_alpha": null,
-            "reg_lambda": null,
-            "sampling_method": null,
-            "scale_pos_weight": null,
-            "subsample": null,
-            "tree_method": null,
-            "validate_parameters": null,
-            "verbosity": null
+            "verbose": 0,
+            "warm_start": false
           },
           "feature_importances": [
-            0.10330341011285782,
-            0.15938426554203033,
-            0.11756115406751633,
-            0.1038295105099678,
-            0.1488993763923645,
-            0.13584144413471222,
-            0.10882438719272614,
-            0.12235645949840546
+            0.07265292910336987,
+            0.18884637223859263,
+            0.10779030185187312,
+            0.1016592583350105,
+            0.1402492047373969,
+            0.14699696685218594,
+            0.12284790870788222,
+            0.11895705817368876
           ],
           "feature_names": [
             "Pregnancies",
@@ -12951,58 +13847,37 @@
           ]
         },
         {
-          "model_type": "xgb",
+          "model_type": "rf",
           "params": {
-            "objective": "binary:logistic",
-            "base_score": null,
-            "booster": null,
-            "callbacks": null,
-            "colsample_bylevel": null,
-            "colsample_bynode": null,
-            "colsample_bytree": null,
-            "device": null,
-            "early_stopping_rounds": null,
-            "enable_categorical": true,
-            "eval_metric": null,
-            "feature_types": null,
-            "feature_weights": null,
-            "gamma": null,
-            "grow_policy": null,
-            "importance_type": null,
-            "interaction_constraints": null,
-            "learning_rate": null,
-            "max_bin": null,
-            "max_cat_threshold": null,
-            "max_cat_to_onehot": null,
-            "max_delta_step": null,
-            "max_depth": 3,
-            "max_leaves": null,
-            "min_child_weight": null,
-            "missing": NaN,
-            "monotone_constraints": null,
-            "multi_strategy": null,
+            "bootstrap": true,
+            "ccp_alpha": 0.0,
+            "class_weight": null,
+            "criterion": "gini",
+            "max_depth": 10,
+            "max_features": "sqrt",
+            "max_leaf_nodes": null,
+            "max_samples": null,
+            "min_impurity_decrease": 0.0,
+            "min_samples_leaf": 1,
+            "min_samples_split": 2,
+            "min_weight_fraction_leaf": 0.0,
+            "monotonic_cst": null,
             "n_estimators": 245,
             "n_jobs": null,
-            "num_parallel_tree": null,
+            "oob_score": false,
             "random_state": null,
-            "reg_alpha": null,
-            "reg_lambda": null,
-            "sampling_method": null,
-            "scale_pos_weight": null,
-            "subsample": null,
-            "tree_method": null,
-            "validate_parameters": null,
-            "verbosity": null
+            "verbose": 0,
+            "warm_start": false
           },
           "feature_importances": [
-            0.10087927430868149,
-            0.14688056707382202,
-            0.1135212853550911,
-            0.12583523988723755,
-            0.1327076107263565,
-            0.14084573090076447,
-            0.11822091042995453,
-            0.12110933661460876
+            0.07773447367634298,
+            0.1817058808172068,
+            0.11539384122162186,
+            0.10388124018139944,
+            0.11717642340308008,
+            0.16115161474045223,
+            0.13727897909483822,
+            0.10567754686505836
           ],
           "feature_names": [
             "Pregnancies",
@@ -13016,58 +13891,37 @@
           ]
         },
         {
-          "model_type": "xgb",
+          "model_type": "rf",
           "params": {
-            "objective": "binary:logistic",
-            "base_score": null,
-            "booster": null,
-            "callbacks": null,
-            "colsample_bylevel": null,
-            "colsample_bynode": null,
-            "colsample_bytree": null,
-            "device": null,
-            "early_stopping_rounds": null,
-            "enable_categorical": true,
-            "eval_metric": null,
-            "feature_types": null,
-            "feature_weights": null,
-            "gamma": null,
-            "grow_policy": null,
-            "importance_type": null,
-            "interaction_constraints": null,
-            "learning_rate": null,
-            "max_bin": null,
-            "max_cat_threshold": null,
-            "max_cat_to_onehot": null,
-            "max_delta_step": null,
-            "max_depth": 3,
-            "max_leaves": null,
-            "min_child_weight": null,
-            "missing": NaN,
-            "monotone_constraints": null,
-            "multi_strategy": null,
+            "bootstrap": true,
+            "ccp_alpha": 0.0,
+            "class_weight": null,
+            "criterion": "gini",
+            "max_depth": 10,
+            "max_features": "sqrt",
+            "max_leaf_nodes": null,
+            "max_samples": null,
+            "min_impurity_decrease": 0.0,
+            "min_samples_leaf": 1,
+            "min_samples_split": 2,
+            "min_weight_fraction_leaf": 0.0,
+            "monotonic_cst": null,
             "n_estimators": 245,
             "n_jobs": null,
-            "num_parallel_tree": null,
+            "oob_score": false,
             "random_state": null,
-            "reg_alpha": null,
-            "reg_lambda": null,
-            "sampling_method": null,
-            "scale_pos_weight": null,
-            "subsample": null,
-            "tree_method": null,
-            "validate_parameters": null,
-            "verbosity": null
+            "verbose": 0,
+            "warm_start": false
           },
           "feature_importances": [
-            0.143804669380188,
-            0.15040841698646545,
-            0.11331385374069214,
-            0.13687247037887573,
-            0.08912552893161774,
-            0.09625865519046783,
-            0.1505247801542282,
-            0.11969161778688431
+            0.0918058828337958,
+            0.17847755398288845,
+            0.11111741248798013,
+            0.11017752282631814,
+            0.09409745184393167,
+            0.11841762754437583,
+            0.1617688112874817,
+            0.13413773719322836
           ],
           "feature_names": [
             "Pregnancies",
@@ -13081,58 +13935,37 @@
           ]
         },
         {
-          "model_type": "xgb",
+          "model_type": "rf",
           "params": {
-            "objective": "binary:logistic",
-            "base_score": null,
-            "booster": null,
-            "callbacks": null,
-            "colsample_bylevel": null,
-            "colsample_bynode": null,
-            "colsample_bytree": null,
-            "device": null,
-            "early_stopping_rounds": null,
-            "enable_categorical": true,
-            "eval_metric": null,
-            "feature_types": null,
-            "feature_weights": null,
-            "gamma": null,
-            "grow_policy": null,
-            "importance_type": null,
-            "interaction_constraints": null,
-            "learning_rate": null,
-            "max_bin": null,
-            "max_cat_threshold": null,
-            "max_cat_to_onehot": null,
-            "max_delta_step": null,
-            "max_depth": 3,
-            "max_leaves": null,
-            "min_child_weight": null,
-            "missing": NaN,
-            "monotone_constraints": null,
-            "multi_strategy": null,
+            "bootstrap": true,
+            "ccp_alpha": 0.0,
+            "class_weight": null,
+            "criterion": "gini",
+            "max_depth": 10,
+            "max_features": "sqrt",
+            "max_leaf_nodes": null,
+            "max_samples": null,
+            "min_impurity_decrease": 0.0,
+            "min_samples_leaf": 1,
+            "min_samples_split": 2,
+            "min_weight_fraction_leaf": 0.0,
+            "monotonic_cst": null,
             "n_estimators": 245,
             "n_jobs": null,
-            "num_parallel_tree": null,
+            "oob_score": false,
             "random_state": null,
-            "reg_alpha": null,
-            "reg_lambda": null,
-            "sampling_method": null,
-            "scale_pos_weight": null,
-            "subsample": null,
-            "tree_method": null,
-            "validate_parameters": null,
-            "verbosity": null
+            "verbose": 0,
+            "warm_start": false
           },
           "feature_importances": [
-            0.1272735744714737,
-            0.13545648753643036,
-            0.11927199363708496,
-            0.1297094225883484,
-            0.10958539694547653,
-            0.13983429968357086,
-            0.11007580906152725,
-            0.12879303097724915
+            0.09400233813319699,
+            0.13677485621631152,
+            0.12492859473321327,
+            0.11258367411158159,
+            0.12031219259095499,
+            0.1665855806911252,
+            0.12231263797000126,
+            0.12250012555361521
           ],
           "feature_names": [
             "Pregnancies",
@@ -13146,58 +13979,37 @@
           ]
         },
         {
-          "model_type": "xgb",
+          "model_type": "rf",
           "params": {
-            "objective": "binary:logistic",
-            "base_score": null,
-            "booster": null,
-            "callbacks": null,
-            "colsample_bylevel": null,
-            "colsample_bynode": null,
-            "colsample_bytree": null,
-            "device": null,
-            "early_stopping_rounds": null,
-            "enable_categorical": true,
-            "eval_metric": null,
-            "feature_types": null,
-            "feature_weights": null,
-            "gamma": null,
-            "grow_policy": null,
-            "importance_type": null,
-            "interaction_constraints": null,
-            "learning_rate": null,
-            "max_bin": null,
-            "max_cat_threshold": null,
-            "max_cat_to_onehot": null,
-            "max_delta_step": null,
-            "max_depth": 3,
-            "max_leaves": null,
-            "min_child_weight": null,
-            "missing": NaN,
-            "monotone_constraints": null,
-            "multi_strategy": null,
+            "bootstrap": true,
+            "ccp_alpha": 0.0,
+            "class_weight": null,
+            "criterion": "gini",
+            "max_depth": 10,
+            "max_features": "sqrt",
+            "max_leaf_nodes": null,
+            "max_samples": null,
+            "min_impurity_decrease": 0.0,
+            "min_samples_leaf": 1,
+            "min_samples_split": 2,
+            "min_weight_fraction_leaf": 0.0,
+            "monotonic_cst": null,
             "n_estimators": 245,
             "n_jobs": null,
-            "num_parallel_tree": null,
+            "oob_score": false,
             "random_state": null,
-            "reg_alpha": null,
-            "reg_lambda": null,
-            "sampling_method": null,
-            "scale_pos_weight": null,
-            "subsample": null,
-            "tree_method": null,
-            "validate_parameters": null,
-            "verbosity": null
+            "verbose": 0,
+            "warm_start": false
           },
           "feature_importances": [
-            0.09979893267154694,
-            0.1573633849620819,
-            0.1291198879480362,
-            0.11807975172996521,
-            0.12534868717193604,
-            0.125795379281044,
-            0.11032039672136307,
-            0.13417357206344604
+            0.07366812061946479,
+            0.17875717183760662,
+            0.12241263832739925,
+            0.09650971483331747,
+            0.12669636466846954,
+            0.14700327788280454,
+            0.12140641029764054,
+            0.1335463015332973
           ],
           "feature_names": [
             "Pregnancies",
@@ -13211,58 +14023,37 @@
           ]
         },
         {
-          "model_type": "xgb",
+          "model_type": "rf",
           "params": {
-            "objective": "binary:logistic",
-            "base_score": null,
-            "booster": null,
-            "callbacks": null,
-            "colsample_bylevel": null,
-            "colsample_bynode": null,
-            "colsample_bytree": null,
-            "device": null,
-            "early_stopping_rounds": null,
-            "enable_categorical": true,
-            "eval_metric": null,
-            "feature_types": null,
-            "feature_weights": null,
-            "gamma": null,
-            "grow_policy": null,
-            "importance_type": null,
-            "interaction_constraints": null,
-            "learning_rate": null,
-            "max_bin": null,
-            "max_cat_threshold": null,
-            "max_cat_to_onehot": null,
-            "max_delta_step": null,
-            "max_depth": 3,
-            "max_leaves": null,
-            "min_child_weight": null,
-            "missing": NaN,
-            "monotone_constraints": null,
-            "multi_strategy": null,
+            "bootstrap": true,
+            "ccp_alpha": 0.0,
+            "class_weight": null,
+            "criterion": "gini",
+            "max_depth": 10,
+            "max_features": "sqrt",
+            "max_leaf_nodes": null,
+            "max_samples": null,
+            "min_impurity_decrease": 0.0,
+            "min_samples_leaf": 1,
+            "min_samples_split": 2,
+            "min_weight_fraction_leaf": 0.0,
+            "monotonic_cst": null,
             "n_estimators": 245,
             "n_jobs": null,
-            "num_parallel_tree": null,
+            "oob_score": false,
             "random_state": null,
-            "reg_alpha": null,
-            "reg_lambda": null,
-            "sampling_method": null,
-            "scale_pos_weight": null,
-            "subsample": null,
-            "tree_method": null,
-            "validate_parameters": null,
-            "verbosity": null
+            "verbose": 0,
+            "warm_start": false
           },
           "feature_importances": [
-            0.10549905151128769,
-            0.12689481675624847,
-            0.11046600341796875,
-            0.14878928661346436,
-            0.11018570512533188,
-            0.11247146129608154,
-            0.12731604278087616,
-            0.15837764739990234
+            0.08038871772694446,
+            0.1435577610043295,
+            0.11371654081431831,
+            0.1337967183585733,
+            0.11098495447773292,
+            0.1237578869464051,
+            0.14306194355912813,
+            0.15073547711256835
           ],
           "feature_names": [
             "Pregnancies",
@@ -13276,58 +14067,37 @@
           ]
         },
         {
-          "model_type": "xgb",
+          "model_type": "rf",
           "params": {
-            "objective": "binary:logistic",
-            "base_score": null,
-            "booster": null,
-            "callbacks": null,
-            "colsample_bylevel": null,
-            "colsample_bynode": null,
-            "colsample_bytree": null,
-            "device": null,
-            "early_stopping_rounds": null,
-            "enable_categorical": true,
-            "eval_metric": null,
-            "feature_types": null,
-            "feature_weights": null,
-            "gamma": null,
-            "grow_policy": null,
-            "importance_type": null,
-            "interaction_constraints": null,
-            "learning_rate": null,
-            "max_bin": null,
-            "max_cat_threshold": null,
-            "max_cat_to_onehot": null,
-            "max_delta_step": null,
-            "max_depth": 3,
-            "max_leaves": null,
-            "min_child_weight": null,
-            "missing": NaN,
-            "monotone_constraints": null,
-            "multi_strategy": null,
+            "bootstrap": true,
+            "ccp_alpha": 0.0,
+            "class_weight": null,
+            "criterion": "gini",
+            "max_depth": 10,
+            "max_features": "sqrt",
+            "max_leaf_nodes": null,
+            "max_samples": null,
+            "min_impurity_decrease": 0.0,
+            "min_samples_leaf": 1,
+            "min_samples_split": 2,
+            "min_weight_fraction_leaf": 0.0,
+            "monotonic_cst": null,
             "n_estimators": 245,
             "n_jobs": null,
-            "num_parallel_tree": null,
+            "oob_score": false,
             "random_state": null,
-            "reg_alpha": null,
-            "reg_lambda": null,
-            "sampling_method": null,
-            "scale_pos_weight": null,
-            "subsample": null,
-            "tree_method": null,
-            "validate_parameters": null,
-            "verbosity": null
+            "verbose": 0,
+            "warm_start": false
           },
           "feature_importances": [
-            0.10785521566867828,
-            0.18706193566322327,
-            0.1330530196428299,
-            0.10357315838336945,
-            0.09207379817962646,
-            0.12220976501703262,
-            0.0889936313033104,
-            0.16517947614192963
+            0.08248493567226858,
+            0.2137370734847525,
+            0.1264124128071565,
+            0.09097107827727806,
+            0.10492264290296613,
+            0.12276127303136859,
+            0.10854351138821576,
+            0.15016707243599392
           ],
           "feature_names": [
             "Pregnancies",
@@ -13341,58 +14111,37 @@
           ]
         },
         {
-          "model_type": "xgb",
+          "model_type": "rf",
           "params": {
-            "objective": "binary:logistic",
-            "base_score": null,
-            "booster": null,
-            "callbacks": null,
-            "colsample_bylevel": null,
-            "colsample_bynode": null,
-            "colsample_bytree": null,
-            "device": null,
-            "early_stopping_rounds": null,
-            "enable_categorical": true,
-            "eval_metric": null,
-            "feature_types": null,
-            "feature_weights": null,
-            "gamma": null,
-            "grow_policy": null,
-            "importance_type": null,
-            "interaction_constraints": null,
-            "learning_rate": null,
-            "max_bin": null,
-            "max_cat_threshold": null,
-            "max_cat_to_onehot": null,
-            "max_delta_step": null,
-            "max_depth": 3,
-            "max_leaves": null,
-            "min_child_weight": null,
-            "missing": NaN,
-            "monotone_constraints": null,
-            "multi_strategy": null,
+            "bootstrap": true,
+            "ccp_alpha": 0.0,
+            "class_weight": null,
+            "criterion": "gini",
+            "max_depth": 10,
+            "max_features": "sqrt",
+            "max_leaf_nodes": null,
+            "max_samples": null,
+            "min_impurity_decrease": 0.0,
+            "min_samples_leaf": 1,
+            "min_samples_split": 2,
+            "min_weight_fraction_leaf": 0.0,
+            "monotonic_cst": null,
             "n_estimators": 245,
             "n_jobs": null,
-            "num_parallel_tree": null,
+            "oob_score": false,
             "random_state": null,
-            "reg_alpha": null,
-            "reg_lambda": null,
-            "sampling_method": null,
-            "scale_pos_weight": null,
-            "subsample": null,
-            "tree_method": null,
-            "validate_parameters": null,
-            "verbosity": null
+            "verbose": 0,
+            "warm_start": false
           },
           "feature_importances": [
-            0.09428951889276505,
-            0.17708629369735718,
-            0.14271286129951477,
-            0.12836720049381256,
-            0.1125810518860817,
-            0.11580287665128708,
-            0.10967203974723816,
-            0.11948812752962112
+            0.07949915001484298,
+            0.19392597014477947,
+            0.1242254940467707,
+            0.10946766910573696,
+            0.1062387967709473,
+            0.1439750817228875,
+            0.12503859671836284,
+            0.1176292414756723
           ],
           "feature_names": [
             "Pregnancies",
@@ -13406,58 +14155,37 @@
           ]
         },
         {
-          "model_type": "xgb",
+          "model_type": "rf",
           "params": {
-            "objective": "binary:logistic",
-            "base_score": null,
-            "booster": null,
-            "callbacks": null,
-            "colsample_bylevel": null,
-            "colsample_bynode": null,
-            "colsample_bytree": null,
-            "device": null,
-            "early_stopping_rounds": null,
-            "enable_categorical": true,
-            "eval_metric": null,
-            "feature_types": null,
-            "feature_weights": null,
-            "gamma": null,
-            "grow_policy": null,
-            "importance_type": null,
-            "interaction_constraints": null,
-            "learning_rate": null,
-            "max_bin": null,
-            "max_cat_threshold": null,
-            "max_cat_to_onehot": null,
-            "max_delta_step": null,
-            "max_depth": 3,
-            "max_leaves": null,
-            "min_child_weight": null,
-            "missing": NaN,
-            "monotone_constraints": null,
-            "multi_strategy": null,
+            "bootstrap": true,
+            "ccp_alpha": 0.0,
+            "class_weight": null,
+            "criterion": "gini",
+            "max_depth": 10,
+            "max_features": "sqrt",
+            "max_leaf_nodes": null,
+            "max_samples": null,
+            "min_impurity_decrease": 0.0,
+            "min_samples_leaf": 1,
+            "min_samples_split": 2,
+            "min_weight_fraction_leaf": 0.0,
+            "monotonic_cst": null,
             "n_estimators": 245,
             "n_jobs": null,
-            "num_parallel_tree": null,
+            "oob_score": false,
             "random_state": null,
-            "reg_alpha": null,
-            "reg_lambda": null,
-            "sampling_method": null,
-            "scale_pos_weight": null,
-            "subsample": null,
-            "tree_method": null,
-            "validate_parameters": null,
-            "verbosity": null
+            "verbose": 0,
+            "warm_start": false
           },
           "feature_importances": [
-            0.09661918878555298,
-            0.1535746455192566,
-            0.16289854049682617,
-            0.10937542468309402,
-            0.13438917696475983,
-            0.11275576800107956,
-            0.10157087445259094,
-            0.1288164108991623
+            0.07385927052420069,
+            0.1874026078931874,
+            0.1412764160515573,
+            0.09212874393186585,
+            0.12026981383616153,
+            0.14472188631857685,
+            0.12086452437118476,
+            0.11947673707326557
           ],
           "feature_names": [
             "Pregnancies",
@@ -13472,743 +14200,25 @@
         }
       ],
       "f1": {
-        "real": 0.592152063889281,
-        "real_sd": 0.051749811985616394,
-        "display_real": "0.592 \u00b1 0.05",
-        "gen": 0.41940131880570036,
-        "gen_sd": 0.08359982843611988,
-        "display_gen": "0.419 \u00b1 0.08",
-        "aug": 0.5801400872191316,
-        "aug_sd": 0.07566974597131934,
-        "display_aug": "0.580 \u00b1 0.08",
-        "delta": -0.012011976670149466,
-        "delta_sd": 0.04414024951791701,
-        "display_delta": "-0.012 \u00b1 0.04",
-        "pvalue_aug_vs_real": 0.6953125,
-        "delta_gen": -0.17275074508358063,
-        "delta_gen_sd": 0.0844953752168485,
-        "display_delta_gen": "-0.173 \u00b1 0.08",
+        "real": 0.6155511296147973,
+        "real_sd": 0.04548865149675521,
+        "display_real": "0.616 \u00b1 0.05",
+        "gen": 0.3918510612034914,
+        "gen_sd": 0.08091099407066729,
+        "display_gen": "0.392 \u00b1 0.08",
+        "aug": 0.592050060894001,
+        "aug_sd": 0.06974811462005753,
+        "display_aug": "0.592 \u00b1 0.07",
+        "delta": -0.02350106872079611,
+        "delta_sd": 0.045921275452409614,
+        "display_delta": "-0.024 \u00b1 0.05",
+        "pvalue_aug_vs_real": 0.232421875,
+        "delta_gen": -0.2237000684113058,
+        "delta_gen_sd": 0.08318397804120985,
+        "display_delta_gen": "-0.224 \u00b1 0.08",
         "pvalue_gen_vs_real": 0.001953125,
-        "qvalue_aug_vs_real": 0.6953125,
+        "qvalue_aug_vs_real": 0.2734375,
         "qvalue_gen_vs_real": 0.004595588235294118
-      }
-    },
-    "nb": {
-      "accuracy": {
-        "real": 0.7636363636363636,
-        "real_sd": 0.024157240568491258,
-        "display_real": "0.764 \u00b1 0.02",
-        "gen": 0.524025974025974,
-        "gen_sd": 0.10709562122867208,
-        "display_gen": "0.524 \u00b1 0.11",
-        "aug": 0.7389610389610389,
-        "aug_sd": 0.02130028502189185,
-        "display_aug": "0.739 \u00b1 0.02",
-        "delta": -0.024675324675324684,
-        "delta_sd": 0.028125204971048985,
-        "display_delta": "-0.025 \u00b1 0.03",
-        "pvalue_aug_vs_real": 0.0390625,
-        "delta_gen": -0.2396103896103896,
-        "delta_gen_sd": 0.1033039129531824,
-        "display_delta_gen": "-0.240 \u00b1 0.10",
-        "pvalue_gen_vs_real": 0.001953125,
-        "qvalue_aug_vs_real": 0.057870370370370364,
-        "qvalue_gen_vs_real": 0.004595588235294118
-      },
-      "folds_metadata": [
-        {
-          "model_type": "nb",
-          "params": {
-            "priors": null,
-            "var_smoothing": 1e-09
-          }
-        },
-        {
-          "model_type": "nb",
-          "params": {
-            "priors": null,
-            "var_smoothing": 1e-09
-          }
-        },
-        {
-          "model_type": "nb",
-          "params": {
-            "priors": null,
-            "var_smoothing": 1e-09
-          }
-        },
-        {
-          "model_type": "nb",
-          "params": {
-            "priors": null,
-            "var_smoothing": 1e-09
-          }
-        },
-        {
-          "model_type": "nb",
-          "params": {
-            "priors": null,
-            "var_smoothing": 1e-09
-          }
-        },
-        {
-          "model_type": "nb",
-          "params": {
-            "priors": null,
-            "var_smoothing": 1e-09
-          }
-        },
-        {
-          "model_type": "nb",
-          "params": {
-            "priors": null,
-            "var_smoothing": 1e-09
-          }
-        },
-        {
-          "model_type": "nb",
-          "params": {
-            "priors": null,
-            "var_smoothing": 1e-09
-          }
-        },
-        {
-          "model_type": "nb",
-          "params": {
-            "priors": null,
-            "var_smoothing": 1e-09
-          }
-        },
-        {
-          "model_type": "nb",
-          "params": {
-            "priors": null,
-            "var_smoothing": 1e-09
-          }
-        }
-      ],
-      "f1": {
-        "real": 0.6399852354635025,
-        "real_sd": 0.049328033088906605,
-        "display_real": "0.640 \u00b1 0.05",
-        "gen": 0.3915869413201914,
-        "gen_sd": 0.09540090655688054,
-        "display_gen": "0.392 \u00b1 0.10",
-        "aug": 0.5626362739546098,
-        "aug_sd": 0.08550746554627234,
-        "display_aug": "0.563 \u00b1 0.09",
-        "delta": -0.07734896150889248,
-        "delta_sd": 0.07775922100783675,
-        "display_delta": "-0.077 \u00b1 0.08",
-        "pvalue_aug_vs_real": 0.01953125,
-        "delta_gen": -0.24839829414331102,
-        "delta_gen_sd": 0.08164548670172225,
-        "display_delta_gen": "-0.248 \u00b1 0.08",
-        "pvalue_gen_vs_real": 0.001953125,
-        "qvalue_aug_vs_real": 0.033967391304347824,
-        "qvalue_gen_vs_real": 0.004595588235294118
-      }
-    },
-    "dt": {
-      "accuracy": {
-        "real": 0.714935064935065,
-        "real_sd": 0.040076036686258365,
-        "display_real": "0.715 \u00b1 0.04",
-        "gen": 0.5597402597402598,
-        "gen_sd": 0.06956239865372509,
-        "display_gen": "0.560 \u00b1 0.07",
-        "aug": 0.6876623376623376,
-        "aug_sd": 0.047757080540771144,
-        "display_aug": "0.688 \u00b1 0.05",
-        "delta": -0.02727272727272726,
-        "delta_sd": 0.061038961038961045,
-        "display_delta": "-0.027 \u00b1 0.06",
-        "pvalue_aug_vs_real": 0.1953125,
-        "delta_gen": -0.1551948051948052,
-        "delta_gen_sd": 0.06365292654849865,
-        "display_delta_gen": "-0.155 \u00b1 0.06",
-        "pvalue_gen_vs_real": 0.001953125,
-        "qvalue_aug_vs_real": 0.23674242424242425,
-        "qvalue_gen_vs_real": 0.004595588235294118
-      },
-      "folds_metadata": [
-        {
-          "model_type": "dt",
-          "params": {
-            "ccp_alpha": 0.0,
-            "class_weight": null,
-            "criterion": "gini",
-            "max_depth": 10,
-            "max_features": null,
-            "max_leaf_nodes": null,
-            "min_impurity_decrease": 0.0,
-            "min_samples_leaf": 1,
-            "min_samples_split": 2,
-            "min_weight_fraction_leaf": 0.0,
-            "monotonic_cst": null,
-            "random_state": null,
-            "splitter": "best"
-          },
-          "feature_importances": [
-            0.11804457921488216,
-            0.19936591253254032,
-            0.12496157056872034,
-            0.14617134951109365,
-            0.06125178118351374,
-            0.16793289731441782,
-            0.10606379918011888,
-            0.07620811049471303
-          ],
-          "feature_names": [
-            "Pregnancies",
-            "Glucose",
-            "BloodPressure",
-            "SkinThickness",
-            "Insulin",
-            "BMI",
-            "DiabetesPedigreeFunction",
-            "Age"
-          ]
-        },
-        {
-          "model_type": "dt",
-          "params": {
-            "ccp_alpha": 0.0,
-            "class_weight": null,
-            "criterion": "gini",
-            "max_depth": 10,
-            "max_features": null,
-            "max_leaf_nodes": null,
-            "min_impurity_decrease": 0.0,
-            "min_samples_leaf": 1,
-            "min_samples_split": 2,
-            "min_weight_fraction_leaf": 0.0,
-            "monotonic_cst": null,
-            "random_state": null,
-            "splitter": "best"
-          },
-          "feature_importances": [
-            0.07440708068582497,
-            0.2176114964151175,
-            0.1050950924300628,
-            0.09014030970222034,
-            0.12882534600642478,
-            0.16248134822775967,
-            0.0841814275906928,
-            0.13725789894189705
-          ],
-          "feature_names": [
-            "Pregnancies",
-            "Glucose",
-            "BloodPressure",
-            "SkinThickness",
-            "Insulin",
-            "BMI",
-            "DiabetesPedigreeFunction",
-            "Age"
-          ]
-        },
-        {
-          "model_type": "dt",
-          "params": {
-            "ccp_alpha": 0.0,
-            "class_weight": null,
-            "criterion": "gini",
-            "max_depth": 10,
-            "max_features": null,
-            "max_leaf_nodes": null,
-            "min_impurity_decrease": 0.0,
-            "min_samples_leaf": 1,
-            "min_samples_split": 2,
-            "min_weight_fraction_leaf": 0.0,
-            "monotonic_cst": null,
-            "random_state": null,
-            "splitter": "best"
-          },
-          "feature_importances": [
-            0.07385168756812015,
-            0.19096920200951015,
-            0.15873828600871395,
-            0.10308357489572388,
-            0.11134721844155131,
-            0.15378968552105748,
-            0.12383448898704627,
-            0.08438585656827682
-          ],
-          "feature_names": [
-            "Pregnancies",
-            "Glucose",
-            "BloodPressure",
-            "SkinThickness",
-            "Insulin",
-            "BMI",
-            "DiabetesPedigreeFunction",
-            "Age"
-          ]
-        },
-        {
-          "model_type": "dt",
-          "params": {
-            "ccp_alpha": 0.0,
-            "class_weight": null,
-            "criterion": "gini",
-            "max_depth": 10,
-            "max_features": null,
-            "max_leaf_nodes": null,
-            "min_impurity_decrease": 0.0,
-            "min_samples_leaf": 1,
-            "min_samples_split": 2,
-            "min_weight_fraction_leaf": 0.0,
-            "monotonic_cst": null,
-            "random_state": null,
-            "splitter": "best"
-          },
-          "feature_importances": [
-            0.07849117818778312,
-            0.2063126450620203,
-            0.042927948608445045,
-            0.12347415982360946,
-            0.08267865847831969,
-            0.1291821378408924,
-            0.19780106756959448,
-            0.13913220442933558
-          ],
-          "feature_names": [
-            "Pregnancies",
-            "Glucose",
-            "BloodPressure",
-            "SkinThickness",
-            "Insulin",
-            "BMI",
-            "DiabetesPedigreeFunction",
-            "Age"
-          ]
-        },
-        {
-          "model_type": "dt",
-          "params": {
-            "ccp_alpha": 0.0,
-            "class_weight": null,
-            "criterion": "gini",
-            "max_depth": 10,
-            "max_features": null,
-            "max_leaf_nodes": null,
-            "min_impurity_decrease": 0.0,
-            "min_samples_leaf": 1,
-            "min_samples_split": 2,
-            "min_weight_fraction_leaf": 0.0,
-            "monotonic_cst": null,
-            "random_state": null,
-            "splitter": "best"
-          },
-          "feature_importances": [
-            0.07435762122947437,
-            0.18267488929168035,
-            0.10339487745438793,
-            0.11089738132351788,
-            0.138208749128492,
-            0.17496386760329785,
-            0.09960264770144052,
-            0.1158999662677091
-          ],
-          "feature_names": [
-            "Pregnancies",
-            "Glucose",
-            "BloodPressure",
-            "SkinThickness",
-            "Insulin",
-            "BMI",
-            "DiabetesPedigreeFunction",
-            "Age"
-          ]
-        },
-        {
-          "model_type": "dt",
-          "params": {
-            "ccp_alpha": 0.0,
-            "class_weight": null,
-            "criterion": "gini",
-            "max_depth": 10,
-            "max_features": null,
-            "max_leaf_nodes": null,
-            "min_impurity_decrease": 0.0,
-            "min_samples_leaf": 1,
-            "min_samples_split": 2,
-            "min_weight_fraction_leaf": 0.0,
-            "monotonic_cst": null,
-            "random_state": null,
-            "splitter": "best"
-          },
-          "feature_importances": [
-            0.10196013310785705,
-            0.20733114525599583,
-            0.09953873899591961,
-            0.07577224389566989,
-            0.1412187585714588,
-            0.11886617095031035,
-            0.15328771798412136,
-            0.10202509123866718
-          ],
-          "feature_names": [
-            "Pregnancies",
-            "Glucose",
-            "BloodPressure",
-            "SkinThickness",
-            "Insulin",
-            "BMI",
-            "DiabetesPedigreeFunction",
-            "Age"
-          ]
-        },
-        {
-          "model_type": "dt",
-          "params": {
-            "ccp_alpha": 0.0,
-            "class_weight": null,
-            "criterion": "gini",
-            "max_depth": 10,
-            "max_features": null,
-            "max_leaf_nodes": null,
-            "min_impurity_decrease": 0.0,
-            "min_samples_leaf": 1,
-            "min_samples_split": 2,
-            "min_weight_fraction_leaf": 0.0,
-            "monotonic_cst": null,
-            "random_state": null,
-            "splitter": "best"
-          },
-          "feature_importances": [
-            0.07679509791193248,
-            0.14342970848878955,
-            0.10617733073247099,
-            0.10775870527218999,
-            0.12316493768506669,
-            0.12947866251679427,
-            0.16424200002435022,
-            0.1489535573684058
-          ],
-          "feature_names": [
-            "Pregnancies",
-            "Glucose",
-            "BloodPressure",
-            "SkinThickness",
-            "Insulin",
-            "BMI",
-            "DiabetesPedigreeFunction",
-            "Age"
-          ]
-        },
-        {
-          "model_type": "dt",
-          "params": {
-            "ccp_alpha": 0.0,
-            "class_weight": null,
-            "criterion": "gini",
-            "max_depth": 10,
-            "max_features": null,
-            "max_leaf_nodes": null,
-            "min_impurity_decrease": 0.0,
-            "min_samples_leaf": 1,
-            "min_samples_split": 2,
-            "min_weight_fraction_leaf": 0.0,
-            "monotonic_cst": null,
-            "random_state": null,
-            "splitter": "best"
-          },
-          "feature_importances": [
-            0.07145162454919111,
-            0.25214289545108637,
-            0.1387850040242462,
-            0.08795222919761105,
-            0.08830087006187158,
-            0.13477929500207872,
-            0.08594089422200334,
-            0.14064718749191166
-          ],
-          "feature_names": [
-            "Pregnancies",
-            "Glucose",
-            "BloodPressure",
-            "SkinThickness",
-            "Insulin",
-            "BMI",
-            "DiabetesPedigreeFunction",
-            "Age"
-          ]
-        },
-        {
-          "model_type": "dt",
-          "params": {
-            "ccp_alpha": 0.0,
-            "class_weight": null,
-            "criterion": "gini",
-            "max_depth": 10,
-            "max_features": null,
-            "max_leaf_nodes": null,
-            "min_impurity_decrease": 0.0,
-            "min_samples_leaf": 1,
-            "min_samples_split": 2,
-            "min_weight_fraction_leaf": 0.0,
-            "monotonic_cst": null,
-            "random_state": null,
-            "splitter": "best"
-          },
-          "feature_importances": [
-            0.07219324708772287,
-            0.18872885382535143,
-            0.1403815157449737,
-            0.11688922105465949,
-            0.08227877110155904,
-            0.12683519699737214,
-            0.1546970566351643,
-            0.11799613755319699
-          ],
-          "feature_names": [
-            "Pregnancies",
-            "Glucose",
-            "BloodPressure",
-            "SkinThickness",
-            "Insulin",
-            "BMI",
-            "DiabetesPedigreeFunction",
-            "Age"
-          ]
-        },
-        {
-          "model_type": "dt",
-          "params": {
-            "ccp_alpha": 0.0,
-            "class_weight": null,
-            "criterion": "gini",
-            "max_depth": 10,
-            "max_features": null,
-            "max_leaf_nodes": null,
-            "min_impurity_decrease": 0.0,
-            "min_samples_leaf": 1,
-            "min_samples_split": 2,
-            "min_weight_fraction_leaf": 0.0,
-            "monotonic_cst": null,
-            "random_state": null,
-            "splitter": "best"
-          },
-          "feature_importances": [
-            0.0586710967115377,
-            0.192348164938401,
-            0.1618212310312632,
-            0.08636562135279245,
-            0.09649382533765583,
-            0.12866165086740747,
-            0.10367198909209183,
-            0.17196642066885054
-          ],
-          "feature_names": [
-            "Pregnancies",
-            "Glucose",
-            "BloodPressure",
-            "SkinThickness",
-            "Insulin",
-            "BMI",
-            "DiabetesPedigreeFunction",
-            "Age"
-          ]
-        }
-      ],
-      "f1": {
-        "real": 0.574864956627473,
-        "real_sd": 0.07036589240958031,
-        "display_real": "0.575 \u00b1 0.07",
-        "gen": 0.40105931482130597,
-        "gen_sd": 0.08980898186383425,
-        "display_gen": "0.401 \u00b1 0.09",
-        "aug": 0.531825100899625,
-        "aug_sd": 0.0809823876462238,
-        "display_aug": "0.532 \u00b1 0.08",
-        "delta": -0.04303985572784801,
-        "delta_sd": 0.09751921719049148,
-        "display_delta": "-0.043 \u00b1 0.10",
-        "pvalue_aug_vs_real": 0.16015625,
-        "delta_gen": -0.17380564180616695,
-        "delta_gen_sd": 0.09636320852247511,
-        "display_delta_gen": "-0.174 \u00b1 0.10",
-        "pvalue_gen_vs_real": 0.001953125,
-        "qvalue_aug_vs_real": 0.2001953125,
-        "qvalue_gen_vs_real": 0.004595588235294118
-      }
-    },
-    "knn": {
-      "accuracy": {
-        "real": 0.7545454545454545,
-        "real_sd": 0.01785419101930848,
-        "display_real": "0.755 \u00b1 0.02",
-        "gen": 0.5694805194805196,
-        "gen_sd": 0.05764610161030179,
-        "display_gen": "0.569 \u00b1 0.06",
-        "aug": 0.7428571428571428,
-        "aug_sd": 0.020369333949815743,
-        "display_aug": "0.743 \u00b1 0.02",
-        "delta": -0.011688311688311692,
-        "delta_sd": 0.017131046699055758,
-        "display_delta": "-0.012 \u00b1 0.02",
-        "pvalue_aug_vs_real": 0.140625,
-        "delta_gen": -0.18506493506493507,
-        "delta_gen_sd": 0.057733809689338264,
-        "display_delta_gen": "-0.185 \u00b1 0.06",
-        "pvalue_gen_vs_real": 0.001953125,
-        "qvalue_aug_vs_real": 0.1814516129032258,
-        "qvalue_gen_vs_real": 0.004595588235294118
-      },
-      "folds_metadata": [
-        {
-          "model_type": "knn",
-          "params": {
-            "algorithm": "auto",
-            "leaf_size": 30,
-            "metric": "minkowski",
-            "metric_params": null,
-            "n_jobs": null,
-            "n_neighbors": 15,
-            "p": 2,
-            "weights": "uniform"
-          }
-        },
-        {
-          "model_type": "knn",
-          "params": {
-            "algorithm": "auto",
-            "leaf_size": 30,
-            "metric": "minkowski",
-            "metric_params": null,
-            "n_jobs": null,
-            "n_neighbors": 15,
-            "p": 2,
-            "weights": "uniform"
-          }
-        },
-        {
-          "model_type": "knn",
-          "params": {
-            "algorithm": "auto",
-            "leaf_size": 30,
-            "metric": "minkowski",
-            "metric_params": null,
-            "n_jobs": null,
-            "n_neighbors": 15,
-            "p": 2,
-            "weights": "uniform"
-          }
-        },
-        {
-          "model_type": "knn",
-          "params": {
-            "algorithm": "auto",
-            "leaf_size": 30,
-            "metric": "minkowski",
-            "metric_params": null,
-            "n_jobs": null,
-            "n_neighbors": 15,
-            "p": 2,
-            "weights": "uniform"
-          }
-        },
-        {
-          "model_type": "knn",
-          "params": {
-            "algorithm": "auto",
-            "leaf_size": 30,
-            "metric": "minkowski",
-            "metric_params": null,
-            "n_jobs": null,
-            "n_neighbors": 15,
-            "p": 2,
-            "weights": "uniform"
-          }
-        },
-        {
-          "model_type": "knn",
-          "params": {
-            "algorithm": "auto",
-            "leaf_size": 30,
-            "metric": "minkowski",
-            "metric_params": null,
-            "n_jobs": null,
-            "n_neighbors": 15,
-            "p": 2,
-            "weights": "uniform"
-          }
-        },
-        {
-          "model_type": "knn",
-          "params": {
-            "algorithm": "auto",
-            "leaf_size": 30,
-            "metric": "minkowski",
-            "metric_params": null,
-            "n_jobs": null,
-            "n_neighbors": 15,
-            "p": 2,
-            "weights": "uniform"
-          }
-        },
-        {
-          "model_type": "knn",
-          "params": {
-            "algorithm": "auto",
-            "leaf_size": 30,
-            "metric": "minkowski",
-            "metric_params": null,
-            "n_jobs": null,
-            "n_neighbors": 15,
-            "p": 2,
-            "weights": "uniform"
-          }
-        },
-        {
-          "model_type": "knn",
-          "params": {
-            "algorithm": "auto",
-            "leaf_size": 30,
-            "metric": "minkowski",
-            "metric_params": null,
-            "n_jobs": null,
-            "n_neighbors": 15,
-            "p": 2,
-            "weights": "uniform"
-          }
-        },
-        {
-          "model_type": "knn",
-          "params": {
-            "algorithm": "auto",
-            "leaf_size": 30,
-            "metric": "minkowski",
-            "metric_params": null,
-            "n_jobs": null,
-            "n_neighbors": 15,
-            "p": 2,
-            "weights": "uniform"
-          }
-        }
-      ],
-      "f1": {
-        "real": 0.5998259463389416,
-        "real_sd": 0.032606447272949986,
-        "display_real": "0.600 \u00b1 0.03",
-        "gen": 0.38434965493463386,
-        "gen_sd": 0.09459334890234067,
-        "display_gen": "0.384 \u00b1 0.09",
-        "aug": 0.5824504486933532,
-        "aug_sd": 0.044913338537159994,
-        "display_aug": "0.582 \u00b1 0.04",
-        "delta": -0.017375497645588413,
-        "delta_sd": 0.030651127017891244,
-        "display_delta": "-0.017 \u00b1 0.03",
-        "pvalue_aug_vs_real": 0.09765625,
-        "delta_gen": -0.21547629140430774,
-        "delta_gen_sd": 0.1006310612204712,
-        "display_delta_gen": "-0.215 \u00b1 0.10",
-        "pvalue_gen_vs_real": 0.00390625,
-        "qvalue_aug_vs_real": 0.13020833333333331,
-        "qvalue_gen_vs_real": 0.008223684210526315
       }
     }
   },
