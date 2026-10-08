@@ -488,7 +488,7 @@ Contribution type & method, theory, study, multi-site, resource, review, evidenc
 \end{tabularx}
 \end{table}
 
-The bibliography has 335 entries; 45 are excluded background, which leaves a coded corpus of 290 works published between 1956 and 2025, 204 of them since 2019.
+\noindent The bibliography has 335 entries; 45 are excluded background, which leaves a coded corpus of 290 works published between 1956 and 2025, 204 of them since 2019.
 
 \subsection{Coding scheme}
 
@@ -656,6 +656,7 @@ P2 & \citet{raghu2019transfusion} & ImageNet transfer gave little benefit on lar
 P2, P3 & \citet{hollmann2025accurate} & TabPFN outperformed baselines tuned for 4\,h, in 2.8\,s, on datasets up to 10,000 samples.\\
 P6 & \citet{fridadar2018gan} & GAN augmentation on 182 liver lesions: sensitivity 78.6\% to 85.7\%, specificity 88.4\% to 92.4\%.\\
 P6 & \citet{stadler2022synthetic} & Synthetic data gave no better privacy-utility trade-off than traditional anonymization.\\
+\addlinespace
 T2 & \citet{wong2021external} & A widely deployed sepsis model: external AUC 0.63, missing 67\% of sepsis cases.\\
 T2 & \citet{zech2018variable} & Pneumonia CNNs identified the source hospital; external performance was significantly lower in 3 of 5 comparisons.\\
 O2, T1 & \citet{roberts2021common} & Of 62 COVID-19 imaging models reviewed in detail, none was of potential clinical use.\\
@@ -692,7 +693,7 @@ We now turn to the setting that motivates this paper: a set of hospitals, each t
 \subsection{Problem statement}\label{sec:S8_1}
 
 There are $K$ hospitals, the vertices of an undirected connected graph $\mathcal{G}=(V,E)$. An edge means that two hospitals have an agreement allowing them to exchange privatized model summaries; $\mathcal{G}$ is sparse, with $|E|=O(K)$, and there is no vertex that every hospital trusts. Hospital $k$ holds $n_k$ labeled records from $P_k$ and wants a model that performs well on its own population. We require:
-\begin{enumerate}[label=(R\arabic*),leftmargin=*]
+\begin{enumerate}[label=(R\arabic*),leftmargin=*,itemsep=1pt]
 \item no patient-level record leaves its hospital;
 \item every released quantity satisfies $(\epsilon,\delta)$-differential privacy with respect to the patients of the releasing hospital;
 \item no central server: computation uses only messages along edges of $\mathcal{G}$;
@@ -709,6 +710,14 @@ We analyze the core of the problem in the simplest model that keeps its structur
 \end{equation}
 with all $u_k,e_k$ independent. Here $\tau^2$ is the between-hospital heterogeneity, the quantity that random-effects meta-analysis estimates \cite{dersimonian1986meta}, and $\sigma^2$ absorbs the inverse Fisher information per patient. This is the classical setting of empirical Bayes \cite{efron1973steins,gelman2013bayesian}. What is new here is that the population mean $\mu$ must be estimated privately and without a server, so hospital $k$ only has access to some estimate $\tilde{\mu}$ with error.
 
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.49\linewidth]{figures/fig_risk}\hfill
+\includegraphics[width=0.49\linewidth]{figures/fig_ess_gain}
+\caption{Left: risk of hospital $k$ as a function of its size $n_k$, with $K=12$, other hospitals of 200 patients, $\sigma^2=1$, $\tau^2=0.02$ and $\delta=10^{-5}$. Full pooling is excellent for small sites until it hits the heterogeneity floor $\tau^2$, and then harms large ones; hierarchical borrowing (Proposition~\ref{prop:borrowing}) is never worse than either. Privacy at $\epsilon=1$ is almost free; at $\epsilon=0.1$ it reduces but does not remove the gain. Right: relative gain in effective sample size $n^{\eff}_k/n_k$ for a hospital with $n_k=50$, as a function of heterogeneity and privacy budget, from Equations~\eqref{eq:borrowed} and~\eqref{eq:M}.}
+\label{fig:risk}
+\end{figure}
+
 \begin{proposition}[Borrowing with an imperfect prior]\label{prop:borrowing}
 Let $\tilde{\mu}$ be any estimate of $\mu$ that is independent of $(u_k,e_k)$ and has mean squared error $M=\mathbb{E}(\tilde{\mu}-\mu)^2$. Among estimators $\tilde{\theta}_k=\alpha\hat{\theta}_k+(1-\alpha)\tilde{\mu}$, the risk $R_k(\alpha)=\mathbb{E}(\tilde{\theta}_k-\theta_k)^2$ is minimized at
 \[
@@ -719,15 +728,6 @@ Equivalently, the effective sample size of hospital $k$ becomes
 n_k^{\eff}=\frac{\sigma^2}{R_k^{\star}}=n_k+\underbrace{\frac{\sigma^2}{\tau^2+M}}_{\text{borrowed patients }B}.
 \end{equation}
 \end{proposition}
-
-\begin{figure}[t]
-\centering
-\includegraphics[width=0.49\linewidth]{figures/fig_risk}\hfill
-\includegraphics[width=0.49\linewidth]{figures/fig_ess_gain}
-\caption{Left: risk of hospital $k$ as a function of its size $n_k$, with $K=12$, other hospitals of 200 patients, $\sigma^2=1$, $\tau^2=0.02$ and $\delta=10^{-5}$. Full pooling is excellent for small sites until it hits the heterogeneity floor $\tau^2$, and then harms large ones; hierarchical borrowing (Proposition~\ref{prop:borrowing}) is never worse than either. Privacy at $\epsilon=1$ is almost free; at $\epsilon=0.1$ it reduces but does not remove the gain. Right: relative gain in effective sample size $n^{\eff}_k/n_k$ for a hospital with $n_k=50$, as a function of heterogeneity and privacy budget, from Equations~\eqref{eq:borrowed} and~\eqref{eq:M}.}
-\label{fig:risk}
-\end{figure}
-
 \begin{proof}
 $\tilde{\theta}_k-\theta_k=\alpha e_k+(1-\alpha)(\tilde{\mu}-\mu)-(1-\alpha)u_k$. The three terms are independent with zero mean (the middle term has second moment $M$), so $R_k(\alpha)=\alpha^2 v_k+(1-\alpha)^2(\tau^2+M)$. This is a convex quadratic in $\alpha$, minimized at $\alpha_k^{\star}$; substituting gives $R_k^{\star}$. The bound follows because $R_k^{\star}$ is half the harmonic mean of $v_k$ and $\tau^2+M$. Finally $\sigma^2/R_k^{\star}=\sigma^2/v_k+\sigma^2/(\tau^2+M)=n_k+B$.
 \end{proof}
