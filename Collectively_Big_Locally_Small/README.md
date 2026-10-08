@@ -7,7 +7,7 @@ The project was first rebuilt 1:1 from `recovered_main.pdf`, which is kept unmod
 ## Build
 
 ```sh
-latexmk -pdf main.tex                         # the paper (50 pages)
+latexmk -pdf main.tex                         # the paper (52 pages)
 cd supplement && latexmk -pdf supplement.tex  # the online supplement (26 pages); build main.tex first
 ```
 
@@ -78,7 +78,7 @@ Each script writes a figure to `supplement/figures/` and its numbers to `supplem
 - **§8.**
   - The claim that GHB is never worse than local estimation is now limited to known τ² and M.
   - The caption of Table 6 now says the method was checked in simulation, not on real data.
-  - A new paragraph summarizes the simulation evidence.
+  - A new subsection, §8.7, presents the simulation study, with Figures 12–14 and Table 7; the supplement gives the full design.
 - **Bibliography.** Added Greenhalgh and Peacock (2005).
 
 ## Recovery from `recovered_main.pdf`
