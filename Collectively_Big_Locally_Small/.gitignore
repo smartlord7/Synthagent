@@ -7,3 +7,4 @@
 *.out
 main.pdf
 comment.cut
+__pycache__/
