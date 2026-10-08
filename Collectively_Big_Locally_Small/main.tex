@@ -120,11 +120,6 @@ The term ``small data'' appears in social science \cite{kitchin2015small}, in pe
 \begin{enumerate}[leftmargin=*]
 \item \textbf{A formal definition.} We define small data relative to a task, through an \emph{effective sample size} $n^{\eff}$ that accounts for clustering, missing labels, label noise, distribution shift and outcome rarity, and a \emph{smallness index} $\sigma = n^{\star}/n^{\eff}$ that compares it with the sample complexity $n^{\star}$ of the task (Section~\ref{sec:definition}). The definition assembles known ingredients (Kish's design effect, the sample complexity of learning with label noise, and the sample-size criteria used for clinical prediction models) into one task-relative quantity. It is a first-order heuristic for diagnosis and comparison, not a new estimator.
 \item \textbf{A new taxonomy.} We propose the Scarcity-Provenance taxonomy (Sections~\ref{sec:scarcity} and~\ref{sec:provenance}). Its first axis classifies ten forms of scarcity in healthcare by the term of $\sigma$ they degrade. Its second axis classifies remedies by where the missing information comes from. We prove a ``no free lunch'' result for re-expression (Proposition~\ref{prop:nfl}) that explains formally why augmentation and synthetic data cannot by themselves solve a small-data problem.
-\item \textbf{A coded survey.} We classify a curated corpus of 290 works on both axes (Section~\ref{sec:method}, Appendix~\ref{app:corpus}), review the solutions channel by channel (Section~\ref{sec:solutions}), and compare where the literature has actually worked with where the taxonomy says it could, which exposes specific empty cells (Section~\ref{sec:evidence}).
-\item \textbf{A blueprint for siloed hospital networks.} For sparse networks of hospitals without a trusted central server, we derive a privacy-preserving hierarchical borrowing scheme with closed-form risk, explicit privacy cost and convergence on sparse graphs (Section~\ref{sec:blueprint}), and argue that it is a principled default for this setting. The ingredients are standard; their combination for serverless hospital networks, and its empirical evaluation, are what remain open.
-\item \textbf{A research agenda} with concrete open problems (Section~\ref{sec:agenda}).
-\end{enumerate}
-
 \begin{figure*}[t]
 \centering
 \begin{tikzpicture}[x=1bp,y=1bp,
@@ -154,6 +149,10 @@ The term ``small data'' appears in social science \cite{kitchin2015small}, in pe
 \caption{Structure of the paper. The definition of Section~\ref{sec:definition} produces the two axes of the taxonomy, which serve as the coding scheme of the survey and shape the design of the blueprint.}
 \label{fig:structure}
 \end{figure*}
+\item \textbf{A coded survey.} We classify a curated corpus of 290 works on both axes (Section~\ref{sec:method}, Appendix~\ref{app:corpus}), review the solutions channel by channel (Section~\ref{sec:solutions}), and compare where the literature has actually worked with where the taxonomy says it could, which exposes specific empty cells (Section~\ref{sec:evidence}).
+\item \textbf{A blueprint for siloed hospital networks.} For sparse networks of hospitals without a trusted central server, we derive a privacy-preserving hierarchical borrowing scheme with closed-form risk, explicit privacy cost and convergence on sparse graphs (Section~\ref{sec:blueprint}), and argue that it is a principled default for this setting. The ingredients are standard; their combination for serverless hospital networks, and its empirical evaluation, are what remain open.
+\item \textbf{A research agenda} with concrete open problems (Section~\ref{sec:agenda}).
+\end{enumerate}
 
 \paragraph{Scope and method} We cover supervised and semi-supervised prediction from clinical data: imaging, structured electronic health records (EHR), clinical text, omics and tabular registries. We do not cover causal effect estimation from small trials in depth, although several of our results apply to it. How the corpus was assembled and coded, and what remains to be done before the review can be called systematic, is described in Section~\ref{sec:method}. Existing surveys cover individual families, such as federated learning in healthcare \cite{nguyen2022federated,rieke2020future,xu2021federated}, few-shot learning \cite{wang2020generalizing}, meta-learning \cite{hospedales2022meta}, imperfect medical datasets \cite{cheplygina2019not,tajbakhsh2020embracing}, informed machine learning \cite{rueden2023informed} and synthetic data \cite{chen2021synthetic,jordon2022synthetic}. Among the surveys we found, none defines small data formally, none organizes remedies by information provenance, and none treats the sparse, serverless hospital network as a first-class setting.
 
@@ -198,7 +197,7 @@ A learning \emph{task} is a tuple $\mathcal{T}=(P,\mathcal{H},\ell,\varepsilon,\
 \begin{definition}[Sample complexity of a task]\label{def:samplecomplexity}
 The sample complexity $n^{\star}_{\mathcal{T}}$ is the smallest $n$ for which there is a learner $A$ such that, for $\mathcal{D}\sim P^n$ independent and identically distributed (i.i.d.) and fully and correctly labeled,
 \[
-\Pr_{\mathcal{D}\sim P^n}\left[R(A(\mathcal{D})) - \inf_{h\in\mathcal{H}} R(h) \le \varepsilon\right] \;\ge\; 1-\delta.
+\Pr_{\mathcal{D}\sim P^n} \Big[R(A(\mathcal{D})) - \inf_{h\in\mathcal{H}} R(h) \le \varepsilon\Big] \;\ge\; 1-\delta.
 \]
 \end{definition}
 
@@ -385,7 +384,7 @@ The proposition is elementary, but its consequences are not widely appreciated i
 
 Write the posterior for the parameter of site $k$ as
 \begin{equation}\label{eq:posterior}
-p(\theta_k\mid\mathcal{D}_k,\mathcal{S}) \;\propto\; \underbrace{p(\mathcal{D}_k\mid\theta_k)}_{\text{likelihood: local data}} ;\cdot; \underbrace{p(\theta_k\mid\mathcal{S})}_{\text{prior: everything else}},
+p(\theta_k\mid\mathcal{D}_k,\mathcal{S}) \;\propto\; \underbrace{p(\mathcal{D}_k\mid\theta_k)}_{\text{likelihood: local data}} \;\cdot\; \underbrace{p(\theta_k\mid\mathcal{S})}_{\text{prior: everything else}},
 \end{equation}
 where $\mathcal{S}$ denotes all information other than the local labeled sample. Every remedy for small data does one of two things: it enlarges the likelihood term by adding observations that bear on $\theta_k$, or it sharpens the prior term by bringing in information from $\mathcal{S}$. The six channels below exhaust the possible sources; Figure~\ref{fig:provenance} shows them.
 
