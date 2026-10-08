@@ -60,73 +60,37 @@ Pedro Henriques Abreu\textsuperscript{1}}
 \maketitle
 
 \begin{abstract}
-Many prediction tasks in medicine must be learned from small tables: a clinical cohort or a disease registry often holds a few hundred labelled records, and its rarest class only a few dozen. We call a table \emph{small} when it has at most 1,000 rows. Synthetic rows could enlarge such tables, but deep generators (GANs, variational autoencoders, diffusion models) must first be trained on the very rows that are scarce. Large language models (LLMs) need no training and can write new rows from a few real examples placed in the prompt, yet their raw output is not a usable table: it can contain too few rows, missing or invented columns and values of the wrong type, and its cost is rarely reported. We present \system, a system that treats every LLM response as an unverified proposal. A deterministic controller decides which real rows the model sees, repairs and validates each response against the table schema, requests the missing rows until the table reaches the requested size, and logs the cost and every correction. We compare \system with SMOTE, CTGAN and TVAE on six medical tables of 195 to 768 rows, over ten repeated splits and ten classifiers. \system fills 99.7\% of the cells it is asked for, keeps a membership-inference attack near chance (AUC 0.53) and, with GPT-4.1, gives the largest mean F1 gain of the five generators ($+1.1$ points). No generator, however, improves utility significantly on every dataset, and repeated runs of the same pipeline already differ by up to 0.6 points, a threshold below which design differences should not be interpreted.
+Small tables are where synthetic data is most needed and least reliable. Clinical cohorts, registries and pilot studies hold hundreds of rows, minority classes hold dozens, and a dedicated deep generator cannot be fitted robustly to so little evidence. Large language models (LLMs) offer a training-free alternative, but a raw completion is not a data product: it can return the wrong number of rows, malformed records, invented fields, or copies of scarce examples, at a cost no one measured. We present \system, a verifier-guided synthesis system that treats LLM output as an untrusted proposal and wraps it in a deterministic control layer. The controller budgets which real rows enter a bounded context window, parses and repairs structured output, validates typed integrity rules, tracks the exact residual row demand, and logs tokens, latency and every recovery action, so each synthetic table carries its own audit trail. We evaluate \system on six medical classification tables of 195 to 768 rows with ten seeded holdouts, ten downstream classifiers, four LLM backends and three non-LLM generators (SMOTE, CTGAN and TVAE): 780 dataset-configuration repetitions and up to 23,400 model fits. The controller delivers 99.7\% complete tables, holds generated-only fidelity within a 0.9-point band across all seven control variants, and keeps a distance-based membership attack near chance (AUC 0.526). Augmentation does not help uniformly: the reference backend changes mean accuracy by $-1.19$ points, while GPT-4.1 turns the mean F1 change positive ($+1.09$). No generator dominates: \system with GPT-4.1 gives the largest mean F1 gain of all five generators compared, TVAE the best mean accuracy change at a fraction of the cost, CTGAN the highest marginal fidelity but the most detectable rows, and SMOTE large F1 gains on rare-positive tables offset by losses elsewhere. We use three functionally inert ablation arms to measure an empirical noise floor, and show that backend choice, not control toggles, is the only factor that clearly exceeds it, although no configuration is a statistically significant winner across six datasets.
 \end{abstract}
 
 \begin{IEEEkeywords}
-synthetic data, small data, tabular data generation, large language models, data quality, data augmentation, healthcare data
+synthetic data, small data, tabular data generation, large language models, data quality, data augmentation, privacy, healthcare data
 \end{IEEEkeywords}
 
 %======================================================================
 \section{Introduction}
 %======================================================================
-\paragraph*{Context: small tabular data}
-Many prediction tasks in medicine are learned from tables with a few hundred records: the cohort of a single hospital, a disease registry or a pilot study. Collecting more records is slow and expensive, and often impossible when the condition is rare or the data cannot leave the institution. Throughout the paper we use the following working definition.
+Many consequential tabular problems are small-data problems. Clinical cohorts, rare-event registries, pilot studies, local operational databases and expert-labeled collections often contain hundreds rather than millions of rows. In this regime every split removes a meaningful fraction of the evidence, rare classes are represented by a handful of cases, and a single anomalous record can move a metric. Synthetic data is attractive because it promises more rows without more collection or more disclosure. It cannot, however, create information that the source table never contained, and a high-capacity generator can learn the sample more easily than the population.
 
-\smallskip\noindent\fbox{\parbox{\dimexpr\columnwidth-2\fboxsep-2\fboxrule\relax}{%
-\textbf{Definition 1 (Small tabular dataset).} A labelled table with $n$ rows, $d$ features and $n_{\min}$ rows in its least frequent class is \emph{small} when $n\le1{,}000$. We characterize it further by its events per variable, $\mathrm{EPV}=n_{\min}/d$.}}\smallskip
+The data-engineering community has long treated synthetic data as a managed artifact, from workload-driven database generation~\cite{sanghi2023enterprise} and GAN-based relational synthesis~\cite{fan2020relational} to cross-silo latent diffusion~\cite{shankar2024silofuse} and, most recently, LLM-based generators~\cite{chen2026tabloft}. LLMs are particularly appealing for small tables. They need no per-table training, they carry prior knowledge about column semantics, and they can condition on a few dozen real rows placed in context~\cite{borisov2023great,seedat2024cllm}. Yet an LLM completion is a \emph{proposal}, not a dataset. It has no obligation to return the requested number of rows, valid JSON, the declared columns, or values of the right type; it may copy scarce examples verbatim; and its cost is measured in tokens and latency that classical generators do not incur. In data-management terms, the missing piece is not another generator but the \emph{control plane} around one: the component that decides what evidence the model sees, checks what comes back, repairs or rejects it, and records enough provenance to judge the result.
 
-The threshold is two orders of magnitude below the tables on which deep tabular generators are usually benchmarked, such as Adult (48,842 rows) or Covertype (581,012 rows)~\cite{xu2019ctgan}. At this size every record carries at least 0.1\% of the evidence, a 20\% test split removes up to 200 rows, and the least frequent class has at most a few hundred examples. EPV links the definition to clinical practice: sample-size guidance for clinical prediction models asks for at least 10 minority-class events per candidate feature, and often many more~\cite{peduzzi1996epv,riley2020samplesize}. The six tables we study have 195 to 768 rows and an EPV between 1.0 and 33.5, and four of them fall below 10 (Table~\ref{tab:datasets}).
+This paper builds that control plane and evaluates it honestly in the regime where it matters most. Our system, \system, separates probabilistic row proposal from deterministic control. An explicit state records the schema, active rules, the context shown, the accepted rows, the residual demand and the evidence produced by every parser and validator call. Each control component addresses one observable failure: context budgeting addresses coverage and window overflow, structured parsing addresses syntax failure, typed validation addresses schema failure, and residual top-up addresses under-generation. The design follows the agentic pattern of alternating action and observation~\cite{yao2023react,wang2024agentsurvey}, but replaces free-form self-reflection with machine-checkable state.
 
-\paragraph*{Problem and why it matters}
-Synthetic data generation produces artificial rows that follow the distribution of a real table. For a small table it promises more training examples, more examples of a rare class, and data with which to build and test pipelines without exposing patient records. Small tables are, however, exactly where generation is hardest. First, a learned generator must estimate the joint distribution of all columns from the same few rows it is meant to supplement; in our experiments, only 29.6\% of CTGAN rows stay inside the observed schema (Section~\ref{sec:rq5}). Second, a small test set makes it hard to tell whether synthetic rows helped at all: across ten random splits of the same table, the accuracy of a model trained on real data alone has a standard deviation of up to 18 points (Section~\ref{sec:results}). The problem this paper addresses is therefore twofold: \emph{how to generate synthetic rows for a small table without training a generator on it, while guaranteeing a valid table of the requested size; and how to measure reliably whether those rows help a downstream model.}
-
-Large language models (LLMs) are a natural answer to the first half. They need no per-table training, they know what column names such as \texttt{age} or \texttt{cholesterol} mean, and they can imitate a few dozen real rows shown in the prompt~\cite{borisov2023great,seedat2024cllm}. An LLM response, however, is a \emph{proposal}, not a table. Nothing obliges it to return the requested number of rows, well-formed JSON, the declared columns, or values of the declared types (Figure~\ref{fig:teaser}, left), and each request costs tokens and time that nobody accounts for.
-
-\begin{figure}[t]
-\centering
-\resizebox{\columnwidth}{!}{\input{figures_teaser.tex}}
-\caption{The problem in one request. Asked for 30 rows of a heart-disease table, a raw LLM response (left) can return too few rows, an invented column, a missing column or a value of the wrong type. \system (right) checks and corrects every response before admitting it, so the table that reaches the user has the requested size and schema, and a log records what was repaired and at what cost.}
-\label{fig:teaser}
-\end{figure}
-
-\paragraph*{Existing approaches and their limitations}
-Table~\ref{tab:positioning} groups prior generators by what they guarantee. Interpolation methods such as SMOTE~\cite{chawla2002smote} need no training but only mix existing minority rows and ignore column types. Deep generators such as CTGAN, TVAE~\cite{xu2019ctgan}, TabDDPM~\cite{kotelnikov2023tabddpm} and TabSyn~\cite{zhang2024tabsyn} learn the joint distribution, which requires the large samples that small tables lack. Fine-tuned language models such as GReaT~\cite{borisov2023great} and REaLTabFormer~\cite{solatorio2023realtabformer} also train on the target table. Prompted LLMs such as CLLM~\cite{seedat2024cllm} and EPIC~\cite{kim2024epic} avoid training and target the low-data regime, but they focus on what to put in the prompt and which generated rows to keep; they do not guarantee that the output is a well-formed table of the requested size, and they do not report its cost. On the evaluation side, generators are usually compared from single runs, so a difference of one point between two configurations is reported as an effect even when two runs of the same configuration differ by as much.
-
-\begin{table}[t]
-\centering
-\caption{Positioning of \system against generator families. \checkmark: provided by design; (\checkmark): partially, e.g.\ unparsable samples are discarded; $\times$: not addressed.}
-\label{tab:positioning}
-\footnotesize
-\setlength{\tabcolsep}{2.5pt}
-\begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}lccccc@{}}
-\toprule
-Family & \begin{tabular}[c]{@{}c@{}}No table\\training\end{tabular} & \begin{tabular}[c]{@{}c@{}}Column\\semantics\end{tabular} & \begin{tabular}[c]{@{}c@{}}Schema\\checked\end{tabular} & \begin{tabular}[c]{@{}c@{}}Exact\\size\end{tabular} & \begin{tabular}[c]{@{}c@{}}Cost\\logged\end{tabular} \\
-\midrule
-Interpolation~\cite{chawla2002smote} & \checkmark & $\times$ & $\times$ & \checkmark & $\times$ \\
-Deep gen.~\cite{xu2019ctgan,kotelnikov2023tabddpm,zhang2024tabsyn} & $\times$ & $\times$ & $\times$ & \checkmark & $\times$ \\
-Fine-tuned LMs~\cite{borisov2023great,solatorio2023realtabformer} & $\times$ & \checkmark & (\checkmark) & \checkmark & $\times$ \\
-Prompted LLMs~\cite{seedat2024cllm,kim2024epic} & \checkmark & \checkmark & $\times$ & $\times$ & $\times$ \\
-\midrule
-\system (ours) & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark \\
-\bottomrule
-\end{tabular*}
-\end{table}
-
-\paragraph*{Our approach and what is different}
-We present \system, which separates \emph{proposing} rows, done by the LLM, from \emph{admitting} them, done by a deterministic controller. The controller keeps an explicit record of the schema, the real rows shown, the rows accepted so far and the rows still missing, and each of its four components removes one observable failure: a context budgeter chooses which real rows fit in the prompt; a parser repairs malformed output and maps returned columns back to the schema; a validator checks column types and, when a row fails, asks the model to correct only the offending fields; and a top-up loop requests exactly the missing rows until the table has the requested size. Every token, repair and violation is logged, so each synthetic table carries its own audit trail. Compared with the families in Table~\ref{tab:positioning}, \system needs no training on the small table, unlike deep and fine-tuned generators, and it guarantees schema, size and accounting, which prompted-LLM methods leave to the model. We also change how such systems are evaluated: every augmented model is paired with a real-only model on the same split, and we measure how much two runs of the \emph{same} pipeline differ, the \emph{noise floor}, before attributing any difference to a design choice.
+\paragraph*{Why small data changes the evaluation}
+Small data makes evaluation as important as generation. With six datasets of a few hundred rows, real-only baselines already vary by several points across splits, and differences between configurations can be ordinary run-to-run noise. Data-preparation studies have shown that cleaning can silently hurt downstream models~\cite{li2021cleanml,guha2023cleaningfairness}; synthetic augmentation deserves the same scrutiny. We therefore pair every augmented model with a real-only model on the same holdout, report every real-only baseline with its variability, and use functionally inert ablation arms to measure how much two runs of the \emph{same} system differ before attributing any difference to a design choice.
 
 \paragraph*{Contributions}
-\begin{enumerate}[leftmargin=*,itemsep=1pt]
-  \item \textbf{\system, an open-source control layer for LLM-based synthesis of small tables} that guarantees schema-checked output of the requested size and records its cost and repairs (Section~\ref{sec:system}).
-  \item \textbf{An evaluation protocol for small data} that pairs every augmented model with a real-only model on the same split, reports fidelity, privacy diagnostics, utility and cost together, and calibrates comparisons with an empirical noise floor (Sections~\ref{sec:method} and~\ref{sec:ablation}).
-  \item \textbf{An empirical study on six medical tables} with four LLM backends and three non-LLM generators (SMOTE, CTGAN, TVAE), 780 dataset-configuration repetitions and up to 23,400 classifier fits, reporting null and negative results alongside positive ones (Section~\ref{sec:results}).
+\begin{enumerate}[leftmargin=*,itemsep=2pt]
+  \item \textbf{A verifier-guided control plane for LLM-based table synthesis.} We formalize small-data synthesis as a bounded agent loop over explicit state (schema, rules, context, accepted rows, residual demand, budget, diagnostics) and implement it as an open-source system with token-budgeted context selection, structured-output repair, typed validation with targeted correction, exact-volume completion and a per-run audit trail (Section~\ref{sec:system}).
+  \item \textbf{A rigorous small-data evaluation protocol.} We combine generated-only fidelity, a classifier two-sample test, a membership-inference diagnostic, paired downstream utility over ten classifiers and three training regimes, and full cost accounting. Configurations are compared with Friedman and Holm-corrected Wilcoxon tests over datasets, and a completeness gate admits only configurations that finished on every dataset and repetition (Section~\ref{sec:method}).
+  \item \textbf{An empirical noise floor for LLM-pipeline ablations.} Three ablation arms are functionally inert in the reported setting. Rather than discard them, we use them as repeated runs of the reference system to calibrate how large an effect must be before it can be attributed to a design choice (Section~\ref{sec:ablation}).
+  \item \textbf{A large, fully reported study on six medical tables.} The study covers 13 configurations, four LLM backends, three non-LLM generators (SMOTE, CTGAN, TVAE), 780 dataset-configuration repetitions and up to 23,400 model fits, and it reports negative and null results alongside positive ones (Section~\ref{sec:results}).
 \end{enumerate}
 
-\paragraph*{Main findings}
-(i)~\system returns complete tables (99.7\% of cells filled) whose fidelity is stable across all control variants. (ii)~The choice of LLM is the only factor whose effect clearly exceeds the noise floor: GPT-4.1 gives the largest mean F1 gain of all generators ($+1.09$ points). (iii)~No generator dominates: TVAE gives the best mean accuracy change at a fraction of the cost, and SMOTE helps most when the positive class is rare. (iv)~No configuration improves utility significantly on every dataset, so synthetic rows are not a substitute for real evidence; \system makes this trade-off measurable before augmented data is used.
+\paragraph*{Key findings}
+(i)~The control layer makes LLM synthesis dependable: generated tables are 99.7\% complete, and fidelity is stable across every control variant (JSD 72.4--73.3 out of 100). (ii)~Backend choice is the only factor that clearly exceeds the noise floor: GPT-4.1 raises marginal fidelity to 75.7 and turns the mean F1 change positive ($+1.09$ points), and GPT-4.1 mini brings the mean accuracy change to $-0.23$ points, but stronger backends preserve pairwise correlations less well. (iii)~Against SMOTE, CTGAN and TVAE, no generator dominates. GPT-4.1 under \system gives the largest mean F1 gain; TVAE gives the best mean accuracy change in a few seconds of CPU time; CTGAN reaches the highest marginal fidelity but produces the most detectable rows; SMOTE gives the largest F1 gains on the two rare-positive tables but loses 8.2 F1 points where the scored class is the majority. The LLM arms never shift a dataset's mean F1 by more than 6.4 points in either direction. (iv)~No configuration is a statistically significant utility winner across six datasets, and augmentation helps some learner-dataset pairs while hurting others. Synthetic volume is therefore not a substitute for evidence; the value of the control plane is that it makes the trade-off measurable before augmented data is used.
 
-\paragraph*{Paper organization} Section~\ref{sec:related} reviews related work, Section~\ref{sec:problem} formalizes the problem, Section~\ref{sec:system} presents \system, Section~\ref{sec:method} describes the experimental protocol, Section~\ref{sec:results} answers five research questions, Section~\ref{sec:discussion} discusses limitations and Section~\ref{sec:conclusion} concludes.
+\paragraph*{Paper organization} Section~\ref{sec:related} positions \system against tabular generators, LLM-based data preparation, privacy evaluation and cross-silo learning. Section~\ref{sec:problem} defines the small-data regime and states synthesis as a constrained multi-objective problem. Section~\ref{sec:system} presents the system: its explicit control state, context budgeting, verification and recovery, exact-volume completion and a cross-silo deployment pattern. Section~\ref{sec:method} describes the datasets, configurations, metrics and statistical protocol, organized around five research questions, which Section~\ref{sec:results} answers in turn. Section~\ref{sec:discussion} discusses what the evidence supports, its limitations and its implications, and Section~\ref{sec:conclusion} concludes.
 
 %======================================================================
 \section{Related Work}
@@ -156,7 +120,7 @@ Federated learning keeps raw data local and aggregates model updates~\cite{mcmah
 The related work leaves open what a dependable LLM-based generator must guarantee when only a few hundred rows exist. Before describing the system, we make this setting precise and state the objectives against which every configuration is later judged.
 
 \paragraph*{Small-data regime}
-We work with tables that are small in the sense of Definition~1: at most 1,000 rows, with few minority-class events per feature. Table~\ref{tab:datasets} lists the six evaluation tables: they have 195 to 768 rows, their least frequent class holds 13 to 268 rows, and their EPV ranges from 1.0 to 33.5. After an 80/20 split, the generator sees a 20\% sample of the remaining training rows as context, that is, 31 to 123 real rows.
+We define the regime operationally rather than by a row-count threshold. A task is small-data when withholding observations materially changes the training set, minority support is sparse, and estimator variance across reasonable splits is visible. All six evaluation tables satisfy this definition: they contain 195 to 768 rows, and the least frequent class covers 4.3\% to 37.3\% of the rows. After an 80/20 holdout, the generator sees a 20\% sample of the remaining training rows as context.
 
 This setting creates three linked risks. \emph{Coverage risk}: a random context sample can miss a rare class or local mode. \emph{Estimation risk}: apparent augmentation gains can be split variability, especially when many classifiers and configurations are inspected. \emph{Memorization risk}: high similarity can reflect reproduction of scarce records rather than generalization. Our design answers these with context-selection strategies, matched repeated holdouts with corrected tests, and novelty and membership diagnostics.
 
@@ -325,20 +289,20 @@ Table~\ref{tab:datasets} summarizes the six medical classification tables. Five 
 
 \begin{table}[t]
 \centering
-\caption{Evaluation datasets, all small in the sense of Definition~1. $d$: features; $n_{\min}$: rows in the least frequent class (share in parentheses); EPV $=n_{\min}/d$; Miss.: share of empty cells.}
+\caption{Evaluation datasets. Feat.\ is the number of features, Min.\ the share of the least frequent target class and Miss.\ the share of empty cells.}
 \label{tab:datasets}
 \small
 \setlength{\tabcolsep}{4pt}
-\begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}lrrrrrr@{}}
+\begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}lrrrrr@{}}
 \toprule
-Dataset & $n$ & $d$ & Classes & $n_{\min}$ (\%) & EPV & Miss.\ (\%) \\
+Dataset & Rows & Feat. & Classes & Min.\ (\%) & Miss.\ (\%) \\
 \midrule
-Heart disease & 303 & 13 & 5 & 13 (4.3) & 1.0 & 0.1 \\
-Breast cancer & 569 & 30 & 2 & 212 (37.3) & 7.1 & 0.0 \\
-Heart failure & 299 & 12 & 2 & 96 (32.1) & 8.0 & 0.0 \\
-Diabetes & 768 & 8 & 2 & 268 (34.9) & 33.5 & 0.0 \\
-Liver disease & 583 & 10 & 2 & 167 (28.6) & 16.7 & 0.1 \\
-Parkinson's & 195 & 22 & 2 & 48 (24.6) & 2.2 & 0.0 \\
+Heart disease & 303 & 13 & 5 & 4.3 & 0.1 \\
+Breast cancer & 569 & 30 & 2 & 37.3 & 0.0 \\
+Heart failure & 299 & 12 & 2 & 32.1 & 0.0 \\
+Diabetes & 768 & 8 & 2 & 34.9 & 0.0 \\
+Liver disease & 583 & 10 & 2 & 28.6 & 0.1 \\
+Parkinson's & 195 & 22 & 2 & 24.6 & 0.0 \\
 \bottomrule
 \end{tabular*}
 \end{table}

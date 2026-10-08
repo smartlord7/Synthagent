@@ -3,17 +3,41 @@
   "filename": "heart_failure_clinical_records.csv",
   "results": [
     {
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
       "Synthetic Fidelity (JSD)": 86,
       "Correlation Stability": 91,
       "Distribution Consistency": 89,
       "Entropy Preservation": 90,
       "Mean Z Score Drift": 0.10992594984344185,
+=======
+=======
+>>>>>>> Stashed changes
+      "Synthetic Fidelity (JSD)": 85,
+      "Correlation Stability": 91,
+      "Distribution Consistency": 86,
+      "Entropy Preservation": 89,
+      "Mean Z Score Drift": 0.11882441324744172,
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
       "Categorical Fidelity": 0,
       "Privacy Risk": 100,
       "Data Density": 100.0,
       "Coverage Score": 0,
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
       "Feature Accuracy": 89,
       "Novelty Score": 2.7638694008380784e-09,
+=======
+      "Feature Accuracy": 88,
+      "Novelty Score": 9.807559928242591e-09,
+>>>>>>> Stashed changes
+=======
+      "Feature Accuracy": 88,
+      "Novelty Score": 9.807559928242591e-09,
+>>>>>>> Stashed changes
       "Gen Synthetic Fidelity (JSD)": 0,
       "Gen Correlation Stability": 0,
       "Gen Distribution Consistency": 0,
@@ -35,8 +59,18 @@
           "generated": null,
           "generated_metadata": null,
           "augmented": {
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             "accuracy": 0.75,
             "f1": 0.6511627906976745
+=======
+            "accuracy": 0.7833333333333333,
+            "f1": 0.6976744186046512
+>>>>>>> Stashed changes
+=======
+            "accuracy": 0.7833333333333333,
+            "f1": 0.6976744186046512
+>>>>>>> Stashed changes
           },
           "augmented_metadata": {
             "model_type": "rf",
@@ -62,6 +96,8 @@
               "warm_start": false
             },
             "feature_importances": [
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
               0.0826013427301721,
               0.01150574845314778,
               0.08823989396663852,
@@ -74,6 +110,25 @@
               0.009332479695027688,
               0.011326619130953158,
               0.3752487726630969
+=======
+=======
+>>>>>>> Stashed changes
+              0.07124769924211302,
+              0.008524144698932848,
+              0.07870260859334977,
+              0.008579161210769324,
+              0.127505928604042,
+              0.0112781563786785,
+              0.06681546779123258,
+              0.12194383291056723,
+              0.07260615810994299,
+              0.010612969656152356,
+              0.012696729114800435,
+              0.409487143689419
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
             ],
             "feature_names": [
               "age",
@@ -236,14 +291,34 @@
         },
         "dt": {
           "original": {
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             "accuracy": 0.7166666666666667,
             "f1": 0.6046511627906976
+=======
+            "accuracy": 0.75,
+            "f1": 0.6666666666666666
+>>>>>>> Stashed changes
+=======
+            "accuracy": 0.75,
+            "f1": 0.6666666666666666
+>>>>>>> Stashed changes
           },
           "generated": null,
           "generated_metadata": null,
           "augmented": {
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             "accuracy": 0.6833333333333333,
             "f1": 0.5581395348837209
+=======
+            "accuracy": 0.7833333333333333,
+            "f1": 0.7111111111111111
+>>>>>>> Stashed changes
+=======
+            "accuracy": 0.7833333333333333,
+            "f1": 0.7111111111111111
+>>>>>>> Stashed changes
           },
           "augmented_metadata": {
             "model_type": "dt",
@@ -263,6 +338,8 @@
               "splitter": "best"
             },
             "feature_importances": [
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
               0.04746007164421183,
               0.0,
               0.04122138643266597,
@@ -275,6 +352,25 @@
               0.0,
               0.01409221853467882,
               0.5815901823925039
+=======
+=======
+>>>>>>> Stashed changes
+              0.017514107258019336,
+              0.0,
+              0.041221386432665964,
+              0.0,
+              0.08462180400901527,
+              0.0,
+              0.07097353698374606,
+              0.12183448674063915,
+              0.03996784057937378,
+              0.0,
+              0.0,
+              0.6238668379965404
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
             ],
             "feature_names": [
               "age",
@@ -330,6 +426,8 @@
               "warm_start": false
             },
             "feature_importances": [
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
               0.05198911464655271,
               0.009444581307043537,
               0.05876694062803416,
@@ -342,6 +440,25 @@
               0.0011459544416737174,
               3.0456401859507267e-05,
               0.5901431100318663
+=======
+=======
+>>>>>>> Stashed changes
+              0.05200988168841491,
+              0.009444581307043537,
+              0.05872582411118604,
+              0.0,
+              0.11809814830742914,
+              0.0,
+              0.04406437018683232,
+              0.07779753302516192,
+              0.049930370766099866,
+              0.0011459544416736844,
+              0.0,
+              0.5887833361661586
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
             ],
             "feature_names": [
               "age",
@@ -441,14 +558,34 @@
         },
         "mlp": {
           "original": {
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             "accuracy": 0.5666666666666667,
             "f1": 0.0
+=======
+            "accuracy": 0.43333333333333335,
+            "f1": 0.6046511627906976
+>>>>>>> Stashed changes
+=======
+            "accuracy": 0.43333333333333335,
+            "f1": 0.6046511627906976
+>>>>>>> Stashed changes
           },
           "generated": null,
           "generated_metadata": null,
           "augmented": {
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             "accuracy": 0.4166666666666667,
             "f1": 0.5882352941176471
+=======
+            "accuracy": 0.5666666666666667,
+            "f1": 0.0
+>>>>>>> Stashed changes
+=======
+            "accuracy": 0.5666666666666667,
+            "f1": 0.0
+>>>>>>> Stashed changes
           },
           "augmented_metadata": {
             "model_type": "mlp",
@@ -480,6 +617,8 @@
               "warm_start": false
             },
             "loss_curve": [
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
               25.48694227861112,
               25.486942249023045,
               25.486942212973,
@@ -497,6 +636,34 @@
               10.556725419961433,
               25.336135899322528,
               25.48694158650134
+=======
+=======
+>>>>>>> Stashed changes
+              25.486942795352487,
+              25.48694275444956,
+              25.486942706309758,
+              25.48694265582441,
+              25.48694260431272,
+              25.48694255243233,
+              25.486942500557397,
+              25.4869424489035,
+              22.605746822995567,
+              10.55672608935101,
+              10.55672603876104,
+              10.556725988312179,
+              10.55672593797211,
+              10.556725887740091,
+              10.556725837666452,
+              10.55672578778974,
+              10.556725738229158,
+              10.556725688987614,
+              10.556725640091166,
+              10.556725591698234,
+              10.556725543884525
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
             ]
           },
           "task_type": "classification",
@@ -553,6 +720,8 @@
         "invalid_rows": 0,
         "request_errors": 8,
         "type_errors": 0,
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
         "generation_seconds": 4.312034368515015
       },
       "fold_seconds": 10.056299924850464
@@ -563,12 +732,39 @@
       "Distribution Consistency": 89,
       "Entropy Preservation": 89,
       "Mean Z Score Drift": 0.09641000669768261,
+=======
+=======
+>>>>>>> Stashed changes
+        "generation_seconds": 1.707181692123413
+      },
+      "fold_seconds": 2.8338186740875244
+    },
+    {
+      "Synthetic Fidelity (JSD)": 82,
+      "Correlation Stability": 89,
+      "Distribution Consistency": 81,
+      "Entropy Preservation": 87,
+      "Mean Z Score Drift": 0.11900529658413594,
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
       "Categorical Fidelity": 0,
       "Privacy Risk": 100,
       "Data Density": 100.0,
       "Coverage Score": 0,
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
       "Feature Accuracy": 94,
       "Novelty Score": 7.631777783656379e-09,
+=======
+      "Feature Accuracy": 88,
+      "Novelty Score": 9.546203821758813e-09,
+>>>>>>> Stashed changes
+=======
+      "Feature Accuracy": 88,
+      "Novelty Score": 9.546203821758813e-09,
+>>>>>>> Stashed changes
       "Gen Synthetic Fidelity (JSD)": 0,
       "Gen Correlation Stability": 0,
       "Gen Distribution Consistency": 0,
@@ -584,14 +780,34 @@
       "ml_eval": {
         "rf": {
           "original": {
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             "accuracy": 0.7833333333333333,
             "f1": 0.7111111111111111
+=======
+            "accuracy": 0.8,
+            "f1": 0.7272727272727273
+>>>>>>> Stashed changes
+=======
+            "accuracy": 0.8,
+            "f1": 0.7272727272727273
+>>>>>>> Stashed changes
           },
           "generated": null,
           "generated_metadata": null,
           "augmented": {
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             "accuracy": 0.7833333333333333,
             "f1": 0.7111111111111111
+=======
+            "accuracy": 0.8,
+            "f1": 0.7272727272727273
+>>>>>>> Stashed changes
+=======
+            "accuracy": 0.8,
+            "f1": 0.7272727272727273
+>>>>>>> Stashed changes
           },
           "augmented_metadata": {
             "model_type": "rf",
@@ -617,6 +833,8 @@
               "warm_start": false
             },
             "feature_importances": [
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
               0.07543292465062106,
               0.01205862142826983,
               0.08000590103421829,
@@ -629,6 +847,25 @@
               0.011490378268118663,
               0.008650451064455224,
               0.4027368460404039
+=======
+=======
+>>>>>>> Stashed changes
+              0.08431409533088881,
+              0.012288624786220946,
+              0.08631871991012864,
+              0.009736052316453213,
+              0.14801516429628142,
+              0.007920092053574154,
+              0.07491310380554433,
+              0.10352853050226284,
+              0.05370033673336028,
+              0.009403696432573227,
+              0.007870931098076017,
+              0.4019906527346361
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
             ],
             "feature_names": [
               "age",
@@ -791,13 +1028,31 @@
         },
         "dt": {
           "original": {
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             "accuracy": 0.7666666666666667,
             "f1": 0.6666666666666666
+=======
+            "accuracy": 0.75,
+            "f1": 0.6511627906976745
+>>>>>>> Stashed changes
+=======
+            "accuracy": 0.75,
+            "f1": 0.6511627906976745
+>>>>>>> Stashed changes
           },
           "generated": null,
           "generated_metadata": null,
           "augmented": {
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             "accuracy": 0.75,
+=======
+            "accuracy": 0.7666666666666667,
+>>>>>>> Stashed changes
+=======
+            "accuracy": 0.7666666666666667,
+>>>>>>> Stashed changes
             "f1": 0.6666666666666666
           },
           "augmented_metadata": {
@@ -818,6 +1073,8 @@
               "splitter": "best"
             },
             "feature_importances": [
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
               0.0607796790780201,
               0.0469334338769239,
               0.05722673099498804,
@@ -830,6 +1087,25 @@
               0.0,
               0.011926613785194773,
               0.5076109144221194
+=======
+=======
+>>>>>>> Stashed changes
+              0.050219656455712226,
+              0.0,
+              0.05722673099498803,
+              0.04894486675736349,
+              0.12665288990144635,
+              0.010560022622307874,
+              0.05587211969257438,
+              0.06367023163624828,
+              0.07228537614254295,
+              0.0,
+              0.011926613785194771,
+              0.5026414920116214
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
             ],
             "feature_names": [
               "age",
@@ -885,6 +1161,8 @@
               "warm_start": false
             },
             "feature_importances": [
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
               0.0518416065105312,
               0.013467636802593061,
               0.05810028165099344,
@@ -897,6 +1175,25 @@
               0.0022702706322602,
               0.0003907143587918994,
               0.5881040431396467
+=======
+=======
+>>>>>>> Stashed changes
+              0.04663669013225549,
+              0.011358117493786448,
+              0.060723724308331825,
+              0.0020563169894812386,
+              0.14737006379081294,
+              0.0019137309047217881,
+              0.02854237715656428,
+              0.08795579017601422,
+              0.021797744937443877,
+              0.0023347131303430614,
+              0.00039071435879191465,
+              0.5889200166214529
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
             ],
             "feature_names": [
               "age",
@@ -996,14 +1293,34 @@
         },
         "mlp": {
           "original": {
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             "accuracy": 0.36666666666666664,
             "f1": 0.5365853658536586
+=======
+            "accuracy": 0.38333333333333336,
+            "f1": 0.5542168674698795
+>>>>>>> Stashed changes
+=======
+            "accuracy": 0.38333333333333336,
+            "f1": 0.5542168674698795
+>>>>>>> Stashed changes
           },
           "generated": null,
           "generated_metadata": null,
           "augmented": {
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             "accuracy": 0.38333333333333336,
             "f1": 0.5542168674698795
+=======
+            "accuracy": 0.6166666666666667,
+            "f1": 0.0
+>>>>>>> Stashed changes
+=======
+            "accuracy": 0.6166666666666667,
+            "f1": 0.0
+>>>>>>> Stashed changes
           },
           "augmented_metadata": {
             "model_type": "mlp",
@@ -1035,6 +1352,8 @@
               "warm_start": false
             },
             "loss_curve": [
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
               25.03451197856362,
               25.034511945831184,
               25.03451190851912,
@@ -1047,6 +1366,37 @@
               25.034511659184513,
               25.034511627362495,
               25.03451159646397
+=======
+=======
+>>>>>>> Stashed changes
+              25.034512343139124,
+              25.034512303961193,
+              25.034512257900012,
+              25.034512209691684,
+              25.034512160564265,
+              25.034512111175047,
+              25.034512061884463,
+              25.034512012890993,
+              25.03451196432136,
+              25.034511916341973,
+              25.034511869045602,
+              22.772357844125434,
+              11.00915711042664,
+              11.00915706429726,
+              11.009157017953338,
+              11.00915697148673,
+              11.009156924950211,
+              11.00915687836735,
+              11.009156831823036,
+              11.009156785367553,
+              11.009156739060447,
+              11.009156692982268,
+              11.009156647277631,
+              11.009156601963582
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
             ]
           },
           "task_type": "classification",
@@ -1103,22 +1453,56 @@
         "invalid_rows": 0,
         "request_errors": 8,
         "type_errors": 0,
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
         "generation_seconds": 3.6734681129455566
       },
       "fold_seconds": 8.824191331863403
+=======
+        "generation_seconds": 1.6413536071777344
+      },
+      "fold_seconds": 2.8252663612365723
+>>>>>>> Stashed changes
+=======
+        "generation_seconds": 1.6413536071777344
+      },
+      "fold_seconds": 2.8252663612365723
+>>>>>>> Stashed changes
     },
     {
       "Synthetic Fidelity (JSD)": 86,
       "Correlation Stability": 90,
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
       "Distribution Consistency": 88,
       "Entropy Preservation": 89,
       "Mean Z Score Drift": 0.10740617890276026,
+=======
+      "Distribution Consistency": 86,
+      "Entropy Preservation": 88,
+      "Mean Z Score Drift": 0.12706611342016177,
+>>>>>>> Stashed changes
+=======
+      "Distribution Consistency": 86,
+      "Entropy Preservation": 88,
+      "Mean Z Score Drift": 0.12706611342016177,
+>>>>>>> Stashed changes
       "Categorical Fidelity": 0,
       "Privacy Risk": 100,
       "Data Density": 100.0,
       "Coverage Score": 0,
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
       "Feature Accuracy": 91,
       "Novelty Score": 3.889882422548557e-09,
+=======
+      "Feature Accuracy": 87,
+      "Novelty Score": 1.499315704550929e-09,
+>>>>>>> Stashed changes
+=======
+      "Feature Accuracy": 87,
+      "Novelty Score": 1.499315704550929e-09,
+>>>>>>> Stashed changes
       "Gen Synthetic Fidelity (JSD)": 0,
       "Gen Correlation Stability": 0,
       "Gen Distribution Consistency": 0,
@@ -1134,14 +1518,34 @@
       "ml_eval": {
         "rf": {
           "original": {
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             "accuracy": 0.8166666666666667,
             "f1": 0.6857142857142857
+=======
+            "accuracy": 0.8666666666666667,
+            "f1": 0.7647058823529411
+>>>>>>> Stashed changes
+=======
+            "accuracy": 0.8666666666666667,
+            "f1": 0.7647058823529411
+>>>>>>> Stashed changes
           },
           "generated": null,
           "generated_metadata": null,
           "augmented": {
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             "accuracy": 0.8666666666666667,
             "f1": 0.7777777777777778
+=======
+            "accuracy": 0.8166666666666667,
+            "f1": 0.6857142857142857
+>>>>>>> Stashed changes
+=======
+            "accuracy": 0.8166666666666667,
+            "f1": 0.6857142857142857
+>>>>>>> Stashed changes
           },
           "augmented_metadata": {
             "model_type": "rf",
@@ -1167,6 +1571,8 @@
               "warm_start": false
             },
             "feature_importances": [
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
               0.10761676262304581,
               0.012722722756528576,
               0.061032153014316685,
@@ -1179,6 +1585,25 @@
               0.013405613055034455,
               0.011507402344979907,
               0.3563565182529718
+=======
+=======
+>>>>>>> Stashed changes
+              0.11092694928164987,
+              0.01270078000724523,
+              0.075953356152976,
+              0.010706858141054805,
+              0.13805360160919614,
+              0.014940788697680842,
+              0.07807916186727608,
+              0.14428461102643833,
+              0.07615732295869308,
+              0.01715691061896622,
+              0.007723950927804522,
+              0.31331570871101877
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
             ],
             "feature_names": [
               "age",
@@ -1341,14 +1766,34 @@
         },
         "dt": {
           "original": {
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             "accuracy": 0.8333333333333334,
             "f1": 0.7058823529411765
+=======
+            "accuracy": 0.8666666666666667,
+            "f1": 0.7647058823529411
+>>>>>>> Stashed changes
+=======
+            "accuracy": 0.8666666666666667,
+            "f1": 0.7647058823529411
+>>>>>>> Stashed changes
           },
           "generated": null,
           "generated_metadata": null,
           "augmented": {
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             "accuracy": 0.8166666666666667,
             "f1": 0.6857142857142857
+=======
+            "accuracy": 0.8333333333333334,
+            "f1": 0.7222222222222222
+>>>>>>> Stashed changes
+=======
+            "accuracy": 0.8333333333333334,
+            "f1": 0.7222222222222222
+>>>>>>> Stashed changes
           },
           "augmented_metadata": {
             "model_type": "dt",
@@ -1368,6 +1813,8 @@
               "splitter": "best"
             },
             "feature_importances": [
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
               0.06798250195751471,
               0.016179404911587498,
               0.137826236986168,
@@ -1380,6 +1827,25 @@
               0.016853546782903645,
               0.0,
               0.434153988330574
+=======
+=======
+>>>>>>> Stashed changes
+              0.06124108324435325,
+              0.016179404911587498,
+              0.10636628299141453,
+              0.01985654239149375,
+              0.10639680519568033,
+              0.018910992753803566,
+              0.03115675661061392,
+              0.1173453034433836,
+              0.051315037204707564,
+              0.016853546782903645,
+              0.006741418713161459,
+              0.44763682575689695
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
             ],
             "feature_names": [
               "age",
@@ -1435,6 +1901,8 @@
               "warm_start": false
             },
             "feature_importances": [
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
               0.0608355124200245,
               0.0,
               0.0632285666226367,
@@ -1447,6 +1915,25 @@
               0.0014495105478500314,
               0.004397800894256093,
               0.5289523457661998
+=======
+=======
+>>>>>>> Stashed changes
+              0.0581199396821683,
+              0.0,
+              0.061925065529808136,
+              0.0,
+              0.13306234279785478,
+              0.004882416360875313,
+              0.025870099015390453,
+              0.13389657937008131,
+              0.0478512868242227,
+              0.0014495105478500258,
+              0.0034447622421584414,
+              0.5294979976295905
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
             ],
             "feature_names": [
               "age",
@@ -1546,14 +2033,34 @@
         },
         "mlp": {
           "original": {
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             "accuracy": 0.2833333333333333,
             "f1": 0.44155844155844154
+=======
+            "accuracy": 0.7166666666666667,
+            "f1": 0.0
+>>>>>>> Stashed changes
+=======
+            "accuracy": 0.7166666666666667,
+            "f1": 0.0
+>>>>>>> Stashed changes
           },
           "generated": null,
           "generated_metadata": null,
           "augmented": {
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             "accuracy": 0.7166666666666667,
             "f1": 0.0
+=======
+            "accuracy": 0.26666666666666666,
+            "f1": 0.42105263157894735
+>>>>>>> Stashed changes
+=======
+            "accuracy": 0.26666666666666666,
+            "f1": 0.42105263157894735
+>>>>>>> Stashed changes
           },
           "augmented_metadata": {
             "model_type": "mlp",
@@ -1585,6 +2092,8 @@
               "warm_start": false
             },
             "loss_curve": [
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
               11.914019322928642,
               11.763219406072608,
               23.50350726369322,
@@ -1598,6 +2107,33 @@
               11.928504039613562,
               23.53992053686785,
               21.869268345260412
+=======
+=======
+>>>>>>> Stashed changes
+              24.129650802274195,
+              24.12965077175475,
+              24.129650737137073,
+              24.12965070145931,
+              24.12965066560868,
+              24.129650630037478,
+              24.129650595027645,
+              21.369040433875302,
+              11.914019043872337,
+              11.914019010789909,
+              11.914018977782149,
+              11.914018944803122,
+              11.914018911808588,
+              11.914018878828767,
+              11.914018846050853,
+              11.914018813544383,
+              11.914018781334075,
+              11.914018749480721,
+              11.914018718115601,
+              14.176172665688773
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
             ]
           },
           "task_type": "classification",
@@ -1654,6 +2190,8 @@
         "invalid_rows": 0,
         "request_errors": 8,
         "type_errors": 0,
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
         "generation_seconds": 3.9271485805511475
       },
       "fold_seconds": 11.619529008865356
@@ -1664,12 +2202,39 @@
       "Distribution Consistency": 89,
       "Entropy Preservation": 88,
       "Mean Z Score Drift": 0.1400491704046492,
+=======
+=======
+>>>>>>> Stashed changes
+        "generation_seconds": 1.6731793880462646
+      },
+      "fold_seconds": 3.0269198417663574
+    },
+    {
+      "Synthetic Fidelity (JSD)": 89,
+      "Correlation Stability": 90,
+      "Distribution Consistency": 91,
+      "Entropy Preservation": 88,
+      "Mean Z Score Drift": 0.07860345775895149,
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
       "Categorical Fidelity": 0,
       "Privacy Risk": 100,
       "Data Density": 100.0,
       "Coverage Score": 0,
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
       "Feature Accuracy": 84,
       "Novelty Score": 4.483561875389377e-09,
+=======
+      "Feature Accuracy": 95,
+      "Novelty Score": 8.506998848516347e-09,
+>>>>>>> Stashed changes
+=======
+      "Feature Accuracy": 95,
+      "Novelty Score": 8.506998848516347e-09,
+>>>>>>> Stashed changes
       "Gen Synthetic Fidelity (JSD)": 0,
       "Gen Correlation Stability": 0,
       "Gen Distribution Consistency": 0,
@@ -1685,8 +2250,18 @@
       "ml_eval": {
         "rf": {
           "original": {
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             "accuracy": 0.8,
             "f1": 0.7391304347826086
+=======
+            "accuracy": 0.8166666666666667,
+            "f1": 0.7659574468085106
+>>>>>>> Stashed changes
+=======
+            "accuracy": 0.8166666666666667,
+            "f1": 0.7659574468085106
+>>>>>>> Stashed changes
           },
           "generated": null,
           "generated_metadata": null,
@@ -1718,6 +2293,8 @@
               "warm_start": false
             },
             "feature_importances": [
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
               0.08344196126771915,
               0.009716752635997005,
               0.10331863881606057,
@@ -1730,6 +2307,25 @@
               0.0085556603495001,
               0.006308578057585358,
               0.37815939692966266
+=======
+=======
+>>>>>>> Stashed changes
+              0.09216041582036998,
+              0.008413396384736496,
+              0.09145586895366137,
+              0.0074346435588527,
+              0.09875658850372136,
+              0.009672842205877559,
+              0.06720009792853116,
+              0.1334704638613478,
+              0.07743816319515096,
+              0.007903763447822213,
+              0.007500206466006232,
+              0.3985935496739222
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
             ],
             "feature_names": [
               "age",
@@ -1898,8 +2494,18 @@
           "generated": null,
           "generated_metadata": null,
           "augmented": {
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             "accuracy": 0.7666666666666667,
             "f1": 0.7083333333333334
+=======
+            "accuracy": 0.7833333333333333,
+            "f1": 0.723404255319149
+>>>>>>> Stashed changes
+=======
+            "accuracy": 0.7833333333333333,
+            "f1": 0.723404255319149
+>>>>>>> Stashed changes
           },
           "augmented_metadata": {
             "model_type": "dt",
@@ -1919,6 +2525,8 @@
               "splitter": "best"
             },
             "feature_importances": [
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
               0.03461108815878073,
               0.0,
               0.10556064018496487,
@@ -1930,6 +2538,24 @@
               0.06432545631025684,
               0.03975441346068545,
               0.01413490256379927,
+=======
+=======
+>>>>>>> Stashed changes
+              0.020476185594981454,
+              0.01590176538427418,
+              0.0750191542881843,
+              0.031980217050595845,
+              0.047344723127322394,
+              0.01413490256379927,
+              0.08383861163528193,
+              0.11461856784519339,
+              0.07570680642656277,
+              0.03975441346068545,
+              0.0,
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
               0.481224652623119
             ],
             "feature_names": [
@@ -1958,8 +2584,18 @@
           "generated": null,
           "generated_metadata": null,
           "augmented": {
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             "accuracy": 0.8,
             "f1": 0.76
+=======
+            "accuracy": 0.7833333333333333,
+            "f1": 0.7450980392156863
+>>>>>>> Stashed changes
+=======
+            "accuracy": 0.7833333333333333,
+            "f1": 0.7450980392156863
+>>>>>>> Stashed changes
           },
           "augmented_metadata": {
             "model_type": "gb",
@@ -1986,6 +2622,8 @@
               "warm_start": false
             },
             "feature_importances": [
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
               0.052866555460435026,
               0.0037018556311484,
               0.060401875929427834,
@@ -1998,6 +2636,25 @@
               0.0,
               0.000872279035831693,
               0.5739893613574047
+=======
+=======
+>>>>>>> Stashed changes
+              0.04991895315410455,
+              0.0037109078289144243,
+              0.0586492516615078,
+              0.0016006719913063325,
+              0.07886346558755326,
+              0.0029852772493354153,
+              0.03459271251203367,
+              0.12030662884132337,
+              0.06992087178907765,
+              0.0,
+              0.0003658421848672316,
+              0.5790854171999764
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
             ],
             "feature_names": [
               "age",
@@ -2097,14 +2754,34 @@
         },
         "mlp": {
           "original": {
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             "accuracy": 0.5666666666666667,
             "f1": 0.0
+=======
+            "accuracy": 0.5833333333333334,
+            "f1": 0.24242424242424243
+>>>>>>> Stashed changes
+=======
+            "accuracy": 0.5833333333333334,
+            "f1": 0.24242424242424243
+>>>>>>> Stashed changes
           },
           "generated": null,
           "generated_metadata": null,
           "augmented": {
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             "accuracy": 0.43333333333333335,
             "f1": 0.6046511627906976
+=======
+            "accuracy": 0.5666666666666667,
+            "f1": 0.0
+>>>>>>> Stashed changes
+=======
+            "accuracy": 0.5666666666666667,
+            "f1": 0.0
+>>>>>>> Stashed changes
           },
           "augmented_metadata": {
             "model_type": "mlp",
@@ -2136,6 +2813,8 @@
               "warm_start": false
             },
             "loss_curve": [
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
               25.48694263192482,
               25.48694258887445,
               25.486942538173285,
@@ -2148,6 +2827,25 @@
               25.486942157798367,
               25.486942104389776,
               25.486942051641243
+=======
+=======
+>>>>>>> Stashed changes
+              10.556726782190639,
+              10.556726747563724,
+              10.556726706632793,
+              10.556726663658232,
+              10.55672661967804,
+              10.55672657508449,
+              10.556726530335046,
+              10.556726485783923,
+              10.556726441646116,
+              10.556726398059421,
+              10.5567263551134,
+              10.556726312935025
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
             ]
           },
           "task_type": "classification",
@@ -2204,6 +2902,8 @@
         "invalid_rows": 0,
         "request_errors": 8,
         "type_errors": 0,
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
         "generation_seconds": 1645.5992243289948
       },
       "fold_seconds": 1648.0802640914917
@@ -2214,12 +2914,39 @@
       "Distribution Consistency": 88,
       "Entropy Preservation": 86,
       "Mean Z Score Drift": 0.11325019999195218,
+=======
+=======
+>>>>>>> Stashed changes
+        "generation_seconds": 1.691028118133545
+      },
+      "fold_seconds": 2.962758779525757
+    },
+    {
+      "Synthetic Fidelity (JSD)": 85,
+      "Correlation Stability": 89,
+      "Distribution Consistency": 87,
+      "Entropy Preservation": 89,
+      "Mean Z Score Drift": 0.12213329524077704,
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
       "Categorical Fidelity": 0,
       "Privacy Risk": 100,
       "Data Density": 100.0,
       "Coverage Score": 0,
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
       "Feature Accuracy": 89,
       "Novelty Score": 5.914025923390633e-09,
+=======
+      "Feature Accuracy": 90,
+      "Novelty Score": 5.262863214189653e-09,
+>>>>>>> Stashed changes
+=======
+      "Feature Accuracy": 90,
+      "Novelty Score": 5.262863214189653e-09,
+>>>>>>> Stashed changes
       "Gen Synthetic Fidelity (JSD)": 0,
       "Gen Correlation Stability": 0,
       "Gen Distribution Consistency": 0,
@@ -2235,14 +2962,34 @@
       "ml_eval": {
         "rf": {
           "original": {
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             "accuracy": 0.8333333333333334,
             "f1": 0.8076923076923077
+=======
+            "accuracy": 0.85,
+            "f1": 0.8301886792452831
+>>>>>>> Stashed changes
+=======
+            "accuracy": 0.85,
+            "f1": 0.8301886792452831
+>>>>>>> Stashed changes
           },
           "generated": null,
           "generated_metadata": null,
           "augmented": {
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             "accuracy": 0.8666666666666667,
             "f1": 0.8461538461538461
+=======
+            "accuracy": 0.85,
+            "f1": 0.8235294117647058
+>>>>>>> Stashed changes
+=======
+            "accuracy": 0.85,
+            "f1": 0.8235294117647058
+>>>>>>> Stashed changes
           },
           "augmented_metadata": {
             "model_type": "rf",
@@ -2268,6 +3015,8 @@
               "warm_start": false
             },
             "feature_importances": [
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
               0.09391614818234403,
               0.016127383272860858,
               0.07930296908316142,
@@ -2280,6 +3029,25 @@
               0.016627753830212984,
               0.009937975850491608,
               0.33190693087374734
+=======
+=======
+>>>>>>> Stashed changes
+              0.07839073218201978,
+              0.014024297629750344,
+              0.06159628348065713,
+              0.013362273390642705,
+              0.16708843905110748,
+              0.016273029905618498,
+              0.07893063975522505,
+              0.12616558454810536,
+              0.08070557883101138,
+              0.012285429810445852,
+              0.013657687310249324,
+              0.33752002410516707
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
             ],
             "feature_names": [
               "age",
@@ -2443,13 +3211,31 @@
         "dt": {
           "original": {
             "accuracy": 0.8333333333333334,
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             "f1": 0.8148148148148148
+=======
+            "f1": 0.8076923076923077
+>>>>>>> Stashed changes
+=======
+            "f1": 0.8076923076923077
+>>>>>>> Stashed changes
           },
           "generated": null,
           "generated_metadata": null,
           "augmented": {
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             "accuracy": 0.85,
             "f1": 0.8301886792452831
+=======
+            "accuracy": 0.8333333333333334,
+            "f1": 0.8076923076923077
+>>>>>>> Stashed changes
+=======
+            "accuracy": 0.8333333333333334,
+            "f1": 0.8076923076923077
+>>>>>>> Stashed changes
           },
           "augmented_metadata": {
             "model_type": "dt",
@@ -2469,6 +3255,8 @@
               "splitter": "best"
             },
             "feature_importances": [
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
               0.05079547235607215,
               0.017220606039124058,
               0.05743239591337728,
@@ -2481,6 +3269,25 @@
               0.024370682230807145,
               0.0,
               0.4597780698970464
+=======
+=======
+>>>>>>> Stashed changes
+              0.06155835113052468,
+              0.017220606039124054,
+              0.06580352384906257,
+              0.03444121207824812,
+              0.06150024382526501,
+              0.0285013508647531,
+              0.05396480288130077,
+              0.12005626167179367,
+              0.051279137983169444,
+              0.024370682230807142,
+              0.0,
+              0.4813038274459514
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
             ],
             "feature_names": [
               "age",
@@ -2536,6 +3343,8 @@
               "warm_start": false
             },
             "feature_importances": [
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
               0.05852002781958439,
               0.004097915125468857,
               0.019933145831525775,
@@ -2548,6 +3357,25 @@
               0.011997793960891304,
               0.0021439921459478523,
               0.5673542778979808
+=======
+=======
+>>>>>>> Stashed changes
+              0.05917204211176123,
+              0.0034818578256178563,
+              0.01862647855637528,
+              0.0002975432367751274,
+              0.09875550156078577,
+              0.007847739475412329,
+              0.05192205622557585,
+              0.1417929889810609,
+              0.03659476297934468,
+              0.011997793960891283,
+              0.0021439921459478492,
+              0.5673672429404518
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
             ],
             "feature_names": [
               "age",
@@ -2647,14 +3475,34 @@
         },
         "mlp": {
           "original": {
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             "accuracy": 0.43333333333333335,
             "f1": 0.6046511627906976
+=======
+            "accuracy": 0.6333333333333333,
+            "f1": 0.3888888888888889
+>>>>>>> Stashed changes
+=======
+            "accuracy": 0.6333333333333333,
+            "f1": 0.3888888888888889
+>>>>>>> Stashed changes
           },
           "generated": null,
           "generated_metadata": null,
           "augmented": {
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             "accuracy": 0.43333333333333335,
             "f1": 0.5952380952380952
+=======
+            "accuracy": 0.5666666666666667,
+            "f1": 0.0
+>>>>>>> Stashed changes
+=======
+            "accuracy": 0.5666666666666667,
+            "f1": 0.0
+>>>>>>> Stashed changes
           },
           "augmented_metadata": {
             "model_type": "mlp",
@@ -2686,6 +3534,8 @@
               "warm_start": false
             },
             "loss_curve": [
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
               10.5567268521477,
               10.556726815877806,
               10.55672677424938,
@@ -2728,6 +3578,25 @@
               10.556725461429204,
               10.556725434331936,
               10.55672540709827
+=======
+=======
+>>>>>>> Stashed changes
+              10.556726527384166,
+              10.556726491207613,
+              11.53559169267543,
+              25.48694266486259,
+              21.57960149557749,
+              10.556726326464043,
+              10.556726284106468,
+              10.55672624075498,
+              10.556726196684739,
+              10.559239557093418,
+              25.11598703406475,
+              21.211407857985417
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
             ]
           },
           "task_type": "classification",
@@ -2784,6 +3653,8 @@
         "invalid_rows": 0,
         "request_errors": 8,
         "type_errors": 0,
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
         "generation_seconds": 3.045255184173584
       },
       "fold_seconds": 5.128734111785889
@@ -2794,12 +3665,39 @@
       "Distribution Consistency": 87,
       "Entropy Preservation": 89,
       "Mean Z Score Drift": 0.07483952463782906,
+=======
+=======
+>>>>>>> Stashed changes
+        "generation_seconds": 1.7069716453552246
+      },
+      "fold_seconds": 2.949284791946411
+    },
+    {
+      "Synthetic Fidelity (JSD)": 84,
+      "Correlation Stability": 88,
+      "Distribution Consistency": 87,
+      "Entropy Preservation": 87,
+      "Mean Z Score Drift": 0.11505686415128871,
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
       "Categorical Fidelity": 0,
       "Privacy Risk": 100,
       "Data Density": 100.0,
       "Coverage Score": 0,
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
       "Feature Accuracy": 93,
       "Novelty Score": 0.0,
+=======
+      "Feature Accuracy": 89,
+      "Novelty Score": 9.32949617454418e-09,
+>>>>>>> Stashed changes
+=======
+      "Feature Accuracy": 89,
+      "Novelty Score": 9.32949617454418e-09,
+>>>>>>> Stashed changes
       "Gen Synthetic Fidelity (JSD)": 0,
       "Gen Correlation Stability": 0,
       "Gen Distribution Consistency": 0,
@@ -2815,14 +3713,34 @@
       "ml_eval": {
         "rf": {
           "original": {
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             "accuracy": 0.8166666666666667,
             "f1": 0.6857142857142857
+=======
+            "accuracy": 0.85,
+            "f1": 0.7567567567567568
+>>>>>>> Stashed changes
+=======
+            "accuracy": 0.85,
+            "f1": 0.7567567567567568
+>>>>>>> Stashed changes
           },
           "generated": null,
           "generated_metadata": null,
           "augmented": {
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             "accuracy": 0.85,
             "f1": 0.7428571428571429
+=======
+            "accuracy": 0.8166666666666667,
+            "f1": 0.6857142857142857
+>>>>>>> Stashed changes
+=======
+            "accuracy": 0.8166666666666667,
+            "f1": 0.6857142857142857
+>>>>>>> Stashed changes
           },
           "augmented_metadata": {
             "model_type": "rf",
@@ -2848,6 +3766,8 @@
               "warm_start": false
             },
             "feature_importances": [
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
               0.09572606420603455,
               0.011965354294926338,
               0.07306970420880732,
@@ -2860,6 +3780,25 @@
               0.009513194054013723,
               0.011793615221769367,
               0.3829773966443421
+=======
+=======
+>>>>>>> Stashed changes
+              0.09000396847681885,
+              0.012580074992839045,
+              0.07362312047070073,
+              0.01163382724411427,
+              0.0950400137729082,
+              0.007504267303955167,
+              0.05775155821062793,
+              0.14428039551015584,
+              0.06904921956786542,
+              0.012845634252454892,
+              0.010546588682870763,
+              0.4151413315146889
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
             ],
             "feature_names": [
               "age",
@@ -3022,14 +3961,34 @@
         },
         "dt": {
           "original": {
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             "accuracy": 0.7166666666666667,
             "f1": 0.5405405405405406
+=======
+            "accuracy": 0.7333333333333333,
+            "f1": 0.5789473684210527
+>>>>>>> Stashed changes
+=======
+            "accuracy": 0.7333333333333333,
+            "f1": 0.5789473684210527
+>>>>>>> Stashed changes
           },
           "generated": null,
           "generated_metadata": null,
           "augmented": {
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             "accuracy": 0.7166666666666667,
             "f1": 0.5142857142857142
+=======
+            "accuracy": 0.7333333333333333,
+            "f1": 0.5555555555555556
+>>>>>>> Stashed changes
+=======
+            "accuracy": 0.7333333333333333,
+            "f1": 0.5555555555555556
+>>>>>>> Stashed changes
           },
           "augmented_metadata": {
             "model_type": "dt",
@@ -3049,6 +4008,8 @@
               "splitter": "best"
             },
             "feature_importances": [
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
               0.004753220440167896,
               0.015748723299104938,
               0.0695810824844743,
@@ -3061,6 +4022,25 @@
               0.0,
               0.02263878974246336,
               0.5511029046142139
+=======
+=======
+>>>>>>> Stashed changes
+              0.01240884982167724,
+              0.015748723299104938,
+              0.08927663656135737,
+              0.06278184228598815,
+              0.033548452657499395,
+              0.03696993956279119,
+              0.013998865154759942,
+              0.09832123930243786,
+              0.07633734303329608,
+              0.0,
+              0.007874361649552478,
+              0.5527337466715354
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
             ],
             "feature_names": [
               "age",
@@ -3116,6 +4096,8 @@
               "warm_start": false
             },
             "feature_importances": [
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
               0.0236982895747204,
               0.0,
               0.05637525382273816,
@@ -3128,6 +4110,25 @@
               0.002022239412807575,
               0.0009343145100216248,
               0.6186812957483073
+=======
+=======
+>>>>>>> Stashed changes
+              0.023898133212728243,
+              0.0,
+              0.05447352803423991,
+              0.0,
+              0.07580939753978644,
+              0.005367775174283409,
+              0.040165258393297286,
+              0.11411216964143739,
+              0.06422253237218228,
+              0.002022239412807524,
+              0.0009343145100216251,
+              0.6189946517092159
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
             ],
             "feature_names": [
               "age",
@@ -3227,14 +4228,34 @@
         },
         "mlp": {
           "original": {
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             "accuracy": 0.65,
             "f1": 0.0
+=======
+            "accuracy": 0.55,
+            "f1": 0.18181818181818182
+>>>>>>> Stashed changes
+=======
+            "accuracy": 0.55,
+            "f1": 0.18181818181818182
+>>>>>>> Stashed changes
           },
           "generated": null,
           "generated_metadata": null,
           "augmented": {
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             "accuracy": 0.35,
             "f1": 0.5185185185185185
+=======
+            "accuracy": 0.48333333333333334,
+            "f1": 0.43636363636363634
+>>>>>>> Stashed changes
+=======
+            "accuracy": 0.48333333333333334,
+            "f1": 0.43636363636363634
+>>>>>>> Stashed changes
           },
           "augmented_metadata": {
             "model_type": "mlp",
@@ -3266,6 +4287,8 @@
               "warm_start": false
             },
             "loss_curve": [
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
               24.732891393306364,
               24.73289137448337,
               24.732891351124223,
@@ -3278,6 +4301,34 @@
               24.73289118318933,
               24.732891161227645,
               24.73289114003536
+=======
+=======
+>>>>>>> Stashed changes
+              24.73289166720143,
+              24.73289163298566,
+              24.73289159319765,
+              24.732891551786427,
+              24.73289150979188,
+              24.73289146769329,
+              24.732891425831973,
+              24.732891384405043,
+              25.034511873973603,
+              11.310777698021814,
+              11.310777658004705,
+              11.310777617882595,
+              11.310777577672134,
+              11.31077753746691,
+              11.31077749731643,
+              11.310777457213083,
+              11.310777417245937,
+              11.310777377549488,
+              11.310777338120767,
+              11.310777299076497,
+              11.310777260414685
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
             ]
           },
           "task_type": "classification",
@@ -3334,6 +4385,8 @@
         "invalid_rows": 0,
         "request_errors": 8,
         "type_errors": 0,
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
         "generation_seconds": 2.8495829105377197
       },
       "fold_seconds": 4.708853244781494
@@ -3344,12 +4397,39 @@
       "Distribution Consistency": 85,
       "Entropy Preservation": 87,
       "Mean Z Score Drift": 0.15568577831233904,
+=======
+=======
+>>>>>>> Stashed changes
+        "generation_seconds": 1.593120813369751
+      },
+      "fold_seconds": 2.927077293395996
+    },
+    {
+      "Synthetic Fidelity (JSD)": 86,
+      "Correlation Stability": 90,
+      "Distribution Consistency": 87,
+      "Entropy Preservation": 88,
+      "Mean Z Score Drift": 0.0740854453173628,
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
       "Categorical Fidelity": 0,
       "Privacy Risk": 100,
       "Data Density": 100.0,
       "Coverage Score": 0,
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
       "Feature Accuracy": 84,
       "Novelty Score": 4.704022756915696e-09,
+=======
+      "Feature Accuracy": 92,
+      "Novelty Score": 6.084904658657384e-09,
+>>>>>>> Stashed changes
+=======
+      "Feature Accuracy": 92,
+      "Novelty Score": 6.084904658657384e-09,
+>>>>>>> Stashed changes
       "Gen Synthetic Fidelity (JSD)": 0,
       "Gen Correlation Stability": 0,
       "Gen Distribution Consistency": 0,
@@ -3365,14 +4445,34 @@
       "ml_eval": {
         "rf": {
           "original": {
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             "accuracy": 0.8666666666666667,
             "f1": 0.7777777777777778
+=======
+            "accuracy": 0.85,
+            "f1": 0.7428571428571429
+>>>>>>> Stashed changes
+=======
+            "accuracy": 0.85,
+            "f1": 0.7428571428571429
+>>>>>>> Stashed changes
           },
           "generated": null,
           "generated_metadata": null,
           "augmented": {
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             "accuracy": 0.8833333333333333,
             "f1": 0.8108108108108109
+=======
+            "accuracy": 0.8333333333333334,
+            "f1": 0.7058823529411765
+>>>>>>> Stashed changes
+=======
+            "accuracy": 0.8333333333333334,
+            "f1": 0.7058823529411765
+>>>>>>> Stashed changes
           },
           "augmented_metadata": {
             "model_type": "rf",
@@ -3398,6 +4498,8 @@
               "warm_start": false
             },
             "feature_importances": [
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
               0.09100847395255782,
               0.013267298448759604,
               0.07111857864106652,
@@ -3410,6 +4512,25 @@
               0.011762257780006976,
               0.00915003570926174,
               0.33419517208380345
+=======
+=======
+>>>>>>> Stashed changes
+              0.08315713255492191,
+              0.011555819925423438,
+              0.0672060848392072,
+              0.010857060728542662,
+              0.1155084157465902,
+              0.01384554713992749,
+              0.07833065447462208,
+              0.1665414263410418,
+              0.0691987809166328,
+              0.007490662411278703,
+              0.009500192933393561,
+              0.36680822198841817
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
             ],
             "feature_names": [
               "age",
@@ -3572,8 +4693,18 @@
         },
         "dt": {
           "original": {
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             "accuracy": 0.8166666666666667,
             "f1": 0.7027027027027027
+=======
+            "accuracy": 0.8,
+            "f1": 0.6666666666666666
+>>>>>>> Stashed changes
+=======
+            "accuracy": 0.8,
+            "f1": 0.6666666666666666
+>>>>>>> Stashed changes
           },
           "generated": null,
           "generated_metadata": null,
@@ -3600,10 +4731,23 @@
             },
             "feature_importances": [
               0.032418684355903914,
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
               0.015306708939888747,
               0.05334401563530894,
               0.0,
               0.021346014142947612,
+=======
+=======
+>>>>>>> Stashed changes
+              0.0,
+              0.06865072457519768,
+              0.010204472626592498,
+              0.011141541516355115,
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
               0.036444545094973205,
               0.015306708939888747,
               0.14383580903607923,
@@ -3666,6 +4810,8 @@
               "warm_start": false
             },
             "feature_importances": [
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
               0.04287210503072098,
               1.1090635881671225e-06,
               0.06999913720662744,
@@ -3678,6 +4824,25 @@
               0.005627872492310879,
               0.0,
               0.5695272866966382
+=======
+=======
+>>>>>>> Stashed changes
+              0.04163192185536872,
+              5.337510980371623e-07,
+              0.0686986429102347,
+              0.0,
+              0.06164675206576324,
+              0.002102982407425639,
+              0.05234408108809389,
+              0.15269992719497186,
+              0.04858921745858555,
+              0.0056278724923108795,
+              0.0,
+              0.5666580687761475
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
             ],
             "feature_names": [
               "age",
@@ -3777,14 +4942,34 @@
         },
         "mlp": {
           "original": {
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             "accuracy": 0.5833333333333334,
             "f1": 0.358974358974359
+=======
+            "accuracy": 0.36666666666666664,
+            "f1": 0.5365853658536586
+>>>>>>> Stashed changes
+=======
+            "accuracy": 0.36666666666666664,
+            "f1": 0.5365853658536586
+>>>>>>> Stashed changes
           },
           "generated": null,
           "generated_metadata": null,
           "augmented": {
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             "accuracy": 0.6166666666666667,
             "f1": 0.14814814814814814
+=======
+            "accuracy": 0.6333333333333333,
+            "f1": 0.0
+>>>>>>> Stashed changes
+=======
+            "accuracy": 0.6333333333333333,
+            "f1": 0.0
+>>>>>>> Stashed changes
           },
           "augmented_metadata": {
             "model_type": "mlp",
@@ -3816,6 +5001,8 @@
               "warm_start": false
             },
             "loss_curve": [
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
               22.923168155004788,
               11.009157169815486,
               10.957835614124972,
@@ -3830,6 +5017,31 @@
               11.601071534596288,
               15.19839266249828,
               15.614549070996123
+=======
+=======
+>>>>>>> Stashed changes
+              24.431271156689192,
+              11.159967788142843,
+              13.57293199865074,
+              21.616573376249224,
+              11.159967683265698,
+              13.394379422734593,
+              8.01413870078031,
+              11.159133753228371,
+              11.256191937009275,
+              22.187249205493565,
+              11.159967455852748,
+              11.11599413574134,
+              24.75642113603274,
+              10.93754447478929,
+              11.159967304216533,
+              10.630476501012739,
+              22.861398828451456,
+              11.159967192292655
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
             ]
           },
           "task_type": "classification",
@@ -3886,6 +5098,8 @@
         "invalid_rows": 0,
         "request_errors": 8,
         "type_errors": 0,
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
         "generation_seconds": 2.799269914627075
       },
       "fold_seconds": 5.434149265289307
@@ -3896,12 +5110,39 @@
       "Distribution Consistency": 83,
       "Entropy Preservation": 88,
       "Mean Z Score Drift": 0.13639868412792513,
+=======
+=======
+>>>>>>> Stashed changes
+        "generation_seconds": 2.02592396736145
+      },
+      "fold_seconds": 3.490422487258911
+    },
+    {
+      "Synthetic Fidelity (JSD)": 82,
+      "Correlation Stability": 90,
+      "Distribution Consistency": 81,
+      "Entropy Preservation": 88,
+      "Mean Z Score Drift": 0.13330363781675705,
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
       "Categorical Fidelity": 0,
       "Privacy Risk": 100,
       "Data Density": 100.0,
       "Coverage Score": 0,
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
       "Feature Accuracy": 89,
       "Novelty Score": 8.409419510641676e-10,
+=======
+      "Feature Accuracy": 86,
+      "Novelty Score": 5.020509677882853e-09,
+>>>>>>> Stashed changes
+=======
+      "Feature Accuracy": 86,
+      "Novelty Score": 5.020509677882853e-09,
+>>>>>>> Stashed changes
       "Gen Synthetic Fidelity (JSD)": 0,
       "Gen Correlation Stability": 0,
       "Gen Distribution Consistency": 0,
@@ -3917,14 +5158,32 @@
       "ml_eval": {
         "rf": {
           "original": {
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             "accuracy": 0.8666666666666667,
             "f1": 0.7777777777777778
+=======
+            "accuracy": 0.9,
+            "f1": 0.8421052631578947
+>>>>>>> Stashed changes
+=======
+            "accuracy": 0.9,
+            "f1": 0.8421052631578947
+>>>>>>> Stashed changes
           },
           "generated": null,
           "generated_metadata": null,
           "augmented": {
             "accuracy": 0.9,
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             "f1": 0.8421052631578947
+=======
+            "f1": 0.85
+>>>>>>> Stashed changes
+=======
+            "f1": 0.85
+>>>>>>> Stashed changes
           },
           "augmented_metadata": {
             "model_type": "rf",
@@ -3950,6 +5209,8 @@
               "warm_start": false
             },
             "feature_importances": [
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
               0.0915244642998468,
               0.012374541369018933,
               0.07360719316099401,
@@ -3962,6 +5223,25 @@
               0.012039299832746495,
               0.010425693576486815,
               0.3773832558019343
+=======
+=======
+>>>>>>> Stashed changes
+              0.08044205633330785,
+              0.009359044187291046,
+              0.07749445618601006,
+              0.01695358547930038,
+              0.13873437027975954,
+              0.010410624015363497,
+              0.07191546746316524,
+              0.12502830693616515,
+              0.07280741936500994,
+              0.011739043916007856,
+              0.011675493677585,
+              0.3734401321610344
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
             ],
             "feature_names": [
               "age",
@@ -4124,14 +5404,34 @@
         },
         "dt": {
           "original": {
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             "accuracy": 0.75,
             "f1": 0.6511627906976745
+=======
+            "accuracy": 0.7833333333333333,
+            "f1": 0.6829268292682927
+>>>>>>> Stashed changes
+=======
+            "accuracy": 0.7833333333333333,
+            "f1": 0.6829268292682927
+>>>>>>> Stashed changes
           },
           "generated": null,
           "generated_metadata": null,
           "augmented": {
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             "accuracy": 0.7833333333333333,
             "f1": 0.6829268292682927
+=======
+            "accuracy": 0.8,
+            "f1": 0.7272727272727273
+>>>>>>> Stashed changes
+=======
+            "accuracy": 0.8,
+            "f1": 0.7272727272727273
+>>>>>>> Stashed changes
           },
           "augmented_metadata": {
             "model_type": "dt",
@@ -4151,6 +5451,8 @@
               "splitter": "best"
             },
             "feature_importances": [
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
               0.05603956929495139,
               0.04122873356370823,
               0.0568203918895587,
@@ -4163,6 +5465,25 @@
               0.0,
               0.0,
               0.5073352575874274
+=======
+=======
+>>>>>>> Stashed changes
+              0.05603956929495138,
+              0.04122873356370822,
+              0.07001358662994533,
+              0.07310800401485676,
+              0.08457894933290484,
+              0.0372487864836916,
+              0.04295284424000875,
+              0.08019517669743463,
+              0.04094173874305696,
+              0.013193194740386632,
+              0.0,
+              0.46049941625905483
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
             ],
             "feature_names": [
               "age",
@@ -4218,6 +5539,8 @@
               "warm_start": false
             },
             "feature_importances": [
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
               0.04870258835761597,
               0.0047355738513508985,
               0.06801782429003149,
@@ -4230,6 +5553,25 @@
               0.0021569607515930333,
               6.699965348707042e-06,
               0.5635897560511972
+=======
+=======
+>>>>>>> Stashed changes
+              0.04998781073323426,
+              0.004709465343327024,
+              0.06690527875846182,
+              0.009418403386741958,
+              0.10736601903778037,
+              0.004043274610218529,
+              0.0481329256463393,
+              0.11117792714029832,
+              0.032757351741481706,
+              0.0021569607515930355,
+              0.00037706697944258954,
+              0.5629675158710811
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
             ],
             "feature_names": [
               "age",
@@ -4329,14 +5671,32 @@
         },
         "mlp": {
           "original": {
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             "accuracy": 0.5833333333333334,
+=======
+            "accuracy": 0.65,
+>>>>>>> Stashed changes
+=======
+            "accuracy": 0.65,
+>>>>>>> Stashed changes
             "f1": 0.0
           },
           "generated": null,
           "generated_metadata": null,
           "augmented": {
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             "accuracy": 0.65,
             "f1": 0.0
+=======
+            "accuracy": 0.35,
+            "f1": 0.5185185185185185
+>>>>>>> Stashed changes
+=======
+            "accuracy": 0.35,
+            "f1": 0.5185185185185185
+>>>>>>> Stashed changes
           },
           "augmented_metadata": {
             "model_type": "mlp",
@@ -4368,6 +5728,8 @@
               "warm_start": false
             },
             "loss_curve": [
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
               11.310777388083679,
               11.310777360512223,
               11.31077732762039,
@@ -4380,6 +5742,25 @@
               11.310777084417715,
               11.310777051197789,
               11.310777018698131
+=======
+=======
+>>>>>>> Stashed changes
+              11.310778378567283,
+              11.310778351092047,
+              11.31077832027985,
+              11.3107782891719,
+              11.310778258579509,
+              11.31077822862047,
+              11.310778199487105,
+              11.310778171223117,
+              11.31077814391724,
+              11.791604232321465,
+              24.732891696078173,
+              24.73289166730264
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
             ]
           },
           "task_type": "classification",
@@ -4436,6 +5817,8 @@
         "invalid_rows": 0,
         "request_errors": 8,
         "type_errors": 0,
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
         "generation_seconds": 4.139882326126099
       },
       "fold_seconds": 6.005305051803589
@@ -4446,12 +5829,39 @@
       "Distribution Consistency": 88,
       "Entropy Preservation": 88,
       "Mean Z Score Drift": 0.10161187684550092,
+=======
+=======
+>>>>>>> Stashed changes
+        "generation_seconds": 1.8462867736816406
+      },
+      "fold_seconds": 4.071779251098633
+    },
+    {
+      "Synthetic Fidelity (JSD)": 84,
+      "Correlation Stability": 90,
+      "Distribution Consistency": 82,
+      "Entropy Preservation": 90,
+      "Mean Z Score Drift": 0.13102950229635182,
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
       "Categorical Fidelity": 0,
       "Privacy Risk": 100,
       "Data Density": 100.0,
       "Coverage Score": 0,
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
       "Feature Accuracy": 90,
       "Novelty Score": 2.6095684035240136e-09,
+=======
+      "Feature Accuracy": 87,
+      "Novelty Score": 3.2141462381937096e-09,
+>>>>>>> Stashed changes
+=======
+      "Feature Accuracy": 87,
+      "Novelty Score": 3.2141462381937096e-09,
+>>>>>>> Stashed changes
       "Gen Synthetic Fidelity (JSD)": 0,
       "Gen Correlation Stability": 0,
       "Gen Distribution Consistency": 0,
@@ -4467,14 +5877,32 @@
       "ml_eval": {
         "rf": {
           "original": {
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             "accuracy": 0.8666666666666667,
             "f1": 0.7777777777777778
+=======
+            "accuracy": 0.85,
+            "f1": 0.7567567567567568
+>>>>>>> Stashed changes
+=======
+            "accuracy": 0.85,
+            "f1": 0.7567567567567568
+>>>>>>> Stashed changes
           },
           "generated": null,
           "generated_metadata": null,
           "augmented": {
             "accuracy": 0.8833333333333333,
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             "f1": 0.8205128205128205
+=======
+            "f1": 0.8108108108108109
+>>>>>>> Stashed changes
+=======
+            "f1": 0.8108108108108109
+>>>>>>> Stashed changes
           },
           "augmented_metadata": {
             "model_type": "rf",
@@ -4500,6 +5928,8 @@
               "warm_start": false
             },
             "feature_importances": [
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
               0.09283893964413278,
               0.014796170707184366,
               0.06617662361023967,
@@ -4512,6 +5942,25 @@
               0.009257311182183054,
               0.014616273898620542,
               0.3731102970578416
+=======
+=======
+>>>>>>> Stashed changes
+              0.10035416952598845,
+              0.01055036791714266,
+              0.07025796778477597,
+              0.009730475286810788,
+              0.1421293660900772,
+              0.006261185917347946,
+              0.06443823013061314,
+              0.10982301734714567,
+              0.07460770719487277,
+              0.013350060714813568,
+              0.011472057283800758,
+              0.3870253948066111
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
             ],
             "feature_names": [
               "age",
@@ -4674,8 +6123,18 @@
         },
         "dt": {
           "original": {
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             "accuracy": 0.8666666666666667,
             "f1": 0.8
+=======
+            "accuracy": 0.85,
+            "f1": 0.7804878048780488
+>>>>>>> Stashed changes
+=======
+            "accuracy": 0.85,
+            "f1": 0.7804878048780488
+>>>>>>> Stashed changes
           },
           "generated": null,
           "generated_metadata": null,
@@ -4703,16 +6162,38 @@
             "feature_importances": [
               0.01347206424414117,
               0.01594403861640435,
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
               0.07259050141626329,
+=======
+              0.08255552555151598,
+>>>>>>> Stashed changes
+=======
+              0.08255552555151598,
+>>>>>>> Stashed changes
               0.02510237032166043,
               0.0531747929408025,
               0.03986009654101088,
               0.03986009654101088,
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
               0.13212782893854425,
               0.04490408116012095,
               0.020096132006092976,
               0.0,
               0.5428679972739484
+=======
+=======
+>>>>>>> Stashed changes
+              0.11718029273566516,
+              0.059851617363000036,
+              0.020096132006092976,
+              0.0,
+              0.5329029731386957
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
             ],
             "feature_names": [
               "age",
@@ -4768,6 +6249,8 @@
               "warm_start": false
             },
             "feature_importances": [
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
               0.04091609013569321,
               0.0,
               0.055724393421814525,
@@ -4780,6 +6263,25 @@
               0.008991532394182851,
               9.886018149683662e-06,
               0.5847479799038728
+=======
+=======
+>>>>>>> Stashed changes
+              0.037604589098178764,
+              0.0,
+              0.05557448997887993,
+              0.005733134829893451,
+              0.10958682478802648,
+              0.0032595880146291754,
+              0.053173731489386436,
+              0.0960972224701588,
+              0.045004767666121305,
+              0.008991532394182895,
+              0.0,
+              0.5849741192705428
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
             ],
             "feature_names": [
               "age",
@@ -4879,8 +6381,18 @@
         },
         "mlp": {
           "original": {
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             "accuracy": 0.6666666666666666,
             "f1": 0.0
+=======
+            "accuracy": 0.4,
+            "f1": 0.5
+>>>>>>> Stashed changes
+=======
+            "accuracy": 0.4,
+            "f1": 0.5
+>>>>>>> Stashed changes
           },
           "generated": null,
           "generated_metadata": null,
@@ -4918,6 +6430,8 @@
               "warm_start": false
             },
             "loss_curve": [
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
               11.461588331221558,
               11.461588285817912,
               11.461588231751337,
@@ -4930,6 +6444,36 @@
               11.461587821049381,
               11.461587762945136,
               11.46158770544684
+=======
+=======
+>>>>>>> Stashed changes
+              24.58208173942105,
+              24.582081703441744,
+              24.582081660123226,
+              24.58208161439674,
+              24.582081567606274,
+              24.582081520392812,
+              24.582081473001857,
+              24.582081425632897,
+              24.582081378433347,
+              24.58208133139856,
+              22.26838369775295,
+              11.461588163235856,
+              11.461588115774061,
+              11.46158806746113,
+              11.461588018343985,
+              11.461587968687654,
+              11.461587918606465,
+              11.46158786823275,
+              11.461587817688537,
+              11.46158776713295,
+              11.461587716639695,
+              11.461587666418971,
+              11.461587616528552
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
             ]
           },
           "task_type": "classification",
@@ -4986,6 +6530,8 @@
         "invalid_rows": 0,
         "request_errors": 8,
         "type_errors": 0,
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
         "generation_seconds": 2.891521453857422
       },
       "fold_seconds": 4.7463085651397705
@@ -4996,12 +6542,39 @@
       "Distribution Consistency": 87,
       "Entropy Preservation": 89,
       "Mean Z Score Drift": 0.0874395004420103,
+=======
+=======
+>>>>>>> Stashed changes
+        "generation_seconds": 1.8677270412445068
+      },
+      "fold_seconds": 3.328205108642578
+    },
+    {
+      "Synthetic Fidelity (JSD)": 84,
+      "Correlation Stability": 88,
+      "Distribution Consistency": 89,
+      "Entropy Preservation": 88,
+      "Mean Z Score Drift": 0.13164395950326063,
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
       "Categorical Fidelity": 0,
       "Privacy Risk": 100,
       "Data Density": 100.0,
       "Coverage Score": 0,
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
       "Feature Accuracy": 92,
       "Novelty Score": 4.2781371129871014e-09,
+=======
+      "Feature Accuracy": 89,
+      "Novelty Score": 1.2421812367026124e-08,
+>>>>>>> Stashed changes
+=======
+      "Feature Accuracy": 89,
+      "Novelty Score": 1.2421812367026124e-08,
+>>>>>>> Stashed changes
       "Gen Synthetic Fidelity (JSD)": 0,
       "Gen Correlation Stability": 0,
       "Gen Distribution Consistency": 0,
@@ -5017,14 +6590,34 @@
       "ml_eval": {
         "rf": {
           "original": {
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             "accuracy": 0.8166666666666667,
             "f1": 0.6451612903225806
+=======
+            "accuracy": 0.8333333333333334,
+            "f1": 0.6875
+>>>>>>> Stashed changes
+=======
+            "accuracy": 0.8333333333333334,
+            "f1": 0.6875
+>>>>>>> Stashed changes
           },
           "generated": null,
           "generated_metadata": null,
           "augmented": {
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             "accuracy": 0.8,
             "f1": 0.625
+=======
+            "accuracy": 0.8166666666666667,
+            "f1": 0.6451612903225806
+>>>>>>> Stashed changes
+=======
+            "accuracy": 0.8166666666666667,
+            "f1": 0.6451612903225806
+>>>>>>> Stashed changes
           },
           "augmented_metadata": {
             "model_type": "rf",
@@ -5050,6 +6643,8 @@
               "warm_start": false
             },
             "feature_importances": [
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
               0.09489507358553251,
               0.01162177710424139,
               0.06300117865931547,
@@ -5062,6 +6657,25 @@
               0.009270036404884328,
               0.014836629814336585,
               0.3654189409177813
+=======
+=======
+>>>>>>> Stashed changes
+              0.10367284461527224,
+              0.010277296356541383,
+              0.07009460803586456,
+              0.011770243826053376,
+              0.09872924064326083,
+              0.018543055742102632,
+              0.06708969180913954,
+              0.13399913707029262,
+              0.09809672598406179,
+              0.01154307812175927,
+              0.012818795473158541,
+              0.3633652823224932
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
             ],
             "feature_names": [
               "age",
@@ -5231,7 +6845,15 @@
           "generated_metadata": null,
           "augmented": {
             "accuracy": 0.7666666666666667,
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             "f1": 0.5625
+=======
+            "f1": 0.6111111111111112
+>>>>>>> Stashed changes
+=======
+            "f1": 0.6111111111111112
+>>>>>>> Stashed changes
           },
           "augmented_metadata": {
             "model_type": "dt",
@@ -5251,6 +6873,8 @@
               "splitter": "best"
             },
             "feature_importances": [
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
               0.020967068326091142,
               0.013103429370322653,
               0.03866935950046305,
@@ -5263,6 +6887,25 @@
               0.024022953845591524,
               0.025083707651760514,
               0.5803366747164529
+=======
+=======
+>>>>>>> Stashed changes
+              0.033959252031298515,
+              0.023509160211484074,
+              0.05673470987890503,
+              0.0,
+              0.04140551752916299,
+              0.020407257128024377,
+              0.037217207413343174,
+              0.11673157037772888,
+              0.08217122132402833,
+              0.0,
+              0.010075354376350326,
+              0.5777887497296743
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
             ],
             "feature_names": [
               "age",
@@ -5318,6 +6961,8 @@
               "warm_start": false
             },
             "feature_importances": [
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
               0.02990065403788659,
               0.0009968842391068079,
               0.04878458612816626,
@@ -5330,6 +6975,25 @@
               0.0034245692066303453,
               0.001619709815195411,
               0.5837090004849316
+=======
+=======
+>>>>>>> Stashed changes
+              0.029623879157217578,
+              0.0009968842391068038,
+              0.04906155818584102,
+              0.0,
+              0.07241546390416405,
+              1.0180854578955551e-05,
+              0.026455765037486114,
+              0.13200790595026954,
+              0.10053051105467556,
+              0.002369316227693598,
+              0.002036162716249739,
+              0.5844923726727171
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
             ],
             "feature_names": [
               "age",
@@ -5435,8 +7099,18 @@
           "generated": null,
           "generated_metadata": null,
           "augmented": {
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             "accuracy": 0.7166666666666667,
             "f1": 0.19047619047619047
+=======
+            "accuracy": 0.7,
+            "f1": 0.0
+>>>>>>> Stashed changes
+=======
+            "accuracy": 0.7,
+            "f1": 0.0
+>>>>>>> Stashed changes
           },
           "augmented_metadata": {
             "model_type": "mlp",
@@ -5468,6 +7142,8 @@
               "warm_start": false
             },
             "loss_curve": [
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
               11.763208531233843,
               11.763208515660857,
               11.76320849617129,
@@ -5480,6 +7156,25 @@
               24.28046035762603,
               22.853824363611317,
               12.517259600119695
+=======
+=======
+>>>>>>> Stashed changes
+              11.763209157193273,
+              11.763209119978987,
+              11.763209076641225,
+              11.763209031450803,
+              11.763208985569149,
+              11.763208939542391,
+              11.763208893698188,
+              11.763208848254845,
+              11.763208803347794,
+              11.76320875910831,
+              11.76320871557782,
+              11.763208672931341
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
             ]
           },
           "task_type": "classification",
@@ -5536,12 +7231,2025 @@
         "invalid_rows": 0,
         "request_errors": 8,
         "type_errors": 0,
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
         "generation_seconds": 3.7283236980438232
       },
       "fold_seconds": 7.85627293586731
     }
   ],
   "overall_ml": {
+=======
+=======
+>>>>>>> Stashed changes
+        "generation_seconds": 1.6591157913208008
+      },
+      "fold_seconds": 3.027276039123535
+    }
+  ],
+  "overall_ml": {
+    "ab": {
+      "accuracy": {
+        "real": 0.825,
+        "real_sd": 0.030046260628866582,
+        "display_real": "0.825 \u00b1 0.03",
+        "aug": 0.825,
+        "aug_sd": 0.030046260628866582,
+        "display_aug": "0.825 \u00b1 0.03",
+        "delta": 0.0,
+        "delta_sd": 0.0,
+        "display_delta": "+0.000 \u00b1 0.00",
+        "pvalue_aug_vs_real": null
+      },
+      "folds_metadata": [
+        {
+          "model_type": "ab",
+          "params": {
+            "estimator": null,
+            "learning_rate": 1.0,
+            "n_estimators": 50,
+            "random_state": null
+          },
+          "feature_importances": [
+            0.10207030640850986,
+            0.0,
+            0.1240800578769101,
+            0.0,
+            0.12412534979886736,
+            0.0,
+            0.09549169564626231,
+            0.07251007933572659,
+            0.05585196562580428,
+            0.0,
+            0.0,
+            0.4258705453079197
+          ],
+          "feature_names": [
+            "age",
+            "anaemia",
+            "creatinine_phosphokinase",
+            "diabetes",
+            "ejection_fraction",
+            "high_blood_pressure",
+            "platelets",
+            "serum_creatinine",
+            "serum_sodium",
+            "sex",
+            "smoking",
+            "time"
+          ]
+        },
+        {
+          "model_type": "ab",
+          "params": {
+            "estimator": null,
+            "learning_rate": 1.0,
+            "n_estimators": 50,
+            "random_state": null
+          },
+          "feature_importances": [
+            0.05670424523783752,
+            0.0,
+            0.20198675925682277,
+            0.0,
+            0.17689389713948295,
+            0.0,
+            0.05965977447840692,
+            0.09292279435871745,
+            0.04570032274074785,
+            0.01575699548605897,
+            0.0,
+            0.3503752113019253
+          ],
+          "feature_names": [
+            "age",
+            "anaemia",
+            "creatinine_phosphokinase",
+            "diabetes",
+            "ejection_fraction",
+            "high_blood_pressure",
+            "platelets",
+            "serum_creatinine",
+            "serum_sodium",
+            "sex",
+            "smoking",
+            "time"
+          ]
+        },
+        {
+          "model_type": "ab",
+          "params": {
+            "estimator": null,
+            "learning_rate": 1.0,
+            "n_estimators": 50,
+            "random_state": null
+          },
+          "feature_importances": [
+            0.11558444437543032,
+            0.0,
+            0.18764951025899243,
+            0.0,
+            0.12805904734729254,
+            0.0,
+            0.11085234818028919,
+            0.09147302833399042,
+            0.03654745413162204,
+            0.0,
+            0.0,
+            0.32983416737238325
+          ],
+          "feature_names": [
+            "age",
+            "anaemia",
+            "creatinine_phosphokinase",
+            "diabetes",
+            "ejection_fraction",
+            "high_blood_pressure",
+            "platelets",
+            "serum_creatinine",
+            "serum_sodium",
+            "sex",
+            "smoking",
+            "time"
+          ]
+        },
+        {
+          "model_type": "ab",
+          "params": {
+            "estimator": null,
+            "learning_rate": 1.0,
+            "n_estimators": 50,
+            "random_state": null
+          },
+          "feature_importances": [
+            0.05961372532615307,
+            0.0,
+            0.11751929989677656,
+            0.0,
+            0.11978979807847617,
+            0.0,
+            0.08689608709651288,
+            0.058908745397135046,
+            0.1105292832265131,
+            0.01597988890630307,
+            0.0,
+            0.43076317207213033
+          ],
+          "feature_names": [
+            "age",
+            "anaemia",
+            "creatinine_phosphokinase",
+            "diabetes",
+            "ejection_fraction",
+            "high_blood_pressure",
+            "platelets",
+            "serum_creatinine",
+            "serum_sodium",
+            "sex",
+            "smoking",
+            "time"
+          ]
+        },
+        {
+          "model_type": "ab",
+          "params": {
+            "estimator": null,
+            "learning_rate": 1.0,
+            "n_estimators": 50,
+            "random_state": null
+          },
+          "feature_importances": [
+            0.07070675474270806,
+            0.0,
+            0.05519963667676944,
+            0.0,
+            0.12044357510045542,
+            0.0,
+            0.22011860106316225,
+            0.07868718935433043,
+            0.0692772828056188,
+            0.03739081052487032,
+            0.0,
+            0.34817614973208527
+          ],
+          "feature_names": [
+            "age",
+            "anaemia",
+            "creatinine_phosphokinase",
+            "diabetes",
+            "ejection_fraction",
+            "high_blood_pressure",
+            "platelets",
+            "serum_creatinine",
+            "serum_sodium",
+            "sex",
+            "smoking",
+            "time"
+          ]
+        },
+        {
+          "model_type": "ab",
+          "params": {
+            "estimator": null,
+            "learning_rate": 1.0,
+            "n_estimators": 50,
+            "random_state": null
+          },
+          "feature_importances": [
+            0.1169751712852041,
+            0.0,
+            0.10387983160133407,
+            0.0,
+            0.08554871672442597,
+            0.0,
+            0.08315327128468684,
+            0.14674056999039575,
+            0.021088265371033775,
+            0.018615064379210622,
+            0.0,
+            0.42399910936370894
+          ],
+          "feature_names": [
+            "age",
+            "anaemia",
+            "creatinine_phosphokinase",
+            "diabetes",
+            "ejection_fraction",
+            "high_blood_pressure",
+            "platelets",
+            "serum_creatinine",
+            "serum_sodium",
+            "sex",
+            "smoking",
+            "time"
+          ]
+        },
+        {
+          "model_type": "ab",
+          "params": {
+            "estimator": null,
+            "learning_rate": 1.0,
+            "n_estimators": 50,
+            "random_state": null
+          },
+          "feature_importances": [
+            0.08198764957876634,
+            0.0,
+            0.11410161326722969,
+            0.0,
+            0.05442714260460564,
+            0.0,
+            0.08897329314613478,
+            0.12270262925858531,
+            0.06257664113491904,
+            0.0,
+            0.0,
+            0.47523103100975916
+          ],
+          "feature_names": [
+            "age",
+            "anaemia",
+            "creatinine_phosphokinase",
+            "diabetes",
+            "ejection_fraction",
+            "high_blood_pressure",
+            "platelets",
+            "serum_creatinine",
+            "serum_sodium",
+            "sex",
+            "smoking",
+            "time"
+          ]
+        },
+        {
+          "model_type": "ab",
+          "params": {
+            "estimator": null,
+            "learning_rate": 1.0,
+            "n_estimators": 50,
+            "random_state": null
+          },
+          "feature_importances": [
+            0.10625857346174815,
+            0.0,
+            0.1491900202006446,
+            0.0,
+            0.10450140569315075,
+            0.0,
+            0.14331399937255757,
+            0.0758264664062392,
+            0.041713106073814246,
+            0.01825739230449795,
+            0.0,
+            0.36093903648734743
+          ],
+          "feature_names": [
+            "age",
+            "anaemia",
+            "creatinine_phosphokinase",
+            "diabetes",
+            "ejection_fraction",
+            "high_blood_pressure",
+            "platelets",
+            "serum_creatinine",
+            "serum_sodium",
+            "sex",
+            "smoking",
+            "time"
+          ]
+        },
+        {
+          "model_type": "ab",
+          "params": {
+            "estimator": null,
+            "learning_rate": 1.0,
+            "n_estimators": 50,
+            "random_state": null
+          },
+          "feature_importances": [
+            0.10881460083413448,
+            0.0,
+            0.11792583410282773,
+            0.0,
+            0.09915687634717277,
+            0.0,
+            0.09999004504556104,
+            0.07666598839634815,
+            0.03741184272344114,
+            0.016290030830536865,
+            0.0,
+            0.4437447817199779
+          ],
+          "feature_names": [
+            "age",
+            "anaemia",
+            "creatinine_phosphokinase",
+            "diabetes",
+            "ejection_fraction",
+            "high_blood_pressure",
+            "platelets",
+            "serum_creatinine",
+            "serum_sodium",
+            "sex",
+            "smoking",
+            "time"
+          ]
+        },
+        {
+          "model_type": "ab",
+          "params": {
+            "estimator": null,
+            "learning_rate": 1.0,
+            "n_estimators": 50,
+            "random_state": null
+          },
+          "feature_importances": [
+            0.09492822654999876,
+            0.0,
+            0.13483138276281312,
+            0.0,
+            0.0912154732767691,
+            0.0,
+            0.12079298744191251,
+            0.1827057442780242,
+            0.04692239626711913,
+            0.0,
+            0.0,
+            0.3286037894233632
+          ],
+          "feature_names": [
+            "age",
+            "anaemia",
+            "creatinine_phosphokinase",
+            "diabetes",
+            "ejection_fraction",
+            "high_blood_pressure",
+            "platelets",
+            "serum_creatinine",
+            "serum_sodium",
+            "sex",
+            "smoking",
+            "time"
+          ]
+        }
+      ],
+      "f1": {
+        "real": 0.7417404771442427,
+        "real_sd": 0.0645348462562029,
+        "display_real": "0.742 \u00b1 0.06",
+        "aug": 0.7417404771442427,
+        "aug_sd": 0.0645348462562029,
+        "display_aug": "0.742 \u00b1 0.06",
+        "delta": 0.0,
+        "delta_sd": 0.0,
+        "display_delta": "+0.000 \u00b1 0.00",
+        "pvalue_aug_vs_real": null
+      },
+      "error": "Empty dataset or no targets"
+    },
+    "lr": {
+      "accuracy": {
+        "real": 0.805,
+        "real_sd": 0.035784850922639805,
+        "display_real": "0.805 \u00b1 0.04",
+        "aug": 0.805,
+        "aug_sd": 0.035784850922639805,
+        "display_aug": "0.805 \u00b1 0.04",
+        "delta": 0.0,
+        "delta_sd": 0.0,
+        "display_delta": "+0.000 \u00b1 0.00",
+        "pvalue_aug_vs_real": null
+      },
+      "folds_metadata": [
+        {
+          "model_type": "lr",
+          "params": {
+            "C": 1.0,
+            "class_weight": null,
+            "dual": false,
+            "fit_intercept": true,
+            "intercept_scaling": 1,
+            "l1_ratio": 0.0,
+            "max_iter": 100,
+            "n_jobs": null,
+            "penalty": "deprecated",
+            "random_state": null,
+            "solver": "lbfgs",
+            "tol": 0.0001,
+            "verbose": 0,
+            "warm_start": false
+          }
+        },
+        {
+          "model_type": "lr",
+          "params": {
+            "C": 1.0,
+            "class_weight": null,
+            "dual": false,
+            "fit_intercept": true,
+            "intercept_scaling": 1,
+            "l1_ratio": 0.0,
+            "max_iter": 100,
+            "n_jobs": null,
+            "penalty": "deprecated",
+            "random_state": null,
+            "solver": "lbfgs",
+            "tol": 0.0001,
+            "verbose": 0,
+            "warm_start": false
+          }
+        },
+        {
+          "model_type": "lr",
+          "params": {
+            "C": 1.0,
+            "class_weight": null,
+            "dual": false,
+            "fit_intercept": true,
+            "intercept_scaling": 1,
+            "l1_ratio": 0.0,
+            "max_iter": 100,
+            "n_jobs": null,
+            "penalty": "deprecated",
+            "random_state": null,
+            "solver": "lbfgs",
+            "tol": 0.0001,
+            "verbose": 0,
+            "warm_start": false
+          }
+        },
+        {
+          "model_type": "lr",
+          "params": {
+            "C": 1.0,
+            "class_weight": null,
+            "dual": false,
+            "fit_intercept": true,
+            "intercept_scaling": 1,
+            "l1_ratio": 0.0,
+            "max_iter": 100,
+            "n_jobs": null,
+            "penalty": "deprecated",
+            "random_state": null,
+            "solver": "lbfgs",
+            "tol": 0.0001,
+            "verbose": 0,
+            "warm_start": false
+          }
+        },
+        {
+          "model_type": "lr",
+          "params": {
+            "C": 1.0,
+            "class_weight": null,
+            "dual": false,
+            "fit_intercept": true,
+            "intercept_scaling": 1,
+            "l1_ratio": 0.0,
+            "max_iter": 100,
+            "n_jobs": null,
+            "penalty": "deprecated",
+            "random_state": null,
+            "solver": "lbfgs",
+            "tol": 0.0001,
+            "verbose": 0,
+            "warm_start": false
+          }
+        },
+        {
+          "model_type": "lr",
+          "params": {
+            "C": 1.0,
+            "class_weight": null,
+            "dual": false,
+            "fit_intercept": true,
+            "intercept_scaling": 1,
+            "l1_ratio": 0.0,
+            "max_iter": 100,
+            "n_jobs": null,
+            "penalty": "deprecated",
+            "random_state": null,
+            "solver": "lbfgs",
+            "tol": 0.0001,
+            "verbose": 0,
+            "warm_start": false
+          }
+        },
+        {
+          "model_type": "lr",
+          "params": {
+            "C": 1.0,
+            "class_weight": null,
+            "dual": false,
+            "fit_intercept": true,
+            "intercept_scaling": 1,
+            "l1_ratio": 0.0,
+            "max_iter": 100,
+            "n_jobs": null,
+            "penalty": "deprecated",
+            "random_state": null,
+            "solver": "lbfgs",
+            "tol": 0.0001,
+            "verbose": 0,
+            "warm_start": false
+          }
+        },
+        {
+          "model_type": "lr",
+          "params": {
+            "C": 1.0,
+            "class_weight": null,
+            "dual": false,
+            "fit_intercept": true,
+            "intercept_scaling": 1,
+            "l1_ratio": 0.0,
+            "max_iter": 100,
+            "n_jobs": null,
+            "penalty": "deprecated",
+            "random_state": null,
+            "solver": "lbfgs",
+            "tol": 0.0001,
+            "verbose": 0,
+            "warm_start": false
+          }
+        },
+        {
+          "model_type": "lr",
+          "params": {
+            "C": 1.0,
+            "class_weight": null,
+            "dual": false,
+            "fit_intercept": true,
+            "intercept_scaling": 1,
+            "l1_ratio": 0.0,
+            "max_iter": 100,
+            "n_jobs": null,
+            "penalty": "deprecated",
+            "random_state": null,
+            "solver": "lbfgs",
+            "tol": 0.0001,
+            "verbose": 0,
+            "warm_start": false
+          }
+        },
+        {
+          "model_type": "lr",
+          "params": {
+            "C": 1.0,
+            "class_weight": null,
+            "dual": false,
+            "fit_intercept": true,
+            "intercept_scaling": 1,
+            "l1_ratio": 0.0,
+            "max_iter": 100,
+            "n_jobs": null,
+            "penalty": "deprecated",
+            "random_state": null,
+            "solver": "lbfgs",
+            "tol": 0.0001,
+            "verbose": 0,
+            "warm_start": false
+          }
+        }
+      ],
+      "f1": {
+        "real": 0.6894302795561282,
+        "real_sd": 0.08352326977188368,
+        "display_real": "0.689 \u00b1 0.08",
+        "aug": 0.6894302795561282,
+        "aug_sd": 0.08352326977188368,
+        "display_aug": "0.689 \u00b1 0.08",
+        "delta": 0.0,
+        "delta_sd": 0.0,
+        "display_delta": "+0.000 \u00b1 0.00",
+        "pvalue_aug_vs_real": null
+      },
+      "error": "Empty dataset or no targets"
+    },
+    "dt": {
+      "accuracy": {
+        "real": 0.7883333333333333,
+        "real_sd": 0.044752405273658515,
+        "display_real": "0.788 \u00b1 0.04",
+        "aug": 0.7966666666666666,
+        "aug_sd": 0.034801021696368506,
+        "display_aug": "0.797 \u00b1 0.03",
+        "delta": 0.008333333333333337,
+        "delta_sd": 0.01707825127659933,
+        "display_delta": "+0.008 \u00b1 0.02",
+        "pvalue_aug_vs_real": 0.234375,
+        "qvalue_aug_vs_real": 0.46875
+      },
+      "folds_metadata": [
+        {
+          "model_type": "dt",
+          "params": {
+            "ccp_alpha": 0.0,
+            "class_weight": null,
+            "criterion": "gini",
+            "max_depth": 7,
+            "max_features": null,
+            "max_leaf_nodes": null,
+            "min_impurity_decrease": 0.0,
+            "min_samples_leaf": 1,
+            "min_samples_split": 2,
+            "min_weight_fraction_leaf": 0.0,
+            "monotonic_cst": null,
+            "random_state": null,
+            "splitter": "best"
+          },
+          "feature_importances": [
+            0.017514107258019336,
+            0.0,
+            0.041221386432665964,
+            0.0,
+            0.08462180400901527,
+            0.0,
+            0.07097353698374606,
+            0.12183448674063915,
+            0.03996784057937378,
+            0.0,
+            0.0,
+            0.6238668379965404
+          ],
+          "feature_names": [
+            "age",
+            "anaemia",
+            "creatinine_phosphokinase",
+            "diabetes",
+            "ejection_fraction",
+            "high_blood_pressure",
+            "platelets",
+            "serum_creatinine",
+            "serum_sodium",
+            "sex",
+            "smoking",
+            "time"
+          ]
+        },
+        {
+          "model_type": "dt",
+          "params": {
+            "ccp_alpha": 0.0,
+            "class_weight": null,
+            "criterion": "gini",
+            "max_depth": 7,
+            "max_features": null,
+            "max_leaf_nodes": null,
+            "min_impurity_decrease": 0.0,
+            "min_samples_leaf": 1,
+            "min_samples_split": 2,
+            "min_weight_fraction_leaf": 0.0,
+            "monotonic_cst": null,
+            "random_state": null,
+            "splitter": "best"
+          },
+          "feature_importances": [
+            0.050219656455712226,
+            0.0,
+            0.05722673099498803,
+            0.04894486675736349,
+            0.12665288990144635,
+            0.010560022622307874,
+            0.05587211969257438,
+            0.06367023163624828,
+            0.07228537614254295,
+            0.0,
+            0.011926613785194771,
+            0.5026414920116214
+          ],
+          "feature_names": [
+            "age",
+            "anaemia",
+            "creatinine_phosphokinase",
+            "diabetes",
+            "ejection_fraction",
+            "high_blood_pressure",
+            "platelets",
+            "serum_creatinine",
+            "serum_sodium",
+            "sex",
+            "smoking",
+            "time"
+          ]
+        },
+        {
+          "model_type": "dt",
+          "params": {
+            "ccp_alpha": 0.0,
+            "class_weight": null,
+            "criterion": "gini",
+            "max_depth": 7,
+            "max_features": null,
+            "max_leaf_nodes": null,
+            "min_impurity_decrease": 0.0,
+            "min_samples_leaf": 1,
+            "min_samples_split": 2,
+            "min_weight_fraction_leaf": 0.0,
+            "monotonic_cst": null,
+            "random_state": null,
+            "splitter": "best"
+          },
+          "feature_importances": [
+            0.06124108324435325,
+            0.016179404911587498,
+            0.10636628299141453,
+            0.01985654239149375,
+            0.10639680519568033,
+            0.018910992753803566,
+            0.03115675661061392,
+            0.1173453034433836,
+            0.051315037204707564,
+            0.016853546782903645,
+            0.006741418713161459,
+            0.44763682575689695
+          ],
+          "feature_names": [
+            "age",
+            "anaemia",
+            "creatinine_phosphokinase",
+            "diabetes",
+            "ejection_fraction",
+            "high_blood_pressure",
+            "platelets",
+            "serum_creatinine",
+            "serum_sodium",
+            "sex",
+            "smoking",
+            "time"
+          ]
+        },
+        {
+          "model_type": "dt",
+          "params": {
+            "ccp_alpha": 0.0,
+            "class_weight": null,
+            "criterion": "gini",
+            "max_depth": 7,
+            "max_features": null,
+            "max_leaf_nodes": null,
+            "min_impurity_decrease": 0.0,
+            "min_samples_leaf": 1,
+            "min_samples_split": 2,
+            "min_weight_fraction_leaf": 0.0,
+            "monotonic_cst": null,
+            "random_state": null,
+            "splitter": "best"
+          },
+          "feature_importances": [
+            0.020476185594981454,
+            0.01590176538427418,
+            0.0750191542881843,
+            0.031980217050595845,
+            0.047344723127322394,
+            0.01413490256379927,
+            0.08383861163528193,
+            0.11461856784519339,
+            0.07570680642656277,
+            0.03975441346068545,
+            0.0,
+            0.481224652623119
+          ],
+          "feature_names": [
+            "age",
+            "anaemia",
+            "creatinine_phosphokinase",
+            "diabetes",
+            "ejection_fraction",
+            "high_blood_pressure",
+            "platelets",
+            "serum_creatinine",
+            "serum_sodium",
+            "sex",
+            "smoking",
+            "time"
+          ]
+        },
+        {
+          "model_type": "dt",
+          "params": {
+            "ccp_alpha": 0.0,
+            "class_weight": null,
+            "criterion": "gini",
+            "max_depth": 7,
+            "max_features": null,
+            "max_leaf_nodes": null,
+            "min_impurity_decrease": 0.0,
+            "min_samples_leaf": 1,
+            "min_samples_split": 2,
+            "min_weight_fraction_leaf": 0.0,
+            "monotonic_cst": null,
+            "random_state": null,
+            "splitter": "best"
+          },
+          "feature_importances": [
+            0.06155835113052468,
+            0.017220606039124054,
+            0.06580352384906257,
+            0.03444121207824812,
+            0.06150024382526501,
+            0.0285013508647531,
+            0.05396480288130077,
+            0.12005626167179367,
+            0.051279137983169444,
+            0.024370682230807142,
+            0.0,
+            0.4813038274459514
+          ],
+          "feature_names": [
+            "age",
+            "anaemia",
+            "creatinine_phosphokinase",
+            "diabetes",
+            "ejection_fraction",
+            "high_blood_pressure",
+            "platelets",
+            "serum_creatinine",
+            "serum_sodium",
+            "sex",
+            "smoking",
+            "time"
+          ]
+        },
+        {
+          "model_type": "dt",
+          "params": {
+            "ccp_alpha": 0.0,
+            "class_weight": null,
+            "criterion": "gini",
+            "max_depth": 7,
+            "max_features": null,
+            "max_leaf_nodes": null,
+            "min_impurity_decrease": 0.0,
+            "min_samples_leaf": 1,
+            "min_samples_split": 2,
+            "min_weight_fraction_leaf": 0.0,
+            "monotonic_cst": null,
+            "random_state": null,
+            "splitter": "best"
+          },
+          "feature_importances": [
+            0.01240884982167724,
+            0.015748723299104938,
+            0.08927663656135737,
+            0.06278184228598815,
+            0.033548452657499395,
+            0.03696993956279119,
+            0.013998865154759942,
+            0.09832123930243786,
+            0.07633734303329608,
+            0.0,
+            0.007874361649552478,
+            0.5527337466715354
+          ],
+          "feature_names": [
+            "age",
+            "anaemia",
+            "creatinine_phosphokinase",
+            "diabetes",
+            "ejection_fraction",
+            "high_blood_pressure",
+            "platelets",
+            "serum_creatinine",
+            "serum_sodium",
+            "sex",
+            "smoking",
+            "time"
+          ]
+        },
+        {
+          "model_type": "dt",
+          "params": {
+            "ccp_alpha": 0.0,
+            "class_weight": null,
+            "criterion": "gini",
+            "max_depth": 7,
+            "max_features": null,
+            "max_leaf_nodes": null,
+            "min_impurity_decrease": 0.0,
+            "min_samples_leaf": 1,
+            "min_samples_split": 2,
+            "min_weight_fraction_leaf": 0.0,
+            "monotonic_cst": null,
+            "random_state": null,
+            "splitter": "best"
+          },
+          "feature_importances": [
+            0.032418684355903914,
+            0.0,
+            0.06865072457519768,
+            0.010204472626592498,
+            0.011141541516355115,
+            0.036444545094973205,
+            0.015306708939888747,
+            0.14383580903607923,
+            0.10258070034338303,
+            0.0,
+            0.0,
+            0.5794168135116265
+          ],
+          "feature_names": [
+            "age",
+            "anaemia",
+            "creatinine_phosphokinase",
+            "diabetes",
+            "ejection_fraction",
+            "high_blood_pressure",
+            "platelets",
+            "serum_creatinine",
+            "serum_sodium",
+            "sex",
+            "smoking",
+            "time"
+          ]
+        },
+        {
+          "model_type": "dt",
+          "params": {
+            "ccp_alpha": 0.0,
+            "class_weight": null,
+            "criterion": "gini",
+            "max_depth": 7,
+            "max_features": null,
+            "max_leaf_nodes": null,
+            "min_impurity_decrease": 0.0,
+            "min_samples_leaf": 1,
+            "min_samples_split": 2,
+            "min_weight_fraction_leaf": 0.0,
+            "monotonic_cst": null,
+            "random_state": null,
+            "splitter": "best"
+          },
+          "feature_importances": [
+            0.05603956929495138,
+            0.04122873356370822,
+            0.07001358662994533,
+            0.07310800401485676,
+            0.08457894933290484,
+            0.0372487864836916,
+            0.04295284424000875,
+            0.08019517669743463,
+            0.04094173874305696,
+            0.013193194740386632,
+            0.0,
+            0.46049941625905483
+          ],
+          "feature_names": [
+            "age",
+            "anaemia",
+            "creatinine_phosphokinase",
+            "diabetes",
+            "ejection_fraction",
+            "high_blood_pressure",
+            "platelets",
+            "serum_creatinine",
+            "serum_sodium",
+            "sex",
+            "smoking",
+            "time"
+          ]
+        },
+        {
+          "model_type": "dt",
+          "params": {
+            "ccp_alpha": 0.0,
+            "class_weight": null,
+            "criterion": "gini",
+            "max_depth": 7,
+            "max_features": null,
+            "max_leaf_nodes": null,
+            "min_impurity_decrease": 0.0,
+            "min_samples_leaf": 1,
+            "min_samples_split": 2,
+            "min_weight_fraction_leaf": 0.0,
+            "monotonic_cst": null,
+            "random_state": null,
+            "splitter": "best"
+          },
+          "feature_importances": [
+            0.01347206424414117,
+            0.01594403861640435,
+            0.08255552555151598,
+            0.02510237032166043,
+            0.0531747929408025,
+            0.03986009654101088,
+            0.03986009654101088,
+            0.11718029273566516,
+            0.059851617363000036,
+            0.020096132006092976,
+            0.0,
+            0.5329029731386957
+          ],
+          "feature_names": [
+            "age",
+            "anaemia",
+            "creatinine_phosphokinase",
+            "diabetes",
+            "ejection_fraction",
+            "high_blood_pressure",
+            "platelets",
+            "serum_creatinine",
+            "serum_sodium",
+            "sex",
+            "smoking",
+            "time"
+          ]
+        },
+        {
+          "model_type": "dt",
+          "params": {
+            "ccp_alpha": 0.0,
+            "class_weight": null,
+            "criterion": "gini",
+            "max_depth": 7,
+            "max_features": null,
+            "max_leaf_nodes": null,
+            "min_impurity_decrease": 0.0,
+            "min_samples_leaf": 1,
+            "min_samples_split": 2,
+            "min_weight_fraction_leaf": 0.0,
+            "monotonic_cst": null,
+            "random_state": null,
+            "splitter": "best"
+          },
+          "feature_importances": [
+            0.033959252031298515,
+            0.023509160211484074,
+            0.05673470987890503,
+            0.0,
+            0.04140551752916299,
+            0.020407257128024377,
+            0.037217207413343174,
+            0.11673157037772888,
+            0.08217122132402833,
+            0.0,
+            0.010075354376350326,
+            0.5777887497296743
+          ],
+          "feature_names": [
+            "age",
+            "anaemia",
+            "creatinine_phosphokinase",
+            "diabetes",
+            "ejection_fraction",
+            "high_blood_pressure",
+            "platelets",
+            "serum_creatinine",
+            "serum_sodium",
+            "sex",
+            "smoking",
+            "time"
+          ]
+        }
+      ],
+      "f1": {
+        "real": 0.6811037522814759,
+        "real_sd": 0.08489526116255135,
+        "display_real": "0.681 \u00b1 0.08",
+        "aug": 0.7008226464531603,
+        "aug_sd": 0.07061292019215892,
+        "display_aug": "0.701 \u00b1 0.07",
+        "delta": 0.019718894171684355,
+        "delta_sd": 0.037062510862542614,
+        "display_delta": "+0.020 \u00b1 0.04",
+        "pvalue_aug_vs_real": 0.1484375,
+        "qvalue_aug_vs_real": 0.46875
+      },
+      "error": "Empty dataset or no targets"
+    },
+    "gb": {
+      "accuracy": {
+        "real": 0.8300000000000001,
+        "real_sd": 0.05153208277913436,
+        "display_real": "0.830 \u00b1 0.05",
+        "aug": 0.8283333333333334,
+        "aug_sd": 0.05273097339852125,
+        "display_aug": "0.828 \u00b1 0.05",
+        "delta": -0.0016666666666666718,
+        "delta_sd": 0.005000000000000016,
+        "display_delta": "-0.002 \u00b1 0.01",
+        "pvalue_aug_vs_real": 1.0,
+        "qvalue_aug_vs_real": 1.0
+      },
+      "folds_metadata": [
+        {
+          "model_type": "gb",
+          "params": {
+            "ccp_alpha": 0.0,
+            "criterion": "friedman_mse",
+            "init": null,
+            "learning_rate": 0.1,
+            "loss": "log_loss",
+            "max_depth": 3,
+            "max_features": null,
+            "max_leaf_nodes": null,
+            "min_impurity_decrease": 0.0,
+            "min_samples_leaf": 1,
+            "min_samples_split": 2,
+            "min_weight_fraction_leaf": 0.0,
+            "n_estimators": 50,
+            "n_iter_no_change": null,
+            "random_state": null,
+            "subsample": 1.0,
+            "tol": 0.0001,
+            "validation_fraction": 0.1,
+            "verbose": 0,
+            "warm_start": false
+          },
+          "feature_importances": [
+            0.05200988168841491,
+            0.009444581307043537,
+            0.05872582411118604,
+            0.0,
+            0.11809814830742914,
+            0.0,
+            0.04406437018683232,
+            0.07779753302516192,
+            0.049930370766099866,
+            0.0011459544416736844,
+            0.0,
+            0.5887833361661586
+          ],
+          "feature_names": [
+            "age",
+            "anaemia",
+            "creatinine_phosphokinase",
+            "diabetes",
+            "ejection_fraction",
+            "high_blood_pressure",
+            "platelets",
+            "serum_creatinine",
+            "serum_sodium",
+            "sex",
+            "smoking",
+            "time"
+          ]
+        },
+        {
+          "model_type": "gb",
+          "params": {
+            "ccp_alpha": 0.0,
+            "criterion": "friedman_mse",
+            "init": null,
+            "learning_rate": 0.1,
+            "loss": "log_loss",
+            "max_depth": 3,
+            "max_features": null,
+            "max_leaf_nodes": null,
+            "min_impurity_decrease": 0.0,
+            "min_samples_leaf": 1,
+            "min_samples_split": 2,
+            "min_weight_fraction_leaf": 0.0,
+            "n_estimators": 50,
+            "n_iter_no_change": null,
+            "random_state": null,
+            "subsample": 1.0,
+            "tol": 0.0001,
+            "validation_fraction": 0.1,
+            "verbose": 0,
+            "warm_start": false
+          },
+          "feature_importances": [
+            0.04663669013225549,
+            0.011358117493786448,
+            0.060723724308331825,
+            0.0020563169894812386,
+            0.14737006379081294,
+            0.0019137309047217881,
+            0.02854237715656428,
+            0.08795579017601422,
+            0.021797744937443877,
+            0.0023347131303430614,
+            0.00039071435879191465,
+            0.5889200166214529
+          ],
+          "feature_names": [
+            "age",
+            "anaemia",
+            "creatinine_phosphokinase",
+            "diabetes",
+            "ejection_fraction",
+            "high_blood_pressure",
+            "platelets",
+            "serum_creatinine",
+            "serum_sodium",
+            "sex",
+            "smoking",
+            "time"
+          ]
+        },
+        {
+          "model_type": "gb",
+          "params": {
+            "ccp_alpha": 0.0,
+            "criterion": "friedman_mse",
+            "init": null,
+            "learning_rate": 0.1,
+            "loss": "log_loss",
+            "max_depth": 3,
+            "max_features": null,
+            "max_leaf_nodes": null,
+            "min_impurity_decrease": 0.0,
+            "min_samples_leaf": 1,
+            "min_samples_split": 2,
+            "min_weight_fraction_leaf": 0.0,
+            "n_estimators": 50,
+            "n_iter_no_change": null,
+            "random_state": null,
+            "subsample": 1.0,
+            "tol": 0.0001,
+            "validation_fraction": 0.1,
+            "verbose": 0,
+            "warm_start": false
+          },
+          "feature_importances": [
+            0.0581199396821683,
+            0.0,
+            0.061925065529808136,
+            0.0,
+            0.13306234279785478,
+            0.004882416360875313,
+            0.025870099015390453,
+            0.13389657937008131,
+            0.0478512868242227,
+            0.0014495105478500258,
+            0.0034447622421584414,
+            0.5294979976295905
+          ],
+          "feature_names": [
+            "age",
+            "anaemia",
+            "creatinine_phosphokinase",
+            "diabetes",
+            "ejection_fraction",
+            "high_blood_pressure",
+            "platelets",
+            "serum_creatinine",
+            "serum_sodium",
+            "sex",
+            "smoking",
+            "time"
+          ]
+        },
+        {
+          "model_type": "gb",
+          "params": {
+            "ccp_alpha": 0.0,
+            "criterion": "friedman_mse",
+            "init": null,
+            "learning_rate": 0.1,
+            "loss": "log_loss",
+            "max_depth": 3,
+            "max_features": null,
+            "max_leaf_nodes": null,
+            "min_impurity_decrease": 0.0,
+            "min_samples_leaf": 1,
+            "min_samples_split": 2,
+            "min_weight_fraction_leaf": 0.0,
+            "n_estimators": 50,
+            "n_iter_no_change": null,
+            "random_state": null,
+            "subsample": 1.0,
+            "tol": 0.0001,
+            "validation_fraction": 0.1,
+            "verbose": 0,
+            "warm_start": false
+          },
+          "feature_importances": [
+            0.04991895315410455,
+            0.0037109078289144243,
+            0.0586492516615078,
+            0.0016006719913063325,
+            0.07886346558755326,
+            0.0029852772493354153,
+            0.03459271251203367,
+            0.12030662884132337,
+            0.06992087178907765,
+            0.0,
+            0.0003658421848672316,
+            0.5790854171999764
+          ],
+          "feature_names": [
+            "age",
+            "anaemia",
+            "creatinine_phosphokinase",
+            "diabetes",
+            "ejection_fraction",
+            "high_blood_pressure",
+            "platelets",
+            "serum_creatinine",
+            "serum_sodium",
+            "sex",
+            "smoking",
+            "time"
+          ]
+        },
+        {
+          "model_type": "gb",
+          "params": {
+            "ccp_alpha": 0.0,
+            "criterion": "friedman_mse",
+            "init": null,
+            "learning_rate": 0.1,
+            "loss": "log_loss",
+            "max_depth": 3,
+            "max_features": null,
+            "max_leaf_nodes": null,
+            "min_impurity_decrease": 0.0,
+            "min_samples_leaf": 1,
+            "min_samples_split": 2,
+            "min_weight_fraction_leaf": 0.0,
+            "n_estimators": 50,
+            "n_iter_no_change": null,
+            "random_state": null,
+            "subsample": 1.0,
+            "tol": 0.0001,
+            "validation_fraction": 0.1,
+            "verbose": 0,
+            "warm_start": false
+          },
+          "feature_importances": [
+            0.05917204211176123,
+            0.0034818578256178563,
+            0.01862647855637528,
+            0.0002975432367751274,
+            0.09875550156078577,
+            0.007847739475412329,
+            0.05192205622557585,
+            0.1417929889810609,
+            0.03659476297934468,
+            0.011997793960891283,
+            0.0021439921459478492,
+            0.5673672429404518
+          ],
+          "feature_names": [
+            "age",
+            "anaemia",
+            "creatinine_phosphokinase",
+            "diabetes",
+            "ejection_fraction",
+            "high_blood_pressure",
+            "platelets",
+            "serum_creatinine",
+            "serum_sodium",
+            "sex",
+            "smoking",
+            "time"
+          ]
+        },
+        {
+          "model_type": "gb",
+          "params": {
+            "ccp_alpha": 0.0,
+            "criterion": "friedman_mse",
+            "init": null,
+            "learning_rate": 0.1,
+            "loss": "log_loss",
+            "max_depth": 3,
+            "max_features": null,
+            "max_leaf_nodes": null,
+            "min_impurity_decrease": 0.0,
+            "min_samples_leaf": 1,
+            "min_samples_split": 2,
+            "min_weight_fraction_leaf": 0.0,
+            "n_estimators": 50,
+            "n_iter_no_change": null,
+            "random_state": null,
+            "subsample": 1.0,
+            "tol": 0.0001,
+            "validation_fraction": 0.1,
+            "verbose": 0,
+            "warm_start": false
+          },
+          "feature_importances": [
+            0.023898133212728243,
+            0.0,
+            0.05447352803423991,
+            0.0,
+            0.07580939753978644,
+            0.005367775174283409,
+            0.040165258393297286,
+            0.11411216964143739,
+            0.06422253237218228,
+            0.002022239412807524,
+            0.0009343145100216251,
+            0.6189946517092159
+          ],
+          "feature_names": [
+            "age",
+            "anaemia",
+            "creatinine_phosphokinase",
+            "diabetes",
+            "ejection_fraction",
+            "high_blood_pressure",
+            "platelets",
+            "serum_creatinine",
+            "serum_sodium",
+            "sex",
+            "smoking",
+            "time"
+          ]
+        },
+        {
+          "model_type": "gb",
+          "params": {
+            "ccp_alpha": 0.0,
+            "criterion": "friedman_mse",
+            "init": null,
+            "learning_rate": 0.1,
+            "loss": "log_loss",
+            "max_depth": 3,
+            "max_features": null,
+            "max_leaf_nodes": null,
+            "min_impurity_decrease": 0.0,
+            "min_samples_leaf": 1,
+            "min_samples_split": 2,
+            "min_weight_fraction_leaf": 0.0,
+            "n_estimators": 50,
+            "n_iter_no_change": null,
+            "random_state": null,
+            "subsample": 1.0,
+            "tol": 0.0001,
+            "validation_fraction": 0.1,
+            "verbose": 0,
+            "warm_start": false
+          },
+          "feature_importances": [
+            0.04163192185536872,
+            5.337510980371623e-07,
+            0.0686986429102347,
+            0.0,
+            0.06164675206576324,
+            0.002102982407425639,
+            0.05234408108809389,
+            0.15269992719497186,
+            0.04858921745858555,
+            0.0056278724923108795,
+            0.0,
+            0.5666580687761475
+          ],
+          "feature_names": [
+            "age",
+            "anaemia",
+            "creatinine_phosphokinase",
+            "diabetes",
+            "ejection_fraction",
+            "high_blood_pressure",
+            "platelets",
+            "serum_creatinine",
+            "serum_sodium",
+            "sex",
+            "smoking",
+            "time"
+          ]
+        },
+        {
+          "model_type": "gb",
+          "params": {
+            "ccp_alpha": 0.0,
+            "criterion": "friedman_mse",
+            "init": null,
+            "learning_rate": 0.1,
+            "loss": "log_loss",
+            "max_depth": 3,
+            "max_features": null,
+            "max_leaf_nodes": null,
+            "min_impurity_decrease": 0.0,
+            "min_samples_leaf": 1,
+            "min_samples_split": 2,
+            "min_weight_fraction_leaf": 0.0,
+            "n_estimators": 50,
+            "n_iter_no_change": null,
+            "random_state": null,
+            "subsample": 1.0,
+            "tol": 0.0001,
+            "validation_fraction": 0.1,
+            "verbose": 0,
+            "warm_start": false
+          },
+          "feature_importances": [
+            0.04998781073323426,
+            0.004709465343327024,
+            0.06690527875846182,
+            0.009418403386741958,
+            0.10736601903778037,
+            0.004043274610218529,
+            0.0481329256463393,
+            0.11117792714029832,
+            0.032757351741481706,
+            0.0021569607515930355,
+            0.00037706697944258954,
+            0.5629675158710811
+          ],
+          "feature_names": [
+            "age",
+            "anaemia",
+            "creatinine_phosphokinase",
+            "diabetes",
+            "ejection_fraction",
+            "high_blood_pressure",
+            "platelets",
+            "serum_creatinine",
+            "serum_sodium",
+            "sex",
+            "smoking",
+            "time"
+          ]
+        },
+        {
+          "model_type": "gb",
+          "params": {
+            "ccp_alpha": 0.0,
+            "criterion": "friedman_mse",
+            "init": null,
+            "learning_rate": 0.1,
+            "loss": "log_loss",
+            "max_depth": 3,
+            "max_features": null,
+            "max_leaf_nodes": null,
+            "min_impurity_decrease": 0.0,
+            "min_samples_leaf": 1,
+            "min_samples_split": 2,
+            "min_weight_fraction_leaf": 0.0,
+            "n_estimators": 50,
+            "n_iter_no_change": null,
+            "random_state": null,
+            "subsample": 1.0,
+            "tol": 0.0001,
+            "validation_fraction": 0.1,
+            "verbose": 0,
+            "warm_start": false
+          },
+          "feature_importances": [
+            0.037604589098178764,
+            0.0,
+            0.05557448997887993,
+            0.005733134829893451,
+            0.10958682478802648,
+            0.0032595880146291754,
+            0.053173731489386436,
+            0.0960972224701588,
+            0.045004767666121305,
+            0.008991532394182895,
+            0.0,
+            0.5849741192705428
+          ],
+          "feature_names": [
+            "age",
+            "anaemia",
+            "creatinine_phosphokinase",
+            "diabetes",
+            "ejection_fraction",
+            "high_blood_pressure",
+            "platelets",
+            "serum_creatinine",
+            "serum_sodium",
+            "sex",
+            "smoking",
+            "time"
+          ]
+        },
+        {
+          "model_type": "gb",
+          "params": {
+            "ccp_alpha": 0.0,
+            "criterion": "friedman_mse",
+            "init": null,
+            "learning_rate": 0.1,
+            "loss": "log_loss",
+            "max_depth": 3,
+            "max_features": null,
+            "max_leaf_nodes": null,
+            "min_impurity_decrease": 0.0,
+            "min_samples_leaf": 1,
+            "min_samples_split": 2,
+            "min_weight_fraction_leaf": 0.0,
+            "n_estimators": 50,
+            "n_iter_no_change": null,
+            "random_state": null,
+            "subsample": 1.0,
+            "tol": 0.0001,
+            "validation_fraction": 0.1,
+            "verbose": 0,
+            "warm_start": false
+          },
+          "feature_importances": [
+            0.029623879157217578,
+            0.0009968842391068038,
+            0.04906155818584102,
+            0.0,
+            0.07241546390416405,
+            1.0180854578955551e-05,
+            0.026455765037486114,
+            0.13200790595026954,
+            0.10053051105467556,
+            0.002369316227693598,
+            0.002036162716249739,
+            0.5844923726727171
+          ],
+          "feature_names": [
+            "age",
+            "anaemia",
+            "creatinine_phosphokinase",
+            "diabetes",
+            "ejection_fraction",
+            "high_blood_pressure",
+            "platelets",
+            "serum_creatinine",
+            "serum_sodium",
+            "sex",
+            "smoking",
+            "time"
+          ]
+        }
+      ],
+      "f1": {
+        "real": 0.7541632435801531,
+        "real_sd": 0.07267313972830841,
+        "display_real": "0.754 \u00b1 0.07",
+        "aug": 0.7517499705786448,
+        "aug_sd": 0.0725332758910294,
+        "display_aug": "0.752 \u00b1 0.07",
+        "delta": -0.0024132730015082983,
+        "delta_sd": 0.007239819004524895,
+        "display_delta": "-0.002 \u00b1 0.01",
+        "pvalue_aug_vs_real": 1.0,
+        "qvalue_aug_vs_real": 1.0
+      },
+      "error": "Empty dataset or no targets"
+    },
+    "svm": {
+      "accuracy": {
+        "real": 0.6333333333333334,
+        "real_sd": 0.051639777949432225,
+        "display_real": "0.633 \u00b1 0.05",
+        "aug": 0.6333333333333334,
+        "aug_sd": 0.051639777949432225,
+        "display_aug": "0.633 \u00b1 0.05",
+        "delta": 0.0,
+        "delta_sd": 0.0,
+        "display_delta": "+0.000 \u00b1 0.00",
+        "pvalue_aug_vs_real": null
+      },
+      "folds_metadata": [
+        {
+          "model_type": "svm",
+          "params": {
+            "C": 1.0,
+            "break_ties": false,
+            "cache_size": 200,
+            "class_weight": null,
+            "coef0": 0.0,
+            "decision_function_shape": "ovr",
+            "degree": 3,
+            "gamma": "scale",
+            "kernel": "rbf",
+            "max_iter": -1,
+            "probability": false,
+            "random_state": null,
+            "shrinking": true,
+            "tol": 0.001,
+            "verbose": false
+          }
+        },
+        {
+          "model_type": "svm",
+          "params": {
+            "C": 1.0,
+            "break_ties": false,
+            "cache_size": 200,
+            "class_weight": null,
+            "coef0": 0.0,
+            "decision_function_shape": "ovr",
+            "degree": 3,
+            "gamma": "scale",
+            "kernel": "rbf",
+            "max_iter": -1,
+            "probability": false,
+            "random_state": null,
+            "shrinking": true,
+            "tol": 0.001,
+            "verbose": false
+          }
+        },
+        {
+          "model_type": "svm",
+          "params": {
+            "C": 1.0,
+            "break_ties": false,
+            "cache_size": 200,
+            "class_weight": null,
+            "coef0": 0.0,
+            "decision_function_shape": "ovr",
+            "degree": 3,
+            "gamma": "scale",
+            "kernel": "rbf",
+            "max_iter": -1,
+            "probability": false,
+            "random_state": null,
+            "shrinking": true,
+            "tol": 0.001,
+            "verbose": false
+          }
+        },
+        {
+          "model_type": "svm",
+          "params": {
+            "C": 1.0,
+            "break_ties": false,
+            "cache_size": 200,
+            "class_weight": null,
+            "coef0": 0.0,
+            "decision_function_shape": "ovr",
+            "degree": 3,
+            "gamma": "scale",
+            "kernel": "rbf",
+            "max_iter": -1,
+            "probability": false,
+            "random_state": null,
+            "shrinking": true,
+            "tol": 0.001,
+            "verbose": false
+          }
+        },
+        {
+          "model_type": "svm",
+          "params": {
+            "C": 1.0,
+            "break_ties": false,
+            "cache_size": 200,
+            "class_weight": null,
+            "coef0": 0.0,
+            "decision_function_shape": "ovr",
+            "degree": 3,
+            "gamma": "scale",
+            "kernel": "rbf",
+            "max_iter": -1,
+            "probability": false,
+            "random_state": null,
+            "shrinking": true,
+            "tol": 0.001,
+            "verbose": false
+          }
+        },
+        {
+          "model_type": "svm",
+          "params": {
+            "C": 1.0,
+            "break_ties": false,
+            "cache_size": 200,
+            "class_weight": null,
+            "coef0": 0.0,
+            "decision_function_shape": "ovr",
+            "degree": 3,
+            "gamma": "scale",
+            "kernel": "rbf",
+            "max_iter": -1,
+            "probability": false,
+            "random_state": null,
+            "shrinking": true,
+            "tol": 0.001,
+            "verbose": false
+          }
+        },
+        {
+          "model_type": "svm",
+          "params": {
+            "C": 1.0,
+            "break_ties": false,
+            "cache_size": 200,
+            "class_weight": null,
+            "coef0": 0.0,
+            "decision_function_shape": "ovr",
+            "degree": 3,
+            "gamma": "scale",
+            "kernel": "rbf",
+            "max_iter": -1,
+            "probability": false,
+            "random_state": null,
+            "shrinking": true,
+            "tol": 0.001,
+            "verbose": false
+          }
+        },
+        {
+          "model_type": "svm",
+          "params": {
+            "C": 1.0,
+            "break_ties": false,
+            "cache_size": 200,
+            "class_weight": null,
+            "coef0": 0.0,
+            "decision_function_shape": "ovr",
+            "degree": 3,
+            "gamma": "scale",
+            "kernel": "rbf",
+            "max_iter": -1,
+            "probability": false,
+            "random_state": null,
+            "shrinking": true,
+            "tol": 0.001,
+            "verbose": false
+          }
+        },
+        {
+          "model_type": "svm",
+          "params": {
+            "C": 1.0,
+            "break_ties": false,
+            "cache_size": 200,
+            "class_weight": null,
+            "coef0": 0.0,
+            "decision_function_shape": "ovr",
+            "degree": 3,
+            "gamma": "scale",
+            "kernel": "rbf",
+            "max_iter": -1,
+            "probability": false,
+            "random_state": null,
+            "shrinking": true,
+            "tol": 0.001,
+            "verbose": false
+          }
+        },
+        {
+          "model_type": "svm",
+          "params": {
+            "C": 1.0,
+            "break_ties": false,
+            "cache_size": 200,
+            "class_weight": null,
+            "coef0": 0.0,
+            "decision_function_shape": "ovr",
+            "degree": 3,
+            "gamma": "scale",
+            "kernel": "rbf",
+            "max_iter": -1,
+            "probability": false,
+            "random_state": null,
+            "shrinking": true,
+            "tol": 0.001,
+            "verbose": false
+          }
+        }
+      ],
+      "f1": {
+        "real": 0.0,
+        "real_sd": 0.0,
+        "display_real": "0.000 \u00b1 0.00",
+        "aug": 0.0,
+        "aug_sd": 0.0,
+        "display_aug": "0.000 \u00b1 0.00",
+        "delta": 0.0,
+        "delta_sd": 0.0,
+        "display_delta": "+0.000 \u00b1 0.00",
+        "pvalue_aug_vs_real": null
+      },
+      "error": "Empty dataset or no targets"
+    },
+    "nb": {
+      "accuracy": {
+        "real": 0.7499999999999999,
+        "real_sd": 0.04887626099538393,
+        "display_real": "0.750 \u00b1 0.05",
+        "aug": 0.7499999999999999,
+        "aug_sd": 0.04887626099538393,
+        "display_aug": "0.750 \u00b1 0.05",
+        "delta": 0.0,
+        "delta_sd": 0.0,
+        "display_delta": "+0.000 \u00b1 0.00",
+        "pvalue_aug_vs_real": null
+      },
+      "folds_metadata": [
+        {
+          "model_type": "nb",
+          "params": {
+            "priors": null,
+            "var_smoothing": 1e-09
+          }
+        },
+        {
+          "model_type": "nb",
+          "params": {
+            "priors": null,
+            "var_smoothing": 1e-09
+          }
+        },
+        {
+          "model_type": "nb",
+          "params": {
+            "priors": null,
+            "var_smoothing": 1e-09
+          }
+        },
+        {
+          "model_type": "nb",
+          "params": {
+            "priors": null,
+            "var_smoothing": 1e-09
+          }
+        },
+        {
+          "model_type": "nb",
+          "params": {
+            "priors": null,
+            "var_smoothing": 1e-09
+          }
+        },
+        {
+          "model_type": "nb",
+          "params": {
+            "priors": null,
+            "var_smoothing": 1e-09
+          }
+        },
+        {
+          "model_type": "nb",
+          "params": {
+            "priors": null,
+            "var_smoothing": 1e-09
+          }
+        },
+        {
+          "model_type": "nb",
+          "params": {
+            "priors": null,
+            "var_smoothing": 1e-09
+          }
+        },
+        {
+          "model_type": "nb",
+          "params": {
+            "priors": null,
+            "var_smoothing": 1e-09
+          }
+        },
+        {
+          "model_type": "nb",
+          "params": {
+            "priors": null,
+            "var_smoothing": 1e-09
+          }
+        }
+      ],
+      "f1": {
+        "real": 0.5667171896628354,
+        "real_sd": 0.13098909338119866,
+        "display_real": "0.567 \u00b1 0.13",
+        "aug": 0.5667171896628354,
+        "aug_sd": 0.13098909338119866,
+        "display_aug": "0.567 \u00b1 0.13",
+        "delta": 0.0,
+        "delta_sd": 0.0,
+        "display_delta": "+0.000 \u00b1 0.00",
+        "pvalue_aug_vs_real": null
+      },
+      "error": "Empty dataset or no targets"
+    },
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
     "xgb": {
       "accuracy": {
         "real": 0.835,
@@ -6301,6 +10009,8 @@
       },
       "error": "Empty dataset or no targets"
     },
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
     "gb": {
       "accuracy": {
         "real": 0.8300000000000001,
@@ -6326,20 +10036,69 @@
             "max_depth": 3,
             "max_features": null,
             "max_leaf_nodes": null,
+=======
+=======
+>>>>>>> Stashed changes
+    "rf": {
+      "accuracy": {
+        "real": 0.8400000000000001,
+        "real_sd": 0.03179797338056486,
+        "display_real": "0.840 \u00b1 0.03",
+        "aug": 0.8316666666666667,
+        "aug_sd": 0.03452052529534663,
+        "display_aug": "0.832 \u00b1 0.03",
+        "delta": -0.008333333333333337,
+        "delta_sd": 0.021408720964441887,
+        "display_delta": "-0.008 \u00b1 0.02",
+        "pvalue_aug_vs_real": 0.375,
+        "qvalue_aug_vs_real": 0.6000000000000001
+      },
+      "folds_metadata": [
+        {
+          "model_type": "rf",
+          "params": {
+            "bootstrap": true,
+            "ccp_alpha": 0.0,
+            "class_weight": null,
+            "criterion": "gini",
+            "max_depth": 7,
+            "max_features": "sqrt",
+            "max_leaf_nodes": null,
+            "max_samples": null,
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
             "min_impurity_decrease": 0.0,
             "min_samples_leaf": 1,
             "min_samples_split": 2,
             "min_weight_fraction_leaf": 0.0,
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             "n_estimators": 50,
             "n_iter_no_change": null,
             "random_state": null,
             "subsample": 1.0,
             "tol": 0.0001,
             "validation_fraction": 0.1,
+=======
+=======
+>>>>>>> Stashed changes
+            "monotonic_cst": null,
+            "n_estimators": 50,
+            "n_jobs": null,
+            "oob_score": false,
+            "random_state": null,
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
             "verbose": 0,
             "warm_start": false
           },
           "feature_importances": [
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             0.05198911464655271,
             0.009444581307043537,
             0.05876694062803416,
@@ -6352,6 +10111,25 @@
             0.0011459544416737174,
             3.0456401859507267e-05,
             0.5901431100318663
+=======
+=======
+>>>>>>> Stashed changes
+            0.07124769924211302,
+            0.008524144698932848,
+            0.07870260859334977,
+            0.008579161210769324,
+            0.127505928604042,
+            0.0112781563786785,
+            0.06681546779123258,
+            0.12194383291056723,
+            0.07260615810994299,
+            0.010612969656152356,
+            0.012696729114800435,
+            0.409487143689419
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
           ],
           "feature_names": [
             "age",
@@ -6369,6 +10147,8 @@
           ]
         },
         {
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
           "model_type": "gb",
           "params": {
             "ccp_alpha": 0.0,
@@ -6379,20 +10159,53 @@
             "max_depth": 3,
             "max_features": null,
             "max_leaf_nodes": null,
+=======
+=======
+>>>>>>> Stashed changes
+          "model_type": "rf",
+          "params": {
+            "bootstrap": true,
+            "ccp_alpha": 0.0,
+            "class_weight": null,
+            "criterion": "gini",
+            "max_depth": 7,
+            "max_features": "sqrt",
+            "max_leaf_nodes": null,
+            "max_samples": null,
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
             "min_impurity_decrease": 0.0,
             "min_samples_leaf": 1,
             "min_samples_split": 2,
             "min_weight_fraction_leaf": 0.0,
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             "n_estimators": 50,
             "n_iter_no_change": null,
             "random_state": null,
             "subsample": 1.0,
             "tol": 0.0001,
             "validation_fraction": 0.1,
+=======
+=======
+>>>>>>> Stashed changes
+            "monotonic_cst": null,
+            "n_estimators": 50,
+            "n_jobs": null,
+            "oob_score": false,
+            "random_state": null,
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
             "verbose": 0,
             "warm_start": false
           },
           "feature_importances": [
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             0.0518416065105312,
             0.013467636802593061,
             0.05810028165099344,
@@ -6405,6 +10218,25 @@
             0.0022702706322602,
             0.0003907143587918994,
             0.5881040431396467
+=======
+=======
+>>>>>>> Stashed changes
+            0.08431409533088881,
+            0.012288624786220946,
+            0.08631871991012864,
+            0.009736052316453213,
+            0.14801516429628142,
+            0.007920092053574154,
+            0.07491310380554433,
+            0.10352853050226284,
+            0.05370033673336028,
+            0.009403696432573227,
+            0.007870931098076017,
+            0.4019906527346361
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
           ],
           "feature_names": [
             "age",
@@ -6422,6 +10254,8 @@
           ]
         },
         {
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
           "model_type": "gb",
           "params": {
             "ccp_alpha": 0.0,
@@ -6432,20 +10266,53 @@
             "max_depth": 3,
             "max_features": null,
             "max_leaf_nodes": null,
+=======
+=======
+>>>>>>> Stashed changes
+          "model_type": "rf",
+          "params": {
+            "bootstrap": true,
+            "ccp_alpha": 0.0,
+            "class_weight": null,
+            "criterion": "gini",
+            "max_depth": 7,
+            "max_features": "sqrt",
+            "max_leaf_nodes": null,
+            "max_samples": null,
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
             "min_impurity_decrease": 0.0,
             "min_samples_leaf": 1,
             "min_samples_split": 2,
             "min_weight_fraction_leaf": 0.0,
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             "n_estimators": 50,
             "n_iter_no_change": null,
             "random_state": null,
             "subsample": 1.0,
             "tol": 0.0001,
             "validation_fraction": 0.1,
+=======
+=======
+>>>>>>> Stashed changes
+            "monotonic_cst": null,
+            "n_estimators": 50,
+            "n_jobs": null,
+            "oob_score": false,
+            "random_state": null,
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
             "verbose": 0,
             "warm_start": false
           },
           "feature_importances": [
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             0.0608355124200245,
             0.0,
             0.0632285666226367,
@@ -6458,6 +10325,25 @@
             0.0014495105478500314,
             0.004397800894256093,
             0.5289523457661998
+=======
+=======
+>>>>>>> Stashed changes
+            0.11092694928164987,
+            0.01270078000724523,
+            0.075953356152976,
+            0.010706858141054805,
+            0.13805360160919614,
+            0.014940788697680842,
+            0.07807916186727608,
+            0.14428461102643833,
+            0.07615732295869308,
+            0.01715691061896622,
+            0.007723950927804522,
+            0.31331570871101877
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
           ],
           "feature_names": [
             "age",
@@ -6475,6 +10361,8 @@
           ]
         },
         {
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
           "model_type": "gb",
           "params": {
             "ccp_alpha": 0.0,
@@ -6485,20 +10373,53 @@
             "max_depth": 3,
             "max_features": null,
             "max_leaf_nodes": null,
+=======
+=======
+>>>>>>> Stashed changes
+          "model_type": "rf",
+          "params": {
+            "bootstrap": true,
+            "ccp_alpha": 0.0,
+            "class_weight": null,
+            "criterion": "gini",
+            "max_depth": 7,
+            "max_features": "sqrt",
+            "max_leaf_nodes": null,
+            "max_samples": null,
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
             "min_impurity_decrease": 0.0,
             "min_samples_leaf": 1,
             "min_samples_split": 2,
             "min_weight_fraction_leaf": 0.0,
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             "n_estimators": 50,
             "n_iter_no_change": null,
             "random_state": null,
             "subsample": 1.0,
             "tol": 0.0001,
             "validation_fraction": 0.1,
+=======
+=======
+>>>>>>> Stashed changes
+            "monotonic_cst": null,
+            "n_estimators": 50,
+            "n_jobs": null,
+            "oob_score": false,
+            "random_state": null,
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
             "verbose": 0,
             "warm_start": false
           },
           "feature_importances": [
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             0.052866555460435026,
             0.0037018556311484,
             0.060401875929427834,
@@ -6511,6 +10432,25 @@
             0.0,
             0.000872279035831693,
             0.5739893613574047
+=======
+=======
+>>>>>>> Stashed changes
+            0.09216041582036998,
+            0.008413396384736496,
+            0.09145586895366137,
+            0.0074346435588527,
+            0.09875658850372136,
+            0.009672842205877559,
+            0.06720009792853116,
+            0.1334704638613478,
+            0.07743816319515096,
+            0.007903763447822213,
+            0.007500206466006232,
+            0.3985935496739222
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
           ],
           "feature_names": [
             "age",
@@ -6528,6 +10468,8 @@
           ]
         },
         {
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
           "model_type": "gb",
           "params": {
             "ccp_alpha": 0.0,
@@ -6538,20 +10480,53 @@
             "max_depth": 3,
             "max_features": null,
             "max_leaf_nodes": null,
+=======
+=======
+>>>>>>> Stashed changes
+          "model_type": "rf",
+          "params": {
+            "bootstrap": true,
+            "ccp_alpha": 0.0,
+            "class_weight": null,
+            "criterion": "gini",
+            "max_depth": 7,
+            "max_features": "sqrt",
+            "max_leaf_nodes": null,
+            "max_samples": null,
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
             "min_impurity_decrease": 0.0,
             "min_samples_leaf": 1,
             "min_samples_split": 2,
             "min_weight_fraction_leaf": 0.0,
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             "n_estimators": 50,
             "n_iter_no_change": null,
             "random_state": null,
             "subsample": 1.0,
             "tol": 0.0001,
             "validation_fraction": 0.1,
+=======
+=======
+>>>>>>> Stashed changes
+            "monotonic_cst": null,
+            "n_estimators": 50,
+            "n_jobs": null,
+            "oob_score": false,
+            "random_state": null,
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
             "verbose": 0,
             "warm_start": false
           },
           "feature_importances": [
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             0.05852002781958439,
             0.004097915125468857,
             0.019933145831525775,
@@ -6564,6 +10539,25 @@
             0.011997793960891304,
             0.0021439921459478523,
             0.5673542778979808
+=======
+=======
+>>>>>>> Stashed changes
+            0.07839073218201978,
+            0.014024297629750344,
+            0.06159628348065713,
+            0.013362273390642705,
+            0.16708843905110748,
+            0.016273029905618498,
+            0.07893063975522505,
+            0.12616558454810536,
+            0.08070557883101138,
+            0.012285429810445852,
+            0.013657687310249324,
+            0.33752002410516707
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
           ],
           "feature_names": [
             "age",
@@ -6581,6 +10575,8 @@
           ]
         },
         {
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
           "model_type": "gb",
           "params": {
             "ccp_alpha": 0.0,
@@ -6591,20 +10587,53 @@
             "max_depth": 3,
             "max_features": null,
             "max_leaf_nodes": null,
+=======
+=======
+>>>>>>> Stashed changes
+          "model_type": "rf",
+          "params": {
+            "bootstrap": true,
+            "ccp_alpha": 0.0,
+            "class_weight": null,
+            "criterion": "gini",
+            "max_depth": 7,
+            "max_features": "sqrt",
+            "max_leaf_nodes": null,
+            "max_samples": null,
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
             "min_impurity_decrease": 0.0,
             "min_samples_leaf": 1,
             "min_samples_split": 2,
             "min_weight_fraction_leaf": 0.0,
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             "n_estimators": 50,
             "n_iter_no_change": null,
             "random_state": null,
             "subsample": 1.0,
             "tol": 0.0001,
             "validation_fraction": 0.1,
+=======
+=======
+>>>>>>> Stashed changes
+            "monotonic_cst": null,
+            "n_estimators": 50,
+            "n_jobs": null,
+            "oob_score": false,
+            "random_state": null,
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
             "verbose": 0,
             "warm_start": false
           },
           "feature_importances": [
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             0.0236982895747204,
             0.0,
             0.05637525382273816,
@@ -6617,6 +10646,25 @@
             0.002022239412807575,
             0.0009343145100216248,
             0.6186812957483073
+=======
+=======
+>>>>>>> Stashed changes
+            0.09000396847681885,
+            0.012580074992839045,
+            0.07362312047070073,
+            0.01163382724411427,
+            0.0950400137729082,
+            0.007504267303955167,
+            0.05775155821062793,
+            0.14428039551015584,
+            0.06904921956786542,
+            0.012845634252454892,
+            0.010546588682870763,
+            0.4151413315146889
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
           ],
           "feature_names": [
             "age",
@@ -6634,6 +10682,8 @@
           ]
         },
         {
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
           "model_type": "gb",
           "params": {
             "ccp_alpha": 0.0,
@@ -6644,20 +10694,53 @@
             "max_depth": 3,
             "max_features": null,
             "max_leaf_nodes": null,
+=======
+=======
+>>>>>>> Stashed changes
+          "model_type": "rf",
+          "params": {
+            "bootstrap": true,
+            "ccp_alpha": 0.0,
+            "class_weight": null,
+            "criterion": "gini",
+            "max_depth": 7,
+            "max_features": "sqrt",
+            "max_leaf_nodes": null,
+            "max_samples": null,
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
             "min_impurity_decrease": 0.0,
             "min_samples_leaf": 1,
             "min_samples_split": 2,
             "min_weight_fraction_leaf": 0.0,
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             "n_estimators": 50,
             "n_iter_no_change": null,
             "random_state": null,
             "subsample": 1.0,
             "tol": 0.0001,
             "validation_fraction": 0.1,
+=======
+=======
+>>>>>>> Stashed changes
+            "monotonic_cst": null,
+            "n_estimators": 50,
+            "n_jobs": null,
+            "oob_score": false,
+            "random_state": null,
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
             "verbose": 0,
             "warm_start": false
           },
           "feature_importances": [
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             0.04287210503072098,
             1.1090635881671225e-06,
             0.06999913720662744,
@@ -6670,6 +10753,25 @@
             0.005627872492310879,
             0.0,
             0.5695272866966382
+=======
+=======
+>>>>>>> Stashed changes
+            0.08315713255492191,
+            0.011555819925423438,
+            0.0672060848392072,
+            0.010857060728542662,
+            0.1155084157465902,
+            0.01384554713992749,
+            0.07833065447462208,
+            0.1665414263410418,
+            0.0691987809166328,
+            0.007490662411278703,
+            0.009500192933393561,
+            0.36680822198841817
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
           ],
           "feature_names": [
             "age",
@@ -6687,6 +10789,8 @@
           ]
         },
         {
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
           "model_type": "gb",
           "params": {
             "ccp_alpha": 0.0,
@@ -6697,20 +10801,53 @@
             "max_depth": 3,
             "max_features": null,
             "max_leaf_nodes": null,
+=======
+=======
+>>>>>>> Stashed changes
+          "model_type": "rf",
+          "params": {
+            "bootstrap": true,
+            "ccp_alpha": 0.0,
+            "class_weight": null,
+            "criterion": "gini",
+            "max_depth": 7,
+            "max_features": "sqrt",
+            "max_leaf_nodes": null,
+            "max_samples": null,
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
             "min_impurity_decrease": 0.0,
             "min_samples_leaf": 1,
             "min_samples_split": 2,
             "min_weight_fraction_leaf": 0.0,
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             "n_estimators": 50,
             "n_iter_no_change": null,
             "random_state": null,
             "subsample": 1.0,
             "tol": 0.0001,
             "validation_fraction": 0.1,
+=======
+=======
+>>>>>>> Stashed changes
+            "monotonic_cst": null,
+            "n_estimators": 50,
+            "n_jobs": null,
+            "oob_score": false,
+            "random_state": null,
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
             "verbose": 0,
             "warm_start": false
           },
           "feature_importances": [
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             0.04870258835761597,
             0.0047355738513508985,
             0.06801782429003149,
@@ -6723,6 +10860,25 @@
             0.0021569607515930333,
             6.699965348707042e-06,
             0.5635897560511972
+=======
+=======
+>>>>>>> Stashed changes
+            0.08044205633330785,
+            0.009359044187291046,
+            0.07749445618601006,
+            0.01695358547930038,
+            0.13873437027975954,
+            0.010410624015363497,
+            0.07191546746316524,
+            0.12502830693616515,
+            0.07280741936500994,
+            0.011739043916007856,
+            0.011675493677585,
+            0.3734401321610344
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
           ],
           "feature_names": [
             "age",
@@ -6740,6 +10896,8 @@
           ]
         },
         {
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
           "model_type": "gb",
           "params": {
             "ccp_alpha": 0.0,
@@ -6750,20 +10908,53 @@
             "max_depth": 3,
             "max_features": null,
             "max_leaf_nodes": null,
+=======
+=======
+>>>>>>> Stashed changes
+          "model_type": "rf",
+          "params": {
+            "bootstrap": true,
+            "ccp_alpha": 0.0,
+            "class_weight": null,
+            "criterion": "gini",
+            "max_depth": 7,
+            "max_features": "sqrt",
+            "max_leaf_nodes": null,
+            "max_samples": null,
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
             "min_impurity_decrease": 0.0,
             "min_samples_leaf": 1,
             "min_samples_split": 2,
             "min_weight_fraction_leaf": 0.0,
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             "n_estimators": 50,
             "n_iter_no_change": null,
             "random_state": null,
             "subsample": 1.0,
             "tol": 0.0001,
             "validation_fraction": 0.1,
+=======
+=======
+>>>>>>> Stashed changes
+            "monotonic_cst": null,
+            "n_estimators": 50,
+            "n_jobs": null,
+            "oob_score": false,
+            "random_state": null,
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
             "verbose": 0,
             "warm_start": false
           },
           "feature_importances": [
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             0.04091609013569321,
             0.0,
             0.055724393421814525,
@@ -6776,6 +10967,25 @@
             0.008991532394182851,
             9.886018149683662e-06,
             0.5847479799038728
+=======
+=======
+>>>>>>> Stashed changes
+            0.10035416952598845,
+            0.01055036791714266,
+            0.07025796778477597,
+            0.009730475286810788,
+            0.1421293660900772,
+            0.006261185917347946,
+            0.06443823013061314,
+            0.10982301734714567,
+            0.07460770719487277,
+            0.013350060714813568,
+            0.011472057283800758,
+            0.3870253948066111
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
           ],
           "feature_names": [
             "age",
@@ -6793,6 +11003,8 @@
           ]
         },
         {
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
           "model_type": "gb",
           "params": {
             "ccp_alpha": 0.0,
@@ -6803,20 +11015,53 @@
             "max_depth": 3,
             "max_features": null,
             "max_leaf_nodes": null,
+=======
+=======
+>>>>>>> Stashed changes
+          "model_type": "rf",
+          "params": {
+            "bootstrap": true,
+            "ccp_alpha": 0.0,
+            "class_weight": null,
+            "criterion": "gini",
+            "max_depth": 7,
+            "max_features": "sqrt",
+            "max_leaf_nodes": null,
+            "max_samples": null,
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
             "min_impurity_decrease": 0.0,
             "min_samples_leaf": 1,
             "min_samples_split": 2,
             "min_weight_fraction_leaf": 0.0,
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             "n_estimators": 50,
             "n_iter_no_change": null,
             "random_state": null,
             "subsample": 1.0,
             "tol": 0.0001,
             "validation_fraction": 0.1,
+=======
+=======
+>>>>>>> Stashed changes
+            "monotonic_cst": null,
+            "n_estimators": 50,
+            "n_jobs": null,
+            "oob_score": false,
+            "random_state": null,
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
             "verbose": 0,
             "warm_start": false
           },
           "feature_importances": [
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             0.02990065403788659,
             0.0009968842391068079,
             0.04878458612816626,
@@ -6829,6 +11074,25 @@
             0.0034245692066303453,
             0.001619709815195411,
             0.5837090004849316
+=======
+=======
+>>>>>>> Stashed changes
+            0.10367284461527224,
+            0.010277296356541383,
+            0.07009460803586456,
+            0.011770243826053376,
+            0.09872924064326083,
+            0.018543055742102632,
+            0.06708969180913954,
+            0.13399913707029262,
+            0.09809672598406179,
+            0.01154307812175927,
+            0.012818795473158541,
+            0.3633652823224932
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
           ],
           "feature_names": [
             "age",
@@ -6847,6 +11111,8 @@
         }
       ],
       "f1": {
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
         "real": 0.7541632435801531,
         "real_sd": 0.07267313972830841,
         "display_real": "0.754 \u00b1 0.07",
@@ -8295,6 +12561,24 @@
         "delta_sd": 0.0,
         "display_delta": "+0.000 \u00b1 0.00",
         "pvalue_aug_vs_real": null
+=======
+=======
+>>>>>>> Stashed changes
+        "real": 0.7571775073812665,
+        "real_sd": 0.04708759291864036,
+        "display_real": "0.757 \u00b1 0.05",
+        "aug": 0.7387315138700778,
+        "aug_sd": 0.06505607492934347,
+        "display_aug": "0.739 \u00b1 0.07",
+        "delta": -0.01844599351118852,
+        "delta_sd": 0.03765710093219579,
+        "display_delta": "-0.018 \u00b1 0.04",
+        "pvalue_aug_vs_real": 0.1953125,
+        "qvalue_aug_vs_real": 0.46875
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
       },
       "error": "Empty dataset or no targets"
     },
@@ -8459,6 +12743,8 @@
     },
     "mlp": {
       "accuracy": {
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
         "real": 0.5,
         "real_sd": 0.1349897115421106,
         "display_real": "0.500 \u00b1 0.13",
@@ -8470,6 +12756,24 @@
         "display_delta": "+0.038 \u00b1 0.22",
         "pvalue_aug_vs_real": 0.7421875,
         "qvalue_aug_vs_real": 0.9843750000000001
+=======
+=======
+>>>>>>> Stashed changes
+        "real": 0.5016666666666667,
+        "real_sd": 0.1350822794530142,
+        "display_real": "0.502 \u00b1 0.14",
+        "aug": 0.5416666666666667,
+        "aug_sd": 0.13128637062205317,
+        "display_aug": "0.542 \u00b1 0.13",
+        "delta": 0.03999999999999997,
+        "delta_sd": 0.25692627563390846,
+        "display_delta": "+0.040 \u00b1 0.26",
+        "pvalue_aug_vs_real": 0.76953125,
+        "qvalue_aug_vs_real": 1.0
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
       },
       "folds_metadata": [
         {
@@ -8502,6 +12806,8 @@
             "warm_start": false
           },
           "loss_curve": [
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             25.48694227861112,
             25.486942249023045,
             25.486942212973,
@@ -8519,6 +12825,34 @@
             10.556725419961433,
             25.336135899322528,
             25.48694158650134
+=======
+=======
+>>>>>>> Stashed changes
+            25.486942795352487,
+            25.48694275444956,
+            25.486942706309758,
+            25.48694265582441,
+            25.48694260431272,
+            25.48694255243233,
+            25.486942500557397,
+            25.4869424489035,
+            22.605746822995567,
+            10.55672608935101,
+            10.55672603876104,
+            10.556725988312179,
+            10.55672593797211,
+            10.556725887740091,
+            10.556725837666452,
+            10.55672578778974,
+            10.556725738229158,
+            10.556725688987614,
+            10.556725640091166,
+            10.556725591698234,
+            10.556725543884525
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
           ]
         },
         {
@@ -8551,6 +12885,8 @@
             "warm_start": false
           },
           "loss_curve": [
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             25.03451197856362,
             25.034511945831184,
             25.03451190851912,
@@ -8563,6 +12899,37 @@
             25.034511659184513,
             25.034511627362495,
             25.03451159646397
+=======
+=======
+>>>>>>> Stashed changes
+            25.034512343139124,
+            25.034512303961193,
+            25.034512257900012,
+            25.034512209691684,
+            25.034512160564265,
+            25.034512111175047,
+            25.034512061884463,
+            25.034512012890993,
+            25.03451196432136,
+            25.034511916341973,
+            25.034511869045602,
+            22.772357844125434,
+            11.00915711042664,
+            11.00915706429726,
+            11.009157017953338,
+            11.00915697148673,
+            11.009156924950211,
+            11.00915687836735,
+            11.009156831823036,
+            11.009156785367553,
+            11.009156739060447,
+            11.009156692982268,
+            11.009156647277631,
+            11.009156601963582
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
           ]
         },
         {
@@ -8595,6 +12962,8 @@
             "warm_start": false
           },
           "loss_curve": [
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             11.914019322928642,
             11.763219406072608,
             23.50350726369322,
@@ -8608,6 +12977,33 @@
             11.928504039613562,
             23.53992053686785,
             21.869268345260412
+=======
+=======
+>>>>>>> Stashed changes
+            24.129650802274195,
+            24.12965077175475,
+            24.129650737137073,
+            24.12965070145931,
+            24.12965066560868,
+            24.129650630037478,
+            24.129650595027645,
+            21.369040433875302,
+            11.914019043872337,
+            11.914019010789909,
+            11.914018977782149,
+            11.914018944803122,
+            11.914018911808588,
+            11.914018878828767,
+            11.914018846050853,
+            11.914018813544383,
+            11.914018781334075,
+            11.914018749480721,
+            11.914018718115601,
+            14.176172665688773
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
           ]
         },
         {
@@ -8640,6 +13036,8 @@
             "warm_start": false
           },
           "loss_curve": [
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             25.48694263192482,
             25.48694258887445,
             25.486942538173285,
@@ -8652,6 +13050,25 @@
             25.486942157798367,
             25.486942104389776,
             25.486942051641243
+=======
+=======
+>>>>>>> Stashed changes
+            10.556726782190639,
+            10.556726747563724,
+            10.556726706632793,
+            10.556726663658232,
+            10.55672661967804,
+            10.55672657508449,
+            10.556726530335046,
+            10.556726485783923,
+            10.556726441646116,
+            10.556726398059421,
+            10.5567263551134,
+            10.556726312935025
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
           ]
         },
         {
@@ -8684,6 +13101,8 @@
             "warm_start": false
           },
           "loss_curve": [
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             10.5567268521477,
             10.556726815877806,
             10.55672677424938,
@@ -8726,6 +13145,25 @@
             10.556725461429204,
             10.556725434331936,
             10.55672540709827
+=======
+=======
+>>>>>>> Stashed changes
+            10.556726527384166,
+            10.556726491207613,
+            11.53559169267543,
+            25.48694266486259,
+            21.57960149557749,
+            10.556726326464043,
+            10.556726284106468,
+            10.55672624075498,
+            10.556726196684739,
+            10.559239557093418,
+            25.11598703406475,
+            21.211407857985417
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
           ]
         },
         {
@@ -8758,6 +13196,8 @@
             "warm_start": false
           },
           "loss_curve": [
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             24.732891393306364,
             24.73289137448337,
             24.732891351124223,
@@ -8770,6 +13210,34 @@
             24.73289118318933,
             24.732891161227645,
             24.73289114003536
+=======
+=======
+>>>>>>> Stashed changes
+            24.73289166720143,
+            24.73289163298566,
+            24.73289159319765,
+            24.732891551786427,
+            24.73289150979188,
+            24.73289146769329,
+            24.732891425831973,
+            24.732891384405043,
+            25.034511873973603,
+            11.310777698021814,
+            11.310777658004705,
+            11.310777617882595,
+            11.310777577672134,
+            11.31077753746691,
+            11.31077749731643,
+            11.310777457213083,
+            11.310777417245937,
+            11.310777377549488,
+            11.310777338120767,
+            11.310777299076497,
+            11.310777260414685
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
           ]
         },
         {
@@ -8802,6 +13270,8 @@
             "warm_start": false
           },
           "loss_curve": [
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             22.923168155004788,
             11.009157169815486,
             10.957835614124972,
@@ -8816,6 +13286,31 @@
             11.601071534596288,
             15.19839266249828,
             15.614549070996123
+=======
+=======
+>>>>>>> Stashed changes
+            24.431271156689192,
+            11.159967788142843,
+            13.57293199865074,
+            21.616573376249224,
+            11.159967683265698,
+            13.394379422734593,
+            8.01413870078031,
+            11.159133753228371,
+            11.256191937009275,
+            22.187249205493565,
+            11.159967455852748,
+            11.11599413574134,
+            24.75642113603274,
+            10.93754447478929,
+            11.159967304216533,
+            10.630476501012739,
+            22.861398828451456,
+            11.159967192292655
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
           ]
         },
         {
@@ -8848,6 +13343,8 @@
             "warm_start": false
           },
           "loss_curve": [
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             11.310777388083679,
             11.310777360512223,
             11.31077732762039,
@@ -8860,6 +13357,25 @@
             11.310777084417715,
             11.310777051197789,
             11.310777018698131
+=======
+=======
+>>>>>>> Stashed changes
+            11.310778378567283,
+            11.310778351092047,
+            11.31077832027985,
+            11.3107782891719,
+            11.310778258579509,
+            11.31077822862047,
+            11.310778199487105,
+            11.310778171223117,
+            11.31077814391724,
+            11.791604232321465,
+            24.732891696078173,
+            24.73289166730264
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
           ]
         },
         {
@@ -8892,6 +13408,8 @@
             "warm_start": false
           },
           "loss_curve": [
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             11.461588331221558,
             11.461588285817912,
             11.461588231751337,
@@ -8904,6 +13422,36 @@
             11.461587821049381,
             11.461587762945136,
             11.46158770544684
+=======
+=======
+>>>>>>> Stashed changes
+            24.58208173942105,
+            24.582081703441744,
+            24.582081660123226,
+            24.58208161439674,
+            24.582081567606274,
+            24.582081520392812,
+            24.582081473001857,
+            24.582081425632897,
+            24.582081378433347,
+            24.58208133139856,
+            22.26838369775295,
+            11.461588163235856,
+            11.461588115774061,
+            11.46158806746113,
+            11.461588018343985,
+            11.461587968687654,
+            11.461587918606465,
+            11.46158786823275,
+            11.461587817688537,
+            11.46158776713295,
+            11.461587716639695,
+            11.461587666418971,
+            11.461587616528552
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
           ]
         },
         {
@@ -8936,6 +13484,8 @@
             "warm_start": false
           },
           "loss_curve": [
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             11.763208531233843,
             11.763208515660857,
             11.76320849617129,
@@ -8948,10 +13498,31 @@
             24.28046035762603,
             22.853824363611317,
             12.517259600119695
+=======
+=======
+>>>>>>> Stashed changes
+            11.763209157193273,
+            11.763209119978987,
+            11.763209076641225,
+            11.763209031450803,
+            11.763208985569149,
+            11.763208939542391,
+            11.763208893698188,
+            11.763208848254845,
+            11.763208803347794,
+            11.76320875910831,
+            11.76320871557782,
+            11.763208672931341
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
           ]
         }
       ],
       "f1": {
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
         "real": 0.2403307790715618,
         "real_sd": 0.24754640959078164,
         "display_real": "0.240 \u00b1 0.25",
@@ -9514,6 +14085,24 @@
         "display_delta": "+0.028 \u00b1 0.04",
         "pvalue_aug_vs_real": 0.09765625,
         "qvalue_aug_vs_real": 0.4921875
+=======
+=======
+>>>>>>> Stashed changes
+        "real": 0.3470123170784011,
+        "real_sd": 0.21507845582357332,
+        "display_real": "0.347 \u00b1 0.22",
+        "aug": 0.1375934786461102,
+        "aug_sd": 0.21148057643370372,
+        "display_aug": "0.138 \u00b1 0.21",
+        "delta": -0.2094188384322908,
+        "delta_sd": 0.41304754139550504,
+        "display_delta": "-0.209 \u00b1 0.41",
+        "pvalue_aug_vs_real": 0.16015625,
+        "qvalue_aug_vs_real": 0.46875
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
       },
       "error": "Empty dataset or no targets"
     }
@@ -9619,7 +14208,15 @@
       "detected_bias_count": 0,
       "sensitive_proxies": {
         "sex": {
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
           "smoking": 0.4458917119097905
+=======
+          "smoking": 0.4458917119097912
+>>>>>>> Stashed changes
+=======
+          "smoking": 0.4458917119097912
+>>>>>>> Stashed changes
         }
       },
       "group_sparsity": {
@@ -9783,6 +14380,14 @@
       "time"
     ]
   },
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
   "avg_fidelity": 85.7,
+=======
+  "avg_fidelity": 84.7,
+>>>>>>> Stashed changes
+=======
+  "avg_fidelity": 84.7,
+>>>>>>> Stashed changes
   "dataset_name": "heart_failure_clinical_records"
 }
