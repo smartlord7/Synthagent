@@ -55,6 +55,6 @@ Cada comentário do PDF anotado e o que mudou no manuscrito.
 
 ## Outras alterações
 
-- A secção e a figura de deployment federado foram retiradas do corpo (não eram avaliadas e desviavam a narrativa); o tema fica num parágrafo da Discussão.
+- O deployment entre hospitais (Secção IV-F, equações e figura) foi mantido, agora ligado ao problema dos hospitais em silos do survey, e claramente assinalado como não avaliado.
 - Foi adicionada a Tabela IX (variação de F1 por dataset, com o pior caso) para tornar os resultados legíveis.
 - Os números são os mesmos; nenhum resultado foi alterado.

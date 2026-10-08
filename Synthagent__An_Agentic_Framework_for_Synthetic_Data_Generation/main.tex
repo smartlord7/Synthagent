@@ -156,11 +156,11 @@ For small data, the four families have the following limitations.
 \end{itemize}
 \system addresses L3 with its control layer and L4 with its evaluation protocol. Because it uses a pre-trained LLM, it also avoids L1 and L2.
 
-\subsection{Validated Output and Data Quality}
-Data-management systems have long combined generation or cleaning with integrity constraints. Kamino enforces denial constraints during private synthesis~\cite{ge2021kamino}, and data-cleaning systems combine statistical inference with constraints~\cite{chu2013holistic,qin2024bclean}. Foundation models can clean and integrate data through prompting~\cite{narayan2022wrangle}, and recovering structured records from free-form LLM output is a data-engineering problem in its own right~\cite{rorseth2026recovering}. \system applies the same principle to SDG: the schema and type rules are inferred from the data, and every LLM response is parsed and validated against them. Studies of data preparation show that a step that looks beneficial can harm downstream models~\cite{li2021cleanml,guha2023cleaningfairness}; we therefore evaluate synthetic samples with paired downstream models.
+\subsection{LLM Agents, Validated Output and Data Quality}
+\system follows the agent pattern of alternating actions and observations~\cite{yao2023react,wang2024agentsurvey}, but its observations are deterministic checks rather than free-form self-reflection by the model. In data management, synthetic data has long been used to test systems and share data~\cite{sanghi2023enterprise,fan2020relational}, and systems have long combined generation or cleaning with integrity constraints. Kamino enforces denial constraints during private synthesis~\cite{ge2021kamino}, and data-cleaning systems combine statistical inference with constraints~\cite{chu2013holistic,qin2024bclean}. Foundation models can clean and integrate data through prompting~\cite{narayan2022wrangle}, and recovering structured records from free-form LLM output is a data-engineering problem in its own right~\cite{rorseth2026recovering}. \system applies the same principle to SDG: the schema and type rules are inferred from the data, and every LLM response is parsed and validated against them. Studies of data preparation show that a step that looks beneficial can harm downstream models~\cite{li2021cleanml,guha2023cleaningfairness}; we therefore evaluate synthetic samples with paired downstream models. Feature augmentation adds columns from related tables~\cite{liang2025featpilot}; \system adds samples instead.
 
 \subsection{Evaluating Synthetic Data}
-Synthcity and SynthEval recommend evaluating fidelity, privacy and utility together~\cite{qian2023synthcity,lautrup2025syntheval}. A classifier two-sample test measures whether a classifier can distinguish real from synthetic samples~\cite{lopezpaz2017c2st}. Membership-inference attacks measure whether an attacker can tell which samples were used for generation~\cite{shokri2017mia,hyeong2022tabularmia}. Formal guarantees require differential privacy~\cite{dwork2014dp}, which \system does not provide; we use a membership-inference attack as a diagnostic only.
+Synthcity and SynthEval recommend evaluating fidelity, privacy and utility together~\cite{qian2023synthcity,lautrup2025syntheval}. A classifier two-sample test measures whether a classifier can distinguish real from synthetic samples~\cite{lopezpaz2017c2st}. Membership-inference attacks measure whether an attacker can tell which samples were used for generation~\cite{shokri2017mia,hyeong2022tabularmia}. Formal guarantees require syntactic anonymization models such as $\ell$-diversity and $t$-closeness~\cite{machanavajjhala2006ldiversity,li2007tcloseness} or differential privacy~\cite{dwork2014dp}, which \system does not provide; we use a membership-inference attack as a diagnostic only.
 
 %======================================================================
 \section{Problem Formulation}
@@ -282,6 +282,33 @@ Equation~\eqref{eq:residual} requests only the residual $q_t$, and any overshoot
 \paragraph*{Audit log and cost accounting (R3)}
 Every run records prompt, completion and total tokens, LLM generation time, parser repair attempts, rule violations, the requested and delivered row counts and the model identifier. These records make a synthetic dataset inspectable after the fact and give the cost term $\kappa(\theta)$ in Equation~\eqref{eq:multiobjective} a measured value.
 
+
+\subsection{Deployment Across Hospitals}
+\label{sec:deployment}
+Healthcare data are often small locally because they are split across institutions that cannot pool them~\cite{simoes2026smalldata,rieke2020digitalhealth,sheller2020medicine}. Because the control layer needs only a local dataset, its schema and an inference endpoint, \system can run inside each hospital of such a network. Consider $K$ hospitals, each holding a small dataset $D_k$ for the same prediction task, with different case mix, coding practice and class prevalence. Each hospital runs \system inside its own infrastructure and trains locally,
+\begin{equation}
+G_k=\mathcal{A}(D_k,S_k,R_k,B_k),\qquad
+\Delta w_k=\mathcal{U}(w_t,D_k\cup G_k),
+\label{eq:local-federated}
+\end{equation}
+where $S_k$ and $R_k$ are the local schema and rules, $B_k$ the local token budget and $\mathcal{U}$ the local training procedure. Only the model update $\Delta w_k$ and approved aggregate diagnostics leave the hospital. A coordinator then aggregates the updates as in FedAvg~\cite{mcmahan2017fedavg,kairouz2021federated},
+\begin{equation}
+w_{t+1}=w_t+\sum_{k\in\mathcal{K}_t}\frac{n_k}{\sum_{j\in\mathcal{K}_t}n_j}\,\Delta w_k,\qquad n_k=|D_k|,
+\label{eq:federated-aggregate}
+\end{equation}
+preferably under secure aggregation~\cite{bonawitz2017secure}. The weights use the number of \emph{real} samples $|D_k|$, not $|D_k\cup G_k|$, so a hospital gains no extra weight by generating more samples (Figure~\ref{fig:federated}). Unlike SiloFuse, which trains a shared generator across sites~\cite{shankar2024silofuse}, this design needs no generator training across hospitals, and each hospital can reject the synthetic samples when paired local validation shows no gain. It is not, by itself, a privacy guarantee: with a remote LLM the prompt content leaves the hospital, so sensitive deployments need a locally served model or a data-processing agreement, and both synthetic samples and model updates can leak information~\cite{chen2024modeltrip}. Our experiments evaluate the generation step one hospital at a time; a multi-site evaluation is future work.
+
+\begin{figure*}[t]
+\centering
+\begin{minipage}[c]{0.6\textwidth}
+\resizebox{\linewidth}{!}{\input{figures_federated.tex}}
+\end{minipage}\hfill
+\begin{minipage}[c]{0.37\textwidth}
+\caption{Deployment across hospitals. Each hospital runs \system (context selection, a locally served LLM, validation and correction) inside its own infrastructure, then decides with paired local validation whether to use the synthetic samples $G_k$ (Hospital~1) or to train on real data only (Hospital~$K$). Only the model update $\Delta w_k$ and approved aggregate diagnostics leave the hospital. The coordinator weights each update by the number of real samples $n_k=|D_k|$ (Equation~\eqref{eq:federated-aggregate}), so generating more samples gives a hospital no extra weight.}
+\label{fig:federated}
+\end{minipage}
+\end{figure*}
+
 %======================================================================
 \section{Experimental Setup}
 \label{sec:setup}
@@ -383,7 +410,7 @@ LLM-chosen settings & 72.53 & 70.10 & 0.886 & 0.526 & $-1.25$ & $+0.11$ & 310.2 
 \end{tabular*}
 \end{table*}
 
-\paragraph*{Effect of the design choices} Against this floor, the design choices have small effects. Dense context stays inside the floor on every measure. Diverse context is the only choice that leaves it on fidelity, with the highest JSD (73.27) and correlation (73.72) and the lowest C2ST accuracy (0.872), but also the highest attack AUC (0.544): samples that cover more of the feature space are closer to more real samples. Letting the LLM choose its own settings stays inside the floor on fidelity and utility and costs 57\% more tokens (115,245 versus 73,510). The Friedman tests find no difference in utility between the variants ($\chi^2_F(7)=3.10$, $p=.875$ for accuracy; $\chi^2_F(7)=4.39$, $p=.734$ for F1), and every Holm-adjusted comparison has $p=1.0$ (Figure~\ref{fig:ranks}).
+\paragraph*{Effect of the design choices} Against this floor, the design choices have small effects. Dense context stays inside the floor on every measure. Diverse context is the only choice that leaves it on fidelity, with the highest JSD (73.27) and correlation (73.72) and the lowest C2ST accuracy (0.872), but also the highest attack AUC (0.544): samples that cover more of the feature space are closer to more real samples. Letting the LLM choose its own settings stays inside the floor on fidelity and utility and costs 57\% more tokens (115,245 versus 73,510). The Friedman tests find no difference in utility between the variants ($\chi^2_F(7)=3.10$, $p=.875$ for accuracy; $\chi^2_F(7)=4.39$, $p=.734$ for F1), and every Holm-adjusted comparison has $p=1.0$ (Figure~\ref{fig:ranks}). The ranks show how little the variants separate: LLM-chosen settings rank best on accuracy (3.75) and the no-post-processing variant, which changes nothing, ranks best on F1 (3.33). SMOTE ranks sixth of eight on accuracy (5.00) and second on F1 (3.67).
 
 \begin{figure}[t]
 \centering
@@ -457,7 +484,7 @@ Mean & 72.7 & 72.6 & 0.878 & 0.526 & 75.4 & 74.2 & $-1.19$ & $-0.14$ \\
 
 \subsection{RQ4: Comparison with Established Generators and LLMs}
 \label{sec:rq4}
-\paragraph*{Choice of LLM} The LLM is the only factor whose effect exceeds the noise floor (Table~\ref{tab:backend}, Figure~\ref{fig:frontier}). All three alternatives to GPT-4o mini exceed it in accuracy change and two in F1 change. GPT-4.1 gives the highest marginal fidelity (75.72, 2.8 points above the floor) and the largest F1 gain ($+1.09$ pp); GPT-4.1 mini gives the best accuracy change ($-0.23$ pp) at the lowest generation time. The three stronger LLMs preserve pairwise correlations less well (62.8--64.3, against at least 70.83 for GPT-4o mini). Across six datasets, these differences are not significant ($\chi^2_F(3)=2.00$, $p=.572$ for accuracy; $\chi^2_F(3)=1.80$, $p=.615$ for F1).
+\paragraph*{Choice of LLM} The LLM is the only factor whose effect exceeds the noise floor (Table~\ref{tab:backend}, Figure~\ref{fig:frontier}). All three alternatives to GPT-4o mini exceed it in accuracy change and two in F1 change. GPT-4.1 gives the highest marginal fidelity (75.72, 2.8 points above the floor) and the largest F1 gain ($+1.09$ pp); GPT-4.1 mini gives the best accuracy change ($-0.23$ pp) at the lowest generation time. The three stronger LLMs preserve pairwise correlations less well (62.8--64.3, against at least 70.83 for GPT-4o mini). Across six datasets, these differences are not significant ($\chi^2_F(3)=2.00$, $p=.572$ for accuracy; $\chi^2_F(3)=1.80$, $p=.615$ for F1); the closest comparison, GPT-4.1 mini against GPT-4o mini in accuracy, differs by $+0.86$ pp with $p_{\mathrm{Holm}}=.188$.
 
 \begin{table}[t]
 \centering
@@ -506,7 +533,7 @@ TVAE & 71.9 & \best{85.6} & 0.868 & 0.515 & 75.6 & \best{$-0.09$} & $-0.21$ & 5.
 \par\vspace{2pt}\raggedright\scriptsize $^{\dagger}$Emits only non-majority samples, so its C2ST is not comparable.
 \end{table}
 
-\paragraph*{Robustness of the utility effect} Average changes hide how much each generator can harm a dataset. Table~\ref{tab:robust} reports the F1 change per dataset. SMOTE gives the largest gains where the scored class is rare ($+10.91$ pp on heart failure, $+4.11$ on diabetes) but loses 8.20 pp on liver disease, where the scored class is the majority. CTGAN loses on every dataset, by up to 10.65 pp. TVAE gives the best accuracy change on average but loses 2.86 pp of F1 on heart failure. \system with GPT-4.1 has the largest mean F1 gain ($+1.09$ pp) and the smallest worst case: it never lowers the F1 of a dataset by more than 0.53 pp, while it raises it by 6.35 pp on heart failure. Across datasets, the differences between the five generators are not significant ($\chi^2_F(4)=6.80$, $p=.147$ for accuracy; $\chi^2_F(4)=5.60$, $p=.231$ for F1; every Holm-adjusted $p\ge.25$).
+\paragraph*{Robustness of the utility effect} Average changes hide how much each generator can harm a dataset. Table~\ref{tab:robust} reports the F1 change per dataset. SMOTE gives the largest gains where the scored class is rare ($+10.91$ pp on heart failure, $+4.11$ on diabetes) but loses 8.20 pp on liver disease, where the scored class is the majority. CTGAN loses on every dataset, by up to 10.65 pp. TVAE gives the best accuracy change on average but loses 2.86 pp of F1 on heart failure. \system with GPT-4.1 has the largest mean F1 gain ($+1.09$ pp) and the smallest worst case: it never lowers the F1 of a dataset by more than 0.53 pp, while it raises it by 6.35 pp on heart failure. Across datasets, the differences between the five generators are not significant ($\chi^2_F(4)=6.80$, $p=.147$ for accuracy; $\chi^2_F(4)=5.60$, $p=.231$ for F1; every Holm-adjusted $p\ge.25$). TVAE has the best accuracy rank (2.00), and the two \system configurations share the best F1 rank (2.50).
 
 \begin{table}[t]
 \centering
@@ -538,9 +565,6 @@ The objective of this paper was to determine whether a control layer makes LLM-b
 
 \paragraph*{Practical recommendations}
 (1)~Choose the LLM first: it is the only factor whose effect exceeds the variation between runs. (2)~Measure cost in tokens, not in time. (3)~Check the effect of synthetic samples per classifier, on paired splits, before using them. (4)~Do not let the LLM choose its own settings without measuring the extra cost.
-
-\paragraph*{Deployment across institutions}
-Because \system needs only a local dataset, its schema and an inference endpoint, each hospital of a network can run it inside its own infrastructure and decide, with paired local validation, whether to use the synthetic samples before training a model that is later combined by federated learning~\cite{mcmahan2017fedavg,rieke2020digitalhealth,sheller2020medicine}. With a remote LLM, the prompt content leaves the institution, so sensitive deployments require a locally served model or a data-processing agreement. We evaluate one site at a time; a multi-site evaluation is future work.
 
 \paragraph*{Threats to validity}
 Only six datasets act as independent blocks, which limits the power of the tests, and the splits are not stratified. The Parkinson's dataset contains several recordings per subject without a subject identifier, so recordings of one person can appear in both partitions. Schema and value ranges are inferred once from the full dataset, which exposes test extremes to the profiler; train-only profiling would be stricter. JSD uses fixed histograms and is dominated by numerical features. The membership attack is a single distance-based adversary, and no result establishes differential privacy~\cite{dwork2014dp}. The correction paths were exercised only by GPT-4.1 mini; a stress test with weaker or local models and stricter rules is needed to measure how often each one is needed. In the current implementation, the output of the last correction round and the samples obtained in top-up rounds are not validated again. Context selection is not class-stratified, so a rare class can be missing from a prompt. All LLMs come from one provider, and locally served open models remain to be evaluated; GPT-4.1 nano and o4-mini were started but did not complete every dataset and are excluded. CTGAN and TVAE use default settings, and tuned or diffusion-based generators may do better on some datasets. The smallness indices in Table~\ref{tab:datasets} rely on a default anticipated $R^2_{\mathrm{CS}}$ and are estimates.
