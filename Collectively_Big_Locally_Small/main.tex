@@ -1,6 +1,7 @@
 \documentclass[acmsmall,screen,nonacm]{acmart}
 
 \citestyle{acmauthoryear}
+\input{prisma/prisma_numbers}
 
 \usepackage{tabularx}
 \usepackage{enumitem}
@@ -149,12 +150,12 @@ The term ``small data'' appears in social science \cite{kitchin2015small}, in pe
 \caption{Structure of the paper. The definition of Section~\ref{sec:definition} produces the two axes of the taxonomy, which serve as the coding scheme of the survey and shape the design of the blueprint.}
 \label{fig:structure}
 \end{figure*}
-\item \textbf{A coded survey.} We classify a curated corpus of 290 works on both axes (Section~\ref{sec:method}, Appendix~\ref{app:corpus}), review the solutions channel by channel (Section~\ref{sec:solutions}), and compare where the literature has actually worked with where the taxonomy says it could, which exposes specific empty cells (Section~\ref{sec:evidence}).
+\item \textbf{A coded survey.} We classify a curated corpus of 290 works on both axes (Section~\ref{sec:method}; the full coding is in the online supplement), review the solutions channel by channel (Section~\ref{sec:solutions}), and compare where the literature has actually worked with where the taxonomy says it could, which exposes specific empty cells (Section~\ref{sec:evidence}).
 \item \textbf{A blueprint for siloed hospital networks.} For sparse networks of hospitals without a trusted central server, we derive a privacy-preserving hierarchical borrowing scheme with closed-form risk, explicit privacy cost and convergence on sparse graphs (Section~\ref{sec:blueprint}), and argue that it is a principled default for this setting. The ingredients are standard; their combination for serverless hospital networks, and its empirical evaluation, are what remain open.
 \item \textbf{A research agenda} with concrete open problems (Section~\ref{sec:agenda}).
 \end{enumerate}
 
-\paragraph{Scope and method} We cover supervised and semi-supervised prediction from clinical data: imaging, structured electronic health records (EHR), clinical text, omics and tabular registries. We do not cover causal effect estimation from small trials in depth, although several of our results apply to it. How the corpus was assembled and coded, and what remains to be done before the review can be called systematic, is described in Section~\ref{sec:method}. Existing surveys cover individual families, such as federated learning in healthcare \cite{nguyen2022federated,rieke2020future,xu2021federated}, few-shot learning \cite{wang2020generalizing}, meta-learning \cite{hospedales2022meta}, imperfect medical datasets \cite{cheplygina2019not,tajbakhsh2020embracing}, informed machine learning \cite{rueden2023informed} and synthetic data \cite{chen2021synthetic,jordon2022synthetic}. Among the surveys we found, none defines small data formally, none organizes remedies by information provenance, and none treats the sparse, serverless hospital network as a first-class setting.
+\paragraph{Scope and method} We cover supervised and semi-supervised prediction from clinical data: imaging, structured electronic health records (EHR), clinical text, omics and tabular registries. We do not cover causal effect estimation from small trials in depth, although several of our results apply to it. How the corpus was assembled and coded, and how a systematic database search reported to PRISMA 2020 complements it, is described in Section~\ref{sec:method}. Existing surveys cover individual families, such as federated learning in healthcare \cite{nguyen2022federated,rieke2020future,xu2021federated}, few-shot learning \cite{wang2020generalizing}, meta-learning \cite{hospedales2022meta}, imperfect medical datasets \cite{cheplygina2019not,tajbakhsh2020embracing}, informed machine learning \cite{rueden2023informed} and synthetic data \cite{chen2021synthetic,jordon2022synthetic}. Among the surveys we found, none defines small data formally, none organizes remedies by information provenance, and none treats the sparse, serverless hospital network as a first-class setting.
 
 \paragraph{How the parts connect} The paper is built as a single argument, shown in Figure~\ref{fig:structure}. We first make smallness measurable (Section~\ref{sec:definition}). The terms of that measure tell us \emph{why} a dataset is small, which gives the scarcity axis of the taxonomy (Section~\ref{sec:scarcity}). Knowing why points to \emph{where} the missing information could come from, which gives the provenance axis (Section~\ref{sec:provenance}). The two axes then serve as the coding scheme for a corpus of 290 works (Section~\ref{sec:method}), which organizes the survey of existing methods (Section~\ref{sec:solutions}) and the reading of their evidence (Section~\ref{sec:evidence}). The gaps that this reading exposes, together with the definition of siloed smallness from Section~\ref{sec:definition}, determine the design of the blueprint (Section~\ref{sec:blueprint}), and what remains unsolved becomes the agenda (Section~\ref{sec:agenda}).
 
@@ -487,30 +488,43 @@ Contribution type & method, theory, study, multi-site, resource, review, evidenc
 \end{tabularx}
 \end{table}
 
-\noindent The bibliography has 335 entries; 45 are excluded background, which leaves a coded corpus of 290 works published between 1956 and 2025, 204 of them since 2019.
+\noindent Of the \PrismaBibTotal{} works identified in this way, \PrismaBgTotal{} were excluded as background (X1: \PrismaBgXOne, X2: \PrismaBgXTwo, X3: \PrismaBgXThree), which leaves a coded corpus of 290 works published between 1956 and 2025, 204 of them since 2019.
 
 \subsection{Coding scheme}
 
-Each work was coded on the five attributes of Table~\ref{tab:coding}. Channels and scarcity classes are those of Sections~\ref{sec:scarcity} and~\ref{sec:provenance}. A work has exactly one primary channel, the one through which most of its information gain is claimed, and at most one secondary channel; 48 of the 257 works that propose or study a remedy have one. Works that document a problem without proposing a remedy (33) are coded with the channel ``none''. Scarcity classes are multi-label and were assigned from the problem the work states it addresses and from its evaluation setting, not from what the method could do in principle. Contribution type records the primary contribution. A work is coded as a multi-site study only when its main contribution is training or validating on data held by two or more independent institutions; method papers that also report an external validation remain methods, and simulated partitions of a single dataset count as single-dataset evidence. The full coding is listed in Appendix~\ref{app:corpus} and released with the paper as a CSV file together with the scripts that produce every count and figure in Section~\ref{sec:evidence}.
+Each work was coded on the five attributes of Table~\ref{tab:coding}. Channels and scarcity classes are those of Sections~\ref{sec:scarcity} and~\ref{sec:provenance}. A work has exactly one primary channel, the one through which most of its information gain is claimed, and at most one secondary channel; 48 of the 257 works that propose or study a remedy have one. Works that document a problem without proposing a remedy (33) are coded with the channel ``none''. Scarcity classes are multi-label and were assigned from the problem the work states it addresses and from its evaluation setting, not from what the method could do in principle. Contribution type records the primary contribution. A work is coded as a multi-site study only when its main contribution is training or validating on data held by two or more independent institutions; method papers that also report an external validation remain methods, and simulated partitions of a single dataset count as single-dataset evidence. The full coding is listed in the online supplement and released with the paper as a CSV file together with the scripts that produce every count and figure in Section~\ref{sec:evidence}.
 
-\subsection{Threats to validity}
+\subsection{Systematic search}\label{sec:search}
 
-Four limitations qualify everything in the next two sections. First, \emph{the corpus is curated, not exhaustive}. It was built to cover every cell of the taxonomy and to support the argument of Section~\ref{sec:blueprint}, so pooling is over-represented by design (102 of 290 works), and counts describe the corpus, not the field. Absolute counts should not be compared across channels; the shape of coverage within a channel, and the cells that remain empty after a deliberate effort to fill them, are more informative. Second, \emph{coding was done by a single coder}, the first author, and inter-rater agreement has not been measured. Third, the primary channel is a judgment about where a method's gain comes from, and some works, foundation models trained with self-supervision for example, sit between two channels. Fourth, recent work is under-represented because of indexing and citation lag, so the decline after 2022 in Figure~\ref{fig:corpus} is not a trend.
+The snowballed corpus was complemented by a systematic database search, executed on \PrismaSearchDate{} and reported following PRISMA 2020 \cite{page2021prisma} (Figure~\ref{fig:prisma}). Its purpose is to test the corpus, not to replace it: we ask how much of the corpus a reproducible search recovers, and whether the coverage profile and the gaps of Section~\ref{sec:evidence} hold in the wider literature.
 
-\paragraph{Protocol for a systematic extension} To make the review systematic, we specify the search that would replace the curated stage. Databases: PubMed, Scopus, Web of Science, IEEE Xplore and the ACM Digital Library, with arXiv and medRxiv for preprints, from 2010 to the search date. Query, adapted to each database's syntax:
+\paragraph{Sources and query} PubMed was searched through the NCBI E-utilities, arXiv through its API, and medRxiv and the arXiv records indexed by Europe PMC through the Europe PMC API, from 2010 to the search date, in titles and abstracts. Scopus, Web of Science, IEEE Xplore and the ACM Digital Library require subscriptions or API keys and were not searched; the scripts accept their exports, which are deduplicated and screened with the rest. The query, adapted to each source's syntax (both spellings replace the inner wildcard of decentrali*ed, and the arXiv API, which has no truncation, receives the common forms of each truncated term), was:
 \begin{quote}
 \footnotesize\ttfamily
 ("small data" OR "small sample*" OR "limited data" OR "data scarcity" OR "few-shot" OR "low-resource" OR "rare disease*" OR "label-efficient" OR "data-efficient" OR federated OR decentrali*ed OR "privacy-preserving") AND (health* OR clinical OR medic* OR hospital* OR patient*) AND ("machine learning" OR "deep learning" OR "transfer learning" OR "synthetic data" OR "data augmentation" OR "active learning" OR "semi-supervised" OR "self-supervised" OR "foundation model*" OR "hierarchical model*")
 \end{quote}
-Two reviewers screen titles and abstracts, then full texts, against criteria I1, I2 and X1 to X3, resolving disagreement by discussion and reporting Cohen's kappa; the same two reviewers code a random 20\% of included works independently to estimate coding reliability; and the flow is reported as a PRISMA 2020 diagram \cite{page2021prisma}.
 
-\paragraph{Author note} This protocol has not yet been executed. All counts in Section~\ref{sec:evidence} and appendix~\ref{app:corpus} refer to the curated corpus described above. Before submission, the search should be run, the PRISMA flow added here, and the counts and figures regenerated from the resulting CSV with the scripts provided.
+\paragraph{Screening} Records were deduplicated by DOI and normalized title, and titles and abstracts were screened against criteria I1, I2 and X1 to X3 by explicit rules, so that the screening can be rerun exactly. The rules exclude records whose only scarcity term refers to a resource-limited setting rather than to scarce data, to a sample-size limitation stated in passing, or to decentralized trials or care; records that are guidelines or statements; and records with no learning method. A single reviewer checked the rules on two random samples of \PrismaVerifyN{} records drawn from both sides of the decision. Two rules that misfired in the first sample were removed, and the final rules reached a precision of \PrismaVerifyPrecision{} and a negative predictive value of \PrismaVerifyNPV{} against the reviewer's judgments. The screening is therefore deliberately sensitive: about a third of the eligible records are false positives, which the field-level analysis below tolerates but a synthesis would not. Eligible records were not assessed in full text.
 
-With the corpus defined, we turn to its content, channel by channel.
+\begin{figure}[t]
+\centering
+\input{figures/fig_prisma}
+\caption{PRISMA 2020 flow diagram. Left: the database search; its eligible records are coded by dictionary for the field-level map of Section~\ref{sec:search} and are not part of the coded synthesis. Right: the seed set and snowballing of Section~\ref{sec:method}, which give the 290 works coded in full and analyzed in Sections~\ref{sec:solutions} and~\ref{sec:evidence}.}
+\label{fig:prisma}
+\end{figure}
 
+\paragraph{How much of the corpus the search finds} Of the \PrismaCorpusInScope{} corpus works that were published since 2010 and evaluated on health data, \PrismaCorpusIndexed{} are indexed in the searched sources, and the query retrieved \PrismaCorpusRetrieved{} of them (\PrismaRecall). The missed works are mostly evidence of type I2, such as studies of external validation failure, hidden stratification or sample size, which describe a scarcity problem without the remedy vocabulary of the query, and methods that report a gain on a small dataset without naming scarcity. Broadening the vocabulary does not solve this: a version of the query with 39 additional scarcity terms and 16 additional method terms returned about 76{,}000 PubMed records and still found only about half of the corpus. This is the pattern that \citet{greenhalgh2005effectiveness} found for complex evidence, where protocol-driven searches located about a third of the relevant sources and snowballing most of the rest, and it is why the coded synthesis rests on the snowballed corpus while the search serves as a check on it.
+
+\paragraph{The field-level map} The \PrismaEligible{} eligible records were coded with dictionaries that encode the definitions of Sections~\ref{sec:scarcity} and~\ref{sec:provenance}. On the \PrismaCoderN{} corpus works with an abstract in Europe PMC, the dictionary coder agreed with the manual primary channel in \PrismaCoderAgree{} of cases (Cohen's $\kappa=\PrismaCoderKappa$), and recovered \PrismaCoderClassRecall{} of the manually assigned scarcity classes. In the field, pooling is the most frequent primary channel (\PrismaFieldA), followed by proxy (\PrismaFieldB) and re-expression (\PrismaFieldF); prior (\PrismaFieldC), unlabeled (\PrismaFieldD) and procurement (\PrismaFieldE) are rare, and \PrismaFieldNone{} of records match no channel. The over-representation of pooling in the corpus is therefore partly a property of the field and not only of our selection. Cell counts of the two maps are moderately correlated (Spearman $\rho=\PrismaCellRho$), and \PrismaGapsConfirmed{} of the \PrismaGapsTotal{} gap cells of Figure~\ref{fig:gapmap} also fall in the bottom third of the field-level map: the temporal-obsolescence row and procurement for measurement poverty are as empty in the wider literature as in the corpus. Three gaps are not confirmed. Stratum sparsity addressed by pooling, and dimensional excess addressed by pooling or by unlabeled data, are well populated in the field, mostly by federated and multi-site genomic and fairness studies. They are under-represented in the corpus rather than in the literature, although the broad dictionaries for these two classes inflate the field counts. Finally, \PrismaSince{} of the eligible records were published in 2023 or later, which confirms that the decline after 2022 in Figure~\ref{fig:corpus} reflects the corpus and not the field.
+
+\subsection{Threats to validity}
+
+Four limitations qualify everything in the next two sections. First, \emph{the coded corpus is curated, not exhaustive}. It was built to cover every cell of the taxonomy and to support the argument of Section~\ref{sec:blueprint}, and counts describe the corpus, not the field. The systematic search of Section~\ref{sec:search} bounds this limitation: it confirms the dominance of pooling and seven of the ten gaps, and it identifies three cells and the most recent years as under-covered by the corpus. Second, \emph{coding was done by a single coder}, the first author, and inter-rater agreement has not been measured; the agreement with an independent dictionary coder ($\kappa=\PrismaCoderKappa$) is a check of consistency, not a substitute. Third, the primary channel is a judgment about where a method's gain comes from, and some works, foundation models trained with self-supervision for example, sit between two channels. Fourth, the search covered PubMed, arXiv and medRxiv but not the subscription databases, and its eligible records were screened by rules checked on a sample rather than read in full, so the field-level map is a check on proportions, not a second corpus.
+
+%% ===================================================================
 \section{Existing Solutions, Organized by Provenance}\label{sec:solutions}
 
- We now review solution families in the order of the provenance channels of Section~\ref{sec:provenance}. For each family we describe the mechanism, the scarcity classes of Figure~\ref{fig:scarcity} it addresses, the healthcare evidence, and the conditions under which it fails. Pooling receives the most space, because it is the only strong channel against custodial scarcity and therefore the foundation of Section~\ref{sec:blueprint}. Table~\ref{tab:families} gives a compact overview. By primary channel, the corpus holds 102 pooling, 60 proxy, 25 prior, 23 unlabeled, 15 procurement and 32 re-expression works, plus 33 that document a problem without proposing a remedy; Table~\ref{tab:corpus} in the appendix lists and codes every one of them.
+ We now review solution families in the order of the provenance channels of Section~\ref{sec:provenance}. For each family we describe the mechanism, the scarcity classes of Figure~\ref{fig:scarcity} it addresses, the healthcare evidence, and the conditions under which it fails. Pooling receives the most space, because it is the only strong channel against custodial scarcity and therefore the foundation of Section~\ref{sec:blueprint}. Table~\ref{tab:families} gives a compact overview. By primary channel, the corpus holds 102 pooling, 60 proxy, 25 prior, 23 unlabeled, 15 procurement and 32 re-expression works, plus 33 that document a problem without proposing a remedy; the online supplement lists and codes every one of them.
 
 \subsection{P1 Pooling: bringing the same task from other custodians}\label{sec:S6_1}
 
@@ -731,7 +745,7 @@ n_k^{\eff}=\frac{\sigma^2}{R_k^{\star}}=n_k+\underbrace{\frac{\sigma^2}{\tau^2+M
 $\tilde{\theta}_k-\theta_k=\alpha e_k+(1-\alpha)(\tilde{\mu}-\mu)-(1-\alpha)u_k$. The three terms are independent with zero mean (the middle term has second moment $M$), so $R_k(\alpha)=\alpha^2 v_k+(1-\alpha)^2(\tau^2+M)$. This is a convex quadratic in $\alpha$, minimized at $\alpha_k^{\star}$; substituting gives $R_k^{\star}$. The bound follows because $R_k^{\star}$ is half the harmonic mean of $v_k$ and $\tau^2+M$. Finally $\sigma^2/R_k^{\star}=\sigma^2/v_k+\sigma^2/(\tau^2+M)=n_k+B$.
 \end{proof}
 
-Equation~\eqref{eq:borrowed} is the central quantity of the blueprint. Collaboration gives every hospital the same number $B$ of \emph{virtual patients}, regardless of its size. A hospital with 30 patients and one with 3,000 both gain $B$; the first may double or triple its effective sample, the second barely notices. Requirement (R4) is therefore satisfied by construction. $B$ is limited by heterogeneity: as $\tau^2\to\infty$, $B\to 0$ and each hospital should act alone; as $\tau^2\to 0$ with $M\to 0$, $B\to\infty$ and full pooling is optimal. Hierarchical borrowing interpolates between the two, using the data to decide where. It never does worse than local estimation, which is not true of a global model (Figure~\ref{fig:risk}).
+Equation~\eqref{eq:borrowed} is the central quantity of the blueprint. Collaboration gives every hospital the same number $B$ of \emph{virtual patients}, regardless of its size. A hospital with 30 patients and one with 3,000 both gain $B$; the first may double or triple its effective sample, the second barely notices. Requirement (R4) is therefore satisfied by construction. $B$ is limited by heterogeneity: as $\tau^2\to\infty$, $B\to 0$ and each hospital should act alone; as $\tau^2\to 0$ with $M\to 0$, $B\to\infty$ and full pooling is optimal. Hierarchical borrowing interpolates between the two, using the data to decide where. With $\tau^2$ and $M$ known it never does worse than local estimation, which is not true of a global model (Figure~\ref{fig:risk}); when both are estimated from the privatized releases the loss is small in simulation, but no longer zero (online supplement, S2 and S7).
 
 \subsection{The cost of privacy}\label{sec:S8_3}
 
@@ -889,7 +903,7 @@ Table~\ref{tab:approaches} compares GHB with the alternatives on requirements (R
 The argument for GHB rests on four results that are each well established, combined in a way that, to our knowledge, has not been set out for this setting. None of the four is new, and the case for GHB is that it is the simplest combination that meets all five requirements at once, not that it outperforms the alternatives; that has to be shown empirically. Hierarchical shrinkage is admissible and minimax-motivated for group estimation \cite{efron1973steins,stein1956inadmissibility}, and Proposition~\ref{prop:borrowing} shows it remains optimal, in closed form, when the prior is estimated imperfectly. Differential privacy composes and is closed under post-processing \cite{dwork2014algorithmic}, which makes the gossip phase free (Proposition~\ref{prop:gossip}). Gossip converges at a rate set by the spectral gap \cite{boyd2006randomized,xiao2004fast}, which turns network design into a measurable quantity. And shared representations reduce the problem to a low-dimensional one \cite{maurer2016benefit,tripuraneni2020theory}, which is what keeps privacy noise small. Each component can be replaced by a stronger one, such as secure aggregation within regions, Bayesian treatment of $\tau^2$, or nonlinear heads, without changing the architecture.
 
 \begin{table}[t]
-\caption{Approaches for sparse, siloed hospital networks against requirements (R1) to (R5), as design properties of each method in its standard form. \yes{} satisfied; \partly{} partially or optionally; \no{} not satisfied. Entries for GHB hold by construction under the assumptions of Section~\ref{sec:blueprint} and have not yet been validated empirically.}
+\caption{Approaches for sparse, siloed hospital networks against requirements (R1) to (R5), as design properties of each method in its standard form. \yes{} satisfied; \partly{} partially or optionally; \no{} not satisfied. Entries for GHB hold by construction under the assumptions of Section~\ref{sec:blueprint}; they have been checked in simulation (online supplement) but not on data from real hospital networks.}
 \label{tab:approaches}
 \small
 \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}Xccccc@{}}
@@ -909,6 +923,8 @@ Distributed meta-analysis \cite{dersimonian1986meta,duan2020learning} & \yes & \
 \end{table}
 
 \paragraph{Threat model and limits} GHB protects patients against honest-but-curious neighbours and any observer of the messages, under the DP guarantee of each release. It does not protect against a hospital that lies about its estimate; robust aggregation \cite{blanchard2017machine} or reputation weighting would be needed. The privacy guarantee is per release, so repeated rounds compose and must be accounted for, for instance with R\'{e}nyi differential privacy \cite{mironov2017renyi}. The Gaussian analysis is asymptotic; for very small $n_k$ the normal approximation of $\hat{\theta}_k$ is poor and a fully Bayesian treatment of each head is preferable. The framework is theoretical and its empirical evaluation on cross-silo benchmarks such as FLamby \cite{ogierduterrail2022flamby} is the first item of future work.
+
+\paragraph{Simulation evidence} The online supplement checks the blueprint by Monte Carlo simulation. With 24 hospitals of 16 to 479 patients and every quantity estimated from privatized releases exchanged by gossip, GHB was within 2\% of local estimation for its worst hospital over a ten-thousand-fold range of $\tau^2$, while a single global model was up to 380 times worse for its worst hospital at large $\tau^2$. At $\tau^2=0.02$ and $\epsilon=1$ the smallest hospitals gained a factor of about 2.3 in effective sample size and the largest about 1.08. With logistic-regression heads and $\epsilon=1$, GHB reduced the excess log-loss over local estimation by about a third, roughly matching a global model trained on pooled data without privacy. At $\epsilon=0.3$ it gave no gain and was slightly worse than local estimation, and joint release by small hospitals helped only in networks where every hospital is small. These results test internal consistency under the model of Equation~\eqref{eq:model} and its logistic analogue; they are not evidence about real hospital networks.
 
 GHB answers the question posed at the start of this section only under explicit assumptions: Gaussian site effects, honest participants and a known collaboration graph. Relaxing each of them, and the measurement problems raised in Sections~\ref{sec:definition} and~\ref{sec:evidence}, defines most of the open problems that follow.
 
@@ -942,332 +958,7 @@ This work is funded by national funds through FCT - Foundation for Science and T
 
 
 \bibliographystyle{ACM-Reference-Format-recovered}
+\nocite{brasil2019artificial,brown2020language,kairouz2021advances}
 \bibliography{references}
-
-\appendix
-
-\section{The Coded Corpus}\label{app:corpus}
-
-Table~\ref{tab:corpus} lists all 290 works of the corpus with their coding under the scheme of Table~\ref{tab:coding}. The same data are released as a CSV file, together with the scripts that compute every count in Sections~\ref{sec:method} and~\ref{sec:evidence} and draw Figures~\ref{fig:corpus} and~\ref{fig:gapmap}.
-
-{\scriptsize
-\setlength{\tabcolsep}{4pt}
-\renewcommand{\arraystretch}{0.95}
-\begin{longtable}{@{}p{5.6cm}llll@{}}
-\caption{The coded corpus (290 works), grouped by primary provenance channel and sorted by year. Sec.: secondary channel. Scarcity: classes of Figure~\ref{fig:scarcity} the work targets or documents. Type: Method, Theory, Study (single-dataset empirical study), Multi-site (training or validation across institutions), Resource (dataset, benchmark or infrastructure), Review, Evidence (documented failure or risk). General: method not specific to health data.}\label{tab:corpus}\\
-\toprule
-Work & Modality & Sec. & Scarcity & Type\\
-\midrule
-\endfirsthead
-\toprule
-Work & Modality & Sec. & Scarcity & Type\\
-\midrule
-\endhead
-\bottomrule
-\endfoot
-\multicolumn{5}{@{}l}{\emph{P1 Pooling} (102)}\\
-\citet{dersimonian1986meta} & Tabular & P3 & C1, T2 & Method\\
-\citet{sweeney2002k} & Tabular &  & C2 & Method\\
-\citet{xiao2004fast} & General &  & C1 & Theory\\
-\citet{boyd2006randomized} & General &  & C1 & Theory\\
-\citet{dwork2006calibrating} & General &  & C2 & Theory\\
-\citet{gentry2009fully} & General &  & C2 & Theory\\
-\citet{nedic2009distributed} & General &  & C1 & Theory\\
-\citet{riley2010meta} & Tabular &  & C1, O2 & Review\\
-\citet{overhage2012validation} & EHR &  & C2 & Resource\\
-\citet{wu2012grid} & Tabular &  & C1 & Method\\
-\citet{jiang2013webglore} & Tabular &  & C1 & Resource\\
-\citet{gaye2014datashield} & Tabular &  & C1, C2 & Resource\\
-\citet{hripcsak2015observational} & EHR &  & C1, C2 & Resource\\
-\citet{lu2015webdisco} & Tabular &  & C1 & Resource\\
-\citet{abadi2016deep} & General &  & C2 & Method\\
-\citet{jochems2016distributed} & Tabular &  & C1 & Multi-site\\
-\citet{johnson2016mimic} & EHR &  & C1, C2 & Resource\\
-\citet{mandel2016smart} & EHR &  & C2 & Resource\\
-\citet{blanchard2017machine} & General &  & C1 & Method\\
-\citet{bonawitz2017practical} & General &  & C1, C2 & Method\\
-\citet{jochems2017developing} & Tabular &  & C1 & Multi-site\\
-\citet{kim2017federated} & EHR &  & C1 & Method\\
-\citet{lian2017can} & General &  & C1 & Theory\\
-\citet{mcmahan2017communication} & General &  & C1 & Method\\
-\citet{mironov2017renyi} & General &  & C2 & Theory\\
-\citet{papernot2017semi} & General & P4 & C2 & Method\\
-\citet{smith2017federated} & General & P3 & C1, T2 & Method\\
-\citet{vanhaesebrouck2017decentralized} & General & P3 & C1, T2 & Method\\
-\citet{bellet2018personalized} & General & P3 & C1, T2 & Method\\
-\citet{brisimi2018federated} & EHR &  & C1 & Method\\
-\citet{chang2018distributed} & Imaging &  & C1 & Multi-site\\
-\citet{cho2018secure} & Omics &  & C1, C2 & Method\\
-\citet{gupta2018distributed} & General &  & C1 & Method\\
-\citet{lee2018privacy} & EHR &  & C1, C2 & Method\\
-\citet{mcmahan2018learning} & General &  & C1, C2 & Method\\
-\citet{reps2018design} & EHR &  & C2 & Resource\\
-\citet{vepakomma2018split} & Multimodal &  & C1, C2 & Method\\
-\citet{zhao2018federated} & General &  & C1, T2 & Method\\
-\citet{choudhury2019differential} & EHR &  & C1, C2 & Method\\
-\citet{huang2019patient} & EHR &  & C1, T2 & Multi-site\\
-\citet{jordan2019communication} & General &  & C1 & Theory\\
-\citet{li2019privacy} & Imaging &  & C1, C2 & Method\\
-\citet{mohri2019agnostic} & General &  & C1, O3 & Method\\
-\citet{poirot2019split} & Imaging &  & C1, C2 & Method\\
-\citet{raisaro2019medco} & Multimodal &  & C1, C2 & Method\\
-\citet{roy2019braintorrent} & Imaging &  & C1 & Method\\
-\citet{sheller2019multi} & Imaging &  & C1 & Method\\
-\citet{suchard2019comprehensive} & EHR &  & C1, C2, O2 & Multi-site\\
-\citet{yang2019federated} & General &  & C1 & Review\\
-\citet{beyan2020distributed} & Multimodal &  & C1, C2 & Resource\\
-\citet{chen2020fedhealth} & Signals & P2 & C1, T2 & Method\\
-\citet{deist2020distributed} & Tabular &  & C1 & Multi-site\\
-\citet{tdinh2020personalized} & General & P3 & C1, T2 & Method\\
-\citet{duan2020learninglocal} & EHR &  & C1, O2 & Method\\
-\citet{duan2020learning} & EHR &  & C1, O2 & Method\\
-\citet{fallah2020personalized} & General & P2 & C1, T2 & Method\\
-\citet{ghosh2020efficient} & General &  & C1, T2 & Method\\
-\citet{hsieh2020non} & General &  & C1, T2 & Method\\
-\citet{kaissis2020secure} & Imaging &  & C1, C2 & Review\\
-\citet{karimireddy2020scaffold} & General &  & C1, T2 & Method\\
-\citet{koloskova2020unified} & General &  & C1 & Theory\\
-\citet{li2020federated} & General &  & C1, T2 & Method\\
-\citet{li2020multi} & Imaging & P2 & C1, T2 & Multi-site\\
-\citet{lin2020ensemble} & General & P4 & C1, T2 & Method\\
-\citet{rieke2020future} & Multimodal &  & C1, C2 & Review\\
-\citet{roth2020federated} & Imaging &  & C1, T2 & Multi-site\\
-\citet{sheller2020federated} & Imaging &  & C1, O1 & Multi-site\\
-\citet{wei2020federated} & General &  & C1, C2 & Method\\
-\citet{bai2021advancing} & Imaging &  & C1, T1 & Multi-site\\
-\citet{collins2021exploiting} & General & P2 & C1, T2 & Method\\
-\citet{dayan2021federated} & Multimodal &  & C1, T1, O2 & Multi-site\\
-\citet{dou2021federated} & Imaging &  & C1, T1 & Multi-site\\
-\citet{froelicher2021truly} & Omics &  & C1, C2 & Method\\
-\citet{guo2021multi} & Imaging &  & C1 & Method\\
-\citet{huang2021personalized} & General &  & C1, T2 & Method\\
-\citet{kairouz2021advances} & General &  & C1 & Review\\
-\citet{kaissis2021end} & Imaging &  & C1, C2 & Method\\
-\citet{li2021ditto} & General & P3 & C1, T2 & Method\\
-\citet{li2021fedbn} & General &  & C1, T2 & Method\\
-\citet{liu2021feddg} & Imaging & P6 & C1, T2 & Method\\
-\citet{marfoq2021federated} & General &  & C1, T2 & Method\\
-\citet{sarma2021federated} & Imaging &  & C1 & Multi-site\\
-\citet{tramer2021differentially} & General & P2 & C2 & Method\\
-\citet{vaid2021federated} & EHR &  & C1, T1 & Multi-site\\
-\citet{warnatherresthal2021swarm} & Multimodal &  & C1, O3 & Multi-site\\
-\citet{xu2021federated} & Multimodal &  & C1 & Review\\
-\citet{ziller2021medical} & Imaging &  & C2 & Method\\
-\citet{adnan2022federated} & Imaging &  & C1, C2 & Method\\
-\citet{cyffers2022privacy} & General &  & C1, C2 & Theory\\
-\citet{jiang2022harmofl} & Imaging &  & C1, T2 & Method\\
-\citet{lu2022federated} & Imaging &  & C1, E1 & Method\\
-\citet{nguyen2022federated} & Multimodal &  & C1 & Review\\
-\citet{ogierduterrail2022flamby} & Multimodal &  & C1, T2 & Resource\\
-\citet{pati2022federated} & Imaging &  & C1, O1 & Multi-site\\
-\citet{saldanha2022swarm} & Imaging &  & C1 & Multi-site\\
-\citet{tedeschini2022decentralized} & Imaging &  & C1 & Method\\
-\citet{xu2022closing} & Imaging &  & C1, T2 & Method\\
-\citet{kalra2023decentralized} & Imaging &  & C1, C2 & Method\\
-\citet{lu2023federated} & General &  & C1 & Method\\
-\citet{ogierduterrail2023federated} & Imaging &  & C1, O1 & Multi-site\\
-\citet{tan2023personalized} & General &  & C1, T2 & Review\\
-\citet{yan2023label} & Imaging & P4 & C1, E1 & Method\\
-\midrule
-\multicolumn{5}{@{}l}{\emph{P2 Proxy} (60)}\\
-\citet{baxter2000model} & General &  & O1, E1 & Theory\\
-\citet{bendavid2010theory} & General &  & T2 & Theory\\
-\citet{pan2010survey} & General &  & E1, T2 & Review\\
-\citet{choi2016doctor} & EHR &  & E1, T2 & Method\\
-\citet{gulshan2016development} & Imaging &  & E1 & Study\\
-\citet{maurer2016benefit} & General &  & O1 & Theory\\
-\citet{shin2016deep} & Imaging &  & E1 & Study\\
-\citet{tajbakhsh2016convolutional} & Imaging &  & E1 & Study\\
-\citet{esteva2017dermatologist} & Imaging &  & E1 & Study\\
-\citet{finn2017model} & General &  & O1, E1 & Method\\
-\citet{kamnitsas2017unsupervised} & Imaging & P4 & T2 & Method\\
-\citet{snell2017prototypical} & General &  & O1, E1 & Method\\
-\citet{alsentzer2019publicly} & Text &  & E1 & Method\\
-\citet{chen2019med3d} & Imaging &  & E1 & Method\\
-\citet{gurovich2019identifying} & Imaging &  & O1 & Method\\
-\citet{prabhu2019few} & Imaging &  & O1, O3 & Method\\
-\citet{raghu2019transfusion} & Imaging &  & E1 & Study\\
-\citet{zhang2019metapred} & EHR &  & O1, E1 & Method\\
-\citet{brown2020language} & General &  & E1 & Method\\
-\citet{lee2020biobert} & Text &  & E1 & Method\\
-\citet{li2020behrt} & EHR &  & E1, E3 & Method\\
-\citet{mahajan2020meta} & Imaging &  & O1 & Method\\
-\citet{roy2020squeeze} & Imaging &  & E1, O1 & Method\\
-\citet{tripuraneni2020theory} & General &  & E1 & Theory\\
-\citet{wang2020generalizing} & General &  & O1, E1 & Review\\
-\citet{azizi2021big} & Imaging & P4 & E1, T2 & Method\\
-\citet{du2021few} & General &  & E1 & Theory\\
-\citet{huang2021gloria} & Imaging & P4 & E1 & Method\\
-\citet{radford2021learning} & General &  & E1 & Method\\
-\citet{rasmy2021med} & EHR &  & E1, O2 & Method\\
-\citet{sowrirajan2021moco} & Imaging & P4 & E1 & Method\\
-\citet{steinberg2021language} & EHR &  & E1 & Method\\
-\citet{zhou2021models} & Imaging & P4 & E1 & Method\\
-\citet{agrawal2022large} & Text &  & E1 & Method\\
-\citet{guan2022domain} & Imaging &  & T2 & Review\\
-\citet{hospedales2022meta} & General &  & O1, E1 & Review\\
-\citet{hsieh2022gestaltmatcher} & Imaging &  & O1 & Method\\
-\citet{hu2022lora} & General &  & E1 & Method\\
-\citet{mei2022radimagenet} & Imaging &  & E1 & Resource\\
-\citet{tiu2022expert} & Imaging & P4 & E1 & Method\\
-\citet{wang2022medclip} & Imaging & P4 & E1 & Method\\
-\citet{zhang2022contrastive} & Imaging & P4 & E1 & Method\\
-\citet{banerjee2023machine} & Multimodal & P3 & O1 & Review\\
-\citet{hegselmann2023tabllm} & Tabular & P3 & E1, O2 & Method\\
-\citet{hollmann2023tabpfn} & Tabular & P3 & E3, O2 & Method\\
-\citet{jiang2023health} & Text &  & E1 & Method\\
-\citet{moor2023foundation} & Multimodal &  & E1, O1 & Review\\
-\citet{nori2023capabilities} & Text &  & E1 & Study\\
-\citet{singhal2023large} & Text &  & E1 & Method\\
-\citet{theodoris2023transfer} & Omics &  & E1, E3, O1 & Method\\
-\citet{wornow2023shaky} & EHR &  & E1, T2 & Review\\
-\citet{zhou2023foundation} & Imaging & P4 & E1, T2 & Method\\
-\citet{chen2024general} & Imaging &  & E1, O1 & Method\\
-\citet{cui2024scgpt} & Omics &  & E1, E3 & Method\\
-\citet{lu2024visual} & Imaging &  & E1, O1 & Method\\
-\citet{ma2024segment} & Imaging &  & E1 & Method\\
-\citet{pai2024foundation} & Imaging &  & E1, O1 & Method\\
-\citet{vorontsov2024foundation} & Imaging &  & E1, O1 & Method\\
-\citet{xu2024whole} & Imaging &  & E1 & Method\\
-\citet{hollmann2025accurate} & Tabular & P3 & E3, O2 & Method\\
-\midrule
-\multicolumn{5}{@{}l}{\emph{P3 Prior} (25)}\\
-\citet{stein1956inadmissibility} & General & P1 & O1, C1 & Theory\\
-\citet{efron1973steins} & General & P1 & O1, C1 & Theory\\
-\citet{tibshirani1996regression} & General &  & E3 & Method\\
-\citet{steyerberg2000prognostic} & Tabular &  & O2, E3 & Study\\
-\citet{lake2015human} & General &  & O1 & Method\\
-\citet{choi2017gram} & EHR &  & E3, O1 & Method\\
-\citet{rotmensch2017learning} & EHR & P4 & E3 & Method\\
-\citet{ma2018kame} & EHR &  & E3, O1 & Method\\
-\citet{arjovsky2019invariant} & General &  & T1, T2 & Method\\
-\citet{raissi2019physics} & General &  & O1, E3 & Method\\
-\citet{shang2019gamenet} & EHR &  & E3 & Method\\
-\citet{subbaswamy2019preventing} & EHR &  & T2 & Method\\
-\citet{castro2020causality} & Imaging &  & T2, E2 & Review\\
-\citet{kissas2020machine} & Imaging &  & E1 & Method\\
-\citet{lagergren2020biologically} & Tabular &  & E1, E3 & Method\\
-\citet{sahlicostabal2020physics} & Signals &  & O1, E1 & Method\\
-\citet{vancalster2020regression} & Tabular &  & O2 & Study\\
-\citet{gulrajani2021search} & General &  & T2 & Study\\
-\citet{karniadakis2021physics} & General &  & O1, E3 & Review\\
-\citet{kohler2021human} & Text &  & O1 & Resource\\
-\citet{lu2021neural} & Tabular &  & O1 & Method\\
-\citet{riley2021penalization} & Tabular &  & O2 & Study\\
-\citet{scholkopf2021causal} & General &  & T2 & Review\\
-\citet{zhang2021empirical} & Multimodal &  & T2 & Study\\
-\citet{rueden2023informed} & General &  & O1, E3 & Review\\
-\midrule
-\multicolumn{5}{@{}l}{\emph{P4 Unlabeled} (23)}\\
-\citet{scholkopf2012causal} & General &  & E1 & Theory\\
-\citet{agarwal2016learning} & EHR &  & E1, E2 & Method\\
-\citet{halpern2016electronic} & EHR & P3 & E1, E2 & Method\\
-\citet{bai2017semi} & Imaging &  & E1 & Method\\
-\citet{ratner2017snorkel} & General & P3 & E1, E2 & Method\\
-\citet{wang2017chestx} & Imaging &  & E1, E2 & Resource\\
-\citet{ilse2018attention} & Imaging &  & E1 & Method\\
-\citet{campanella2019clinical} & Imaging &  & E1 & Method\\
-\citet{cheplygina2019not} & Imaging & P2 & E1 & Review\\
-\citet{fries2019weakly} & Imaging &  & E1 & Method\\
-\citet{irvin2019chexpert} & Imaging &  & E1, E2 & Resource\\
-\citet{wang2019clinical} & Text & P3 & E1 & Method\\
-\citet{yu2019uncertainty} & Imaging &  & E1 & Method\\
-\citet{chaitanya2020contrastive} & Imaging & P2 & E1 & Method\\
-\citet{chen2020simple} & General & P2 & E1 & Method\\
-\citet{ouyang2020self} & Imaging & P2 & E1, O1 & Method\\
-\citet{sohn2020fixmatch} & General &  & E1 & Method\\
-\citet{tajbakhsh2020embracing} & Imaging & P6 & E1, E2 & Review\\
-\citet{taleb20203d} & Imaging & P2 & E1 & Method\\
-\citet{li2021transformation} & Imaging &  & E1 & Method\\
-\citet{lu2021data} & Imaging &  & E1 & Method\\
-\citet{he2022masked} & General & P2 & E1 & Method\\
-\citet{krishnan2022self} & Multimodal & P2 & E1 & Review\\
-\midrule
-\multicolumn{5}{@{}l}{\emph{P5 Procurement} (15)}\\
-\citet{peduzzi1996simulation} & Tabular &  & O2 & Theory\\
-\citet{settles2009active} & General &  & E1 & Review\\
-\citet{figueroa2012predicting} & Text &  & E1 & Method\\
-\citet{cho2015much} & Imaging &  & E1 & Study\\
-\citet{gal2017deep} & General &  & E1 & Method\\
-\citet{yang2017suggestive} & Imaging &  & E1 & Method\\
-\citet{smailagic2018medal} & Imaging &  & E1 & Method\\
-\citet{balki2019sample} & Imaging &  & E1, O1 & Review\\
-\citet{ghorbani2019data} & General &  & C1 & Method\\
-\citet{riley2019minimumsample} & Tabular &  & O2, E3 & Theory\\
-\citet{riley2019minimum} & Tabular &  & E3 & Theory\\
-\citet{smeden2019sample} & Tabular & P3 & O2 & Theory\\
-\citet{riley2020calculating} & Tabular &  & O2, E3 & Theory\\
-\citet{budd2021survey} & Imaging &  & E1 & Review\\
-\citet{nath2021diminishing} & Imaging &  & E1 & Method\\
-\midrule
-\multicolumn{5}{@{}l}{\emph{P6 Re-expression} (32)}\\
-\citet{chawla2002smote} & Tabular &  & O2 & Method\\
-\citet{goodfellow2014generative} & General &  & E1 & Method\\
-\citet{choi2017generating} & EHR &  & C2 & Method\\
-\citet{bowles2018gan} & Imaging &  & E1 & Method\\
-\citet{fernandez2018smote} & Tabular &  & O2 & Review\\
-\citet{fridadar2018gan} & Imaging &  & E1, O2 & Study\\
-\citet{shin2018medical} & Imaging &  & E1, C2 & Method\\
-\citet{walonoski2018synthea} & EHR & P3 & C2 & Resource\\
-\citet{zhang2018mixup} & General &  & E1 & Method\\
-\citet{baowaly2019synthesizing} & EHR &  & C2 & Method\\
-\citet{beaulieujones2019privacy} & Tabular & P1 & C2 & Method\\
-\citet{jordon2019pate} & Tabular & P1 & C2 & Method\\
-\citet{shorten2019survey} & General &  & E1 & Review\\
-\citet{xu2019modeling} & Tabular &  & C2 & Method\\
-\citet{yi2019generative} & Imaging &  & E1 & Review\\
-\citet{zhao2019data} & Imaging &  & E1 & Method\\
-\citet{goncalves2020generation} & EHR &  & C2 & Study\\
-\citet{ho2020denoising} & General &  & E1 & Method\\
-\citet{yoon2020anonymization} & EHR &  & C2 & Method\\
-\citet{zhang2020ensuring} & EHR &  & C2 & Method\\
-\citet{chaitanya2021semi} & Imaging & P4 & E1 & Method\\
-\citet{chen2021synthetic} & Multimodal &  & C2, O1 & Review\\
-\citet{chlap2021review} & Imaging &  & E1 & Review\\
-\citet{jordon2022synthetic} & General &  & C2 & Review\\
-\citet{stadler2022synthetic} & Tabular &  & C2 & Study\\
-\citet{goorbergh2022harm} & Tabular &  & O2 & Study\\
-\citet{borisov2023language} & Tabular & P2 & C2 & Method\\
-\citet{kazerouni2023diffusion} & Imaging &  & E1 & Review\\
-\citet{khader2023denoising} & Imaging &  & E1, C2 & Method\\
-\citet{kotelnikov2023tabddpm} & Tabular &  & C2 & Method\\
-\citet{ktena2024generative} & Imaging &  & O3, T2 & Method\\
-\citet{shumailov2024ai} & General &  & O3 & Evidence\\
-\midrule
-\multicolumn{5}{@{}l}{\emph{No remedy: documented scarcity, failure or risk} (33)}\\
-\citet{elemam2011systematic} & Tabular &  & C2 & Review\\
-\citet{button2013power} & General &  & O2 & Evidence\\
-\citet{shokri2017membership} & General &  & C2 & Evidence\\
-\citet{varoquaux2018cross} & Imaging &  & O1, O2 & Evidence\\
-\citet{zech2018variable} & Imaging &  & T2 & Evidence\\
-\citet{bagdasaryan2019differential} & General &  & O3, C2 & Evidence\\
-\citet{brasil2019artificial} & Multimodal &  & O1 & Review\\
-\citet{christodoulou2019systematic} & Tabular &  & O2 & Review\\
-\citet{jayaraman2019evaluating} & General &  & C2 & Evidence\\
-\citet{kim2019design} & Imaging &  & T2 & Review\\
-\citet{liu2019comparison} & Imaging &  & T2 & Review\\
-\citet{obermeyer2019dissecting} & EHR &  & O3 & Evidence\\
-\citet{rocher2019estimating} & Tabular &  & C2 & Evidence\\
-\citet{schwarz2019identification} & Imaging &  & C2 & Evidence\\
-\citet{zhu2019deep} & General &  & C1, C2 & Evidence\\
-\citet{geiping2020inverting} & General &  & C1, C2 & Evidence\\
-\citet{nagendran2020artificial} & Imaging &  & T2 & Review\\
-\citet{nguengangwakap2020estimating} & Tabular &  & O1 & Evidence\\
-\citet{oakdenrayner2020hidden} & Imaging &  & O3 & Evidence\\
-\citet{schaefer2020use} & Multimodal &  & O1 & Review\\
-\citet{willemink2020preparing} & Imaging &  & E1, E2, C2 & Review\\
-\citet{wynants2020prediction} & Multimodal &  & O2, T1 & Evidence\\
-\citet{chen2021ethical} & Multimodal &  & O3 & Review\\
-\citet{finlayson2021clinician} & Multimodal &  & T1, T2 & Evidence\\
-\citet{koh2021wilds} & Multimodal &  & T2 & Resource\\
-\citet{roberts2021common} & Imaging &  & O2, T1 & Evidence\\
-\citet{wong2021external} & EHR &  & T2 & Evidence\\
-\citet{carlini2022membership} & General &  & C2 & Evidence\\
-\citet{gichoya2022ai} & Imaging &  & O3, T2 & Evidence\\
-\citet{packhauser2022deep} & Imaging &  & C2 & Evidence\\
-\citet{varoquaux2022machine} & Imaging &  & O1, T2 & Evidence\\
-\citet{yu2022external} & Imaging &  & T2 & Review\\
-\citet{hatamizadeh2023do} & Imaging &  & C1, C2 & Evidence\\
-\end{longtable}}
 
 \end{document}

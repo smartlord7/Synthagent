@@ -1,0 +1,48 @@
+% PRISMA 2020 flow diagram (Figure 7). Numbers are macros from prisma/prisma_numbers.tex.
+\begin{tikzpicture}[
+  x=1cm, y=1cm, font=\scriptsize,
+  box/.style={draw=edgec, line width=0.5pt, rounded corners=2pt, fill=slate100, align=left,
+              inner sep=3pt, text width=#1},
+  box/.default=3.45cm,
+  hdr/.style={draw=edgec, line width=0.5pt, rounded corners=2pt, fill=teal100, align=center,
+              inner sep=3pt, font=\scriptsize\bfseries, text width=#1},
+  stage/.style={draw=edgec, line width=0.5pt, rounded corners=2pt, fill=amber100, font=\scriptsize\bfseries,
+                rotate=90, minimum width=#1, inner sep=2pt, anchor=center},
+  arr/.style={-{Stealth[length=1.6mm]}, line width=0.5pt, draw=edgec}]
+% column headers
+\node[hdr=7.45cm] (hdb) at (2.31, 0) {Identification of records via databases};
+\node[hdr=5.25cm] (hot) at (9.25, 0) {Identification via other methods};
+% identification
+\node[box, anchor=north west] (id) at (-1.45, -0.45) {Records identified ($n=\PrismaIdentTotal$):\\
+  PubMed ($n=\PrismaIdentPubMed$)\\ medRxiv via Europe PMC ($n=\PrismaIdentMedRxiv$)\\
+  arXiv API ($n=\PrismaIdentArXiv$)\\ arXiv via Europe PMC ($n=\PrismaIdentArXivEPMC$)};
+\node[box=3.75cm, anchor=north west] (rm) at (2.30, -0.45) {Records removed before screening:\\
+  duplicates ($n=\PrismaDuplicates$)\\ no abstract or not in English ($n=\PrismaAutoNoAbstract$)\\
+  out-of-scope publication type, X1 ($n=\PrismaAutoType$)};
+\node[box=2.45cm, anchor=north west] (ot) at (6.40, -0.45) {Seed set and backward and forward snowballing ($n=\PrismaBibTotal$)};
+% screening
+\node[box, anchor=north west] (sc) at (-1.45, -2.45) {Records screened on title and abstract ($n=\PrismaScreened$)};
+\node[box=3.75cm, anchor=north west] (ex) at (2.30, -2.45) {Records excluded ($n=\PrismaExclTotal$):\\
+  scarcity term refers to a resource-limited setting ($n=\PrismaExclSetting$)\\
+  only a sample-size limitation ($n=\PrismaExclLimitation$)\\
+  decentralized trials or care ($n=\PrismaExclTrial$)\\
+  guideline or statement, X1 ($n=\PrismaExclGuideline$)\\
+  no learning method ($n=\PrismaExclNoLearning$)};
+\node[box=2.45cm, anchor=north west] (oa) at (6.40, -2.45) {Works assessed in full text ($n=\PrismaBibTotal$)};
+\node[box=2.45cm, anchor=north west] (ox) at (9.35, -2.45) {Excluded as background ($n=\PrismaBgTotal$): textbooks, regulations, guidelines, X1 ($n=\PrismaBgXOne$); scaling with abundant data, X2 ($n=\PrismaBgXTwo$); general theory, X3 ($n=\PrismaBgXThree$)};
+% included
+\node[box, anchor=north west] (el) at (-1.45, -5.55) {Records eligible on title and abstract, coded by dictionary for the field-level map ($n=\PrismaEligible$), of which in the coded corpus ($n=\PrismaCorpusRetrieved$)};
+\node[box=2.45cm, anchor=north west] (in) at (6.40, -5.55) {Works coded in full and included in the synthesis ($n=\PrismaCoded$)};
+% stage labels
+\node[stage=2.0cm] at (-1.85, -1.30) {Identification};
+\node[stage=2.9cm] at (-1.85, -3.95) {Screening};
+\node[stage=1.2cm] at (-1.85, -6.10) {Included};
+% arrows
+\draw[arr] (id.south -| sc.north) -- (sc.north);
+\draw[arr] (id.east) -- (rm.west |- id.east);
+\draw[arr] (sc.south) -- (el.north);
+\draw[arr] (sc.east) -- (ex.west |- sc.east);
+\draw[arr] (ot.south) -- (oa.north);
+\draw[arr] (oa.east) -- (ox.west |- oa.east);
+\draw[arr] (oa.south) -- (in.north);
+\end{tikzpicture}

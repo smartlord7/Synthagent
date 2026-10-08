@@ -198,6 +198,7 @@ def main():
     b.set_title("Mean over hospitals and replicates", fontsize=7.5)
     b.legend(frameon=False, fontsize=6.3)
     ghb.tidy(a, b)
+    ghb.tidy(a, b)
     style.save(fig, ghb.FIGDIR / "s7_logistic.pdf")
     json.dump(dict(n=n.tolist(), tau2=TAU2S, eps_grid=[str(e) for e in EPS_GRID], table=table),
               open(ghb.RESDIR / "s7_logistic.json", "w"), indent=1)

@@ -8,3 +8,5 @@
 main.pdf
 comment.cut
 __pycache__/
+prisma/data/screened.jsonl.gz
+prisma/data/*.log

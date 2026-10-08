@@ -3,8 +3,9 @@
 24 hospitals in 4 regions of 6. theta_k = mu + r_region(k) + u_k with r ~ N(0, tau_r^2) and
 u ~ N(0, tau_w^2 = 0.002). The similarity graph links hospitals in the same region. GMRF: Jacobi
 iterations on the privatized releases (100 sweeps), then each hospital's final update with its own
-noise-free estimate; anchor mu_0 = mu + N(0, 0.05^2) (channel P3). beta and gamma are chosen on a
-grid using independent tuning replicates, then evaluated on fresh ones. epsilon = 1.
+noise-free estimate. The anchor term is switched off (gamma = 0) so that both priors use the same
+information. beta is chosen on a grid using independent tuning replicates, then evaluated on fresh
+ones; the similarity graph (regions) is assumed known. epsilon = 1.
 """
 import json
 
@@ -17,7 +18,7 @@ import style
 R_TUNE, R, EPS, TAU2_W, SWEEPS = 1000, 8000, 1.0, 0.002, 100
 TAU2_R = np.logspace(-3.5, -0.5, 9)
 BETAS = np.logspace(0, 4, 13)
-GAMMAS = np.array([0.0, 1.0, 10.0, 100.0])
+GAMMAS = np.array([0.0])  # no anchor, so that both priors use the same information
 REGIONS = 4
 
 
@@ -73,7 +74,7 @@ def main():
     style.setup()
     fig, ax = plt.subplots(figsize=(3.6, 2.4))
     ax.plot(TAU2_R, out["ghb"], "-o", ms=3, color=style.TEAL700, lw=1.3, label="GHB, exchangeable prior")
-    ax.plot(TAU2_R, out["gmrf"], "-s", ms=3, color=style.VIOLET600, lw=1.3, label="GHB, GMRF prior (Eq. 7)")
+    ax.plot(TAU2_R, out["gmrf"], "-s", ms=3, color=style.VIOLET600, lw=1.3, label="GHB, GMRF prior by region (Eq. 7)")
     ax.plot(TAU2_R, out["ghb_worst"], ":", color=style.TEAL700, lw=1.0, label="worst hospital")
     ax.plot(TAU2_R, out["gmrf_worst"], ":", color=style.VIOLET600, lw=1.0)
     ax.axhline(1, color=style.SLATE800, lw=0.6)
@@ -81,6 +82,7 @@ def main():
     ax.set_xlabel(r"Between-region heterogeneity $\tau_r^2$  ($\tau_w^2$=0.002)")
     ax.set_ylabel(r"$R_k/v_k$, mean over hospitals")
     ax.legend(frameon=False, fontsize=6.3, loc="upper left")
+    ghb.tidy(ax)
     ghb.tidy(ax)
     style.save(fig, ghb.FIGDIR / "s6_gmrf.pdf")
     json.dump(dict(n=n.tolist(), region=region.tolist(), **out), open(ghb.RESDIR / "s6_gmrf.json", "w"), indent=1)
