@@ -462,7 +462,7 @@ A work was included if it (I1) proposes, evaluates or reviews a way of learning 
 \caption{Coding scheme applied to every work in the corpus.}
 \label{tab:coding}
 \footnotesize
-\begin{tabularx}{\linewidth}{@{}lp{2.5cm}X@{}}
+\begin{tabularx}{\linewidth}{@{}p{2.3cm}p{2.5cm}X@{}}
 \toprule
 Attribute & Values & Rule\\
 \midrule
@@ -559,7 +559,119 @@ Synthetic data are also promoted as a privacy technology \cite{chen2021synthetic
 Taken together, the six channels cover a wide range of techniques, but the evidence behind them is uneven. Some channels have been tested at multi-site scale, others mainly on internal splits of a single dataset. The next section reads the reported results through the taxonomy to separate the two.
 
 
-%%CHUNK4%%
+%% ===================================================================
+\section{What the Evidence Shows, and What It Does Not}\label{sec:evidence}
+
+We read the evidence at two levels: the shape of the coded corpus, which shows where the literature has worked, and the quantitative findings it reports, which show what that work achieved. All counts below come from the coding of Section~\ref{sec:method} and are subject to the threats to validity listed there.
+
+\subsection{Where the literature has worked}\label{sec:S7_1}
+
+\begin{table}[t]
+\caption{Representative solution families by provenance channel, with the scarcity classes they target, the main assumption, and the main limitation in healthcare.}
+\label{tab:families}
+\scriptsize
+\setlength{\tabcolsep}{4pt}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{2cm}>{\raggedright\arraybackslash}p{3.3cm}>{\raggedright\arraybackslash}p{0.95cm}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X@{}}
+\toprule
+Family & Representative work & Targets & Key assumption & Main limitation\\
+\midrule
+\multicolumn{5}{@{}l}{\emph{P1 Pooling}}\\
+Common data models & OHDSI/OMOP \cite{hripcsak2015observational,overhage2012validation} & C2 & semantic harmonization is feasible & harmonization cost; no joint fitting by itself\\
+Distributed statistics & GLORE \cite{wu2012grid}, ODAL \cite{duan2020learning}, DataSHIELD \cite{gaye2014datashield} & C1, O2 & low-dimensional parametric model & limited model classes\\
+Federated learning & FedAvg \cite{mcmahan2017communication}, EXAM \cite{dayan2021federated}, \cite{pati2022federated} & C1, O1, O2 & trusted server; moderate heterogeneity & non-i.i.d. drift \cite{hsieh2020non}; leakage without DP \cite{geiping2020inverting}\\
+Personalized FL & Ditto \cite{li2021ditto}, FedRep \cite{collins2021exploiting}, IFCA \cite{ghosh2020efficient} & C1, T2 & shared low-dim.\ structure & small sites may still overfit local heads\\
+Decentralized learning & D-PSGD \cite{lian2017can}, Swarm \cite{warnatherresthal2021swarm}, ProxyFL \cite{kalra2023decentralized} & C1 & connected graph & slow mixing on sparse graphs\\
+\midrule
+\multicolumn{5}{@{}l}{\emph{P2 Proxy}}\\
+Transfer learning & \cite{pan2010survey,raghu2019transfusion} & E1, E3 & source close to target & negative transfer; limited gain on large tasks\\
+Self-supervised and foundation models & \cite{azizi2021big,moor2023foundation,zhou2023foundation} & E1, E3, T2 & pretraining data cover target & bias inherited from pretraining; compute\\
+Tabular priors & TabPFN \cite{hollmann2025accurate}, TabLLM \cite{hegselmann2023tabllm} & E3, O2 & synthetic or textual prior matches reality & limited size and feature range; opacity\\
+Meta-learning & MAML \cite{finn2017model}, ProtoNets \cite{snell2017prototypical} & O1, E1 & many related tasks available & task distribution itself scarce\\
+\midrule
+\multicolumn{5}{@{}l}{\emph{P3 Prior}}\\
+Hierarchical Bayes, shrinkage & \cite{efron1973steins,gelman2013bayesian} & O1 to O3, C1 & exchangeability across groups & misspecified hyperpriors\\
+Physics-informed & \cite{karniadakis2021physics,raissi2019physics} & O1, E3 & known mechanism & mechanism often partial in medicine\\
+Ontology-guided & GRAM \cite{choi2017gram} & E3, O1 & ontology reflects similarity & ontologies built for billing\\
+Causal and invariant & IRM \cite{arjovsky2019invariant}, \cite{castro2020causality} & T1, T2 & stable causal mechanisms & needs diverse environments\\
+\midrule
+\multicolumn{5}{@{}l}{\emph{P4 Unlabeled, P5 Procurement}}\\
+Semi- and weak supervision & FixMatch \cite{sohn2020fixmatch}, Snorkel \cite{ratner2017snorkel} & E1 & cluster or manifold assumption & confirmation bias\\
+Active learning, design & \cite{budd2021survey,riley2020calculating,settles2009active} & E1, O2 & labeling oracle available & cold start; sampling bias\\
+\midrule
+\multicolumn{5}{@{}l}{\emph{P6 Re-expression}}\\
+Augmentation, SMOTE & \cite{chawla2002smote,shorten2019survey} & E1, O2 & invariances known & no new information (Proposition~\ref{prop:nfl})\\
+Synthetic data & \cite{fridadar2018gan,jordon2019pate,xu2019modeling} & C1, C2, O2 & generator faithful & privacy-utility trade-off \cite{stadler2022synthetic}; tail loss \cite{shumailov2024ai}\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Figure~\ref{fig:corpus} profiles the corpus. Two thirds of the 290 works (204) appeared in or after 2019. Of the 206 works evaluated on health data, almost half (100) use imaging, while structured EHR (35), tabular registries (36), clinical text (9), omics (4), physiological signals (2) and multimodal data (20) share the rest; the remaining 84 are general methods that health applications build on. Most works propose a method (152). Only 18 have a multi-institution study as their primary contribution, and every one of them is a pooling study. No proxy, prior, unlabeled, procurement or re-expression work in the corpus has a multi-institution study as its main result, although several report external validation alongside a method.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/fig_corpus}
+\caption{Profile of the coded corpus (290 works), colored by primary provenance channel. (a) Year of publication; the drop after 2022 reflects indexing and citation lag in a curated corpus, not a trend. (b) Data modality, for the 206 works evaluated on health data. (c) Primary contribution type.}
+\label{fig:corpus}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.72\linewidth]{figures/fig_gapmap}
+\caption{Gap map. Each cell gives the number of corpus works that target a scarcity class (rows) through a channel, as primary or secondary channel (columns); shading is on a log scale. The small marks below each count repeat the judged potential of Figure~\ref{fig:matrix} ($+$ weak to $+\,+\,+$ strong, $\cdot$ none). Red outlines mark cells judged at least moderately promising that contain two works or fewer.}
+\label{fig:gapmap}
+\end{figure}
+
+Figure~\ref{fig:gapmap} sets the coverage of each cell of the taxonomy against the judged potential of Figure~\ref{fig:matrix}. Coverage is very uneven. Label poverty (E1, 100 works) and custodial fragmentation (C1, 97 works) dominate, and they are served by different channels: E1 mainly by proxy (56) and unlabeled data (33), C1 almost only by pooling (93). Temporal obsolescence (T1) and measurement poverty (E2) are targeted by 8 works each, and stratum sparsity (O3) by 10, although these are the classes that the external-validation failures of Section~\ref{sec:intro} point to. Ten cells judged at least moderately promising contain two works or fewer; they are outlined in red. Four of them lie in the T1 row and four in the procurement column. Channels are also rarely combined. Of the 257 remedy works, 48 have a secondary channel, mostly self-supervised pretraining that mixes proxy and unlabeled information (16) and personalized pooling that mixes pooling with a prior or a shared representation (11). No work in the corpus combines pooling with procurement.
+
+\subsection{What the reported results show}\label{sec:S7_2}
+
+Table~\ref{tab:evidence} collects quantitative results reported in the literature. They are not directly comparable, since tasks, metrics and baselines differ, and we report them as the original authors did. Read through the taxonomy and together with the corpus profile, they support six observations.
+
+\begin{table}[t]
+\caption{Selected quantitative findings, as reported by the original authors.}
+\label{tab:evidence}
+\footnotesize
+\begin{tabularx}{\linewidth}{@{}p{1.15cm}>{\raggedright\arraybackslash}p{2.6cm}X@{}}
+\toprule
+Channel & Study & Reported finding\\
+\midrule
+P1 & \citet{sheller2020federated} & Federated training of brain tumor segmentation reached 99\% of the model quality of centrally pooled data.\\
+P1 & \citet{dayan2021federated} & Across 20 institutions, federated EXAM improved average AUC by 16\% and generalisability by 38\% over single-site models.\\
+P1 & \citet{pati2022federated} & 71 sites, 6,314 patients: 33\% better delineation of the surgically targetable tumor and 23\% of the whole tumor than a publicly trained model.\\
+P2 & \citet{azizi2021big} & Self-supervised pretraining: $+6.7$\% top-1 accuracy in dermatology, $+1.1$\% mean AUC on chest X-rays.\\
+P2 & \citet{raghu2019transfusion} & ImageNet transfer gave little benefit on large medical imaging tasks; small models performed comparably.\\
+P2, P3 & \citet{hollmann2025accurate} & TabPFN outperformed baselines tuned for 4\,h, in 2.8\,s, on datasets up to 10,000 samples.\\
+P6 & \citet{fridadar2018gan} & GAN augmentation on 182 liver lesions: sensitivity 78.6\% to 85.7\%, specificity 88.4\% to 92.4\%.\\
+P6 & \citet{stadler2022synthetic} & Synthetic data gave no better privacy-utility trade-off than traditional anonymization.\\
+T2 & \citet{wong2021external} & A widely deployed sepsis model: external AUC 0.63, missing 67\% of sepsis cases.\\
+T2 & \citet{zech2018variable} & Pneumonia CNNs identified the source hospital; external performance was significantly lower in 3 of 5 comparisons.\\
+O2, T1 & \citet{roberts2021common} & Of 62 COVID-19 imaging models reviewed in detail, none was of potential clinical use.\\
+all & \citet{varoquaux2018cross} & With about 100 samples, cross-validation error bars are around $\pm 10$\%.\\
+C & \citet{rocher2019estimating} & 99.98\% of Americans re-identifiable from 15 demographic attributes.\\
+C & \citet{bagdasaryan2019differential} & DP training reduces accuracy more for under-represented groups.\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\paragraph{1. Pooling works when the custodial gap is real, and is the only channel tested across institutions} The largest gains in Table~\ref{tab:evidence} come from federated pooling in settings that are siloed-small in the sense of Definition~\ref{def:siloed}: rare tumors, a new disease, many modest sites. This is what the matrix in Figure~\ref{fig:matrix} predicts. The gains are reported relative to single-site or public-data baselines, and are largest at the smallest sites. Pooling is also the only channel whose evidence includes multi-institution studies as primary results (18 of 102 pooling works); the other 84 evaluate on simulated partitions, public benchmarks or theory.
+
+\paragraph{2. Proxy information helps in proportion to its relevance} Self-supervised pretraining on in-domain unlabeled data outperforms generic ImageNet transfer \cite{azizi2021big,raghu2019transfusion}, and the strongest small-data results on tabular problems come from models whose prior was designed for small tabular problems \cite{hollmann2025accurate}. Generic scale is less valuable than relevant structure. Foundation models are the fastest-growing part of the proxy channel, but their evaluation is still mostly on curated benchmarks \cite{wornow2023shaky}, so how much they reduce $\sigma$ at a specific hospital is largely unmeasured.
+
+\paragraph{3. Re-expression helps modestly and does not travel} Augmentation gains are real but usually reported on internal test sets, and the privacy case for synthetic data is weak \cite{stadler2022synthetic}. Rebalancing by resampling harms calibration in clinical risk models \cite{goorbergh2022harm}. Where generative augmentation does help under shift \cite{ktena2024generative}, the generator was trained on much larger data, so the gain comes through the proxy channel. All of this follows from Proposition~\ref{prop:nfl}.
+
+\paragraph{4. Evaluation is itself a small-data problem} The most consistent finding of the meta-research is that small studies produce over-optimistic and unstable estimates. Cross-validation on 100 samples has error bars near $\pm$10\% \cite{varoquaux2018cross}; reported accuracy in some imaging applications falls as studies get larger \cite{varoquaux2022machine}; under-powered studies inflate effect sizes generally \cite{button2013power,ioannidis2005most}; and most COVID-19 models could not be used \cite{roberts2021common,wynants2020prediction}. Among imaging AI studies, only 6\% of 516 performed external validation \cite{kim2019design}; systematic comparisons with clinicians found few studies with out-of-sample validation and frequent risk of bias \cite{liu2019comparison,nagendran2020artificial}; externally validated algorithms often lose performance \cite{yu2022external}; and in clinical prediction, machine learning showed no performance benefit over logistic regression in comparisons at low risk of bias \cite{christodoulou2019systematic}. A method that ``works on small data'' has often only been evaluated on small data. External, site-held-out validation and reporting standards such as TRIPOD+AI \cite{collins2024tripod} address this directly.
+
+\paragraph{5. Privacy costs are paid by the smallest} DP noise is calibrated to sensitivity, which scales inversely with sample size, and its accuracy cost falls disproportionately on small datasets and minority groups \cite{bagdasaryan2019differential,tramer2021differentially}. A privacy mechanism designed without attention to small sites can cancel the benefit of pooling for exactly the participants who need it. Section~\ref{sec:blueprint} designs around this.
+
+\paragraph{6. Research effort follows convenient data, not severe scarcity} The corpus profile shows two dense regions, label poverty in imaging and custodial fragmentation through pooling, and three nearly empty rows: temporal obsolescence, measurement poverty and stratum sparsity. Procurement, which clinical research treats as the first remedy, is the smallest channel and is never combined with pooling. The empty cells of Figure~\ref{fig:gapmap} are not evidence that those remedies fail; they are untested, and they are where new work is most likely to change practice.
+
+\subsection{Limitations by channel}\label{sec:S7_3}
+
+ \textbf{Pooling} assumes a trusted coordinator, roughly exchangeable sites, and the governance to run a consortium; the first and third are often missing. Model updates leak information without formal protection \cite{geiping2020inverting,zhu2019deep}, and formal protection costs accuracy. Heterogeneity can make a global model worse than a local one for some sites \cite{hsieh2020non}. \textbf{Proxy} methods inherit the biases and blind spots of the source, including demographic shortcuts \cite{gichoya2022ai}, and their benefit is hard to predict before trying. \textbf{Prior} knowledge is incomplete for most diseases and, when wrong, biases the model in a way that more local data corrects only slowly. \textbf{Unlabeled} data help only under assumptions on the data distribution that are rarely tested. \textbf{Procurement} is slow, expensive and subject to the same governance as any data collection. \textbf{Re-expression} cannot exceed the information in its inputs. Across all channels, uncertainty is under-reported: modern networks are poorly calibrated \cite{guo2017calibration}, and calibration is the first property to fail under small samples and shift.
+
+\paragraph{What the gaps imply} The six observations and the limitations above point to the same place. Pooling is the only strong remedy for custodial scarcity (observation 1), but in its standard form it needs a trusted server, assumes away heterogeneity, and lets privacy costs fall on the smallest participants (observation 5). Proxy and prior information are most useful as a starting point rather than a substitute (observation 2), and re-expression cannot carry the load (observation 3). A method for siloed hospitals should therefore combine personalized pooling with privacy spent where it hurts least, on top of a public representation, and be evaluated honestly (observation 4). It should also  leave room for the neglected channels, in particular procurement inside a consortium (observation 6). The next section derives such a method.
+
+%%CHUNK5%%
 
 \bibliographystyle{ACM-Reference-Format-recovered}
 \bibliography{references}
