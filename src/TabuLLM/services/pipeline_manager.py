@@ -343,6 +343,15 @@ def run_single_dataset_benchmark(args):
                 if apply_post_processing:
                     generated_rows = PostProcessor.apply_active_rules(generated_rows, rules_hierarchy.get("user", []))
                 if raw_prompting:
+                    # A fold in which no request returned a completion measures the provider
+                    # (quota, rate limit, network), not the model's output. Fail it so the unit
+                    # is not checkpointed as complete and --resume retries it.
+                    raw_stats = result_bundle.get("stats", {})
+                    if raw_stats.get("total_tokens", 0) == 0:
+                        raise RuntimeError(
+                            f"raw_prompting fold {fold_num}: no LLM request succeeded "
+                            f"(request_errors={raw_stats.get('request_errors', 0)})"
+                        )
                     generated_rows, type_errors = _align_raw_rows(generated_rows, df_orig_all)
                     result_bundle.setdefault("stats", {})["type_errors"] = type_errors
                 generation_stats = {**result_bundle.get("stats", {}), "generation_seconds": generation_seconds}
