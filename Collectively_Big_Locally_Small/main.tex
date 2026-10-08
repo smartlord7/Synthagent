@@ -1,0 +1,350 @@
+\documentclass[acmsmall,screen,nonacm]{acmart}
+
+\citestyle{acmauthoryear}
+
+\usepackage{tabularx}
+\usepackage{enumitem}
+\usepackage{multirow}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning}
+
+% Colours of the TikZ figures
+\definecolor{edgec}{rgb}{0.3851,0.41255,0.44}
+\definecolor{slate100}{rgb}{0.9451,0.96078,0.97647}
+\definecolor{red100}{rgb}{0.99608,0.88628,0.88628}
+\definecolor{teal100}{rgb}{0.8,0.98431,0.9451}
+\definecolor{blue100}{rgb}{0.85883,0.91765,0.99608}
+\definecolor{amber100}{rgb}{0.99608,0.95294,0.7804}
+\definecolor{violet100}{rgb}{0.92941,0.91374,0.99608}
+\definecolor{hdrc}{rgb}{0.12158,0.16078,0.2}
+\definecolor{conc}{rgb}{0.47295,0.49648,0.52}
+\definecolor{famO}{rgb}{0.7255,0.1098,0.1098}
+\definecolor{famE}{rgb}{0.14511,0.38824,0.92157}
+\definecolor{famT}{rgb}{0.85098,0.46667,0.02353}
+\definecolor{famC}{rgb}{0.05882,0.46275,0.43137}
+
+\newcommand{\eff}{\mathrm{eff}}
+
+\begin{document}
+
+\title{Collectively Big, Locally Small}
+\subtitle{Formalizing Small Data in Healthcare and Learning Privately Across Siloed Hospitals}
+
+\author{Sancho Amaral Sim\~{o}es}
+\authornote{Corresponding author.}
+\email{sanchosimoes@student.dei.uc.pt}
+\affiliation{%
+  \institution{CISUC, DEI, FCTUC, University of Coimbra}
+  \city{Coimbra}
+  \country{Portugal}}
+
+\author{Jo\~{a}o P. Vilela}
+\email{jvilela@fc.up.pt}
+\affiliation{%
+  \institution{CISUC, DEI, FCTUC, University of Coimbra}
+  \city{Coimbra}
+  \country{Portugal}}
+\affiliation{%
+  \institution{CRACS/INESC TEC, DCS, FCUP, University of Porto}
+  \city{Porto}
+  \country{Portugal}}
+
+\author{Pedro Henriques Abreu}
+\email{pha@dei.uc.pt}
+\affiliation{%
+  \institution{CISUC, DEI, FCTUC, University of Coimbra}
+  \city{Coimbra}
+  \country{Portugal}}
+
+\begin{abstract}
+Health systems produce data at an enormous rate, yet most clinical learning problems are small. A rare disease registry holds a few hundred patients, an intensive care unit sees a handful of the outcome it wants to predict, a regional hospital owns a fraction of the cases needed to validate a model, and the data that would close the gap sit in other institutions that cannot legally or practically share them. ``Small data'' is invoked constantly in the literature but is rarely defined in a way that can be measured, compared, or reasoned about. This survey and position paper does four things. First, it gives a task-relative formal definition of small data through an effective sample size and a smallness index that combine learning-theoretic sample complexity with the clinical sample-size criteria used in prediction modeling. Second, it introduces a new two-axis taxonomy. The first axis classifies ten forms of scarcity in healthcare by the term of the smallness index they degrade, grouped into ontic, epistemic, temporal-contextual and custodial scarcity. The second axis classifies every remedy by the provenance of the information it injects (pooling, proxy, prior, unlabeled data, procurement, re-expression), and we prove that re-expression, which includes augmentation and synthetic data, cannot add information about the target that was not already present in the data or in the generator. Third, we code a curated corpus of 290 works on both axes and use it to review the solution families across imaging, electronic health records, omics and tabular data, to summarize the quantitative evidence, and to locate where it is thin. Only 18 of the 290 works are multi-institution studies, all of them on pooling, and temporal obsolescence, measurement poverty and stratum sparsity are barely addressed by any channel. Fourth, for sparse networks of hospitals that operate as data silos, we derive a privacy-preserving hierarchical borrowing scheme that runs by gossip over the existing collaboration graph without a central server. We show that it adds the same number of ``virtual patients'', $\sigma^2/(\tau^2+M)$, to every site, so that the smallest hospitals gain the most, that differential privacy enters only through the population-level estimate, and that the gossip phase incurs no additional privacy cost. We close with a research agenda.
+\end{abstract}
+
+\begin{CCSXML}
+<ccs2012>
+   <concept>
+       <concept_id>10010147.10010257</concept_id>
+       <concept_desc>Computing methodologies~Machine learning</concept_desc>
+       <concept_significance>500</concept_significance>
+       </concept>
+   <concept>
+       <concept_id>10010405.10010444.10010449</concept_id>
+       <concept_desc>Applied computing~Health informatics</concept_desc>
+       <concept_significance>500</concept_significance>
+       </concept>
+   <concept>
+       <concept_id>10002978.10003029.10011150</concept_id>
+       <concept_desc>Security and privacy~Privacy protections</concept_desc>
+       <concept_significance>300</concept_significance>
+       </concept>
+ </ccs2012>
+\end{CCSXML}
+
+\ccsdesc[500]{Computing methodologies~Machine learning}
+\ccsdesc[500]{Applied computing~Health informatics}
+\ccsdesc[300]{Security and privacy~Privacy protections}
+
+\keywords{small data, healthcare, effective sample size, taxonomy, federated learning, decentralized learning, differential privacy, hierarchical Bayes, data silos, rare diseases, foundation models, synthetic data}
+
+\maketitle
+\renewcommand{\shortauthors}{Sim\~{o}es et al.}
+
+%% ===================================================================
+\section{Introduction}\label{sec:intro}
+
+The standard story of machine learning in medicine is a story about scale. Large labeled collections of retinal photographs, skin lesions and chest radiographs produced models that matched specialists on narrow tasks \cite{rajpurkar2022ai,topol2019high}, and the broader field learned that performance tends to grow predictably with data \cite{halevy2009unreasonable,hestness2017deep,kaplan2020scaling,sun2017revisiting}. The story is accurate for the problems it describes. It is not representative of the problems most clinicians and health systems actually face.
+
+Consider what a typical clinical question looks like from the inside. Rare diseases are individually rare but collectively common: the Orphanet database lists more than six thousand of them, affecting an estimated 3.5\% to 5.9\% of the population \cite{nguengangwakap2020estimating}, and most have cohorts of tens or hundreds of patients worldwide \cite{banerjee2023machine,schaefer2020use}. Prediction models in common conditions are routinely built on a few dozen outcome events, which is why the clinical literature has spent three decades arguing over events per variable \cite{peduzzi1996simulation,riley2019minimumsample,smeden2019sample}. During the first months of COVID-19, hundreds of models were developed from small, local, convenience samples, and systematic reviews found nearly all of them to be at high risk of bias and none fit for clinical use \cite{roberts2021common,wynants2020prediction}. Even large systems turn small at the point of deployment: a proprietary sepsis model used in hundreds of hospitals achieved an area under the curve of 0.63 on external validation and missed two thirds of sepsis cases \cite{wong2021external}, and convolutional networks for pneumonia learned to recognize the hospital that produced an image rather than the disease \cite{zech2018variable}.
+
+These failures share a structure. Health data are abundant in aggregate and scarce where they are needed: for the specific outcome, in the specific subgroup, at the specific site, in the current period, with labels. They are also fragmented. Every hospital holds a slice of the population under its own legal, ethical and technical constraints \cite{cohen2018hipaa,gdpr2016,price2019privacy}, and the European Health Data Space regulation \cite{ehds2025} is a recent recognition that this fragmentation is itself a policy problem. The consequence is a paradox that motivates this paper: \emph{healthcare is collectively big and locally small}.
+
+The term ``small data'' appears in social science \cite{kitchin2015small}, in personal health \cite{estrin2014small,hekler2019we}, in statistics \cite{faraway2018when}, and in hundreds of applied papers. It is almost always used informally, as a synonym for ``fewer samples than we would like''. Three consequences follow. Methods are compared across problems whose difficulty is not comparable. Remedies that cannot work in a given setting are applied anyway, as when synthetic data is expected to compensate for a cohort that does not contain the relevant information. And the specific case of many small, isolated institutions, which is the default organizational form of healthcare, is treated either as a federated learning problem with a central server that often does not exist, or not at all.
+
+\paragraph{Contributions} This paper is both a survey and a position paper. Its contributions are as follows.
+\begin{enumerate}[leftmargin=*,itemsep=2pt]
+\item \textbf{A formal definition.} We define small data relative to a task, through an \emph{effective sample size} $n^{\eff}$ that accounts for clustering, missing labels, label noise, distribution shift and outcome rarity, and a \emph{smallness index} $\sigma = n^{\star}/n^{\eff}$ that compares it with the sample complexity $n^{\star}$ of the task (Section~\ref{sec:definition}). The definition assembles known ingredients (Kish's design effect, the sample complexity of learning with label noise, and the sample-size criteria used for clinical prediction models) into one task-relative quantity. It is a first-order heuristic for diagnosis and comparison, not a new estimator.
+\item \textbf{A new taxonomy.} We propose the Scarcity-Provenance taxonomy (Sections~\ref{sec:scarcity} and~\ref{sec:provenance}). Its first axis classifies ten forms of scarcity in healthcare by the term of $\sigma$ they degrade. Its second axis classifies remedies by where the missing information comes from. We prove a ``no free lunch'' result for re-expression (Proposition~\ref{prop:nfl}) that explains formally why augmentation and synthetic data cannot by themselves solve a small-data problem.
+\item \textbf{A coded survey.} We classify a curated corpus of 290 works on both axes (Section~\ref{sec:method}, Appendix~\ref{app:corpus}), review the solutions channel by channel (Section~\ref{sec:solutions}), and compare where the literature has actually worked with where the taxonomy says it could, which exposes specific empty cells (Section~\ref{sec:evidence}).
+\item \textbf{A blueprint for siloed hospital networks.} For sparse networks of hospitals without a trusted central server, we derive a privacy-preserving hierarchical borrowing scheme with closed-form risk, explicit privacy cost and convergence on sparse graphs (Section~\ref{sec:blueprint}), and argue that it is a principled default for this setting. The ingredients are standard; their combination for serverless hospital networks, and its empirical evaluation, are what remain open.
+\item \textbf{A research agenda} with concrete open problems (Section~\ref{sec:agenda}).
+\end{enumerate}
+
+\begin{figure*}[t]
+\centering
+\begin{tikzpicture}[x=1bp,y=1bp,
+  box/.style={fill=#1,draw=edgec,line width=0.4pt,rounded corners=2pt},
+  btxt/.style={align=center,font=\footnotesize\sffamily,inner sep=0pt,text width=2.7cm},
+  arr/.style={draw=edgec,line width=0.8pt,-{Stealth[length=2.2mm]}}]
+\path[box=slate100] (-42.297,-17.717) rectangle (42.297,17.717);
+\path[box=red100] (55.499,-17.717) rectangle (140.094,17.717);
+\path[box=teal100] (153.295,-17.717) rectangle (237.890,17.717);
+\path[box=blue100] (251.092,-17.717) rectangle (335.687,17.717);
+\path[box=amber100] (55.499,-77.245) rectangle (237.890,-41.812);
+\path[box=violet100] (251.092,-77.245) rectangle (335.687,-41.812);
+\node[btxt] at (0,0) {\textbf{\S2 Definition}\\ $n^{\eff}$, $n^{\star}$, $\sigma = n^{\star}/n^{\eff}$};
+\node[btxt] at (97.797,0) {\textbf{\S3 Scarcity axis}\\ where the deficit enters $\sigma$};
+\node[btxt] at (195.594,0) {\textbf{\S4 Provenance axis}\\ where missing information comes from};
+\node[btxt] at (293.390,0) {\textbf{\S5 to \S7 Survey}\\ corpus, methods, evidence};
+\node[btxt,text width=6.2cm] at (146.695,-59.528) {\textbf{\S8 Blueprint} for sparse, siloed hospital networks: privatized hierarchical borrowing by gossip};
+\node[btxt] at (293.390,-59.528) {\textbf{\S9 Agenda}\\ open problems};
+\draw[arr] (42.497,0) -- (55.299,0);
+\draw[arr] (140.294,0) -- (153.095,0);
+\draw[arr] (238.090,0) -- (250.892,0);
+\draw[arr] (195.593,-17.916) -- (195.593,-41.612);
+\draw[arr] (293.390,-17.916) -- (293.390,-41.612);
+\draw[arr] (238.090,-59.528) -- (250.892,-59.528);
+\draw[arr] (0,-17.916) -- (0,-59.528) -- (55.299,-59.528);
+\end{tikzpicture}
+\caption{Structure of the paper. The definition of Section~\ref{sec:definition} produces the two axes of the taxonomy, which serve as the coding scheme of the survey and shape the design of the blueprint.}
+\label{fig:structure}
+\end{figure*}
+
+\paragraph{Scope and method} We cover supervised and semi-supervised prediction from clinical data: imaging, structured electronic health records (EHR), clinical text, omics and tabular registries. We do not cover causal effect estimation from small trials in depth, although several of our results apply to it. How the corpus was assembled and coded, and what remains to be done before the review can be called systematic, is described in Section~\ref{sec:method}. Existing surveys cover individual families, such as federated learning in healthcare \cite{nguyen2022federated,rieke2020future,xu2021federated}, few-shot learning \cite{wang2020generalizing}, meta-learning \cite{hospedales2022meta}, imperfect medical datasets \cite{cheplygina2019not,tajbakhsh2020embracing}, informed machine learning \cite{rueden2023informed} and synthetic data \cite{chen2021synthetic,jordon2022synthetic}. Among the surveys we found, none defines small data formally, none organizes remedies by information provenance, and none treats the sparse, serverless hospital network as a first-class setting.
+
+\paragraph{How the parts connect} The paper is built as a single argument, shown in Figure~\ref{fig:structure}. We first make smallness measurable (Section~\ref{sec:definition}). The terms of that measure tell us \emph{why} a dataset is small, which gives the scarcity axis of the taxonomy (Section~\ref{sec:scarcity}). Knowing why points to \emph{where} the missing information could come from, which gives the provenance axis (Section~\ref{sec:provenance}). The two axes then serve as the coding scheme for a corpus of 290 works (Section~\ref{sec:method}), which organizes the survey of existing methods (Section~\ref{sec:solutions}) and the reading of their evidence (Section~\ref{sec:evidence}). The gaps that this reading exposes, together with the definition of siloed smallness from Section~\ref{sec:definition}, determine the design of the blueprint (Section~\ref{sec:blueprint}), and what remains unsolved becomes the agenda (Section~\ref{sec:agenda}).
+
+%% ===================================================================
+\section{What Is Small Data? A Formal Account}\label{sec:definition}
+
+The paradox of the introduction can only be studied once it can be measured. This section turns ``small'' from an adjective into a quantity, and that quantity is the thread that runs through the rest of the paper.
+
+\begin{table}[t]
+\caption{Main notation.}
+\label{tab:notation}
+\small
+\begin{tabularx}{\linewidth}{@{}lX@{}}
+\toprule
+Symbol & Meaning\\
+\midrule
+$\mathcal{T}=(P,\mathcal{H},\ell,\varepsilon,\delta)$ & learning task: target distribution, hypothesis class, loss, tolerance, confidence\\
+$n$, $n^{\eff}$ & nominal number of records; effective sample size (Definition~\ref{def:ess})\\
+$n^{\star}_{\mathcal{T}}$ & sample complexity of $\mathcal{T}$ (Definition~\ref{def:samplecomplexity})\\
+$\sigma_{\mathcal{T}}(\mathcal{D})$ & smallness index $n^{\star}_{\mathcal{T}}/n^{\eff}(\mathcal{D})$ (Definition~\ref{def:smallness})\\
+DEFF, $\rho_L$, $\eta$, $\rho_S$, $\pi$ & design effect, labeled fraction, label noise rate, shift efficiency, outcome prevalence\\
+$K$, $\mathcal{G}=(V,E)$, $W$ & number of hospitals, collaboration graph, gossip matrix\\
+$\theta_k$, $\hat{\theta}_k$, $v_k=\sigma^2/n_k$ & parameter of site $k$, its local estimate, and the variance of that estimate\\
+$\mu$, $\tau^2$, $M$ & population mean of site parameters, between-site heterogeneity, mean squared error of the estimate of $\mu$\\
+$(\epsilon,\delta)$ & differential privacy parameters (written $\epsilon$ to distinguish them from the tolerance $\varepsilon$)\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Existing notions}
+
+Informal notions of small data fall into three groups. The first is \emph{absolute}: a dataset is small if it has few records, often with arbitrary cut-offs such as a few hundred or a few thousand. This ignores the task. One thousand patients is a lot for estimating a mean blood pressure and very little for a 50-predictor model of a 2\% outcome. The second is \emph{relational}, as in Kitchin and Lauriault's contrast between small data, collected for a specific question with controlled sampling, and big data, which is exhaustive, fine-grained and collected as a by-product \cite{kitchin2015small}. Estrin's ``n of 1'' \cite{estrin2014small} and the small data paradigm of \citet{hekler2019we} belong here, stressing individual-level inference rather than population scale. \citet{faraway2018when} show that a small designed sample can beat a large biased one, which is a statement about information, not about size. The third group is \emph{criterion-based} and comes from clinical prediction research: a dataset is adequate if it contains at least ten events per candidate predictor \cite{peduzzi1996simulation}, or more defensibly if it meets the criteria of \citet{riley2019minimumsample}, which bound overfitting, optimism in apparent fit and imprecision of the intercept \cite{riley2020calculating,smeden2019sample}.
+
+Only the third group is quantitative, and it is tied to regression models. Learning theory provides the general quantity, sample complexity, but it ignores the specific ways in which clinical data lose information. We combine the two.
+
+\subsection{Setup and notation}
+
+A learning \emph{task} is a tuple $\mathcal{T}=(P,\mathcal{H},\ell,\varepsilon,\delta)$, where $P$ is a distribution over $\mathcal{X}\times\mathcal{Y}$ describing the target population at the point of use, $\mathcal{H}$ a hypothesis class, $\ell$ a loss bounded in $[0,1]$, and $(\varepsilon,\delta)$ the required excess risk and confidence. The risk of $h$ is $R(h)=\mathbb{E}_{(x,y)\sim P}\,\ell(h(x),y)$. Notation used throughout is collected in Table~\ref{tab:notation}.
+
+\begin{definition}[Sample complexity of a task]\label{def:samplecomplexity}
+The sample complexity $n^{\star}_{\mathcal{T}}$ is the smallest $n$ for which there is a learner $A$ such that, for $\mathcal{D}\sim P^n$ independent and identically distributed (i.i.d.) and fully and correctly labeled,
+\[
+\Pr_{\mathcal{D}\sim P^n}\left[R(A(\mathcal{D})) - \inf_{h\in\mathcal{H}} R(h) \le \varepsilon\right] \;\ge\; 1-\delta.
+\]
+\end{definition}
+
+$n^{\star}$ is rarely known exactly, but it has usable proxies. For agnostic learning of a class with VC dimension $d$, $n^{\star}=\Theta\bigl((d+\log(1/\delta))/\varepsilon^2\bigr)$ \cite{shalevshwartz2014understanding}, and data-dependent versions replace $d$ with Rademacher complexity \cite{bartlett2002rademacher}. For logistic and survival prediction models, the criteria of Riley et al. give closed forms. Their first criterion, which targets a global shrinkage factor $S$ (typically $0.9$) for a model with $p$ candidate parameters and anticipated Cox-Snell $R^2_{\mathrm{CS}}$, is
+\begin{equation}\label{eq:riley}
+n^{\star} \;\ge\; \frac{p}{(S-1)\,\ln\bigl(1-R^2_{\mathrm{CS}}/S\bigr)} \qquad \text{\cite{riley2019minimumsample}.}
+\end{equation}
+Either way, $n^{\star}$ grows with model complexity and with the precision demanded, and for binary outcomes it is driven by the number of events rather than the number of patients.
+
+\subsection{Effective sample size}
+
+Clinical records are not i.i.d., not all labeled, not all correctly labeled, and not drawn from the population where the model will be used. Each of these reduces the information a record carries.
+
+\begin{definition}[Effective sample size]\label{def:ess}
+Let $\mathcal{D}$ contain $n$ records. Its effective sample size $n^{\eff}(\mathcal{D})$ is the number of i.i.d., correctly labeled records drawn from the target distribution $P$ that would give an estimator with the same variance as the one obtained from $\mathcal{D}$. To first order, when the mechanisms below act independently,
+\begin{equation}\label{eq:neff}
+n^{\eff} \;=\; n\cdot\underbrace{\frac{1}{\mathrm{DEFF}}}_{\text{clustering}}\cdot\underbrace{\rho_L}_{\text{labels}}\cdot\underbrace{(1-2\eta)^2}_{\text{label noise}}\cdot\underbrace{\rho_S}_{\text{shift}},
+\end{equation}
+where $\mathrm{DEFF}=1+(\bar{m}-1)\,\mathrm{ICC}$ is the design effect for $\bar{m}$ records per patient with intra-class correlation ICC \cite{kish1965survey}; $\rho_L$ is the fraction of records with labels missing completely at random; $\eta<1/2$ is a symmetric label-noise rate, whose effect on sample complexity scales as $(1-2\eta)^{-2}$ \cite{angluin1988learning}; and $\rho_S=(\sum_i w_i)^2/(n\sum_i w_i^2)$ is Kish's efficiency of the importance weights $w_i=p_P(x_i)/p_{\mathcal{D}}(x_i)$ needed to transport the sample to $P$ \cite{kish1965survey}. For a binary outcome with prevalence $\pi$, the information about the decision boundary is controlled by the minority class, $n^{\eff}_{\mathrm{ev}}=n^{\eff}\cdot\min(\pi,1-\pi)$.
+\end{definition}
+
+Equation~\eqref{eq:neff} is deliberately simple. Each factor is a standard, estimable quantity, and each can be replaced by a more refined estimator (for instance, the fraction of missing information under multiple imputation) without changing the structure. The factors multiply because each is a ratio of variances under an independent mechanism; when mechanisms interact, the product is an approximation. None of the factors is new, and Equation~\eqref{eq:neff} should be read as a first-order heuristic: it is meant to compare datasets and to show where information is lost, not to replace a variance computed for a specific estimator. What it adds is a single place where the clinical and the learning-theoretic notions of sample size meet, relative to a task.
+
+\begin{definition}[Smallness index]\label{def:smallness}
+The smallness index of a dataset $\mathcal{D}$ for task $\mathcal{T}$ is $\sigma_{\mathcal{T}}(\mathcal{D})=n^{\star}_{\mathcal{T}}/n^{\eff}(\mathcal{D})$. The dataset is \emph{small for} $\mathcal{T}$ when $\sigma_{\mathcal{T}}(\mathcal{D})>1$. We call the regimes $\sigma\le 1$ \emph{sufficient}, $1<\sigma\le 10$ \emph{strained}, $10<\sigma\le 100$ \emph{small}, and $\sigma>100$ \emph{extreme}.
+\end{definition}
+
+The thresholds are conventions, chosen so that each regime corresponds to a qualitatively different strategy. In the strained regime, regularization, simpler models and careful validation usually close the gap. In the small regime, information has to be imported from outside the dataset. In the extreme regime, only strong priors or pooling at a scale beyond any single institution will help.
+
+\begin{example}[An ICU deterioration model]\label{ex:icu}
+A hospital has $n=2{,}000$ ICU stays from patients with on average $\bar{m}=1.6$ stays each and $\mathrm{ICC}=0.5$, so $\mathrm{DEFF}=1.3$. Seventy percent of stays have an adjudicated outcome, adjudication disagrees with a reference standard in 10\% of cases, and the case mix differs from the deployment population with Kish efficiency $0.6$. By Equation~\eqref{eq:neff}, $n^{\eff}\approx 414$, and at an outcome prevalence of 8\% the dataset contains about 33 effective events. For a model with $p=20$ parameters and an anticipated $R^2_{\mathrm{CS}}$ of 15\% of its maximum, Equation~\eqref{eq:riley} gives $n^{\star}\approx 2{,}707$. Hence $\sigma\approx 6.5$: a dataset that looks moderate is strained, close to small. Figure~\ref{fig:deflation} shows the decomposition.
+\end{example}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.8\linewidth]{figures/fig_deflation}
+\caption{Deflation of a nominal sample of 2,000 ICU stays into an effective sample size (Example~\ref{ex:icu}). Hatched segments show the information lost to each mechanism of Equation~\eqref{eq:neff}. The dashed line is the sample size required by the first criterion of \citet{riley2019minimumsample} for a 20-parameter model at 8\% prevalence.}
+\label{fig:deflation}
+\end{figure}
+
+\subsection{Siloed smallness}
+
+The definitions so far concern one dataset. Healthcare adds a second level: data that would be sufficient together are held separately.
+
+\begin{definition}[Siloed smallness]\label{def:siloed}
+Let $\mathcal{D}_1,\dots,\mathcal{D}_K$ be held by $K$ custodians and let $\mathcal{D}_{\cup}$ be their union. The task $\mathcal{T}$ is \emph{siloed-small} if $\sigma_{\mathcal{T}}(\mathcal{D}_k)>1$ for every $k$ while $\sigma_{\mathcal{T}}(\mathcal{D}_{\cup})\le 1$, where $n^{\eff}(\mathcal{D}_{\cup})$ is computed after accounting for the heterogeneity across custodians (the shift factor $\rho_S$ of Equation~\eqref{eq:neff} applied to the mixture). The ratio $\Gamma=\min_k \sigma_{\mathcal{T}}(\mathcal{D}_k)/\sigma_{\mathcal{T}}(\mathcal{D}_{\cup})$ is the \emph{custodial gap}.
+\end{definition}
+
+A siloed-small task can be solved in principle without collecting a single new patient; the obstacle is access. A task that is small even for $\mathcal{D}_{\cup}$ is \emph{intrinsically small}, and no amount of collaboration among the existing custodians will solve it. Rare disease work often sits between the two. The distinction matters because the remedies are different, and because heterogeneity between custodians can make $n^{\eff}(\mathcal{D}_{\cup})$ much smaller than $\sum_k n^{\eff}(\mathcal{D}_k)$. Section~\ref{sec:blueprint} makes this precise.
+
+\subsection{Why healthcare is a special case}
+
+Small data exist in every field, but five properties make healthcare unusual. \emph{Stakes are asymmetric}: errors fall on patients, so the tolerance $\varepsilon$ is small and the required $n^{\star}$ is large. \emph{Labels are expensive and delayed}: ground truth often needs specialist review, biopsy, or months of follow-up \cite{willemink2020preparing}. \emph{Heterogeneity is structural}: devices, coding practices, referral patterns and populations differ across sites in ways that models detect and exploit \cite{finlayson2021clinician,gichoya2022ai,zech2018variable}. \emph{Re-identification risk is high}: Rocher et al. estimate that 99.98\% of Americans would be correctly re-identified in any dataset using 15 demographic attributes \cite{rocher2019estimating}, which undermines de-identification as a basis for sharing \cite{price2019privacy,sweeney2002k}. And \emph{subgroups matter}: performance in a minority subgroup is a clinical and ethical requirement, not a secondary metric \cite{chen2021ethical,obermeyer2019dissecting}. Each subgroup has its own, smaller $n^{\eff}$.
+
+\begin{figure*}[t]
+\centering
+\resizebox{\linewidth}{!}{%
+\begin{tikzpicture}[x=1bp,y=1bp,
+  hdr/.style={fill=hdrc,draw=hdrc,line width=0.4pt,rounded corners=3pt},
+  fam/.style={fill=#1,draw=#1,line width=0.4pt,rounded corners=2pt},
+  cls/.style={fill=#1!12,draw=#1,line width=0.8pt,rounded corners=2pt},
+  famtxt/.style={text=white,align=center,font=\footnotesize\sffamily,inner sep=0pt,text width=88pt},
+  clstxt/.style={text width=93.75pt,align=left,font=\scriptsize\sffamily,inner sep=0pt,anchor=north west},
+  con/.style={draw=conc,line width=0.8pt}]
+\path[hdr] (-206.932,-10.630) rectangle (206.932,10.630);
+\node[text=white,font=\small\sffamily\bfseries,inner sep=0pt] at (0,0)
+  {Smallness in health data:\quad $\sigma_{\mathcal{T}}(\mathcal{D}) = n^{\star}_{\mathcal{T}}\,/\,n^{\eff}(\mathcal{D}) > 1$};
+\foreach \x/\y in {-155.907/-21.061,-51.875/-16.908,52.158/-16.783,156.191/-21.046}
+  \draw[con] (\x,-10.829) -- (\x,\y);
+\path[fam=famO] (-205.292,-55.276) rectangle (-106.523,-21.260);
+\path[fam=famE] (-101.259,-59.429) rectangle (-2.491,-17.108);
+\path[fam=famT] (2.774,-59.555) rectangle (101.542,-16.982);
+\path[fam=famC] (106.807,-55.292) rectangle (205.575,-21.245);
+\node[famtxt] at (-155.907,-38.268) {\textbf{O}\hspace{4.88pt}\textbf{Ontic}\\ the data do not exist\\[-1pt] {\tiny\itshape affects $n^{\star}$ vs.\ world supply}};
+\node[famtxt] at (-51.875,-38.268) {\textbf{E}\hspace{4.88pt}\textbf{Epistemic}\\ data carry little information\\[-1pt] {\tiny\itshape affects $\rho_L$, $\eta$, $n^{\star}(d)$}};
+\node[famtxt] at (52.158,-38.268) {\textbf{T}\hspace{4.88pt}\textbf{Temporal-contextual}\\ data exist, wrong place or time\\[-1pt] {\tiny\itshape affects $\rho_S$}};
+\node[famtxt] at (156.191,-38.268) {\textbf{C}\hspace{4.88pt}\textbf{Custodial}\\ data exist, out of reach\\[-1pt] {\tiny\itshape affects $n^{\eff}_k$ vs.\ $n^{\eff}_{\cup}$}};
+\newcommand\cls[6]{\path[cls=#1] (#2,#3) rectangle (#4,#5);
+  \node[clstxt] at ({#2+2.79},{#5-2.79}) {#6};}
+\cls{famO}{-204.960}{-97.155}{-106.855}{-60.777}{\textbf{O1 Rarity of condition}\\ rare diseases, rare variants, pediatric subtypes; supply bounded by world prevalence}
+\cls{famO}{-204.960}{-128.483}{-106.855}{-100.955}{\textbf{O2 Event sparsity}\\ rare outcomes and adverse events; $n^{\eff}\pi \ll n^{\eff}$}
+\cls{famO}{-204.960}{-163.055}{-106.855}{-132.283}{\textbf{O3 Stratum sparsity}\\ under-represented groups inside large data; $n^{\eff}_g = \pi_g n^{\eff}$}
+\cls{famE}{-100.927}{-93.383}{-2.822}{-64.930}{\textbf{E1 Label poverty}\\ expert annotation, biopsy, long follow-up; low $\rho_L$}
+\cls{famE}{-100.927}{-125.416}{-2.822}{-97.183}{\textbf{E2 Measurement poverty}\\ missingness, coding error, inter-rater disagreement; high $\eta$}
+\cls{famE}{-100.927}{-164.270}{-2.822}{-129.215}{\textbf{E3 Dimensional excess}\\ omics, imaging, high-cardinality codes; $n^{\star}$ grows with $d$}
+\cls{famT}{3.106}{-101.433}{101.210}{-65.055}{\textbf{T1 Temporal obsolescence}\\ practice change, new pathogens, drift in coding; past data lose weight}
+\cls{famT}{3.106}{-133.686}{101.210}{-105.233}{\textbf{T2 Contextual mismatch}\\ other site, device, population\\ or care pathway; low $\rho_S$}
+\cls{famC}{107.138}{-88.976}{205.243}{-60.793}{\textbf{C1 Custodial fragmentation}\\ siloed institutions; $\sigma(\mathcal{D}_k) > 1 \geq \sigma(\mathcal{D}_{\cup})$}
+\cls{famC}{107.138}{-135.520}{205.243}{-92.776}{\textbf{C2 Consent and access limits}\\ law, consent, incentives, interoperability; only a fraction is usable}
+\end{tikzpicture}}
+\caption{The scarcity axis of the Scarcity-Provenance taxonomy. Families are defined by the term of the smallness index they degrade; the ten classes are the forms these take in healthcare.}
+\label{fig:scarcity}
+\end{figure*}
+
+\paragraph{From measurement to diagnosis} The smallness index tells us \emph{how} small a dataset is for a task. It does not yet tell us \emph{why}, and the why matters: a low $\rho_L$, a small $\pi$ and a large custodial gap all raise $\sigma$, but each calls for a different response. The next section uses the structure of $\sigma$ itself to classify the causes.
+
+%% ===================================================================
+\section{The Scarcity Axis: Where the Deficit Comes From}\label{sec:scarcity}
+
+The first axis of our taxonomy answers the question \emph{why is this dataset small?} Existing classifications tend to mix causes (rare disease), symptoms (class imbalance) and remedies (few-shot learning). We instead classify scarcity by the term of the smallness index it degrades. This makes the classes operational, because each one points to a specific quantity that can be estimated. They are not mutually exclusive. Rarity of condition (O1) and event sparsity (O2) both lower the effective number of events, contextual mismatch (T2) and custodial fragmentation (C1) usually arrive together, and a single cohort can be label-poor and high-dimensional at once. A dataset therefore has a \emph{profile} over the ten classes, and that profile is more informative than any single label. This is also how we code the literature in Section~\ref{sec:method}: a work can target several classes.
+
+\subsection{Ontic scarcity (O): the data do not exist}
+
+Ontic scarcity is a property of the world, not of the dataset. More effort spent on collection or access will not remove it, only reduce it.
+
+\textbf{O1, rarity of condition.} For a disease with worldwide prevalence $q$, the total supply of cases is bounded by $qN_{\mathrm{world}}$, and in practice by the fraction diagnosed and recorded. When $n^{\star}$ approaches that bound, the task is intrinsically small in the sense of Definition~\ref{def:siloed}. This is the situation of many of the conditions cataloged by Orphanet \cite{nguengangwakap2020estimating}, and the reason machine learning in rare diseases relies so heavily on transfer, knowledge and international pooling \cite{banerjee2023machine,schaefer2020use}.
+
+\textbf{O2, event sparsity.} The condition may be common, but the outcome of interest is rare: in-hospital cardiac arrest, a severe adverse drug reaction, a post-operative complication. The number of patients is large but the effective number of events $n^{\eff}\pi$ is small, which is what drives the sample-size criteria \cite{peduzzi1996simulation,riley2019minimumsample}. Oversampling or reweighting changes the decision threshold, not the information.
+
+\textbf{O3, stratum sparsity.} Within a large dataset, a subgroup $g$ with share $\pi_g$ has $n^{\eff}_g=\pi_g n^{\eff}$. Clinically meaningful subgroups (by ancestry, sex, age band, comorbidity or disease subtype) are often small even when the whole is not. Failures concentrated in such strata have been called hidden stratification \cite{oakdenrayner2020hidden}, and the related fairness failures are well documented \cite{chen2021ethical,obermeyer2019dissecting}.
+
+\subsection{Epistemic scarcity (E): the data carry little information}
+
+Here the patients exist and are recorded, but each record says less about the target than it could.
+
+\textbf{E1, label poverty.} Unlabeled images, notes and signals are cheap, but labels need specialist time, invasive confirmation, or follow-up long enough for the outcome to occur \cite{willemink2020preparing}. Label poverty acts through $\rho_L$. It is the scarcity class for which semi-supervised, self-supervised and weakly supervised learning were developed \cite{cheplygina2019not,tajbakhsh2020embracing}.
+
+\textbf{E2, measurement poverty.} Missing values that are not missing at random, billing codes that reflect reimbursement more than pathology, and disagreement between raters all reduce the information per record. In Equation~\eqref{eq:neff} this acts through $\eta$ and through the missing-information fraction.
+
+\textbf{E3, dimensional excess.} Genomic, transcriptomic and imaging data have $d\gg n$. In this case $n^{\star}$ grows with $d$, often faster than any realistic cohort, unless strong structural assumptions such as sparsity are imposed \cite{buhlmann2011statistics,tibshirani1996regression}. Dimensional excess is the only class in which smallness can be created by the choice of representation, and therefore partly removed by changing it.
+
+\subsection{Temporal-contextual scarcity (T): the data are about somewhere else}
+
+\textbf{T1, temporal obsolescence.} Treatment guidelines, coding systems, assays and pathogens change. Data collected before a change are partly irrelevant afterwards, so the usable window is shorter than the archive. The early COVID-19 literature is an extreme case \cite{roberts2021common,wynants2020prediction}.
+
+\textbf{T2, contextual mismatch.} A model trained at one site, scanner or population meets a different distribution at deployment \cite{finlayson2021clinician,koh2021wilds}. In Equation~\eqref{eq:neff} this is the factor $\rho_S$, which can be close to zero when supports barely overlap. Learning theory makes the same point through the divergence term in domain adaptation bounds \cite{bendavid2010theory}. External validation studies show the effect directly \cite{debray2015new,wong2021external,zech2018variable}.
+
+\subsection{Custodial scarcity (C): the data are out of reach}
+
+\textbf{C1, custodial fragmentation.} The information exists and is relevant, but is distributed across institutions that do not pool it. This is the silo problem formalized in Definition~\ref{def:siloed}, and the setting of Section~\ref{sec:blueprint}.
+
+\textbf{C2, consent and access limits.} Even inside one institution, only part of the data can be used for a given purpose, because of consent scope, legal basis, governance review, or simply the absence of interoperable extraction \cite{cohen2018hipaa,gdpr2016,mandel2016smart}. Common data models such as OMOP and the OHDSI network \cite{hripcsak2015observational,overhage2012validation} and the FAIR principles \cite{wilkinson2016fair} attack the interoperability side of C2.
+
+\begin{table}[t]
+\caption{Scarcity classes, the quantity that measures each, and the characteristic failure when it is ignored.}
+\label{tab:scarcity}
+\small
+\begin{tabularx}{\linewidth}{@{}lXX@{}}
+\toprule
+Class & What to estimate & Typical failure if ignored\\
+\midrule
+O1 Rarity of condition & world supply $qN_{\mathrm{world}}$ vs.\ $n^{\star}$ & optimistic results from a single centre that do not replicate\\
+O2 Event sparsity & effective events $n^{\eff}\pi$ & overfitting, miscalibrated risks \cite{riley2019minimumsample}\\
+O3 Stratum sparsity & $n^{\eff}_g$ for each relevant group $g$ & hidden stratification, subgroup harm \cite{oakdenrayner2020hidden}\\
+E1 Label poverty & labeled fraction $\rho_L$, label delay & models trained only on the easy, labeled cases\\
+E2 Measurement poverty & noise rate $\eta$, missingness mechanism & learning the documentation process, not the disease\\
+E3 Dimensional excess & $d/n^{\eff}$, intrinsic dimension & spurious signatures, unstable feature selection\\
+T1 Temporal obsolescence & time-sliced performance & silent decay after deployment\\
+T2 Contextual mismatch & Kish efficiency $\rho_S$, site-held-out error & shortcut learning, external failure \cite{zech2018variable}\\
+C1 Custodial fragmentation & custodial gap $\Gamma$ & many under-powered single-site models\\
+C2 Consent and access limits & usable fraction per purpose & selection bias in the usable subset\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\paragraph{Using the scarcity profile} Table~\ref{tab:scarcity} summarizes the ten classes with the quantity to estimate for each and the characteristic failure when it is ignored. We suggest that studies report this profile alongside $n^{\eff}$ and $\sigma$. It takes a few lines and would make results across small-data papers comparable for the first time.
+
+\paragraph{From diagnosis to remedy} A scarcity profile identifies which factor of $\sigma$ is degraded, but not how to repair it. Every repair has to bring in information about the target from somewhere, and the possible sources are limited. The second axis of the taxonomy, introduced next, classifies remedies by that source.
+
+%%CHUNK2%%
+
+\bibliographystyle{ACM-Reference-Format-recovered}
+\bibliography{references}
+
+\end{document}
