@@ -22,6 +22,9 @@
 \definecolor{famE}{rgb}{0.14511,0.38824,0.92157}
 \definecolor{famT}{rgb}{0.85098,0.46667,0.02353}
 \definecolor{famC}{rgb}{0.05882,0.46275,0.43137}
+\definecolor{violetc}{rgb}{0.48627,0.22745,0.92941}
+\definecolor{grayc}{rgb}{0.60393,0.64706,0.69412}
+\definecolor{gray600}{rgb}{0.29727,0.32863,0.36}
 
 \newcommand{\eff}{\mathrm{eff}}
 
@@ -342,7 +345,158 @@ C2 Consent and access limits & usable fraction per purpose & selection bias in t
 
 \paragraph{From diagnosis to remedy} A scarcity profile identifies which factor of $\sigma$ is degraded, but not how to repair it. Every repair has to bring in information about the target from somewhere, and the possible sources are limited. The second axis of the taxonomy, introduced next, classifies remedies by that source.
 
-%%CHUNK2%%
+%% ===================================================================
+\section{The Provenance Axis: Where the Missing Information Comes From}\label{sec:provenance}
+
+The second axis of the taxonomy classifies remedies, and it is the axis along which the rest of the paper is organized. Existing surveys group methods by technique (``generative models'', ``transfer learning'', ``federated learning''). Technique is the wrong primitive for small data, because two techniques that look different can draw on the same source of information, and two that look alike can draw on different ones. A GAN trained on the local cohort and a GAN pretrained on a million public images are both ``synthetic data'', but only the second brings anything new. We therefore classify remedies by the \emph{provenance} of the information they add.
+
+\subsection{A conservation principle}
+
+Let $\theta$ denote the unknown quantity we want to learn: a parameter, a regression function, or a decision rule for the target population. Let $\mathcal{D}$ be the local data and let $M$ denote any external resource used by a method, such as a pretrained network, a knowledge base, or a published risk score.
+
+\begin{proposition}[No free lunch for re-expression]\label{prop:nfl}
+Let $\tilde{\mathcal{D}}=g(\mathcal{D},M,U)$ be any dataset produced by a (possibly randomized) procedure $g$, where $U$ is randomness independent of $(\theta,\mathcal{D},M)$. Then
+\[
+I(\theta;\mathcal{D},\tilde{\mathcal{D}}) \;\le\; I(\theta;\mathcal{D},M).
+\]
+In particular, if $M$ is independent of $(\theta,\mathcal{D})$, or absent, then $I(\theta;\mathcal{D},\tilde{\mathcal{D}})=I(\theta;\mathcal{D})$.
+\end{proposition}
+
+\begin{proof}
+Since $U$ is independent of $(\theta,\mathcal{D},M)$ and $\tilde{\mathcal{D}}$ is a function of $(\mathcal{D},M,U)$, the chain $\theta\to(\mathcal{D},M)\to(\mathcal{D},M,\tilde{\mathcal{D}})$ is Markov. By the data processing inequality \cite{cover2006elements}, $I(\theta;\mathcal{D},M,\tilde{\mathcal{D}})\le I(\theta;\mathcal{D},M)$, and by the chain rule $I(\theta;\mathcal{D},\tilde{\mathcal{D}})\le I(\theta;\mathcal{D},M,\tilde{\mathcal{D}})$. For the second claim, $I(\theta;\mathcal{D},M)=I(\theta;\mathcal{D})+I(\theta;M\mid\mathcal{D})$ and $I(\theta;M\mid\mathcal{D})\le I(\theta,\mathcal{D};M)=0$ when $M$ is independent of $(\theta,\mathcal{D})$. The reverse inequality $I(\theta;\mathcal{D},\tilde{\mathcal{D}})\ge I(\theta;\mathcal{D})$ holds trivially.
+\end{proof}
+
+The proposition is elementary, but its consequences are not widely appreciated in the applied literature. Lower bounds on estimation error, such as those obtained from Fano's inequality, depend on the data only through mutual information. So no augmentation, oversampling or synthetic generation can lower the minimax risk for $\theta$ below what $(\mathcal{D},M)$ allows. Re-expression can still help in practice, and often does, for three reasons that the proposition makes explicit: the generator or augmentation family carries prior knowledge $M$ (rotation invariance in histology, anatomical plausibility in a pretrained generator); the downstream learner may use the re-expressed data more efficiently, which is a computational rather than an informational gain; or the synthetic data are used for a purpose other than learning $\theta$, such as software testing. What re-expression cannot do is replace the missing patients.
+
+\subsection{Six provenance channels}
+
+Write the posterior for the parameter of site $k$ as
+\begin{equation}\label{eq:posterior}
+p(\theta_k\mid\mathcal{D}_k,\mathcal{S}) \;\propto\; \underbrace{p(\mathcal{D}_k\mid\theta_k)}_{\text{likelihood: local data}} \quad\cdot\quad \underbrace{p(\theta_k\mid\mathcal{S})}_{\text{prior: everything else}},
+\end{equation}
+where $\mathcal{S}$ denotes all information other than the local labeled sample. Every remedy for small data does one of two things: it enlarges the likelihood term by adding observations that bear on $\theta_k$, or it sharpens the prior term by bringing in information from $\mathcal{S}$. The six channels below exhaust the possible sources; Figure~\ref{fig:provenance} shows them.
+
+\begin{description}
+\item[P1 Pooling.] Labeled data for the same task from other custodians: data sharing, consortia, distributed statistics, federated and decentralized learning. Information crosses a custodial boundary, so pooling carries a privacy cost, and heterogeneity between custodians limits what it can deliver.
+\item[P2 Proxy.] Data from related but different tasks or populations: transfer learning, multi-task and meta-learning, self-supervised pretraining on external data, foundation models. The cost is relevance: the gain depends on how close the proxy is to the target \cite{bendavid2010theory,tripuraneni2020theory}.
+\item[P3 Prior.] Non-data knowledge: physiology, pharmacology, clinical guidelines, ontologies, causal structure, published effect sizes, expert elicitation. It enters as constraints, priors or architecture.
+\item[P4 Unlabeled.] Unlabeled data from the target population: semi-supervised and self-supervised learning, weak supervision. Unlabeled inputs are informative about $\theta$ only when the input distribution and the conditional of the label share parameters, which theory links to the causal direction of the task \cite{scholkopf2012causal}.
+\item[P5 Procurement.] New labeled observations obtained by deliberate action: prospective collection, active learning, targeted annotation. This is the only channel that increases the local likelihood term with fresh, relevant information.
+\item[P6 Re-expression.] Transformations of existing data: augmentation, resampling, synthetic data, imputation. By Proposition~\ref{prop:nfl} it adds no information beyond $(\mathcal{D},M)$; whatever it contributes comes from the prior knowledge in $M$.
+\end{description}
+
+\begin{figure*}[t]
+\centering
+\resizebox{\linewidth}{!}{%
+\begin{tikzpicture}[x=1bp,y=1bp,
+  chan/.style={fill=#1!12,draw=#1,line width=0.4pt,rounded corners=2pt},
+  ctxt/.style={align=center,font=\scriptsize\sffamily,inner sep=0pt,text width=2.4cm},
+  flow/.style={draw=#1,line width=0.8pt,-{Stealth[length=2mm]}}]
+\path[fill=slate100,draw=conc,line width=0.8pt,dashed,rounded corners=12pt] (-3.5cm,-3.15cm) rectangle (3.5cm,1.75cm);
+\node[anchor=base west,font=\scriptsize\sffamily\itshape,text=edgec,inner sep=0pt] at (-93.06,38.98) {custodial boundary of hospital $k$};
+\path[fill=white,draw=hdrc,line width=0.8pt,rounded corners=3pt] (-48.919,2.255) rectangle (48.919,28.935);
+\node[align=center,font=\footnotesize\sffamily,inner sep=0pt,text width=3.1cm] at (0,15.595) {{\scriptsize\textbf{Posterior} $p(\theta_k \mid \mathcal{D}_k, \mathcal{S})$}\\ {\scriptsize local likelihood $\times$ prior}};
+\path[chan=famE] (-95.404,-47.80) rectangle (-17.983,-17.399);
+\path[chan=violetc] (17.983,-47.69) rectangle (95.404,-17.509);
+\path[chan=grayc] (-40.84,-84.33) rectangle (40.84,-54.568);
+\path[chan=famC] (-197.45,13.16) rectangle (-120.033,43.53);
+\path[chan=famT] (-197.45,-46.62) rectangle (-120.033,-10.07);
+\path[chan=famO] (120.033,-19.08) rectangle (197.45,19.08);
+\node[ctxt] at (-56.694,-32.60) {\textbf{P4 Unlabeled}\\ local images, notes, signals};
+\node[ctxt] at (56.694,-32.60) {\textbf{P5 Procurement}\\ new labels, active learning};
+\node[ctxt,text width=2.6cm] at (0,-69.45) {\textbf{P6 Re-expression}\\ augmentation, synthesis};
+\node[ctxt] at (-158.74,28.345) {\textbf{P1 Pooling}\\ same task, other hospitals};
+\node[ctxt] at (-158.74,-28.345) {\textbf{P2 Proxy}\\ related tasks, public data, foundation models};
+\node[ctxt] at (158.74,0) {\textbf{P3 Prior}\\ physiology, guidelines, ontologies, causal graphs};
+\draw[flow=famC] (-119.833,28.347) -- (-49.24,22.67);
+\node[fill=white,inner sep=1.5bp,align=center,font=\tiny\sffamily,text=famC] at (-99.214,28.347) {crosses\\ boundary};
+\draw[flow=famT] (-119.833,-28.347) -- (-49.4,8.4);
+\draw[flow=famO] (119.833,0) -- (49.3,8.5);
+\draw[flow=famE] (-56.694,-17.199) -- (-25.5,1.85);
+\draw[flow=violetc] (56.694,-17.309) -- (25.5,1.85);
+\draw[flow=grayc,dashed] (0,-54.368) -- (0,1.85);
+\node[fill=white,inner sep=1.5bp,align=center,font=\tiny\sffamily,text=gray600] at (0,-32.598) {no new\\ information\\ (Prop.~\ref{prop:nfl})};
+\end{tikzpicture}}
+\caption{The provenance axis. Each remedy draws information from one of six channels. Only pooling necessarily crosses the custodial boundary; only procurement adds fresh labeled observations from the target; re-expression adds no information about $\theta_k$ beyond what the local data and the generator already contain.}
+\label{fig:provenance}
+\end{figure*}
+
+Two attributes of each channel matter for system design. The first is whether information crosses a custodial boundary, which determines the privacy cost: only P1 crosses one by necessity, and P2 does so when the proxy data belong to another custodian. The second is the source of bias: heterogeneity for P1, relevance for P2, misspecification for P3, the cluster or manifold assumption for P4, selection for P5 and generator bias for P6.
+
+\subsection{Matching scarcity to provenance}\label{sec:matching}
+
+The two axes together give a matrix (Figure~\ref{fig:matrix}) that answers a practical question: given the scarcity profile of a problem, which channels can in principle help? The entries are our judgment, informed by the mechanisms of Section~\ref{sec:provenance} and by the literature, graded from none to strong. They are claims about potential, not measurements, and Section~\ref{sec:evidence} sets them against where the coded corpus has actually worked (Figure~\ref{fig:gapmap}). Three patterns stand out. Ontic scarcity (O1 to O3) can only be addressed by pooling at a scale beyond the local site or by strong priors, since procurement is bounded by the world supply. Custodial scarcity (C1, C2) is addressed almost exclusively by pooling, which is why privacy-preserving pooling is the central technical problem for siloed healthcare. And re-expression is weak against every class, which follows from Proposition~\ref{prop:nfl} and matches the evidence.
+
+The matrix is a set of claims about what can work in principle. The next three sections test it against what has actually been built and measured: Section~\ref{sec:method} describes how we assembled and coded the literature, Section~\ref{sec:solutions} reviews the methods channel by channel, and Section~\ref{sec:evidence} asks what the reported results, and the corpus as a whole, do and do not support.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.66\linewidth]{figures/fig_matrix}
+\caption{The Scarcity-Provenance matrix. Rows are the ten scarcity classes of Figure~\ref{fig:scarcity}; columns are the six provenance channels of Figure~\ref{fig:provenance}. Entries grade how strongly a channel can address a class (blank: not at all; $+$ weak; $++$ moderate; $+\,+\,+$ strong). Grades are the authors' judgment of potential; observed coverage in the coded corpus is shown in Figure~\ref{fig:gapmap}.}
+\label{fig:matrix}
+\end{figure}
+
+%% ===================================================================
+\section{Review Methodology}\label{sec:method}
+
+The taxonomy gives us a vocabulary. To use it as a survey instrument, we need a body of literature coded in that vocabulary and an honest account of how it was assembled. This section provides both, following the guidelines of \citet{kitchenham2007guidelines} for literature reviews and of \citet{wohlin2014guidelines} for snowballing, and using PRISMA 2020 \cite{page2021prisma} as the reporting target.
+
+\subsection{Research questions}
+
+The review addresses five questions, each answered in a specific part of the paper.
+\begin{enumerate}[label=\textbf{RQ\arabic*},leftmargin=*]
+\item How can smallness be defined so that it is task-relative and measurable? (Section~\ref{sec:definition})
+\item Which remedies exist for each scarcity class, and through which provenance channel do they import information? (Section~\ref{sec:solutions})
+\item At what level are these remedies supported by evidence: theory, a single dataset, or data held by several institutions? (Section~\ref{sec:evidence})
+\item Which combinations of scarcity class and channel that the taxonomy deems promising are under-studied? (Section~\ref{sec:evidence})
+\item Which approach fits a sparse network of hospitals that cannot share records and has no trusted coordinator? (Section~\ref{sec:blueprint})
+\end{enumerate}
+
+\subsection{Corpus construction}
+
+The corpus was assembled in two stages. The \emph{seed} set contained the foundational work for each provenance channel, the existing surveys listed in Section~\ref{sec:intro}, and the meta-research on clinical prediction models and medical imaging AI. The \emph{expansion} stage applied backward and forward snowballing \cite{wohlin2014guidelines} from the seed set, with the inclusion criteria below, until new candidates stopped adding channel and modality combinations not yet covered. Every record was checked against the publisher's page or a bibliographic index, and records whose details we could not confirm were dropped.
+
+A work was included if it (I1) proposes, evaluates or reviews a way of learning from limited, fragmented or poorly labeled data, and either addresses health data directly or is the method that health applications build on; or (I2) documents, in health data, a failure or risk caused by scarcity, by distribution shift or by sharing. Works were excluded if they (X1) are textbooks, regulations or reporting guidelines; (X2) concern scaling with abundant data; or (X3) provide general learning theory not tied to a specific channel. Excluded works are still cited where they support an argument.
+
+\begin{table}[t]
+\caption{Coding scheme applied to every work in the corpus.}
+\label{tab:coding}
+\footnotesize
+\begin{tabularx}{\linewidth}{@{}lp{2.5cm}X@{}}
+\toprule
+Attribute & Values & Rule\\
+\midrule
+Primary channel & P1 to P6, none & the channel through which most of the claimed information gain enters\\
+Secondary channel & P1 to P6, empty & a second channel that is essential to the method, not incidental\\
+Scarcity classes & O1 to C2, multi-label & the classes the work states it targets or documents, judged from its setting\\
+Modality & imaging, EHR, tabular, text, omics, signals, multimodal, general & the data the work is evaluated on; general for methods not specific to health\\
+Contribution type & method, theory, study, multi-site, resource, review, evidence & multi-site only if data come from two or more independent institutions\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+The bibliography has 335 entries; 45 are excluded background, which leaves a coded corpus of 290 works published between 1956 and 2025, 204 of them since 2019.
+
+\subsection{Coding scheme}
+
+Each work was coded on the five attributes of Table~\ref{tab:coding}. Channels and scarcity classes are those of Sections~\ref{sec:scarcity} and~\ref{sec:provenance}. A work has exactly one primary channel, the one through which most of its information gain is claimed, and at most one secondary channel; 48 of the 257 works that propose or study a remedy have one. Works that document a problem without proposing a remedy (33) are coded with the channel ``none''. Scarcity classes are multi-label and were assigned from the problem the work states it addresses and from its evaluation setting, not from what the method could do in principle. Contribution type records the primary contribution. A work is coded as a multi-site study only when its main contribution is training or validating on data held by two or more independent institutions; method papers that also report an external validation remain methods, and simulated partitions of a single dataset count as single-dataset evidence. The full coding is listed in Appendix~\ref{app:corpus} and released with the paper as a CSV file together with the scripts that produce every count and figure in Section~\ref{sec:evidence}.
+
+\subsection{Threats to validity}
+
+Four limitations qualify everything in the next two sections. First, \emph{the corpus is curated, not exhaustive}. It was built to cover every cell of the taxonomy and to support the argument of Section~\ref{sec:blueprint}, so pooling is over-represented by design (102 of 290 works), and counts describe the corpus, not the field. Absolute counts should not be compared across channels; the shape of coverage within a channel, and the cells that remain empty after a deliberate effort to fill them, are more informative. Second, \emph{coding was done by a single coder}, the first author, and inter-rater agreement has not been measured. Third, the primary channel is a judgment about where a method's gain comes from, and some works, foundation models trained with self-supervision for example, sit between two channels. Fourth, recent work is under-represented because of indexing and citation lag, so the decline after 2022 in Figure~\ref{fig:corpus} is not a trend.
+
+\paragraph{Protocol for a systematic extension} To make the review systematic, we specify the search that would replace the curated stage. Databases: PubMed, Scopus, Web of Science, IEEE Xplore and the ACM Digital Library, with arXiv and medRxiv for preprints, from 2010 to the search date. Query, adapted to each database's syntax:
+\begin{quote}
+\footnotesize\ttfamily
+("small data" OR "small sample*" OR "limited data" OR "data scarcity" OR "few-shot" OR "low-resource" OR "rare disease*" OR "label-efficient" OR "data-efficient" OR federated OR decentrali*ed OR "privacy-preserving") AND (health* OR clinical OR medic* OR hospital* OR patient*) AND ("machine learning" OR "deep learning" OR "transfer learning" OR "synthetic data" OR "data augmentation" OR "active learning" OR "semi-supervised" OR "self-supervised" OR "foundation model*" OR "hierarchical model*")
+\end{quote}
+Two reviewers screen titles and abstracts, then full texts, against criteria I1, I2 and X1 to X3, resolving disagreement by discussion and reporting Cohen's kappa; the same two reviewers code a random 20\% of included works independently to estimate coding reliability; and the flow is reported as a PRISMA 2020 diagram \cite{page2021prisma}.
+
+\paragraph{Author note} This protocol has not yet been executed. All counts in Section~\ref{sec:evidence} and appendix~\ref{app:corpus} refer to the curated corpus described above. Before submission, the search should be run, the PRISMA flow added here, and the counts and figures regenerated from the resulting CSV with the scripts provided.
+
+With the corpus defined, we turn to its content, channel by channel.
+
+%%CHUNK3%%
 
 \bibliographystyle{ACM-Reference-Format-recovered}
 \bibliography{references}
