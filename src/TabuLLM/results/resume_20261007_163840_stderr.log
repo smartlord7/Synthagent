@@ -1,0 +1,1272 @@
+2026-10-07 16:38:41,684 [INFO] PromptManager: Initializing with template directory: C:\Users\Sancho Amaral Simoes\Documents\GitRepos\TabuLLM\src\TabuLLM\prompts
+2026-10-07 16:38:43,819 [INFO] Starting pipeline benchmark: dataset.csv
+2026-10-07 16:38:43,822 [INFO] Rule Inference: 14 integrity rules, 14 boundary rules (numeric tolerance ±10%).
+2026-10-07 16:38:43,867 [INFO] [dataset.csv | Fold 1] Reusing cached result from checkpoint -- skipping regeneration.
+2026-10-07 16:38:43,867 [INFO] [dataset.csv | Fold 2] Reusing cached result from checkpoint -- skipping regeneration.
+2026-10-07 16:38:43,869 [INFO] [DATA] [dataset.csv | Fold 3] Split Complete: Train=242, Test=61
+2026-10-07 16:38:43,869 [INFO] [DATA] [dataset.csv | Fold 3] Strategy: random | Join: True | Context: 48 | Target Gen: 242
+2026-10-07 16:38:43,869 [INFO] Context Selection: Strategy='random' | RequestedRows=48 | PoolSize=242
+2026-10-07 16:38:43,870 [INFO] Random Selection: Picking 48 rows at random.
+2026-10-07 16:38:43,871 [INFO] [dataset.csv | Fold 3] Pre-Generation Geometry -> Train: 242 | Context: 48 | Target Gen: 242
+2026-10-07 16:38:43,874 [INFO] PromptManager: Successfully rendered 'generation_init.j2'.
+2026-10-07 16:38:43,874 [INFO] Starting LocalOpenAI generation... Total payload: 0. Num empty requested: 242. Chunk limit: 30. Derived subsets: 1
+2026-10-07 16:38:43,875 [INFO] Zero-Shot Mode Activated: Generating 242 rows across 9 chunks.
+2026-10-07 16:38:45,339 [INFO] Budgeting generation context for model gpt-4.1-nano (Max: 1047576 tok).
+2026-10-07 16:38:45,341 [INFO] Turn 1: Budgeting 48 context rows out of 48 requested.
+2026-10-07 16:38:45,343 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 16:38:45,343 [INFO] Processing chunk 1/9. Prompt generation...
+2026-10-07 16:38:45,345 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 16:38:45,345 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 16:39:05,048 [INFO] JSON Transform: Successfully unpacked 48 rows from Compact JSON using 14 identifying keys.
+2026-10-07 16:39:05,569 [INFO] Turn 2: Budgeting 3 context rows out of 48 requested.
+2026-10-07 16:39:05,570 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 16:39:05,571 [INFO] Processing chunk 2/9. Prompt generation...
+2026-10-07 16:39:05,571 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 16:39:05,572 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 16:39:18,171 [WARNING] JSON parsing failed after all stages. Error: Expecting ',' delimiter: line 1 column 1888 (char 1887)
+2026-10-07 16:39:18,173 [INFO] Initial JSON parsing failed. Attempting focused repair... Error: Expecting ',' delimiter: line 1 column 1888 (char 1887)
+2026-10-07 16:39:18,197 [INFO] PromptManager: Successfully rendered 'json_repair.j2'.
+2026-10-07 16:39:18,198 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 16:39:29,293 [INFO] JSON Transform: Successfully unpacked 33 rows from Compact JSON using 14 identifying keys.
+2026-10-07 16:39:29,297 [INFO] Turn 3: Budgeting 6 context rows out of 48 requested.
+2026-10-07 16:39:29,297 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 16:39:29,298 [INFO] Processing chunk 3/9. Prompt generation...
+2026-10-07 16:39:29,298 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 16:39:29,299 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 16:39:41,111 [INFO] JSON Transform: Successfully unpacked 30 rows from Compact JSON using 14 identifying keys.
+2026-10-07 16:39:41,114 [INFO] Turn 4: Budgeting 9 context rows out of 48 requested.
+2026-10-07 16:39:41,115 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 16:39:41,115 [INFO] Processing chunk 4/9. Prompt generation...
+2026-10-07 16:39:41,115 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 16:39:41,116 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 16:39:52,122 [INFO] JSON Transform: Successfully unpacked 32 rows from Compact JSON using 14 identifying keys.
+2026-10-07 16:39:52,124 [INFO] Turn 5: Budgeting 12 context rows out of 48 requested.
+2026-10-07 16:39:52,125 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 16:39:52,125 [INFO] Processing chunk 5/9. Prompt generation...
+2026-10-07 16:39:52,125 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 16:39:52,125 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 16:40:09,945 [INFO] JSON Transform: Successfully unpacked 24 rows from Compact JSON using 14 identifying keys.
+2026-10-07 16:40:09,948 [INFO] Turn 6: Budgeting 15 context rows out of 48 requested.
+2026-10-07 16:40:09,949 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 16:40:09,950 [INFO] Processing chunk 6/9. Prompt generation...
+2026-10-07 16:40:09,950 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 16:40:09,950 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 16:40:23,870 [INFO] JSON Transform: Successfully unpacked 32 rows from Compact JSON using 14 identifying keys.
+2026-10-07 16:40:23,874 [INFO] Turn 7: Budgeting 18 context rows out of 48 requested.
+2026-10-07 16:40:23,875 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 16:40:23,875 [INFO] Processing chunk 7/9. Prompt generation...
+2026-10-07 16:40:23,876 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 16:40:23,876 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 16:40:36,001 [INFO] JSON Transform: Successfully unpacked 30 rows from Compact JSON using 14 identifying keys.
+2026-10-07 16:40:36,012 [INFO] Turn 8: Budgeting 21 context rows out of 48 requested.
+2026-10-07 16:40:36,013 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 16:40:36,013 [INFO] Processing chunk 8/9. Prompt generation...
+2026-10-07 16:40:36,014 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 16:40:36,015 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 16:40:47,387 [INFO] JSON Transform: Successfully unpacked 31 rows from Compact JSON using 14 identifying keys.
+2026-10-07 16:40:47,390 [INFO] Turn 9: Budgeting 24 context rows out of 48 requested.
+2026-10-07 16:40:47,391 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 16:40:47,391 [INFO] Processing chunk 9/9. Prompt generation...
+2026-10-07 16:40:47,391 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 16:40:47,391 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 16:40:49,771 [INFO] JSON Transform: Successfully unpacked 2 rows from Compact JSON using 14 identifying keys.
+2026-10-07 16:40:49,818 [INFO] [dataset.csv | Fold 3] Post-Generation Geometry -> Target: 242 | Generated: 242 | Final Train Size: 290 | Test Size: 61
+2026-10-07 16:40:53,016 [INFO] [ML] [dataset.csv | Fold 3] Evaluating RF (NA Strategy: impute)
+2026-10-07 16:40:53,054 [INFO] [ML] Training RF Model (classification) on 242 samples x 13 features...
+2026-10-07 16:40:53,806 [INFO] [ML] RF Evaluation Complete. Metrics: {'accuracy': 0.5737704918032787, 'f1': 0.5015206587048439}
+2026-10-07 16:40:53,904 [INFO] [ML] Training RF Model (classification) on 242 samples x 13 features...
+2026-10-07 16:40:54,620 [INFO] [ML] RF Evaluation Complete. Metrics: {'accuracy': 0.5737704918032787, 'f1': 0.4970261719873454}
+2026-10-07 16:40:54,768 [INFO] [ML] Training RF Model (classification) on 484 samples x 13 features...
+2026-10-07 16:40:56,283 [INFO] [ML] RF Evaluation Complete. Metrics: {'accuracy': 0.5409836065573771, 'f1': 0.47104646863059285}
+2026-10-07 16:40:56,393 [INFO] [ML] [dataset.csv | Fold 3] Evaluating LR (NA Strategy: impute)
+2026-10-07 16:40:56,404 [INFO] [ML] Training LR Model (classification) on 242 samples x 13 features...
+C:\Users\Sancho Amaral Simoes\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\sklearn\linear_model\_logistic.py:406: ConvergenceWarning: lbfgs failed to converge after 100 iteration(s) (status=1):
+STOP: TOTAL NO. OF ITERATIONS REACHED LIMIT
+
+Increase the number of iterations to improve the convergence (max_iter=100).
+You might also want to scale the data as shown in:
+    https://scikit-learn.org/stable/modules/preprocessing.html
+Please also refer to the documentation for alternative solver options:
+    https://scikit-learn.org/stable/modules/linear_model.html#logistic-regression
+  n_iter_i = _check_optimize_result(
+2026-10-07 16:40:56,871 [INFO] [ML] LR Evaluation Complete. Metrics: {'accuracy': 0.5737704918032787, 'f1': 0.5256830601092897}
+2026-10-07 16:40:56,922 [INFO] [ML] Training LR Model (classification) on 242 samples x 13 features...
+C:\Users\Sancho Amaral Simoes\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\sklearn\linear_model\_logistic.py:406: ConvergenceWarning: lbfgs failed to converge after 100 iteration(s) (status=1):
+STOP: TOTAL NO. OF ITERATIONS REACHED LIMIT
+
+Increase the number of iterations to improve the convergence (max_iter=100).
+You might also want to scale the data as shown in:
+    https://scikit-learn.org/stable/modules/preprocessing.html
+Please also refer to the documentation for alternative solver options:
+    https://scikit-learn.org/stable/modules/linear_model.html#logistic-regression
+  n_iter_i = _check_optimize_result(
+2026-10-07 16:40:56,993 [INFO] [ML] LR Evaluation Complete. Metrics: {'accuracy': 0.5901639344262295, 'f1': 0.5277777777777778}
+2026-10-07 16:40:57,057 [INFO] [ML] Training LR Model (classification) on 484 samples x 13 features...
+C:\Users\Sancho Amaral Simoes\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\sklearn\linear_model\_logistic.py:406: ConvergenceWarning: lbfgs failed to converge after 100 iteration(s) (status=1):
+STOP: TOTAL NO. OF ITERATIONS REACHED LIMIT
+
+Increase the number of iterations to improve the convergence (max_iter=100).
+You might also want to scale the data as shown in:
+    https://scikit-learn.org/stable/modules/preprocessing.html
+Please also refer to the documentation for alternative solver options:
+    https://scikit-learn.org/stable/modules/linear_model.html#logistic-regression
+  n_iter_i = _check_optimize_result(
+2026-10-07 16:40:57,632 [INFO] [ML] LR Evaluation Complete. Metrics: {'accuracy': 0.5573770491803278, 'f1': 0.48035032562317537}
+2026-10-07 16:40:57,633 [INFO] [ML] [dataset.csv | Fold 3] Evaluating XGB (NA Strategy: impute)
+2026-10-07 16:40:57,642 [INFO] [ML] Training XGB Model (classification) on 242 samples x 13 features...
+2026-10-07 16:41:00,679 [INFO] [ML] XGB Evaluation Complete. Metrics: {'accuracy': 0.5245901639344263, 'f1': 0.48579234972677593}
+2026-10-07 16:41:00,822 [INFO] [ML] Training XGB Model (classification) on 242 samples x 13 features...
+2026-10-07 16:41:02,607 [INFO] [ML] XGB Evaluation Complete. Metrics: {'accuracy': 0.5409836065573771, 'f1': 0.4952277959380965}
+2026-10-07 16:41:02,640 [INFO] [ML] Training XGB Model (classification) on 484 samples x 13 features...
+2026-10-07 16:41:03,004 [INFO] [ML] XGB Evaluation Complete. Metrics: {'accuracy': 0.5737704918032787, 'f1': 0.5266472156335928}
+2026-10-07 16:41:03,008 [INFO] [ML] [dataset.csv | Fold 3] Evaluating NB (NA Strategy: impute)
+2026-10-07 16:41:03,017 [INFO] [ML] Training NB Model (classification) on 242 samples x 13 features...
+2026-10-07 16:41:03,027 [INFO] [ML] NB Evaluation Complete. Metrics: {'accuracy': 0.5409836065573771, 'f1': 0.5580209670234676}
+2026-10-07 16:41:03,032 [INFO] [ML] Training NB Model (classification) on 242 samples x 13 features...
+2026-10-07 16:41:03,040 [INFO] [ML] NB Evaluation Complete. Metrics: {'accuracy': 0.47540983606557374, 'f1': 0.4830041373525674}
+2026-10-07 16:41:03,050 [INFO] [ML] Training NB Model (classification) on 484 samples x 13 features...
+2026-10-07 16:41:03,061 [INFO] [ML] NB Evaluation Complete. Metrics: {'accuracy': 0.5081967213114754, 'f1': 0.5076005961251863}
+2026-10-07 16:41:03,062 [INFO] [ML] [dataset.csv | Fold 3] Evaluating DT (NA Strategy: impute)
+2026-10-07 16:41:03,072 [INFO] [ML] Training DT Model (classification) on 242 samples x 13 features...
+2026-10-07 16:41:03,089 [INFO] [ML] DT Evaluation Complete. Metrics: {'accuracy': 0.5737704918032787, 'f1': 0.5765136780418804}
+2026-10-07 16:41:03,095 [INFO] [ML] Training DT Model (classification) on 242 samples x 13 features...
+2026-10-07 16:41:03,105 [INFO] [ML] DT Evaluation Complete. Metrics: {'accuracy': 0.5081967213114754, 'f1': 0.4888409303274398}
+2026-10-07 16:41:03,115 [INFO] [ML] Training DT Model (classification) on 484 samples x 13 features...
+2026-10-07 16:41:03,134 [INFO] [ML] DT Evaluation Complete. Metrics: {'accuracy': 0.5409836065573771, 'f1': 0.49310551835603783}
+2026-10-07 16:41:03,135 [INFO] [ML] [dataset.csv | Fold 3] Evaluating GB (NA Strategy: impute)
+2026-10-07 16:41:03,150 [INFO] [ML] Training GB Model (classification) on 242 samples x 13 features...
+2026-10-07 16:41:04,669 [INFO] [ML] GB Evaluation Complete. Metrics: {'accuracy': 0.5573770491803278, 'f1': 0.5346160322052317}
+2026-10-07 16:41:04,729 [INFO] [ML] Training GB Model (classification) on 242 samples x 13 features...
+2026-10-07 16:41:05,370 [INFO] [ML] GB Evaluation Complete. Metrics: {'accuracy': 0.6065573770491803, 'f1': 0.5791363181573294}
+2026-10-07 16:41:05,428 [INFO] [ML] Training GB Model (classification) on 484 samples x 13 features...
+2026-10-07 16:41:11,532 [INFO] [ML] GB Evaluation Complete. Metrics: {'accuracy': 0.5737704918032787, 'f1': 0.5323490479584564}
+2026-10-07 16:41:11,595 [INFO] [ML] [dataset.csv | Fold 3] Evaluating AB (NA Strategy: impute)
+2026-10-07 16:41:11,606 [INFO] [ML] Training AB Model (classification) on 242 samples x 13 features...
+2026-10-07 16:41:12,489 [INFO] [ML] AB Evaluation Complete. Metrics: {'accuracy': 0.5901639344262295, 'f1': 0.5865478783511571}
+2026-10-07 16:41:12,540 [INFO] [ML] Training AB Model (classification) on 242 samples x 13 features...
+2026-10-07 16:41:14,129 [INFO] [ML] AB Evaluation Complete. Metrics: {'accuracy': 0.5409836065573771, 'f1': 0.534923000496771}
+2026-10-07 16:41:14,179 [INFO] [ML] Training AB Model (classification) on 484 samples x 13 features...
+2026-10-07 16:41:14,676 [INFO] [ML] AB Evaluation Complete. Metrics: {'accuracy': 0.5901639344262295, 'f1': 0.565519726175464}
+2026-10-07 16:41:14,683 [INFO] [ML] [dataset.csv | Fold 3] Evaluating KNN (NA Strategy: impute)
+2026-10-07 16:41:14,692 [INFO] [ML] Training KNN Model (classification) on 242 samples x 13 features...
+2026-10-07 16:41:14,704 [INFO] [ML] KNN Evaluation Complete. Metrics: {'accuracy': 0.5409836065573771, 'f1': 0.43010547718896935}
+2026-10-07 16:41:14,713 [INFO] [ML] Training KNN Model (classification) on 242 samples x 13 features...
+2026-10-07 16:41:14,725 [INFO] [ML] KNN Evaluation Complete. Metrics: {'accuracy': 0.5409836065573771, 'f1': 0.4146576663452266}
+2026-10-07 16:41:14,734 [INFO] [ML] Training KNN Model (classification) on 484 samples x 13 features...
+2026-10-07 16:41:14,748 [INFO] [ML] KNN Evaluation Complete. Metrics: {'accuracy': 0.4918032786885246, 'f1': 0.3792218052538021}
+2026-10-07 16:41:14,749 [INFO] [ML] [dataset.csv | Fold 3] Evaluating MLP (NA Strategy: impute)
+2026-10-07 16:41:14,757 [INFO] [ML] Training MLP Model (classification) on 242 samples x 13 features...
+2026-10-07 16:41:15,314 [INFO] [ML] MLP Evaluation Complete. Metrics: {'accuracy': 0.6065573770491803, 'f1': 0.5760435321669651}
+2026-10-07 16:41:15,325 [INFO] [ML] Training MLP Model (classification) on 242 samples x 13 features...
+2026-10-07 16:41:16,082 [INFO] [ML] MLP Evaluation Complete. Metrics: {'accuracy': 0.5081967213114754, 'f1': 0.4718186655082441}
+2026-10-07 16:41:16,094 [INFO] [ML] Training MLP Model (classification) on 484 samples x 13 features...
+2026-10-07 16:41:16,998 [INFO] [ML] MLP Evaluation Complete. Metrics: {'accuracy': 0.6557377049180327, 'f1': 0.6035568802781917}
+2026-10-07 16:41:17,000 [INFO] [ML] [dataset.csv | Fold 3] Evaluating SVM (NA Strategy: impute)
+2026-10-07 16:41:17,045 [INFO] [ML] Training SVM Model (classification) on 242 samples x 13 features...
+2026-10-07 16:41:17,062 [INFO] [ML] SVM Evaluation Complete. Metrics: {'accuracy': 0.5245901639344263, 'f1': 0.3610082848580998}
+2026-10-07 16:41:17,100 [INFO] [ML] Training SVM Model (classification) on 242 samples x 13 features...
+2026-10-07 16:41:17,222 [INFO] [ML] SVM Evaluation Complete. Metrics: {'accuracy': 0.5245901639344263, 'f1': 0.3610082848580998}
+2026-10-07 16:41:17,364 [INFO] [ML] Training SVM Model (classification) on 484 samples x 13 features...
+2026-10-07 16:41:17,712 [INFO] [ML] SVM Evaluation Complete. Metrics: {'accuracy': 0.5245901639344263, 'f1': 0.3610082848580998}
+2026-10-07 16:41:21,847 [INFO] [dataset.csv | Fold 4] Reusing cached result from checkpoint -- skipping regeneration.
+2026-10-07 16:41:21,849 [INFO] [dataset.csv | Fold 5] Reusing cached result from checkpoint -- skipping regeneration.
+2026-10-07 16:41:21,849 [INFO] [dataset.csv | Fold 6] Reusing cached result from checkpoint -- skipping regeneration.
+2026-10-07 16:41:21,849 [INFO] [dataset.csv | Fold 7] Reusing cached result from checkpoint -- skipping regeneration.
+2026-10-07 16:41:21,850 [INFO] [dataset.csv | Fold 8] Reusing cached result from checkpoint -- skipping regeneration.
+2026-10-07 16:41:21,850 [INFO] [dataset.csv | Fold 9] Reusing cached result from checkpoint -- skipping regeneration.
+2026-10-07 16:41:21,850 [INFO] [dataset.csv | Fold 10] Reusing cached result from checkpoint -- skipping regeneration.
+2026-10-07 16:41:52,934 [INFO] Starting pipeline benchmark: dataset.csv
+2026-10-07 16:41:52,991 [INFO] Rule Inference: 31 integrity rules, 31 boundary rules (numeric tolerance ±10%).
+2026-10-07 16:41:53,406 [INFO] [dataset.csv | Fold 1] Reusing cached result from checkpoint -- skipping regeneration.
+2026-10-07 16:41:53,407 [INFO] [dataset.csv | Fold 2] Reusing cached result from checkpoint -- skipping regeneration.
+2026-10-07 16:41:53,407 [INFO] [dataset.csv | Fold 3] Reusing cached result from checkpoint -- skipping regeneration.
+2026-10-07 16:41:53,407 [INFO] [dataset.csv | Fold 4] Reusing cached result from checkpoint -- skipping regeneration.
+2026-10-07 16:41:53,408 [INFO] [dataset.csv | Fold 5] Reusing cached result from checkpoint -- skipping regeneration.
+2026-10-07 16:41:53,408 [INFO] [dataset.csv | Fold 6] Reusing cached result from checkpoint -- skipping regeneration.
+2026-10-07 16:41:53,408 [INFO] [dataset.csv | Fold 7] Reusing cached result from checkpoint -- skipping regeneration.
+2026-10-07 16:41:53,409 [INFO] [dataset.csv | Fold 8] Reusing cached result from checkpoint -- skipping regeneration.
+2026-10-07 16:41:53,409 [INFO] [dataset.csv | Fold 9] Reusing cached result from checkpoint -- skipping regeneration.
+2026-10-07 16:41:53,411 [INFO] [DATA] [dataset.csv | Fold 10] Split Complete: Train=455, Test=114
+2026-10-07 16:41:53,411 [INFO] [DATA] [dataset.csv | Fold 10] Strategy: random | Join: True | Context: 91 | Target Gen: 455
+2026-10-07 16:41:53,411 [INFO] Context Selection: Strategy='random' | RequestedRows=91 | PoolSize=455
+2026-10-07 16:41:53,412 [INFO] Random Selection: Picking 91 rows at random.
+2026-10-07 16:41:53,416 [INFO] [dataset.csv | Fold 10] Pre-Generation Geometry -> Train: 455 | Context: 91 | Target Gen: 455
+2026-10-07 16:41:53,417 [INFO] PromptManager: Successfully rendered 'generation_init.j2'.
+2026-10-07 16:41:53,417 [INFO] Starting LocalOpenAI generation... Total payload: 0. Num empty requested: 455. Chunk limit: 30. Derived subsets: 1
+2026-10-07 16:41:53,417 [INFO] Zero-Shot Mode Activated: Generating 455 rows across 16 chunks.
+2026-10-07 16:41:53,418 [INFO] Budgeting generation context for model gpt-4.1-nano (Max: 1047576 tok).
+2026-10-07 16:41:53,418 [INFO] Turn 1: Budgeting 91 context rows out of 91 requested.
+2026-10-07 16:41:53,420 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 16:41:53,420 [INFO] Processing chunk 1/16. Prompt generation...
+2026-10-07 16:41:53,420 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 16:41:53,421 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 16:42:12,653 [INFO] JSON Transform: Successfully unpacked 16 rows from Compact JSON using 31 identifying keys.
+2026-10-07 16:42:12,658 [INFO] Turn 2: Budgeting 13 context rows out of 91 requested.
+2026-10-07 16:42:12,668 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 16:42:12,669 [INFO] Processing chunk 2/16. Prompt generation...
+2026-10-07 16:42:12,670 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 16:42:12,670 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 16:42:29,713 [INFO] JSON Transform: Successfully unpacked 14 rows from Compact JSON using 31 identifying keys.
+2026-10-07 16:42:29,744 [INFO] Turn 3: Budgeting 26 context rows out of 91 requested.
+2026-10-07 16:42:29,746 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 16:42:29,746 [INFO] Processing chunk 3/16. Prompt generation...
+2026-10-07 16:42:29,747 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 16:42:29,748 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 16:42:51,295 [INFO] JSON Transform: Successfully unpacked 16 rows from Compact JSON using 31 identifying keys.
+2026-10-07 16:42:51,372 [INFO] Turn 4: Budgeting 39 context rows out of 91 requested.
+2026-10-07 16:42:51,375 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 16:42:51,376 [INFO] Processing chunk 4/16. Prompt generation...
+2026-10-07 16:42:51,376 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 16:42:51,377 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 16:43:11,080 [INFO] JSON Transform: Successfully unpacked 16 rows from Compact JSON using 31 identifying keys.
+2026-10-07 16:43:11,088 [INFO] Turn 5: Budgeting 52 context rows out of 91 requested.
+2026-10-07 16:43:11,116 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 16:43:11,116 [INFO] Processing chunk 5/16. Prompt generation...
+2026-10-07 16:43:11,117 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 16:43:11,118 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 16:43:26,724 [INFO] JSON Transform: Successfully unpacked 13 rows from Compact JSON using 31 identifying keys.
+2026-10-07 16:43:26,732 [INFO] Turn 6: Budgeting 65 context rows out of 91 requested.
+2026-10-07 16:43:26,736 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 16:43:26,740 [INFO] Processing chunk 6/16. Prompt generation...
+2026-10-07 16:43:26,741 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 16:43:26,741 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 16:43:44,470 [INFO] JSON Transform: Successfully unpacked 14 rows from Compact JSON using 31 identifying keys.
+2026-10-07 16:43:44,481 [INFO] Turn 7: Budgeting 78 context rows out of 91 requested.
+2026-10-07 16:43:44,483 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 16:43:44,484 [INFO] Processing chunk 7/16. Prompt generation...
+2026-10-07 16:43:44,484 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 16:43:44,485 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 16:44:05,223 [INFO] JSON Transform: Successfully unpacked 16 rows from Compact JSON using 31 identifying keys.
+2026-10-07 16:44:05,237 [INFO] Turn 8: Budgeting 91 context rows out of 91 requested.
+2026-10-07 16:44:05,240 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 16:44:05,256 [INFO] Processing chunk 8/16. Prompt generation...
+2026-10-07 16:44:05,259 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 16:44:05,259 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 16:44:23,115 [INFO] JSON Transform: Successfully unpacked 15 rows from Compact JSON using 31 identifying keys.
+2026-10-07 16:44:23,125 [INFO] Turn 9: Budgeting 13 context rows out of 91 requested.
+2026-10-07 16:44:23,126 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 16:44:23,127 [INFO] Processing chunk 9/16. Prompt generation...
+2026-10-07 16:44:23,127 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 16:44:23,128 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 16:44:46,308 [INFO] JSON Transform: Successfully unpacked 11 rows from Compact JSON using 31 identifying keys.
+2026-10-07 16:44:46,316 [INFO] Turn 10: Budgeting 26 context rows out of 91 requested.
+2026-10-07 16:44:46,318 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 16:44:46,318 [INFO] Processing chunk 10/16. Prompt generation...
+2026-10-07 16:44:46,319 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 16:44:46,319 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 16:45:14,326 [INFO] JSON Transform: Successfully unpacked 15 rows from Compact JSON using 31 identifying keys.
+2026-10-07 16:45:14,339 [INFO] Turn 11: Budgeting 39 context rows out of 91 requested.
+2026-10-07 16:45:14,341 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 16:45:14,341 [INFO] Processing chunk 11/16. Prompt generation...
+2026-10-07 16:45:14,341 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 16:45:14,342 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 16:45:38,369 [INFO] JSON Transform: Successfully unpacked 18 rows from Compact JSON using 31 identifying keys.
+2026-10-07 16:45:38,374 [INFO] Turn 12: Budgeting 52 context rows out of 91 requested.
+2026-10-07 16:45:38,381 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 16:45:38,381 [INFO] Processing chunk 12/16. Prompt generation...
+2026-10-07 16:45:38,382 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 16:45:38,382 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 16:45:57,090 [INFO] JSON Transform: Successfully unpacked 15 rows from Compact JSON using 31 identifying keys.
+2026-10-07 16:45:57,107 [INFO] Turn 13: Budgeting 65 context rows out of 91 requested.
+2026-10-07 16:45:57,109 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 16:45:57,110 [INFO] Processing chunk 13/16. Prompt generation...
+2026-10-07 16:45:57,110 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 16:45:57,111 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 16:46:16,818 [INFO] JSON Transform: Successfully unpacked 15 rows from Compact JSON using 31 identifying keys.
+2026-10-07 16:46:16,825 [INFO] Turn 14: Budgeting 78 context rows out of 91 requested.
+2026-10-07 16:46:16,859 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 16:46:16,866 [INFO] Processing chunk 14/16. Prompt generation...
+2026-10-07 16:46:16,867 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 16:46:16,867 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 16:46:59,880 [INFO] JSON Transform: Successfully unpacked 30 rows from Compact JSON using 31 identifying keys.
+2026-10-07 16:46:59,885 [INFO] Turn 15: Budgeting 91 context rows out of 91 requested.
+2026-10-07 16:46:59,897 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 16:46:59,897 [INFO] Processing chunk 15/16. Prompt generation...
+2026-10-07 16:46:59,898 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 16:46:59,898 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 16:47:21,917 [INFO] JSON Transform: Successfully unpacked 18 rows from Compact JSON using 31 identifying keys.
+2026-10-07 16:47:21,922 [INFO] Turn 16: Budgeting 13 context rows out of 91 requested.
+2026-10-07 16:47:21,923 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 16:47:21,923 [INFO] Processing chunk 16/16. Prompt generation...
+2026-10-07 16:47:21,924 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 16:47:21,924 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 16:47:30,754 [INFO] JSON Transform: Successfully unpacked 5 rows from Compact JSON using 31 identifying keys.
+2026-10-07 16:47:30,760 [INFO] Initial bulk generation fell short. Have 247/455 rows. Transitioning to Top-Up Guarantee loop...
+2026-10-07 16:47:30,761 [INFO] [Top-up Loop 1] Exact deficit: 208. Requesting 30 missing rows.
+2026-10-07 16:47:30,762 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 16:47:30,762 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 16:47:30,763 [INFO] [LLM] [gpt-4.1-nano] Dispatching Prompt: You are a world-class Data Science Synthetic Data Engine.
+Your goal is to generate high-fidelity synthetic rows based on a provided schema and context.
+
+You are an expert Data Scientist specializing i...
+2026-10-07 16:47:30,763 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 16:47:53,583 [INFO] [LLM] [gpt-4.1-nano] Received Raw Response: {"cols": ["radius1", "texture1", "perimeter1", "area1", "smoothness1", "compactness1", "concavity1", "concave_points1", "symmetry1", "fractal_dimension1", "radius2", "texture2", "perimeter2", "area2",...
+2026-10-07 16:47:53,584 [INFO] JSON Transform: Successfully unpacked 17 rows from Compact JSON using 31 identifying keys.
+2026-10-07 16:47:53,584 [INFO] [Top-up Loop 1 Success] Received 17 valid rows. New Total: 264/455.
+2026-10-07 16:47:53,585 [INFO] [Top-up Loop 2] Exact deficit: 191. Requesting 30 missing rows.
+2026-10-07 16:47:53,586 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 16:47:53,587 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 16:47:53,587 [INFO] [LLM] [gpt-4.1-nano] Dispatching Prompt: You are a world-class Data Science Synthetic Data Engine.
+Your goal is to generate high-fidelity synthetic rows based on a provided schema and context.
+
+You are an expert Data Scientist specializing i...
+2026-10-07 16:47:53,588 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 16:48:27,139 [INFO] [LLM] [gpt-4.1-nano] Received Raw Response: {"cols": ["radius1", "texture1", "perimeter1", "area1", "smoothness1", "compactness1", "concavity1", "concave_points1", "symmetry1", "fractal_dimension1", "radius2", "texture2", "perimeter2", "area2",...
+2026-10-07 16:48:27,140 [INFO] JSON Transform: Successfully unpacked 14 rows from Compact JSON using 31 identifying keys.
+2026-10-07 16:48:27,140 [INFO] [Top-up Loop 2 Success] Received 14 valid rows. New Total: 278/455.
+2026-10-07 16:48:27,141 [INFO] [Top-up Loop 3] Exact deficit: 177. Requesting 30 missing rows.
+2026-10-07 16:48:27,141 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 16:48:27,142 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 16:48:27,142 [INFO] [LLM] [gpt-4.1-nano] Dispatching Prompt: You are a world-class Data Science Synthetic Data Engine.
+Your goal is to generate high-fidelity synthetic rows based on a provided schema and context.
+
+You are an expert Data Scientist specializing i...
+2026-10-07 16:48:27,142 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 16:48:47,812 [INFO] [LLM] [gpt-4.1-nano] Received Raw Response: {"cols": ["radius1", "texture1", "perimeter1", "area1", "smoothness1", "compactness1", "concavity1", "concave_points1", "symmetry1", "fractal_dimension1", "radius2", "texture2", "perimeter2", "area2",...
+2026-10-07 16:48:47,813 [INFO] JSON Transform: Successfully unpacked 13 rows from Compact JSON using 31 identifying keys.
+2026-10-07 16:48:47,813 [INFO] [Top-up Loop 3 Success] Received 13 valid rows. New Total: 291/455.
+2026-10-07 16:48:47,814 [INFO] [Top-up Loop 4] Exact deficit: 164. Requesting 30 missing rows.
+2026-10-07 16:48:47,814 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 16:48:47,815 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 16:48:47,816 [INFO] [LLM] [gpt-4.1-nano] Dispatching Prompt: You are a world-class Data Science Synthetic Data Engine.
+Your goal is to generate high-fidelity synthetic rows based on a provided schema and context.
+
+You are an expert Data Scientist specializing i...
+2026-10-07 16:48:47,816 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 16:49:08,148 [INFO] [LLM] [gpt-4.1-nano] Received Raw Response: {"cols": ["radius1", "texture1", "perimeter1", "area1", "smoothness1", "compactness1", "concavity1", "concave_points1", "symmetry1", "fractal_dimension1", "radius2", "texture2", "perimeter2", "area2",...
+2026-10-07 16:49:08,150 [INFO] JSON Transform: Successfully unpacked 14 rows from Compact JSON using 31 identifying keys.
+2026-10-07 16:49:08,151 [INFO] [Top-up Loop 4 Success] Received 14 valid rows. New Total: 305/455.
+2026-10-07 16:49:08,151 [INFO] [Top-up Loop 5] Exact deficit: 150. Requesting 30 missing rows.
+2026-10-07 16:49:08,152 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 16:49:08,152 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 16:49:08,153 [INFO] [LLM] [gpt-4.1-nano] Dispatching Prompt: You are a world-class Data Science Synthetic Data Engine.
+Your goal is to generate high-fidelity synthetic rows based on a provided schema and context.
+
+You are an expert Data Scientist specializing i...
+2026-10-07 16:49:08,153 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 16:49:26,426 [INFO] [LLM] [gpt-4.1-nano] Received Raw Response: {"cols": ["radius1", "texture1", "perimeter1", "area1", "smoothness1", "compactness1", "concavity1", "concave_points1", "symmetry1", "fractal_dimension1", "radius2", "texture2", "perimeter2", "area2",...
+2026-10-07 16:49:26,427 [INFO] JSON Transform: Successfully unpacked 15 rows from Compact JSON using 31 identifying keys.
+2026-10-07 16:49:26,427 [INFO] [Top-up Loop 5 Success] Received 15 valid rows. New Total: 320/455.
+2026-10-07 16:49:26,427 [INFO] [Top-up Loop 6] Exact deficit: 135. Requesting 30 missing rows.
+2026-10-07 16:49:26,428 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 16:49:26,429 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 16:49:26,429 [INFO] [LLM] [gpt-4.1-nano] Dispatching Prompt: You are a world-class Data Science Synthetic Data Engine.
+Your goal is to generate high-fidelity synthetic rows based on a provided schema and context.
+
+You are an expert Data Scientist specializing i...
+2026-10-07 16:49:26,429 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 16:49:45,535 [INFO] [LLM] [gpt-4.1-nano] Received Raw Response: {"cols": ["radius1", "texture1", "perimeter1", "area1", "smoothness1", "compactness1", "concavity1", "concave_points1", "symmetry1", "fractal_dimension1", "radius2", "texture2", "perimeter2", "area2",...
+2026-10-07 16:49:45,537 [INFO] JSON Transform: Successfully unpacked 16 rows from Compact JSON using 31 identifying keys.
+2026-10-07 16:49:45,537 [INFO] [Top-up Loop 6 Success] Received 16 valid rows. New Total: 336/455.
+2026-10-07 16:49:45,538 [INFO] [Top-up Loop 7] Exact deficit: 119. Requesting 30 missing rows.
+2026-10-07 16:49:45,538 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 16:49:45,539 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 16:49:45,539 [INFO] [LLM] [gpt-4.1-nano] Dispatching Prompt: You are a world-class Data Science Synthetic Data Engine.
+Your goal is to generate high-fidelity synthetic rows based on a provided schema and context.
+
+You are an expert Data Scientist specializing i...
+2026-10-07 16:49:45,540 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 16:49:59,807 [INFO] [LLM] [gpt-4.1-nano] Received Raw Response: {"cols": ["radius1", "texture1", "perimeter1", "area1", "smoothness1", "compactness1", "concavity1", "concave_points1", "symmetry1", "fractal_dimension1", "radius2", "texture2", "perimeter2", "area2",...
+2026-10-07 16:49:59,808 [INFO] JSON Transform: Successfully unpacked 12 rows from Compact JSON using 31 identifying keys.
+2026-10-07 16:49:59,808 [INFO] [Top-up Loop 7 Success] Received 12 valid rows. New Total: 348/455.
+2026-10-07 16:49:59,808 [INFO] [Top-up Loop 8] Exact deficit: 107. Requesting 30 missing rows.
+2026-10-07 16:49:59,809 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 16:49:59,809 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 16:49:59,810 [INFO] [LLM] [gpt-4.1-nano] Dispatching Prompt: You are a world-class Data Science Synthetic Data Engine.
+Your goal is to generate high-fidelity synthetic rows based on a provided schema and context.
+
+You are an expert Data Scientist specializing i...
+2026-10-07 16:49:59,810 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 16:50:14,767 [INFO] [LLM] [gpt-4.1-nano] Received Raw Response: {"cols": ["radius1", "texture1", "perimeter1", "area1", "smoothness1", "compactness1", "concavity1", "concave_points1", "symmetry1", "fractal_dimension1", "radius2", "texture2", "perimeter2", "area2",...
+2026-10-07 16:50:14,769 [INFO] JSON Transform: Successfully unpacked 12 rows from Compact JSON using 31 identifying keys.
+2026-10-07 16:50:14,770 [INFO] [Top-up Loop 8 Success] Received 12 valid rows. New Total: 360/455.
+2026-10-07 16:50:14,770 [INFO] [Top-up Loop 9] Exact deficit: 95. Requesting 30 missing rows.
+2026-10-07 16:50:14,771 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 16:50:14,771 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 16:50:14,771 [INFO] [LLM] [gpt-4.1-nano] Dispatching Prompt: You are a world-class Data Science Synthetic Data Engine.
+Your goal is to generate high-fidelity synthetic rows based on a provided schema and context.
+
+You are an expert Data Scientist specializing i...
+2026-10-07 16:50:14,772 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 16:50:31,419 [INFO] [LLM] [gpt-4.1-nano] Received Raw Response: {"cols": ["radius1", "texture1", "perimeter1", "area1", "smoothness1", "compactness1", "concavity1", "concave_points1", "symmetry1", "fractal_dimension1", "radius2", "texture2", "perimeter2", "area2",...
+2026-10-07 16:50:31,420 [INFO] JSON Transform: Successfully unpacked 13 rows from Compact JSON using 31 identifying keys.
+2026-10-07 16:50:31,421 [INFO] [Top-up Loop 9 Success] Received 13 valid rows. New Total: 373/455.
+2026-10-07 16:50:31,421 [INFO] [Top-up Loop 10] Exact deficit: 82. Requesting 30 missing rows.
+2026-10-07 16:50:31,422 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 16:50:31,422 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 16:50:31,423 [INFO] [LLM] [gpt-4.1-nano] Dispatching Prompt: You are a world-class Data Science Synthetic Data Engine.
+Your goal is to generate high-fidelity synthetic rows based on a provided schema and context.
+
+You are an expert Data Scientist specializing i...
+2026-10-07 16:50:31,423 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 16:50:47,038 [INFO] [LLM] [gpt-4.1-nano] Received Raw Response: {"cols": ["radius1", "texture1", "perimeter1", "area1", "smoothness1", "compactness1", "concavity1", "concave_points1", "symmetry1", "fractal_dimension1", "radius2", "texture2", "perimeter2", "area2",...
+2026-10-07 16:50:47,039 [INFO] JSON Transform: Successfully unpacked 15 rows from Compact JSON using 31 identifying keys.
+2026-10-07 16:50:47,039 [INFO] [Top-up Loop 10 Success] Received 15 valid rows. New Total: 388/455.
+2026-10-07 16:50:47,040 [INFO] [Top-up Loop 11] Exact deficit: 67. Requesting 30 missing rows.
+2026-10-07 16:50:47,040 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 16:50:47,041 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 16:50:47,041 [INFO] [LLM] [gpt-4.1-nano] Dispatching Prompt: You are a world-class Data Science Synthetic Data Engine.
+Your goal is to generate high-fidelity synthetic rows based on a provided schema and context.
+
+You are an expert Data Scientist specializing i...
+2026-10-07 16:50:47,041 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 16:51:31,848 [INFO] [LLM] [gpt-4.1-nano] Received Raw Response: {"cols": ["radius1", "texture1", "perimeter1", "area1", "smoothness1", "compactness1", "concavity1", "concave_points1", "symmetry1", "fractal_dimension1", "radius2", "texture2", "perimeter2", "area2",...
+2026-10-07 16:51:31,848 [INFO] JSON Transform: Successfully unpacked 16 rows from Compact JSON using 31 identifying keys.
+2026-10-07 16:51:31,849 [INFO] [Top-up Loop 11 Success] Received 16 valid rows. New Total: 404/455.
+2026-10-07 16:51:31,849 [INFO] [Top-up Loop 12] Exact deficit: 51. Requesting 30 missing rows.
+2026-10-07 16:51:31,850 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 16:51:31,850 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 16:51:31,850 [INFO] [LLM] [gpt-4.1-nano] Dispatching Prompt: You are a world-class Data Science Synthetic Data Engine.
+Your goal is to generate high-fidelity synthetic rows based on a provided schema and context.
+
+You are an expert Data Scientist specializing i...
+2026-10-07 16:51:31,851 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 16:51:48,039 [INFO] [LLM] [gpt-4.1-nano] Received Raw Response: {"cols": ["radius1", "texture1", "perimeter1", "area1", "smoothness1", "compactness1", "concavity1", "concave_points1", "symmetry1", "fractal_dimension1", "radius2", "texture2", "perimeter2", "area2",...
+2026-10-07 16:51:48,039 [INFO] JSON Transform: Successfully unpacked 13 rows from Compact JSON using 31 identifying keys.
+2026-10-07 16:51:48,039 [INFO] [Top-up Loop 12 Success] Received 13 valid rows. New Total: 417/455.
+2026-10-07 16:51:48,040 [INFO] [Top-up Loop 13] Exact deficit: 38. Requesting 30 missing rows.
+2026-10-07 16:51:48,040 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 16:51:48,041 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 16:51:48,041 [INFO] [LLM] [gpt-4.1-nano] Dispatching Prompt: You are a world-class Data Science Synthetic Data Engine.
+Your goal is to generate high-fidelity synthetic rows based on a provided schema and context.
+
+You are an expert Data Scientist specializing i...
+2026-10-07 16:51:48,042 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 16:52:04,038 [INFO] [LLM] [gpt-4.1-nano] Received Raw Response: {"cols": ["radius1", "texture1", "perimeter1", "area1", "smoothness1", "compactness1", "concavity1", "concave_points1", "symmetry1", "fractal_dimension1", "radius2", "texture2", "perimeter2", "area2",...
+2026-10-07 16:52:04,039 [INFO] JSON Transform: Successfully unpacked 14 rows from Compact JSON using 31 identifying keys.
+2026-10-07 16:52:04,039 [INFO] [Top-up Loop 13 Success] Received 14 valid rows. New Total: 431/455.
+2026-10-07 16:52:04,039 [INFO] [Top-up Loop 14] Exact deficit: 24. Requesting 24 missing rows.
+2026-10-07 16:52:04,040 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 16:52:04,040 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 16:52:04,041 [INFO] [LLM] [gpt-4.1-nano] Dispatching Prompt: You are a world-class Data Science Synthetic Data Engine.
+Your goal is to generate high-fidelity synthetic rows based on a provided schema and context.
+
+You are an expert Data Scientist specializing i...
+2026-10-07 16:52:04,041 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 16:52:22,286 [INFO] [LLM] [gpt-4.1-nano] Received Raw Response: {"cols": ["radius1", "texture1", "perimeter1", "area1", "smoothness1", "compactness1", "concavity1", "concave_points1", "symmetry1", "fractal_dimension1", "radius2", "texture2", "perimeter2", "area2",...
+2026-10-07 16:52:22,288 [INFO] JSON Transform: Successfully unpacked 15 rows from Compact JSON using 31 identifying keys.
+2026-10-07 16:52:22,288 [INFO] [Top-up Loop 14 Success] Received 15 valid rows. New Total: 446/455.
+2026-10-07 16:52:22,288 [INFO] [Top-up Loop 15] Exact deficit: 9. Requesting 9 missing rows.
+2026-10-07 16:52:22,289 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 16:52:22,290 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 16:52:22,290 [INFO] [LLM] [gpt-4.1-nano] Dispatching Prompt: You are a world-class Data Science Synthetic Data Engine.
+Your goal is to generate high-fidelity synthetic rows based on a provided schema and context.
+
+You are an expert Data Scientist specializing i...
+2026-10-07 16:52:22,290 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 16:52:33,378 [INFO] [LLM] [gpt-4.1-nano] Received Raw Response: {"cols": ["radius1", "texture1", "perimeter1", "area1", "smoothness1", "compactness1", "concavity1", "concave_points1", "symmetry1", "fractal_dimension1", "radius2", "texture2", "perimeter2", "area2",...
+2026-10-07 16:52:33,380 [INFO] JSON Transform: Successfully unpacked 9 rows from Compact JSON using 31 identifying keys.
+2026-10-07 16:52:33,381 [INFO] [Top-up Loop 15 Success] Received 9 valid rows. New Total: 455/455.
+2026-10-07 16:52:33,381 [INFO] Algebraic Guarantee successfully satisfied: 455/455 rows strictly assembled.
+2026-10-07 16:52:33,419 [INFO] [dataset.csv | Fold 10] Post-Generation Geometry -> Target: 455 | Generated: 455 | Final Train Size: 546 | Test Size: 114
+2026-10-07 16:52:38,911 [INFO] [ML] [dataset.csv | Fold 10] Evaluating RF (NA Strategy: impute)
+2026-10-07 16:52:38,960 [INFO] [ML] Training RF Model (classification) on 455 samples x 30 features...
+2026-10-07 16:52:40,098 [INFO] [ML] RF Evaluation Complete. Metrics: {'accuracy': 0.9736842105263158, 'f1': 0.9798657718120806}
+2026-10-07 16:52:40,256 [INFO] [ML] Training RF Model (classification) on 455 samples x 30 features...
+2026-10-07 16:52:41,294 [INFO] [ML] RF Evaluation Complete. Metrics: {'accuracy': 0.9649122807017544, 'f1': 0.95}
+2026-10-07 16:52:41,476 [INFO] [ML] Training RF Model (classification) on 910 samples x 30 features...
+2026-10-07 16:52:44,439 [INFO] [ML] RF Evaluation Complete. Metrics: {'accuracy': 0.9824561403508771, 'f1': 0.9866666666666667}
+2026-10-07 16:52:44,607 [INFO] [ML] [dataset.csv | Fold 10] Evaluating LR (NA Strategy: impute)
+2026-10-07 16:52:44,646 [INFO] [ML] Training LR Model (classification) on 455 samples x 30 features...
+C:\Users\Sancho Amaral Simoes\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\sklearn\linear_model\_logistic.py:406: ConvergenceWarning: lbfgs failed to converge after 100 iteration(s) (status=1):
+STOP: TOTAL NO. OF ITERATIONS REACHED LIMIT
+
+Increase the number of iterations to improve the convergence (max_iter=100).
+You might also want to scale the data as shown in:
+    https://scikit-learn.org/stable/modules/preprocessing.html
+Please also refer to the documentation for alternative solver options:
+    https://scikit-learn.org/stable/modules/linear_model.html#logistic-regression
+  n_iter_i = _check_optimize_result(
+2026-10-07 16:52:44,874 [INFO] [ML] LR Evaluation Complete. Metrics: {'accuracy': 0.9649122807017544, 'f1': 0.9733333333333334}
+2026-10-07 16:52:44,938 [INFO] [ML] Training LR Model (classification) on 455 samples x 30 features...
+C:\Users\Sancho Amaral Simoes\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\sklearn\linear_model\_logistic.py:406: ConvergenceWarning: lbfgs failed to converge after 100 iteration(s) (status=1):
+STOP: TOTAL NO. OF ITERATIONS REACHED LIMIT
+
+Increase the number of iterations to improve the convergence (max_iter=100).
+You might also want to scale the data as shown in:
+    https://scikit-learn.org/stable/modules/preprocessing.html
+Please also refer to the documentation for alternative solver options:
+    https://scikit-learn.org/stable/modules/linear_model.html#logistic-regression
+  n_iter_i = _check_optimize_result(
+2026-10-07 16:52:45,143 [INFO] [ML] LR Evaluation Complete. Metrics: {'accuracy': 0.9385964912280702, 'f1': 0.9066666666666666}
+2026-10-07 16:52:45,236 [INFO] [ML] Training LR Model (classification) on 910 samples x 30 features...
+C:\Users\Sancho Amaral Simoes\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\sklearn\linear_model\_logistic.py:406: ConvergenceWarning: lbfgs failed to converge after 100 iteration(s) (status=1):
+STOP: TOTAL NO. OF ITERATIONS REACHED LIMIT
+
+Increase the number of iterations to improve the convergence (max_iter=100).
+You might also want to scale the data as shown in:
+    https://scikit-learn.org/stable/modules/preprocessing.html
+Please also refer to the documentation for alternative solver options:
+    https://scikit-learn.org/stable/modules/linear_model.html#logistic-regression
+  n_iter_i = _check_optimize_result(
+2026-10-07 16:52:45,450 [INFO] [ML] LR Evaluation Complete. Metrics: {'accuracy': 0.9649122807017544, 'f1': 0.9733333333333334}
+2026-10-07 16:52:45,456 [INFO] [ML] [dataset.csv | Fold 10] Evaluating XGB (NA Strategy: impute)
+2026-10-07 16:52:45,518 [INFO] [ML] Training XGB Model (classification) on 455 samples x 30 features...
+2026-10-07 16:52:50,613 [INFO] [ML] XGB Evaluation Complete. Metrics: {'accuracy': 0.9824561403508771, 'f1': 0.9866666666666667}
+2026-10-07 16:52:50,631 [INFO] [ML] Training XGB Model (classification) on 455 samples x 30 features...
+2026-10-07 16:52:50,948 [INFO] [ML] XGB Evaluation Complete. Metrics: {'accuracy': 0.9824561403508771, 'f1': 0.9743589743589743}
+2026-10-07 16:52:50,967 [INFO] [ML] Training XGB Model (classification) on 910 samples x 30 features...
+2026-10-07 16:52:59,328 [INFO] [ML] XGB Evaluation Complete. Metrics: {'accuracy': 0.9912280701754386, 'f1': 0.9933774834437086}
+2026-10-07 16:52:59,330 [INFO] [ML] [dataset.csv | Fold 10] Evaluating NB (NA Strategy: impute)
+2026-10-07 16:52:59,364 [INFO] [ML] Training NB Model (classification) on 455 samples x 30 features...
+2026-10-07 16:52:59,378 [INFO] [ML] NB Evaluation Complete. Metrics: {'accuracy': 0.956140350877193, 'f1': 0.9668874172185431}
+2026-10-07 16:52:59,452 [INFO] [ML] Training NB Model (classification) on 455 samples x 30 features...
+2026-10-07 16:52:59,460 [INFO] [ML] NB Evaluation Complete. Metrics: {'accuracy': 0.956140350877193, 'f1': 0.9367088607594937}
+2026-10-07 16:52:59,473 [INFO] [ML] Training NB Model (classification) on 910 samples x 30 features...
+2026-10-07 16:52:59,498 [INFO] [ML] NB Evaluation Complete. Metrics: {'accuracy': 0.9736842105263158, 'f1': 0.9801324503311258}
+2026-10-07 16:52:59,499 [INFO] [ML] [dataset.csv | Fold 10] Evaluating DT (NA Strategy: impute)
+2026-10-07 16:52:59,561 [INFO] [ML] Training DT Model (classification) on 455 samples x 30 features...
+2026-10-07 16:52:59,655 [INFO] [ML] DT Evaluation Complete. Metrics: {'accuracy': 0.9649122807017544, 'f1': 0.9733333333333334}
+2026-10-07 16:52:59,678 [INFO] [ML] Training DT Model (classification) on 455 samples x 30 features...
+2026-10-07 16:52:59,796 [INFO] [ML] DT Evaluation Complete. Metrics: {'accuracy': 0.8947368421052632, 'f1': 0.8421052631578947}
+2026-10-07 16:52:59,966 [INFO] [ML] Training DT Model (classification) on 910 samples x 30 features...
+2026-10-07 16:53:00,045 [INFO] [ML] DT Evaluation Complete. Metrics: {'accuracy': 0.9736842105263158, 'f1': 0.9801324503311258}
+2026-10-07 16:53:00,058 [INFO] [ML] [dataset.csv | Fold 10] Evaluating GB (NA Strategy: impute)
+2026-10-07 16:53:00,183 [INFO] [ML] Training GB Model (classification) on 455 samples x 30 features...
+2026-10-07 16:53:03,118 [INFO] [ML] GB Evaluation Complete. Metrics: {'accuracy': 0.9912280701754386, 'f1': 0.9933774834437086}
+2026-10-07 16:53:03,214 [INFO] [ML] Training GB Model (classification) on 455 samples x 30 features...
+2026-10-07 16:53:04,390 [INFO] [ML] GB Evaluation Complete. Metrics: {'accuracy': 0.9473684210526315, 'f1': 0.9230769230769231}
+2026-10-07 16:53:04,498 [INFO] [ML] Training GB Model (classification) on 910 samples x 30 features...
+2026-10-07 16:53:10,776 [INFO] [ML] GB Evaluation Complete. Metrics: {'accuracy': 0.9912280701754386, 'f1': 0.9933774834437086}
+2026-10-07 16:53:10,780 [INFO] [ML] [dataset.csv | Fold 10] Evaluating AB (NA Strategy: impute)
+2026-10-07 16:53:10,862 [INFO] [ML] Training AB Model (classification) on 455 samples x 30 features...
+2026-10-07 16:53:12,599 [INFO] [ML] AB Evaluation Complete. Metrics: {'accuracy': 0.9912280701754386, 'f1': 0.9933774834437086}
+2026-10-07 16:53:12,713 [INFO] [ML] Training AB Model (classification) on 455 samples x 30 features...
+2026-10-07 16:53:15,699 [INFO] [ML] AB Evaluation Complete. Metrics: {'accuracy': 0.9385964912280702, 'f1': 0.9135802469135802}
+2026-10-07 16:53:16,014 [INFO] [ML] Training AB Model (classification) on 910 samples x 30 features...
+2026-10-07 16:53:21,058 [INFO] [ML] AB Evaluation Complete. Metrics: {'accuracy': 0.9824561403508771, 'f1': 0.9868421052631579}
+2026-10-07 16:53:21,068 [INFO] [ML] [dataset.csv | Fold 10] Evaluating KNN (NA Strategy: impute)
+2026-10-07 16:53:21,081 [INFO] [ML] Training KNN Model (classification) on 455 samples x 30 features...
+2026-10-07 16:53:25,334 [INFO] [ML] KNN Evaluation Complete. Metrics: {'accuracy': 0.9736842105263158, 'f1': 0.9801324503311258}
+2026-10-07 16:53:25,416 [INFO] [ML] Training KNN Model (classification) on 455 samples x 30 features...
+2026-10-07 16:53:26,011 [INFO] [ML] KNN Evaluation Complete. Metrics: {'accuracy': 0.9298245614035088, 'f1': 0.9}
+2026-10-07 16:53:26,079 [INFO] [ML] Training KNN Model (classification) on 910 samples x 30 features...
+2026-10-07 16:53:26,746 [INFO] [ML] KNN Evaluation Complete. Metrics: {'accuracy': 0.9649122807017544, 'f1': 0.9736842105263158}
+2026-10-07 16:53:26,764 [INFO] [ML] [dataset.csv | Fold 10] Evaluating MLP (NA Strategy: impute)
+2026-10-07 16:53:26,833 [INFO] [ML] Training MLP Model (classification) on 455 samples x 30 features...
+2026-10-07 16:53:27,919 [INFO] [ML] MLP Evaluation Complete. Metrics: {'accuracy': 0.9649122807017544, 'f1': 0.974025974025974}
+2026-10-07 16:53:27,985 [INFO] [ML] Training MLP Model (classification) on 455 samples x 30 features...
+2026-10-07 16:53:29,555 [INFO] [ML] MLP Evaluation Complete. Metrics: {'accuracy': 0.7368421052631579, 'f1': 0.7222222222222222}
+2026-10-07 16:53:29,645 [INFO] [ML] Training MLP Model (classification) on 910 samples x 30 features...
+2026-10-07 16:53:34,459 [INFO] [ML] MLP Evaluation Complete. Metrics: {'accuracy': 0.8859649122807017, 'f1': 0.9064748201438849}
+2026-10-07 16:53:34,476 [INFO] [ML] [dataset.csv | Fold 10] Evaluating SVM (NA Strategy: impute)
+2026-10-07 16:53:34,571 [INFO] [ML] Training SVM Model (classification) on 455 samples x 30 features...
+2026-10-07 16:53:34,640 [INFO] [ML] SVM Evaluation Complete. Metrics: {'accuracy': 0.9649122807017544, 'f1': 0.974025974025974}
+2026-10-07 16:53:34,818 [INFO] [ML] Training SVM Model (classification) on 455 samples x 30 features...
+2026-10-07 16:53:34,837 [INFO] [ML] SVM Evaluation Complete. Metrics: {'accuracy': 0.9649122807017544, 'f1': 0.9473684210526315}
+2026-10-07 16:53:34,868 [INFO] [ML] Training SVM Model (classification) on 910 samples x 30 features...
+2026-10-07 16:53:35,117 [INFO] [ML] SVM Evaluation Complete. Metrics: {'accuracy': 0.9649122807017544, 'f1': 0.9736842105263158}
+2026-10-07 16:54:18,560 [INFO] Starting pipeline benchmark: dataset.csv
+2026-10-07 16:54:18,587 [INFO] Rule Inference: 13 integrity rules, 13 boundary rules (numeric tolerance ±10%).
+2026-10-07 16:54:19,117 [INFO] [DATA] [dataset.csv | Fold 1] Split Complete: Train=239, Test=60
+2026-10-07 16:54:19,118 [INFO] [DATA] [dataset.csv | Fold 1] Strategy: random | Join: True | Context: 47 | Target Gen: 239
+2026-10-07 16:54:19,119 [INFO] Context Selection: Strategy='random' | RequestedRows=47 | PoolSize=239
+2026-10-07 16:54:19,120 [INFO] Random Selection: Picking 47 rows at random.
+2026-10-07 16:54:19,123 [INFO] [dataset.csv | Fold 1] Pre-Generation Geometry -> Train: 239 | Context: 47 | Target Gen: 239
+2026-10-07 16:54:19,129 [INFO] PromptManager: Successfully rendered 'generation_init.j2'.
+2026-10-07 16:54:19,129 [INFO] Starting LocalOpenAI generation... Total payload: 0. Num empty requested: 239. Chunk limit: 30. Derived subsets: 1
+2026-10-07 16:54:19,130 [INFO] Zero-Shot Mode Activated: Generating 239 rows across 8 chunks.
+2026-10-07 16:54:19,130 [INFO] Budgeting generation context for model gpt-4.1-nano (Max: 1047576 tok).
+2026-10-07 16:54:19,130 [INFO] Turn 1: Budgeting 47 context rows out of 47 requested.
+2026-10-07 16:54:19,131 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 16:54:19,131 [INFO] Processing chunk 1/8. Prompt generation...
+2026-10-07 16:54:19,132 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 16:54:19,132 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 16:55:25,217 [INFO] JSON Transform: Successfully unpacked 31 rows from Compact JSON using 13 identifying keys.
+2026-10-07 16:55:25,221 [INFO] Turn 2: Budgeting 39 context rows out of 47 requested.
+2026-10-07 16:55:25,221 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 16:55:25,222 [INFO] Processing chunk 2/8. Prompt generation...
+2026-10-07 16:55:25,222 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 16:55:25,222 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 16:56:25,669 [INFO] JSON Transform: Successfully unpacked 32 rows from Compact JSON using 13 identifying keys.
+2026-10-07 16:56:25,673 [INFO] Turn 3: Budgeting 31 context rows out of 47 requested.
+2026-10-07 16:56:25,674 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 16:56:25,674 [INFO] Processing chunk 3/8. Prompt generation...
+2026-10-07 16:56:25,675 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 16:56:25,675 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 16:57:17,672 [INFO] JSON Transform: Successfully unpacked 26 rows from Compact JSON using 13 identifying keys.
+2026-10-07 16:57:17,675 [INFO] Turn 4: Budgeting 23 context rows out of 47 requested.
+2026-10-07 16:57:17,676 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 16:57:17,677 [INFO] Processing chunk 4/8. Prompt generation...
+2026-10-07 16:57:17,677 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 16:57:17,678 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 16:58:52,203 [INFO] JSON Transform: Successfully unpacked 26 rows from Compact JSON using 13 identifying keys.
+2026-10-07 16:58:52,206 [INFO] Turn 5: Budgeting 15 context rows out of 47 requested.
+2026-10-07 16:58:52,207 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 16:58:52,208 [INFO] Processing chunk 5/8. Prompt generation...
+2026-10-07 16:58:52,208 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 16:58:52,209 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 16:59:58,927 [INFO] JSON Transform: Successfully unpacked 34 rows from Compact JSON using 13 identifying keys.
+2026-10-07 16:59:58,932 [INFO] Turn 6: Budgeting 7 context rows out of 47 requested.
+2026-10-07 16:59:58,932 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 16:59:58,933 [INFO] Processing chunk 6/8. Prompt generation...
+2026-10-07 16:59:58,934 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 16:59:58,934 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 17:00:39,970 [INFO] JSON Transform: Successfully unpacked 25 rows from Compact JSON using 13 identifying keys.
+2026-10-07 17:00:39,998 [INFO] Turn 7: Budgeting 46 context rows out of 47 requested.
+2026-10-07 17:00:40,003 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 17:00:40,004 [INFO] Processing chunk 7/8. Prompt generation...
+2026-10-07 17:00:40,005 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 17:00:40,005 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 17:01:29,333 [INFO] JSON Transform: Successfully unpacked 27 rows from Compact JSON using 13 identifying keys.
+2026-10-07 17:01:29,362 [INFO] Turn 8: Budgeting 38 context rows out of 47 requested.
+2026-10-07 17:01:29,367 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 17:01:29,367 [INFO] Processing chunk 8/8. Prompt generation...
+2026-10-07 17:01:29,368 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 17:01:29,369 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 17:02:59,038 [INFO] JSON Transform: Successfully unpacked 28 rows from Compact JSON using 13 identifying keys.
+2026-10-07 17:02:59,068 [INFO] Initial bulk generation fell short. Have 229/239 rows. Transitioning to Top-Up Guarantee loop...
+2026-10-07 17:02:59,069 [INFO] [Top-up Loop 1] Exact deficit: 10. Requesting 10 missing rows.
+2026-10-07 17:02:59,070 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 17:02:59,070 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 17:02:59,071 [INFO] [LLM] [gpt-4.1-nano] Dispatching Prompt: You are a world-class Data Science Synthetic Data Engine.
+Your goal is to generate high-fidelity synthetic rows based on a provided schema and context.
+
+You are an expert Data Scientist specializing i...
+2026-10-07 17:02:59,071 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 17:03:14,906 [INFO] [LLM] [gpt-4.1-nano] Received Raw Response: {"cols": ["age", "anaemia", "creatinine_phosphokinase", "diabetes", "ejection_fraction", "high_blood_pressure", "platelets", "serum_creatinine", "serum_sodium", "sex", "smoking", "time", "death_event"...
+2026-10-07 17:03:14,932 [WARNING] JSON parsing failed after all stages. Error: Expecting ',' delimiter: line 1 column 771 (char 770)
+2026-10-07 17:03:14,932 [WARNING] Top-up 1: JSON parse critically failed. Skipping round... (Consecutive failures: 1)
+2026-10-07 17:03:14,933 [INFO] [Top-up Loop 2] Exact deficit: 10. Requesting 10 missing rows.
+2026-10-07 17:03:14,933 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 17:03:14,934 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 17:03:14,934 [INFO] [LLM] [gpt-4.1-nano] Dispatching Prompt: You are a world-class Data Science Synthetic Data Engine.
+Your goal is to generate high-fidelity synthetic rows based on a provided schema and context.
+
+You are an expert Data Scientist specializing i...
+2026-10-07 17:03:14,935 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 17:03:29,960 [INFO] [LLM] [gpt-4.1-nano] Received Raw Response: {"cols": ["age", "anaemia", "creatinine_phosphokinase", "diabetes", "ejection_fraction", "high_blood_pressure", "platelets", "serum_creatinine", "serum_sodium", "sex", "smoking", "time", "death_event"...
+2026-10-07 17:03:29,984 [INFO] JSON Transform: Successfully unpacked 10 rows from Compact JSON using 13 identifying keys.
+2026-10-07 17:03:29,985 [INFO] [Top-up Loop 2 Success] Received 10 valid rows. New Total: 239/239.
+2026-10-07 17:03:29,985 [INFO] Algebraic Guarantee successfully satisfied: 239/239 rows strictly assembled.
+2026-10-07 17:03:30,010 [INFO] [dataset.csv | Fold 1] Post-Generation Geometry -> Target: 239 | Generated: 239 | Final Train Size: 286 | Test Size: 60
+2026-10-07 17:03:31,966 [INFO] [ML] [dataset.csv | Fold 1] Evaluating RF (NA Strategy: impute)
+2026-10-07 17:03:31,993 [INFO] [ML] Training RF Model (classification) on 239 samples x 12 features...
+2026-10-07 17:03:32,193 [INFO] [ML] RF Evaluation Complete. Metrics: {'accuracy': 0.7666666666666667, 'f1': 0.6818181818181818}
+2026-10-07 17:03:32,224 [INFO] [ML] Training RF Model (classification) on 239 samples x 12 features...
+2026-10-07 17:03:32,327 [INFO] [ML] RF Evaluation Complete. Metrics: {'accuracy': 0.75, 'f1': 0.6511627906976745}
+2026-10-07 17:03:32,347 [INFO] [ML] Training RF Model (classification) on 478 samples x 12 features...
+2026-10-07 17:03:32,598 [INFO] [ML] RF Evaluation Complete. Metrics: {'accuracy': 0.8333333333333334, 'f1': 0.782608695652174}
+2026-10-07 17:03:32,645 [INFO] [ML] [dataset.csv | Fold 1] Evaluating LR (NA Strategy: impute)
+2026-10-07 17:03:32,652 [INFO] [ML] Training LR Model (classification) on 239 samples x 12 features...
+C:\Users\Sancho Amaral Simoes\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\sklearn\linear_model\_logistic.py:406: ConvergenceWarning: lbfgs failed to converge after 100 iteration(s) (status=1):
+STOP: TOTAL NO. OF ITERATIONS REACHED LIMIT
+
+Increase the number of iterations to improve the convergence (max_iter=100).
+You might also want to scale the data as shown in:
+    https://scikit-learn.org/stable/modules/preprocessing.html
+Please also refer to the documentation for alternative solver options:
+    https://scikit-learn.org/stable/modules/linear_model.html#logistic-regression
+  n_iter_i = _check_optimize_result(
+2026-10-07 17:03:32,761 [INFO] [ML] LR Evaluation Complete. Metrics: {'accuracy': 0.8333333333333334, 'f1': 0.8}
+2026-10-07 17:03:32,796 [INFO] [ML] Training LR Model (classification) on 239 samples x 12 features...
+C:\Users\Sancho Amaral Simoes\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\sklearn\linear_model\_logistic.py:406: ConvergenceWarning: lbfgs failed to converge after 100 iteration(s) (status=1):
+STOP: TOTAL NO. OF ITERATIONS REACHED LIMIT
+
+Increase the number of iterations to improve the convergence (max_iter=100).
+You might also want to scale the data as shown in:
+    https://scikit-learn.org/stable/modules/preprocessing.html
+Please also refer to the documentation for alternative solver options:
+    https://scikit-learn.org/stable/modules/linear_model.html#logistic-regression
+  n_iter_i = _check_optimize_result(
+2026-10-07 17:03:32,917 [INFO] [ML] LR Evaluation Complete. Metrics: {'accuracy': 0.65, 'f1': 0.5116279069767442}
+2026-10-07 17:03:32,952 [INFO] [ML] Training LR Model (classification) on 478 samples x 12 features...
+C:\Users\Sancho Amaral Simoes\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\sklearn\linear_model\_logistic.py:406: ConvergenceWarning: lbfgs failed to converge after 100 iteration(s) (status=1):
+STOP: TOTAL NO. OF ITERATIONS REACHED LIMIT
+
+Increase the number of iterations to improve the convergence (max_iter=100).
+You might also want to scale the data as shown in:
+    https://scikit-learn.org/stable/modules/preprocessing.html
+Please also refer to the documentation for alternative solver options:
+    https://scikit-learn.org/stable/modules/linear_model.html#logistic-regression
+  n_iter_i = _check_optimize_result(
+2026-10-07 17:03:33,162 [INFO] [ML] LR Evaluation Complete. Metrics: {'accuracy': 0.7166666666666667, 'f1': 0.6792452830188679}
+2026-10-07 17:03:33,167 [INFO] [ML] [dataset.csv | Fold 1] Evaluating XGB (NA Strategy: impute)
+2026-10-07 17:03:33,180 [INFO] [ML] Training XGB Model (classification) on 239 samples x 12 features...
+2026-10-07 17:03:33,769 [INFO] [ML] XGB Evaluation Complete. Metrics: {'accuracy': 0.8, 'f1': 0.7391304347826086}
+2026-10-07 17:03:33,803 [INFO] [ML] Training XGB Model (classification) on 239 samples x 12 features...
+2026-10-07 17:03:33,952 [INFO] [ML] XGB Evaluation Complete. Metrics: {'accuracy': 0.6666666666666666, 'f1': 0.47368421052631576}
+2026-10-07 17:03:33,988 [INFO] [ML] Training XGB Model (classification) on 478 samples x 12 features...
+2026-10-07 17:03:34,180 [INFO] [ML] XGB Evaluation Complete. Metrics: {'accuracy': 0.85, 'f1': 0.8163265306122449}
+2026-10-07 17:03:34,182 [INFO] [ML] [dataset.csv | Fold 1] Evaluating NB (NA Strategy: impute)
+2026-10-07 17:03:34,191 [INFO] [ML] Training NB Model (classification) on 239 samples x 12 features...
+2026-10-07 17:03:34,203 [INFO] [ML] NB Evaluation Complete. Metrics: {'accuracy': 0.7333333333333333, 'f1': 0.6363636363636364}
+2026-10-07 17:03:34,213 [INFO] [ML] Training NB Model (classification) on 239 samples x 12 features...
+2026-10-07 17:03:34,228 [INFO] [ML] NB Evaluation Complete. Metrics: {'accuracy': 0.55, 'f1': 0.18181818181818182}
+2026-10-07 17:03:34,237 [INFO] [ML] Training NB Model (classification) on 478 samples x 12 features...
+2026-10-07 17:03:34,261 [INFO] [ML] NB Evaluation Complete. Metrics: {'accuracy': 0.7666666666666667, 'f1': 0.7307692307692307}
+2026-10-07 17:03:34,263 [INFO] [ML] [dataset.csv | Fold 1] Evaluating DT (NA Strategy: impute)
+2026-10-07 17:03:34,277 [INFO] [ML] Training DT Model (classification) on 239 samples x 12 features...
+2026-10-07 17:03:34,301 [INFO] [ML] DT Evaluation Complete. Metrics: {'accuracy': 0.7333333333333333, 'f1': 0.6521739130434783}
+2026-10-07 17:03:34,311 [INFO] [ML] Training DT Model (classification) on 239 samples x 12 features...
+2026-10-07 17:03:34,325 [INFO] [ML] DT Evaluation Complete. Metrics: {'accuracy': 0.6, 'f1': 0.5862068965517241}
+2026-10-07 17:03:34,334 [INFO] [ML] Training DT Model (classification) on 478 samples x 12 features...
+2026-10-07 17:03:34,346 [INFO] [ML] DT Evaluation Complete. Metrics: {'accuracy': 0.7666666666666667, 'f1': 0.72}
+2026-10-07 17:03:34,347 [INFO] [ML] [dataset.csv | Fold 1] Evaluating GB (NA Strategy: impute)
+2026-10-07 17:03:34,365 [INFO] [ML] Training GB Model (classification) on 239 samples x 12 features...
+2026-10-07 17:03:34,615 [INFO] [ML] GB Evaluation Complete. Metrics: {'accuracy': 0.7333333333333333, 'f1': 0.6521739130434783}
+2026-10-07 17:03:34,672 [INFO] [ML] Training GB Model (classification) on 239 samples x 12 features...
+2026-10-07 17:03:34,878 [INFO] [ML] GB Evaluation Complete. Metrics: {'accuracy': 0.7166666666666667, 'f1': 0.6666666666666666}
+2026-10-07 17:03:34,924 [INFO] [ML] Training GB Model (classification) on 478 samples x 12 features...
+2026-10-07 17:03:35,396 [INFO] [ML] GB Evaluation Complete. Metrics: {'accuracy': 0.7833333333333333, 'f1': 0.7346938775510204}
+2026-10-07 17:03:35,437 [INFO] [ML] [dataset.csv | Fold 1] Evaluating AB (NA Strategy: impute)
+2026-10-07 17:03:35,492 [INFO] [ML] Training AB Model (classification) on 239 samples x 12 features...
+2026-10-07 17:03:35,869 [INFO] [ML] AB Evaluation Complete. Metrics: {'accuracy': 0.7833333333333333, 'f1': 0.723404255319149}
+2026-10-07 17:03:35,931 [INFO] [ML] Training AB Model (classification) on 239 samples x 12 features...
+2026-10-07 17:03:36,410 [INFO] [ML] AB Evaluation Complete. Metrics: {'accuracy': 0.6833333333333333, 'f1': 0.4864864864864865}
+2026-10-07 17:03:36,441 [INFO] [ML] Training AB Model (classification) on 478 samples x 12 features...
+2026-10-07 17:03:37,049 [INFO] [ML] AB Evaluation Complete. Metrics: {'accuracy': 0.8333333333333334, 'f1': 0.8}
+2026-10-07 17:03:37,083 [INFO] [ML] [dataset.csv | Fold 1] Evaluating KNN (NA Strategy: impute)
+2026-10-07 17:03:37,093 [INFO] [ML] Training KNN Model (classification) on 239 samples x 12 features...
+2026-10-07 17:03:37,126 [INFO] [ML] KNN Evaluation Complete. Metrics: {'accuracy': 0.5666666666666667, 'f1': 0.0}
+2026-10-07 17:03:37,156 [INFO] [ML] Training KNN Model (classification) on 239 samples x 12 features...
+2026-10-07 17:03:37,202 [INFO] [ML] KNN Evaluation Complete. Metrics: {'accuracy': 0.5666666666666667, 'f1': 0.35}
+2026-10-07 17:03:37,215 [INFO] [ML] Training KNN Model (classification) on 478 samples x 12 features...
+2026-10-07 17:03:37,233 [INFO] [ML] KNN Evaluation Complete. Metrics: {'accuracy': 0.55, 'f1': 0.22857142857142856}
+2026-10-07 17:03:37,252 [INFO] [ML] [dataset.csv | Fold 1] Evaluating MLP (NA Strategy: impute)
+2026-10-07 17:03:37,270 [INFO] [ML] Training MLP Model (classification) on 239 samples x 12 features...
+2026-10-07 17:03:37,344 [INFO] [ML] MLP Evaluation Complete. Metrics: {'accuracy': 0.43333333333333335, 'f1': 0.6046511627906976}
+2026-10-07 17:03:37,355 [INFO] [ML] Training MLP Model (classification) on 239 samples x 12 features...
+2026-10-07 17:03:37,457 [INFO] [ML] MLP Evaluation Complete. Metrics: {'accuracy': 0.5333333333333333, 'f1': 0.2222222222222222}
+2026-10-07 17:03:37,470 [INFO] [ML] Training MLP Model (classification) on 478 samples x 12 features...
+2026-10-07 17:03:37,598 [INFO] [ML] MLP Evaluation Complete. Metrics: {'accuracy': 0.5333333333333333, 'f1': 0.2222222222222222}
+2026-10-07 17:03:37,632 [INFO] [ML] [dataset.csv | Fold 1] Evaluating SVM (NA Strategy: impute)
+2026-10-07 17:03:37,646 [INFO] [ML] Training SVM Model (classification) on 239 samples x 12 features...
+2026-10-07 17:03:37,679 [INFO] [ML] SVM Evaluation Complete. Metrics: {'accuracy': 0.5666666666666667, 'f1': 0.0}
+2026-10-07 17:03:37,704 [INFO] [ML] Training SVM Model (classification) on 239 samples x 12 features...
+2026-10-07 17:03:37,731 [INFO] [ML] SVM Evaluation Complete. Metrics: {'accuracy': 0.5666666666666667, 'f1': 0.3157894736842105}
+2026-10-07 17:03:37,743 [INFO] [ML] Training SVM Model (classification) on 478 samples x 12 features...
+2026-10-07 17:03:37,785 [INFO] [ML] SVM Evaluation Complete. Metrics: {'accuracy': 0.6166666666666667, 'f1': 0.30303030303030304}
+2026-10-07 17:03:38,470 [INFO] [DATA] [dataset.csv | Fold 2] Split Complete: Train=239, Test=60
+2026-10-07 17:03:38,475 [INFO] [DATA] [dataset.csv | Fold 2] Strategy: random | Join: True | Context: 47 | Target Gen: 239
+2026-10-07 17:03:38,475 [INFO] Context Selection: Strategy='random' | RequestedRows=47 | PoolSize=239
+2026-10-07 17:03:38,477 [INFO] Random Selection: Picking 47 rows at random.
+2026-10-07 17:03:38,480 [INFO] [dataset.csv | Fold 2] Pre-Generation Geometry -> Train: 239 | Context: 47 | Target Gen: 239
+2026-10-07 17:03:38,481 [INFO] PromptManager: Successfully rendered 'generation_init.j2'.
+2026-10-07 17:03:38,482 [INFO] Starting LocalOpenAI generation... Total payload: 0. Num empty requested: 239. Chunk limit: 30. Derived subsets: 1
+2026-10-07 17:03:38,482 [INFO] Zero-Shot Mode Activated: Generating 239 rows across 8 chunks.
+2026-10-07 17:03:38,482 [INFO] Budgeting generation context for model gpt-4.1-nano (Max: 1047576 tok).
+2026-10-07 17:03:38,483 [INFO] Turn 1: Budgeting 47 context rows out of 47 requested.
+2026-10-07 17:03:38,484 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 17:03:38,485 [INFO] Processing chunk 1/8. Prompt generation...
+2026-10-07 17:03:38,485 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 17:03:38,486 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 17:04:36,353 [INFO] JSON Transform: Successfully unpacked 29 rows from Compact JSON using 13 identifying keys.
+2026-10-07 17:04:36,393 [INFO] Turn 2: Budgeting 39 context rows out of 47 requested.
+2026-10-07 17:04:36,442 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 17:04:36,443 [INFO] Processing chunk 2/8. Prompt generation...
+2026-10-07 17:04:36,443 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 17:04:36,444 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 17:05:49,027 [INFO] JSON Transform: Successfully unpacked 38 rows from Compact JSON using 13 identifying keys.
+2026-10-07 17:05:49,070 [INFO] Turn 3: Budgeting 31 context rows out of 47 requested.
+2026-10-07 17:05:49,072 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 17:05:49,072 [INFO] Processing chunk 3/8. Prompt generation...
+2026-10-07 17:05:49,073 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 17:05:49,074 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 17:06:10,543 [WARNING] JSON parsing failed after all stages. Error: Expecting ',' delimiter: line 1 column 1992 (char 1991)
+2026-10-07 17:06:10,571 [INFO] Initial JSON parsing failed. Attempting focused repair... Error: Expecting ',' delimiter: line 1 column 1992 (char 1991)
+2026-10-07 17:06:10,572 [INFO] PromptManager: Successfully rendered 'json_repair.j2'.
+2026-10-07 17:06:10,572 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 17:06:26,010 [INFO] JSON Transform: Successfully unpacked 32 rows from Compact JSON using 13 identifying keys.
+2026-10-07 17:06:26,014 [INFO] Turn 4: Budgeting 23 context rows out of 47 requested.
+2026-10-07 17:06:26,015 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 17:06:26,016 [INFO] Processing chunk 4/8. Prompt generation...
+2026-10-07 17:06:26,016 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 17:06:26,017 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 17:06:44,452 [INFO] JSON Transform: Successfully unpacked 33 rows from Compact JSON using 13 identifying keys.
+2026-10-07 17:06:44,471 [INFO] Turn 5: Budgeting 15 context rows out of 47 requested.
+2026-10-07 17:06:44,472 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 17:06:44,472 [INFO] Processing chunk 5/8. Prompt generation...
+2026-10-07 17:06:44,473 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 17:06:44,474 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 17:07:17,937 [INFO] JSON Transform: Successfully unpacked 28 rows from Compact JSON using 13 identifying keys.
+2026-10-07 17:07:17,946 [INFO] Turn 6: Budgeting 7 context rows out of 47 requested.
+2026-10-07 17:07:17,950 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 17:07:17,951 [INFO] Processing chunk 6/8. Prompt generation...
+2026-10-07 17:07:17,952 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 17:07:17,953 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 17:08:03,330 [INFO] JSON Transform: Successfully unpacked 30 rows from Compact JSON using 13 identifying keys.
+2026-10-07 17:08:03,360 [INFO] Turn 7: Budgeting 46 context rows out of 47 requested.
+2026-10-07 17:08:03,366 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 17:08:03,366 [INFO] Processing chunk 7/8. Prompt generation...
+2026-10-07 17:08:03,367 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 17:08:03,368 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 17:08:38,285 [INFO] JSON Transform: Successfully unpacked 30 rows from Compact JSON using 13 identifying keys.
+2026-10-07 17:08:38,288 [INFO] Turn 8: Budgeting 38 context rows out of 47 requested.
+2026-10-07 17:08:38,288 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 17:08:38,289 [INFO] Processing chunk 8/8. Prompt generation...
+2026-10-07 17:08:38,289 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 17:08:38,289 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 17:09:53,763 [INFO] JSON Transform: Successfully unpacked 38 rows from Compact JSON using 13 identifying keys.
+2026-10-07 17:09:53,769 [INFO] [dataset.csv | Fold 2] Post-Generation Geometry -> Target: 239 | Generated: 239 | Final Train Size: 286 | Test Size: 60
+2026-10-07 17:09:54,005 [INFO] [ML] [dataset.csv | Fold 2] Evaluating RF (NA Strategy: impute)
+2026-10-07 17:09:54,031 [INFO] [ML] Training RF Model (classification) on 239 samples x 12 features...
+2026-10-07 17:09:54,083 [INFO] [ML] RF Evaluation Complete. Metrics: {'accuracy': 0.7833333333333333, 'f1': 0.7111111111111111}
+2026-10-07 17:09:54,092 [INFO] [ML] Training RF Model (classification) on 239 samples x 12 features...
+2026-10-07 17:09:54,139 [INFO] [ML] RF Evaluation Complete. Metrics: {'accuracy': 0.7, 'f1': 0.5909090909090909}
+2026-10-07 17:09:54,150 [INFO] [ML] Training RF Model (classification) on 478 samples x 12 features...
+2026-10-07 17:09:54,252 [INFO] [ML] RF Evaluation Complete. Metrics: {'accuracy': 0.8, 'f1': 0.7391304347826086}
+2026-10-07 17:09:54,263 [INFO] [ML] [dataset.csv | Fold 2] Evaluating LR (NA Strategy: impute)
+2026-10-07 17:09:54,266 [INFO] [ML] Training LR Model (classification) on 239 samples x 12 features...
+C:\Users\Sancho Amaral Simoes\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\sklearn\linear_model\_logistic.py:406: ConvergenceWarning: lbfgs failed to converge after 100 iteration(s) (status=1):
+STOP: TOTAL NO. OF ITERATIONS REACHED LIMIT
+
+Increase the number of iterations to improve the convergence (max_iter=100).
+You might also want to scale the data as shown in:
+    https://scikit-learn.org/stable/modules/preprocessing.html
+Please also refer to the documentation for alternative solver options:
+    https://scikit-learn.org/stable/modules/linear_model.html#logistic-regression
+  n_iter_i = _check_optimize_result(
+2026-10-07 17:09:54,289 [INFO] [ML] LR Evaluation Complete. Metrics: {'accuracy': 0.75, 'f1': 0.6511627906976745}
+2026-10-07 17:09:54,293 [INFO] [ML] Training LR Model (classification) on 239 samples x 12 features...
+C:\Users\Sancho Amaral Simoes\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\sklearn\linear_model\_logistic.py:406: ConvergenceWarning: lbfgs failed to converge after 100 iteration(s) (status=1):
+STOP: TOTAL NO. OF ITERATIONS REACHED LIMIT
+
+Increase the number of iterations to improve the convergence (max_iter=100).
+You might also want to scale the data as shown in:
+    https://scikit-learn.org/stable/modules/preprocessing.html
+Please also refer to the documentation for alternative solver options:
+    https://scikit-learn.org/stable/modules/linear_model.html#logistic-regression
+  n_iter_i = _check_optimize_result(
+2026-10-07 17:09:54,316 [INFO] [ML] LR Evaluation Complete. Metrics: {'accuracy': 0.6, 'f1': 0.3684210526315789}
+2026-10-07 17:09:54,320 [INFO] [ML] Training LR Model (classification) on 478 samples x 12 features...
+C:\Users\Sancho Amaral Simoes\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\sklearn\linear_model\_logistic.py:406: ConvergenceWarning: lbfgs failed to converge after 100 iteration(s) (status=1):
+STOP: TOTAL NO. OF ITERATIONS REACHED LIMIT
+
+Increase the number of iterations to improve the convergence (max_iter=100).
+You might also want to scale the data as shown in:
+    https://scikit-learn.org/stable/modules/preprocessing.html
+Please also refer to the documentation for alternative solver options:
+    https://scikit-learn.org/stable/modules/linear_model.html#logistic-regression
+  n_iter_i = _check_optimize_result(
+2026-10-07 17:09:54,344 [INFO] [ML] LR Evaluation Complete. Metrics: {'accuracy': 0.7666666666666667, 'f1': 0.7083333333333334}
+2026-10-07 17:09:54,344 [INFO] [ML] [dataset.csv | Fold 2] Evaluating XGB (NA Strategy: impute)
+2026-10-07 17:09:54,348 [INFO] [ML] Training XGB Model (classification) on 239 samples x 12 features...
+2026-10-07 17:09:56,264 [INFO] [ML] XGB Evaluation Complete. Metrics: {'accuracy': 0.8, 'f1': 0.7391304347826086}
+2026-10-07 17:09:56,292 [INFO] [ML] Training XGB Model (classification) on 239 samples x 12 features...
+2026-10-07 17:09:56,324 [INFO] [ML] XGB Evaluation Complete. Metrics: {'accuracy': 0.65, 'f1': 0.5333333333333333}
+2026-10-07 17:09:56,332 [INFO] [ML] Training XGB Model (classification) on 478 samples x 12 features...
+2026-10-07 17:09:56,452 [INFO] [ML] XGB Evaluation Complete. Metrics: {'accuracy': 0.85, 'f1': 0.8085106382978723}
+2026-10-07 17:09:56,454 [INFO] [ML] [dataset.csv | Fold 2] Evaluating NB (NA Strategy: impute)
+2026-10-07 17:09:56,459 [INFO] [ML] Training NB Model (classification) on 239 samples x 12 features...
+2026-10-07 17:09:56,466 [INFO] [ML] NB Evaluation Complete. Metrics: {'accuracy': 0.7666666666666667, 'f1': 0.631578947368421}
+2026-10-07 17:09:56,471 [INFO] [ML] Training NB Model (classification) on 239 samples x 12 features...
+2026-10-07 17:09:56,478 [INFO] [ML] NB Evaluation Complete. Metrics: {'accuracy': 0.7333333333333333, 'f1': 0.6666666666666666}
+2026-10-07 17:09:56,483 [INFO] [ML] Training NB Model (classification) on 478 samples x 12 features...
+2026-10-07 17:09:56,489 [INFO] [ML] NB Evaluation Complete. Metrics: {'accuracy': 0.7166666666666667, 'f1': 0.6046511627906976}
+2026-10-07 17:09:56,489 [INFO] [ML] [dataset.csv | Fold 2] Evaluating DT (NA Strategy: impute)
+2026-10-07 17:09:56,495 [INFO] [ML] Training DT Model (classification) on 239 samples x 12 features...
+2026-10-07 17:09:56,501 [INFO] [ML] DT Evaluation Complete. Metrics: {'accuracy': 0.7666666666666667, 'f1': 0.6818181818181818}
+2026-10-07 17:09:56,505 [INFO] [ML] Training DT Model (classification) on 239 samples x 12 features...
+2026-10-07 17:09:56,513 [INFO] [ML] DT Evaluation Complete. Metrics: {'accuracy': 0.6833333333333333, 'f1': 0.6274509803921569}
+2026-10-07 17:09:56,517 [INFO] [ML] Training DT Model (classification) on 478 samples x 12 features...
+2026-10-07 17:09:56,527 [INFO] [ML] DT Evaluation Complete. Metrics: {'accuracy': 0.75, 'f1': 0.6666666666666666}
+2026-10-07 17:09:56,527 [INFO] [ML] [dataset.csv | Fold 2] Evaluating GB (NA Strategy: impute)
+2026-10-07 17:09:56,534 [INFO] [ML] Training GB Model (classification) on 239 samples x 12 features...
+2026-10-07 17:09:56,579 [INFO] [ML] GB Evaluation Complete. Metrics: {'accuracy': 0.7833333333333333, 'f1': 0.6976744186046512}
+2026-10-07 17:09:56,583 [INFO] [ML] Training GB Model (classification) on 239 samples x 12 features...
+2026-10-07 17:09:56,621 [INFO] [ML] GB Evaluation Complete. Metrics: {'accuracy': 0.6833333333333333, 'f1': 0.6274509803921569}
+2026-10-07 17:09:56,626 [INFO] [ML] Training GB Model (classification) on 478 samples x 12 features...
+2026-10-07 17:09:56,726 [INFO] [ML] GB Evaluation Complete. Metrics: {'accuracy': 0.85, 'f1': 0.8}
+2026-10-07 17:09:56,727 [INFO] [ML] [dataset.csv | Fold 2] Evaluating AB (NA Strategy: impute)
+2026-10-07 17:09:56,730 [INFO] [ML] Training AB Model (classification) on 239 samples x 12 features...
+2026-10-07 17:09:56,788 [INFO] [ML] AB Evaluation Complete. Metrics: {'accuracy': 0.8, 'f1': 0.7391304347826086}
+2026-10-07 17:09:56,793 [INFO] [ML] Training AB Model (classification) on 239 samples x 12 features...
+2026-10-07 17:09:56,852 [INFO] [ML] AB Evaluation Complete. Metrics: {'accuracy': 0.6666666666666666, 'f1': 0.5}
+2026-10-07 17:09:56,858 [INFO] [ML] Training AB Model (classification) on 478 samples x 12 features...
+2026-10-07 17:09:56,971 [INFO] [ML] AB Evaluation Complete. Metrics: {'accuracy': 0.8333333333333334, 'f1': 0.8}
+2026-10-07 17:09:56,974 [INFO] [ML] [dataset.csv | Fold 2] Evaluating KNN (NA Strategy: impute)
+2026-10-07 17:09:56,978 [INFO] [ML] Training KNN Model (classification) on 239 samples x 12 features...
+2026-10-07 17:09:56,983 [INFO] [ML] KNN Evaluation Complete. Metrics: {'accuracy': 0.6, 'f1': 0.0}
+2026-10-07 17:09:56,987 [INFO] [ML] Training KNN Model (classification) on 239 samples x 12 features...
+2026-10-07 17:09:56,992 [INFO] [ML] KNN Evaluation Complete. Metrics: {'accuracy': 0.65, 'f1': 0.4}
+2026-10-07 17:09:56,996 [INFO] [ML] Training KNN Model (classification) on 478 samples x 12 features...
+2026-10-07 17:09:57,002 [INFO] [ML] KNN Evaluation Complete. Metrics: {'accuracy': 0.6333333333333333, 'f1': 0.35294117647058826}
+2026-10-07 17:09:57,002 [INFO] [ML] [dataset.csv | Fold 2] Evaluating MLP (NA Strategy: impute)
+2026-10-07 17:09:57,005 [INFO] [ML] Training MLP Model (classification) on 239 samples x 12 features...
+2026-10-07 17:09:57,021 [INFO] [ML] MLP Evaluation Complete. Metrics: {'accuracy': 0.6, 'f1': 0.07692307692307693}
+2026-10-07 17:09:57,024 [INFO] [ML] Training MLP Model (classification) on 239 samples x 12 features...
+2026-10-07 17:09:57,035 [INFO] [ML] MLP Evaluation Complete. Metrics: {'accuracy': 0.6166666666666667, 'f1': 0.0}
+2026-10-07 17:09:57,039 [INFO] [ML] Training MLP Model (classification) on 478 samples x 12 features...
+2026-10-07 17:09:57,052 [INFO] [ML] MLP Evaluation Complete. Metrics: {'accuracy': 0.38333333333333336, 'f1': 0.5542168674698795}
+2026-10-07 17:09:57,052 [INFO] [ML] [dataset.csv | Fold 2] Evaluating SVM (NA Strategy: impute)
+2026-10-07 17:09:57,056 [INFO] [ML] Training SVM Model (classification) on 239 samples x 12 features...
+2026-10-07 17:09:57,063 [INFO] [ML] SVM Evaluation Complete. Metrics: {'accuracy': 0.6166666666666667, 'f1': 0.0}
+2026-10-07 17:09:57,066 [INFO] [ML] Training SVM Model (classification) on 239 samples x 12 features...
+2026-10-07 17:09:57,071 [INFO] [ML] SVM Evaluation Complete. Metrics: {'accuracy': 0.65, 'f1': 0.4}
+2026-10-07 17:09:57,076 [INFO] [ML] Training SVM Model (classification) on 478 samples x 12 features...
+2026-10-07 17:09:57,086 [INFO] [ML] SVM Evaluation Complete. Metrics: {'accuracy': 0.65, 'f1': 0.36363636363636365}
+2026-10-07 17:09:57,244 [INFO] [DATA] [dataset.csv | Fold 3] Split Complete: Train=239, Test=60
+2026-10-07 17:09:57,268 [INFO] [DATA] [dataset.csv | Fold 3] Strategy: random | Join: True | Context: 47 | Target Gen: 239
+2026-10-07 17:09:57,268 [INFO] Context Selection: Strategy='random' | RequestedRows=47 | PoolSize=239
+2026-10-07 17:09:57,269 [INFO] Random Selection: Picking 47 rows at random.
+2026-10-07 17:09:57,270 [INFO] [dataset.csv | Fold 3] Pre-Generation Geometry -> Train: 239 | Context: 47 | Target Gen: 239
+2026-10-07 17:09:57,271 [INFO] PromptManager: Successfully rendered 'generation_init.j2'.
+2026-10-07 17:09:57,271 [INFO] Starting LocalOpenAI generation... Total payload: 0. Num empty requested: 239. Chunk limit: 30. Derived subsets: 1
+2026-10-07 17:09:57,272 [INFO] Zero-Shot Mode Activated: Generating 239 rows across 8 chunks.
+2026-10-07 17:09:57,272 [INFO] Budgeting generation context for model gpt-4.1-nano (Max: 1047576 tok).
+2026-10-07 17:09:57,272 [INFO] Turn 1: Budgeting 47 context rows out of 47 requested.
+2026-10-07 17:09:57,272 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 17:09:57,272 [INFO] Processing chunk 1/8. Prompt generation...
+2026-10-07 17:09:57,273 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 17:09:57,273 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 17:10:29,477 [INFO] JSON Transform: Successfully unpacked 27 rows from Compact JSON using 13 identifying keys.
+2026-10-07 17:10:29,502 [INFO] Turn 2: Budgeting 39 context rows out of 47 requested.
+2026-10-07 17:10:29,503 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 17:10:29,503 [INFO] Processing chunk 2/8. Prompt generation...
+2026-10-07 17:10:29,503 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 17:10:29,503 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 17:11:08,706 [INFO] JSON Transform: Successfully unpacked 31 rows from Compact JSON using 13 identifying keys.
+2026-10-07 17:11:08,732 [INFO] Turn 3: Budgeting 31 context rows out of 47 requested.
+2026-10-07 17:11:08,733 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 17:11:08,733 [INFO] Processing chunk 3/8. Prompt generation...
+2026-10-07 17:11:08,733 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 17:11:08,733 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 17:11:47,526 [INFO] JSON Transform: Successfully unpacked 28 rows from Compact JSON using 13 identifying keys.
+2026-10-07 17:11:47,552 [INFO] Turn 4: Budgeting 23 context rows out of 47 requested.
+2026-10-07 17:11:47,552 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 17:11:47,553 [INFO] Processing chunk 4/8. Prompt generation...
+2026-10-07 17:11:47,553 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 17:11:47,553 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 17:12:26,222 [INFO] JSON Transform: Successfully unpacked 29 rows from Compact JSON using 13 identifying keys.
+2026-10-07 17:12:26,237 [INFO] Turn 5: Budgeting 15 context rows out of 47 requested.
+2026-10-07 17:12:26,237 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 17:12:26,238 [INFO] Processing chunk 5/8. Prompt generation...
+2026-10-07 17:12:26,238 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 17:12:26,238 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 17:13:00,424 [INFO] JSON Transform: Successfully unpacked 26 rows from Compact JSON using 13 identifying keys.
+2026-10-07 17:13:00,428 [INFO] Turn 6: Budgeting 7 context rows out of 47 requested.
+2026-10-07 17:13:00,428 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 17:13:00,428 [INFO] Processing chunk 6/8. Prompt generation...
+2026-10-07 17:13:00,429 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 17:13:00,429 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 17:13:40,752 [INFO] JSON Transform: Successfully unpacked 29 rows from Compact JSON using 13 identifying keys.
+2026-10-07 17:13:40,756 [INFO] Turn 7: Budgeting 46 context rows out of 47 requested.
+2026-10-07 17:13:40,757 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 17:13:40,757 [INFO] Processing chunk 7/8. Prompt generation...
+2026-10-07 17:13:40,757 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 17:13:40,757 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 17:14:20,880 [INFO] JSON Transform: Successfully unpacked 32 rows from Compact JSON using 13 identifying keys.
+2026-10-07 17:14:20,906 [INFO] Turn 8: Budgeting 38 context rows out of 47 requested.
+2026-10-07 17:14:20,906 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 17:14:20,907 [INFO] Processing chunk 8/8. Prompt generation...
+2026-10-07 17:14:20,907 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 17:14:20,907 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 17:15:01,593 [INFO] JSON Transform: Successfully unpacked 31 rows from Compact JSON using 13 identifying keys.
+2026-10-07 17:15:01,621 [INFO] Initial bulk generation fell short. Have 233/239 rows. Transitioning to Top-Up Guarantee loop...
+2026-10-07 17:15:01,621 [INFO] [Top-up Loop 1] Exact deficit: 6. Requesting 6 missing rows.
+2026-10-07 17:15:01,621 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 17:15:01,622 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 17:15:01,622 [INFO] [LLM] [gpt-4.1-nano] Dispatching Prompt: You are a world-class Data Science Synthetic Data Engine.
+Your goal is to generate high-fidelity synthetic rows based on a provided schema and context.
+
+You are an expert Data Scientist specializing i...
+2026-10-07 17:15:01,622 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 17:15:05,925 [INFO] [LLM] [gpt-4.1-nano] Received Raw Response: {"cols": ["age", "anaemia", "creatinine_phosphokinase", "diabetes", "ejection_fraction", "high_blood_pressure", "platelets", "serum_creatinine", "serum_sodium", "sex", "smoking", "time", "death_event"...
+2026-10-07 17:15:05,950 [INFO] JSON Transform: Successfully unpacked 6 rows from Compact JSON using 13 identifying keys.
+2026-10-07 17:15:05,951 [INFO] [Top-up Loop 1 Success] Received 6 valid rows. New Total: 239/239.
+2026-10-07 17:15:05,951 [INFO] Algebraic Guarantee successfully satisfied: 239/239 rows strictly assembled.
+2026-10-07 17:15:05,954 [INFO] [dataset.csv | Fold 3] Post-Generation Geometry -> Target: 239 | Generated: 239 | Final Train Size: 286 | Test Size: 60
+2026-10-07 17:15:06,214 [INFO] [ML] [dataset.csv | Fold 3] Evaluating RF (NA Strategy: impute)
+2026-10-07 17:15:06,243 [INFO] [ML] Training RF Model (classification) on 239 samples x 12 features...
+2026-10-07 17:15:06,295 [INFO] [ML] RF Evaluation Complete. Metrics: {'accuracy': 0.8666666666666667, 'f1': 0.7777777777777778}
+2026-10-07 17:15:06,304 [INFO] [ML] Training RF Model (classification) on 239 samples x 12 features...
+2026-10-07 17:15:06,352 [INFO] [ML] RF Evaluation Complete. Metrics: {'accuracy': 0.7, 'f1': 0.18181818181818182}
+2026-10-07 17:15:06,361 [INFO] [ML] Training RF Model (classification) on 478 samples x 12 features...
+2026-10-07 17:15:06,465 [INFO] [ML] RF Evaluation Complete. Metrics: {'accuracy': 0.8333333333333334, 'f1': 0.7222222222222222}
+2026-10-07 17:15:06,477 [INFO] [ML] [dataset.csv | Fold 3] Evaluating LR (NA Strategy: impute)
+2026-10-07 17:15:06,480 [INFO] [ML] Training LR Model (classification) on 239 samples x 12 features...
+C:\Users\Sancho Amaral Simoes\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\sklearn\linear_model\_logistic.py:406: ConvergenceWarning: lbfgs failed to converge after 100 iteration(s) (status=1):
+STOP: TOTAL NO. OF ITERATIONS REACHED LIMIT
+
+Increase the number of iterations to improve the convergence (max_iter=100).
+You might also want to scale the data as shown in:
+    https://scikit-learn.org/stable/modules/preprocessing.html
+Please also refer to the documentation for alternative solver options:
+    https://scikit-learn.org/stable/modules/linear_model.html#logistic-regression
+  n_iter_i = _check_optimize_result(
+2026-10-07 17:15:06,505 [INFO] [ML] LR Evaluation Complete. Metrics: {'accuracy': 0.75, 'f1': 0.5714285714285714}
+2026-10-07 17:15:06,508 [INFO] [ML] Training LR Model (classification) on 239 samples x 12 features...
+C:\Users\Sancho Amaral Simoes\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\sklearn\linear_model\_logistic.py:406: ConvergenceWarning: lbfgs failed to converge after 100 iteration(s) (status=1):
+STOP: TOTAL NO. OF ITERATIONS REACHED LIMIT
+
+Increase the number of iterations to improve the convergence (max_iter=100).
+You might also want to scale the data as shown in:
+    https://scikit-learn.org/stable/modules/preprocessing.html
+Please also refer to the documentation for alternative solver options:
+    https://scikit-learn.org/stable/modules/linear_model.html#logistic-regression
+  n_iter_i = _check_optimize_result(
+2026-10-07 17:15:06,531 [INFO] [ML] LR Evaluation Complete. Metrics: {'accuracy': 0.6833333333333333, 'f1': 0.3448275862068966}
+2026-10-07 17:15:06,534 [INFO] [ML] Training LR Model (classification) on 478 samples x 12 features...
+C:\Users\Sancho Amaral Simoes\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\sklearn\linear_model\_logistic.py:406: ConvergenceWarning: lbfgs failed to converge after 100 iteration(s) (status=1):
+STOP: TOTAL NO. OF ITERATIONS REACHED LIMIT
+
+Increase the number of iterations to improve the convergence (max_iter=100).
+You might also want to scale the data as shown in:
+    https://scikit-learn.org/stable/modules/preprocessing.html
+Please also refer to the documentation for alternative solver options:
+    https://scikit-learn.org/stable/modules/linear_model.html#logistic-regression
+  n_iter_i = _check_optimize_result(
+2026-10-07 17:15:06,558 [INFO] [ML] LR Evaluation Complete. Metrics: {'accuracy': 0.6666666666666666, 'f1': 0.4444444444444444}
+2026-10-07 17:15:06,559 [INFO] [ML] [dataset.csv | Fold 3] Evaluating XGB (NA Strategy: impute)
+2026-10-07 17:15:06,563 [INFO] [ML] Training XGB Model (classification) on 239 samples x 12 features...
+2026-10-07 17:15:14,573 [INFO] [ML] XGB Evaluation Complete. Metrics: {'accuracy': 0.7833333333333333, 'f1': 0.6829268292682927}
+2026-10-07 17:15:14,604 [INFO] [ML] Training XGB Model (classification) on 239 samples x 12 features...
+2026-10-07 17:15:21,241 [INFO] [ML] XGB Evaluation Complete. Metrics: {'accuracy': 0.7, 'f1': 0.3076923076923077}
+2026-10-07 17:15:21,248 [INFO] [ML] Training XGB Model (classification) on 478 samples x 12 features...
+2026-10-07 17:15:25,810 [INFO] [ML] XGB Evaluation Complete. Metrics: {'accuracy': 0.7666666666666667, 'f1': 0.631578947368421}
+2026-10-07 17:15:25,835 [INFO] [ML] [dataset.csv | Fold 3] Evaluating NB (NA Strategy: impute)
+2026-10-07 17:15:25,840 [INFO] [ML] Training NB Model (classification) on 239 samples x 12 features...
+2026-10-07 17:15:25,850 [INFO] [ML] NB Evaluation Complete. Metrics: {'accuracy': 0.7666666666666667, 'f1': 0.5333333333333333}
+2026-10-07 17:15:25,856 [INFO] [ML] Training NB Model (classification) on 239 samples x 12 features...
+2026-10-07 17:15:25,863 [INFO] [ML] NB Evaluation Complete. Metrics: {'accuracy': 0.6166666666666667, 'f1': 0.46511627906976744}
+2026-10-07 17:15:25,868 [INFO] [ML] Training NB Model (classification) on 478 samples x 12 features...
+2026-10-07 17:15:25,876 [INFO] [ML] NB Evaluation Complete. Metrics: {'accuracy': 0.7166666666666667, 'f1': 0.5142857142857142}
+2026-10-07 17:15:25,877 [INFO] [ML] [dataset.csv | Fold 3] Evaluating DT (NA Strategy: impute)
+2026-10-07 17:15:25,881 [INFO] [ML] Training DT Model (classification) on 239 samples x 12 features...
+2026-10-07 17:15:25,888 [INFO] [ML] DT Evaluation Complete. Metrics: {'accuracy': 0.8666666666666667, 'f1': 0.7647058823529411}
+2026-10-07 17:15:25,894 [INFO] [ML] Training DT Model (classification) on 239 samples x 12 features...
+2026-10-07 17:15:25,900 [INFO] [ML] DT Evaluation Complete. Metrics: {'accuracy': 0.7333333333333333, 'f1': 0.5555555555555556}
+2026-10-07 17:15:25,905 [INFO] [ML] Training DT Model (classification) on 478 samples x 12 features...
+2026-10-07 17:15:25,914 [INFO] [ML] DT Evaluation Complete. Metrics: {'accuracy': 0.6833333333333333, 'f1': 0.4864864864864865}
+2026-10-07 17:15:25,920 [INFO] [ML] [dataset.csv | Fold 3] Evaluating GB (NA Strategy: impute)
+2026-10-07 17:15:25,924 [INFO] [ML] Training GB Model (classification) on 239 samples x 12 features...
+2026-10-07 17:15:25,972 [INFO] [ML] GB Evaluation Complete. Metrics: {'accuracy': 0.8833333333333333, 'f1': 0.8108108108108109}
+2026-10-07 17:15:25,978 [INFO] [ML] Training GB Model (classification) on 239 samples x 12 features...
+2026-10-07 17:15:26,025 [INFO] [ML] GB Evaluation Complete. Metrics: {'accuracy': 0.7166666666666667, 'f1': 0.41379310344827586}
+2026-10-07 17:15:26,030 [INFO] [ML] Training GB Model (classification) on 478 samples x 12 features...
+2026-10-07 17:15:26,146 [INFO] [ML] GB Evaluation Complete. Metrics: {'accuracy': 0.75, 'f1': 0.6153846153846154}
+2026-10-07 17:15:26,163 [INFO] [ML] [dataset.csv | Fold 3] Evaluating AB (NA Strategy: impute)
+2026-10-07 17:15:26,167 [INFO] [ML] Training AB Model (classification) on 239 samples x 12 features...
+2026-10-07 17:15:26,231 [INFO] [ML] AB Evaluation Complete. Metrics: {'accuracy': 0.8333333333333334, 'f1': 0.75}
+2026-10-07 17:15:26,237 [INFO] [ML] Training AB Model (classification) on 239 samples x 12 features...
+2026-10-07 17:15:26,314 [INFO] [ML] AB Evaluation Complete. Metrics: {'accuracy': 0.7, 'f1': 0.35714285714285715}
+2026-10-07 17:15:26,320 [INFO] [ML] Training AB Model (classification) on 478 samples x 12 features...
+2026-10-07 17:15:26,458 [INFO] [ML] AB Evaluation Complete. Metrics: {'accuracy': 0.8, 'f1': 0.6666666666666666}
+2026-10-07 17:15:26,461 [INFO] [ML] [dataset.csv | Fold 3] Evaluating KNN (NA Strategy: impute)
+2026-10-07 17:15:26,465 [INFO] [ML] Training KNN Model (classification) on 239 samples x 12 features...
+2026-10-07 17:15:26,472 [INFO] [ML] KNN Evaluation Complete. Metrics: {'accuracy': 0.6833333333333333, 'f1': 0.0}
+2026-10-07 17:15:26,476 [INFO] [ML] Training KNN Model (classification) on 239 samples x 12 features...
+2026-10-07 17:15:26,482 [INFO] [ML] KNN Evaluation Complete. Metrics: {'accuracy': 0.6333333333333333, 'f1': 0.08333333333333333}
+2026-10-07 17:15:26,486 [INFO] [ML] Training KNN Model (classification) on 478 samples x 12 features...
+2026-10-07 17:15:26,492 [INFO] [ML] KNN Evaluation Complete. Metrics: {'accuracy': 0.65, 'f1': 0.08695652173913043}
+2026-10-07 17:15:26,493 [INFO] [ML] [dataset.csv | Fold 3] Evaluating MLP (NA Strategy: impute)
+2026-10-07 17:15:26,496 [INFO] [ML] Training MLP Model (classification) on 239 samples x 12 features...
+2026-10-07 17:15:26,510 [INFO] [ML] MLP Evaluation Complete. Metrics: {'accuracy': 0.2833333333333333, 'f1': 0.44155844155844154}
+2026-10-07 17:15:26,514 [INFO] [ML] Training MLP Model (classification) on 239 samples x 12 features...
+2026-10-07 17:15:26,529 [INFO] [ML] MLP Evaluation Complete. Metrics: {'accuracy': 0.26666666666666666, 'f1': 0.42105263157894735}
+2026-10-07 17:15:26,533 [INFO] [ML] Training MLP Model (classification) on 478 samples x 12 features...
+2026-10-07 17:15:26,546 [INFO] [ML] MLP Evaluation Complete. Metrics: {'accuracy': 0.7166666666666667, 'f1': 0.0}
+2026-10-07 17:15:26,547 [INFO] [ML] [dataset.csv | Fold 3] Evaluating SVM (NA Strategy: impute)
+2026-10-07 17:15:26,550 [INFO] [ML] Training SVM Model (classification) on 239 samples x 12 features...
+2026-10-07 17:15:26,557 [INFO] [ML] SVM Evaluation Complete. Metrics: {'accuracy': 0.7166666666666667, 'f1': 0.0}
+2026-10-07 17:15:26,561 [INFO] [ML] Training SVM Model (classification) on 239 samples x 12 features...
+2026-10-07 17:15:26,567 [INFO] [ML] SVM Evaluation Complete. Metrics: {'accuracy': 0.6333333333333333, 'f1': 0.21428571428571427}
+2026-10-07 17:15:26,571 [INFO] [ML] Training SVM Model (classification) on 478 samples x 12 features...
+2026-10-07 17:15:26,582 [INFO] [ML] SVM Evaluation Complete. Metrics: {'accuracy': 0.6666666666666666, 'f1': 0.09090909090909091}
+2026-10-07 17:15:26,769 [INFO] [DATA] [dataset.csv | Fold 4] Split Complete: Train=239, Test=60
+2026-10-07 17:15:26,771 [INFO] [DATA] [dataset.csv | Fold 4] Strategy: random | Join: True | Context: 47 | Target Gen: 239
+2026-10-07 17:15:26,771 [INFO] Context Selection: Strategy='random' | RequestedRows=47 | PoolSize=239
+2026-10-07 17:15:26,772 [INFO] Random Selection: Picking 47 rows at random.
+2026-10-07 17:15:26,773 [INFO] [dataset.csv | Fold 4] Pre-Generation Geometry -> Train: 239 | Context: 47 | Target Gen: 239
+2026-10-07 17:15:26,774 [INFO] PromptManager: Successfully rendered 'generation_init.j2'.
+2026-10-07 17:15:26,774 [INFO] Starting LocalOpenAI generation... Total payload: 0. Num empty requested: 239. Chunk limit: 30. Derived subsets: 1
+2026-10-07 17:15:26,774 [INFO] Zero-Shot Mode Activated: Generating 239 rows across 8 chunks.
+2026-10-07 17:15:26,774 [INFO] Budgeting generation context for model gpt-4.1-nano (Max: 1047576 tok).
+2026-10-07 17:15:26,775 [INFO] Turn 1: Budgeting 47 context rows out of 47 requested.
+2026-10-07 17:15:26,775 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 17:15:26,775 [INFO] Processing chunk 1/8. Prompt generation...
+2026-10-07 17:15:26,775 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 17:15:26,776 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 17:16:05,562 [INFO] JSON Transform: Successfully unpacked 30 rows from Compact JSON using 13 identifying keys.
+2026-10-07 17:16:05,589 [INFO] Turn 2: Budgeting 39 context rows out of 47 requested.
+2026-10-07 17:16:05,589 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 17:16:05,589 [INFO] Processing chunk 2/8. Prompt generation...
+2026-10-07 17:16:05,590 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 17:16:05,590 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 17:17:13,572 [INFO] JSON Transform: Successfully unpacked 30 rows from Compact JSON using 13 identifying keys.
+2026-10-07 17:17:13,598 [INFO] Turn 3: Budgeting 31 context rows out of 47 requested.
+2026-10-07 17:17:13,599 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 17:17:13,599 [INFO] Processing chunk 3/8. Prompt generation...
+2026-10-07 17:17:13,599 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 17:17:13,599 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 17:17:34,465 [WARNING] JSON parsing failed after all stages. Error: Expecting ',' delimiter: line 1 column 1938 (char 1937)
+2026-10-07 17:17:34,466 [INFO] Initial JSON parsing failed. Attempting focused repair... Error: Expecting ',' delimiter: line 1 column 1938 (char 1937)
+2026-10-07 17:17:34,467 [INFO] PromptManager: Successfully rendered 'json_repair.j2'.
+2026-10-07 17:17:34,467 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 17:17:57,434 [WARNING] JSON parsing failed after all stages. Error: Expecting ',' delimiter: line 1 column 1938 (char 1937)
+2026-10-07 17:17:57,458 [ERROR] Fatally failed chunk index 3: JSON parsing failed: Expecting ',' delimiter: line 1 column 1938 (char 1937)
+2026-10-07 17:17:57,459 [ERROR] Pipeline error in dataset.csv fold 4: JSON parsing failed: Expecting ',' delimiter: line 1 column 1938 (char 1937)
+2026-10-07 17:17:57,460 [INFO] [DATA] [dataset.csv | Fold 5] Split Complete: Train=239, Test=60
+2026-10-07 17:17:57,461 [INFO] [DATA] [dataset.csv | Fold 5] Strategy: random | Join: True | Context: 47 | Target Gen: 239
+2026-10-07 17:17:57,461 [INFO] Context Selection: Strategy='random' | RequestedRows=47 | PoolSize=239
+2026-10-07 17:17:57,462 [INFO] Random Selection: Picking 47 rows at random.
+2026-10-07 17:17:57,463 [INFO] [dataset.csv | Fold 5] Pre-Generation Geometry -> Train: 239 | Context: 47 | Target Gen: 239
+2026-10-07 17:17:57,464 [INFO] PromptManager: Successfully rendered 'generation_init.j2'.
+2026-10-07 17:17:57,464 [INFO] Starting LocalOpenAI generation... Total payload: 0. Num empty requested: 239. Chunk limit: 30. Derived subsets: 1
+2026-10-07 17:17:57,464 [INFO] Zero-Shot Mode Activated: Generating 239 rows across 8 chunks.
+2026-10-07 17:17:57,464 [INFO] Budgeting generation context for model gpt-4.1-nano (Max: 1047576 tok).
+2026-10-07 17:17:57,464 [INFO] Turn 1: Budgeting 47 context rows out of 47 requested.
+2026-10-07 17:17:57,465 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 17:17:57,465 [INFO] Processing chunk 1/8. Prompt generation...
+2026-10-07 17:17:57,465 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 17:17:57,465 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 17:18:13,337 [WARNING] JSON parsing failed after all stages. Error: Expecting ',' delimiter: line 1 column 2000 (char 1999)
+2026-10-07 17:18:13,342 [INFO] Initial JSON parsing failed. Attempting focused repair... Error: Expecting ',' delimiter: line 1 column 2000 (char 1999)
+2026-10-07 17:18:13,343 [INFO] PromptManager: Successfully rendered 'json_repair.j2'.
+2026-10-07 17:18:13,343 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 17:18:30,867 [INFO] JSON Transform: Successfully unpacked 32 rows from Compact JSON using 13 identifying keys.
+2026-10-07 17:18:30,870 [INFO] Turn 2: Budgeting 39 context rows out of 47 requested.
+2026-10-07 17:18:30,870 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 17:18:30,871 [INFO] Processing chunk 2/8. Prompt generation...
+2026-10-07 17:18:30,871 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 17:18:30,871 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 17:19:23,203 [INFO] JSON Transform: Successfully unpacked 38 rows from Compact JSON using 13 identifying keys.
+2026-10-07 17:19:23,230 [INFO] Turn 3: Budgeting 31 context rows out of 47 requested.
+2026-10-07 17:19:23,230 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 17:19:23,230 [INFO] Processing chunk 3/8. Prompt generation...
+2026-10-07 17:19:23,231 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 17:19:23,231 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 17:20:32,318 [INFO] JSON Transform: Successfully unpacked 27 rows from Compact JSON using 13 identifying keys.
+2026-10-07 17:20:32,346 [INFO] Turn 4: Budgeting 23 context rows out of 47 requested.
+2026-10-07 17:20:32,347 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 17:20:32,347 [INFO] Processing chunk 4/8. Prompt generation...
+2026-10-07 17:20:32,347 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 17:20:32,348 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 17:23:10,730 [INFO] JSON Transform: Successfully unpacked 32 rows from Compact JSON using 13 identifying keys.
+2026-10-07 17:23:10,756 [INFO] Turn 5: Budgeting 15 context rows out of 47 requested.
+2026-10-07 17:23:10,757 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 17:23:10,757 [INFO] Processing chunk 5/8. Prompt generation...
+2026-10-07 17:23:10,757 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 17:23:10,757 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 17:24:11,585 [INFO] JSON Transform: Successfully unpacked 28 rows from Compact JSON using 13 identifying keys.
+2026-10-07 17:24:11,611 [INFO] Turn 6: Budgeting 7 context rows out of 47 requested.
+2026-10-07 17:24:11,612 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 17:24:11,612 [INFO] Processing chunk 6/8. Prompt generation...
+2026-10-07 17:24:11,612 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 17:24:11,613 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 17:25:28,555 [INFO] JSON Transform: Successfully unpacked 28 rows from Compact JSON using 13 identifying keys.
+2026-10-07 17:25:28,559 [INFO] Turn 7: Budgeting 46 context rows out of 47 requested.
+2026-10-07 17:25:28,560 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 17:25:28,560 [INFO] Processing chunk 7/8. Prompt generation...
+2026-10-07 17:25:28,561 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 17:25:28,561 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 17:26:06,969 [INFO] JSON Transform: Successfully unpacked 36 rows from Compact JSON using 13 identifying keys.
+2026-10-07 17:26:06,972 [INFO] Turn 8: Budgeting 38 context rows out of 47 requested.
+2026-10-07 17:26:06,973 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 17:26:06,973 [INFO] Processing chunk 8/8. Prompt generation...
+2026-10-07 17:26:06,973 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 17:26:06,973 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
+2026-10-07 17:26:55,169 [INFO] JSON Transform: Successfully unpacked 30 rows from Compact JSON using 13 identifying keys.
+2026-10-07 17:26:55,239 [INFO] [dataset.csv | Fold 5] Post-Generation Geometry -> Target: 239 | Generated: 239 | Final Train Size: 286 | Test Size: 60
+2026-10-07 17:26:55,714 [INFO] [ML] [dataset.csv | Fold 5] Evaluating RF (NA Strategy: impute)
+2026-10-07 17:26:55,718 [INFO] [ML] Training RF Model (classification) on 239 samples x 12 features...
+2026-10-07 17:26:55,801 [INFO] [ML] RF Evaluation Complete. Metrics: {'accuracy': 0.85, 'f1': 0.8235294117647058}
+2026-10-07 17:26:55,813 [INFO] [ML] Training RF Model (classification) on 239 samples x 12 features...
+2026-10-07 17:26:55,882 [INFO] [ML] RF Evaluation Complete. Metrics: {'accuracy': 0.6833333333333333, 'f1': 0.5777777777777777}
+2026-10-07 17:26:55,905 [INFO] [ML] Training RF Model (classification) on 478 samples x 12 features...
+2026-10-07 17:26:56,107 [INFO] [ML] RF Evaluation Complete. Metrics: {'accuracy': 0.8, 'f1': 0.7777777777777778}
+2026-10-07 17:26:56,121 [INFO] [ML] [dataset.csv | Fold 5] Evaluating LR (NA Strategy: impute)
+2026-10-07 17:26:56,126 [INFO] [ML] Training LR Model (classification) on 239 samples x 12 features...
+C:\Users\Sancho Amaral Simoes\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\sklearn\linear_model\_logistic.py:406: ConvergenceWarning: lbfgs failed to converge after 100 iteration(s) (status=1):
+STOP: TOTAL NO. OF ITERATIONS REACHED LIMIT
+
+Increase the number of iterations to improve the convergence (max_iter=100).
+You might also want to scale the data as shown in:
+    https://scikit-learn.org/stable/modules/preprocessing.html
+Please also refer to the documentation for alternative solver options:
+    https://scikit-learn.org/stable/modules/linear_model.html#logistic-regression
+  n_iter_i = _check_optimize_result(
+2026-10-07 17:26:56,166 [INFO] [ML] LR Evaluation Complete. Metrics: {'accuracy': 0.8166666666666667, 'f1': 0.7755102040816326}
+2026-10-07 17:26:56,171 [INFO] [ML] Training LR Model (classification) on 239 samples x 12 features...
+C:\Users\Sancho Amaral Simoes\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\sklearn\linear_model\_logistic.py:406: ConvergenceWarning: lbfgs failed to converge after 100 iteration(s) (status=1):
+STOP: TOTAL NO. OF ITERATIONS REACHED LIMIT
+
+Increase the number of iterations to improve the convergence (max_iter=100).
+You might also want to scale the data as shown in:
+    https://scikit-learn.org/stable/modules/preprocessing.html
+Please also refer to the documentation for alternative solver options:
+    https://scikit-learn.org/stable/modules/linear_model.html#logistic-regression
+  n_iter_i = _check_optimize_result(
+2026-10-07 17:26:56,205 [INFO] [ML] LR Evaluation Complete. Metrics: {'accuracy': 0.6166666666666667, 'f1': 0.5490196078431373}
+2026-10-07 17:26:56,209 [INFO] [ML] Training LR Model (classification) on 478 samples x 12 features...
+C:\Users\Sancho Amaral Simoes\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\sklearn\linear_model\_logistic.py:406: ConvergenceWarning: lbfgs failed to converge after 100 iteration(s) (status=1):
+STOP: TOTAL NO. OF ITERATIONS REACHED LIMIT
+
+Increase the number of iterations to improve the convergence (max_iter=100).
+You might also want to scale the data as shown in:
+    https://scikit-learn.org/stable/modules/preprocessing.html
+Please also refer to the documentation for alternative solver options:
+    https://scikit-learn.org/stable/modules/linear_model.html#logistic-regression
+  n_iter_i = _check_optimize_result(
+2026-10-07 17:26:56,236 [INFO] [ML] LR Evaluation Complete. Metrics: {'accuracy': 0.7333333333333333, 'f1': 0.6666666666666666}
+2026-10-07 17:26:56,236 [INFO] [ML] [dataset.csv | Fold 5] Evaluating XGB (NA Strategy: impute)
+2026-10-07 17:26:56,241 [INFO] [ML] Training XGB Model (classification) on 239 samples x 12 features...
+2026-10-07 17:26:58,364 [INFO] [ML] XGB Evaluation Complete. Metrics: {'accuracy': 0.8666666666666667, 'f1': 0.84}
+2026-10-07 17:26:58,373 [INFO] [ML] Training XGB Model (classification) on 239 samples x 12 features...
+2026-10-07 17:26:59,352 [INFO] [ML] XGB Evaluation Complete. Metrics: {'accuracy': 0.6666666666666666, 'f1': 0.6153846153846154}
+2026-10-07 17:26:59,359 [INFO] [ML] Training XGB Model (classification) on 478 samples x 12 features...
+2026-10-07 17:27:04,637 [INFO] [ML] XGB Evaluation Complete. Metrics: {'accuracy': 0.8666666666666667, 'f1': 0.8518518518518519}
+2026-10-07 17:27:04,639 [INFO] [ML] [dataset.csv | Fold 5] Evaluating NB (NA Strategy: impute)
+2026-10-07 17:27:04,644 [INFO] [ML] Training NB Model (classification) on 239 samples x 12 features...
+2026-10-07 17:27:04,653 [INFO] [ML] NB Evaluation Complete. Metrics: {'accuracy': 0.7666666666666667, 'f1': 0.6956521739130435}
+2026-10-07 17:27:04,658 [INFO] [ML] Training NB Model (classification) on 239 samples x 12 features...
+2026-10-07 17:27:04,664 [INFO] [ML] NB Evaluation Complete. Metrics: {'accuracy': 0.6666666666666666, 'f1': 0.6296296296296297}
+2026-10-07 17:27:04,669 [INFO] [ML] Training NB Model (classification) on 478 samples x 12 features...
+2026-10-07 17:27:04,676 [INFO] [ML] NB Evaluation Complete. Metrics: {'accuracy': 0.75, 'f1': 0.7058823529411765}
+2026-10-07 17:27:04,676 [INFO] [ML] [dataset.csv | Fold 5] Evaluating DT (NA Strategy: impute)
+2026-10-07 17:27:04,682 [INFO] [ML] Training DT Model (classification) on 239 samples x 12 features...
+2026-10-07 17:27:04,689 [INFO] [ML] DT Evaluation Complete. Metrics: {'accuracy': 0.8333333333333334, 'f1': 0.8076923076923077}
+2026-10-07 17:27:04,694 [INFO] [ML] Training DT Model (classification) on 239 samples x 12 features...
+2026-10-07 17:27:04,703 [INFO] [ML] DT Evaluation Complete. Metrics: {'accuracy': 0.5666666666666667, 'f1': 0.4583333333333333}
+2026-10-07 17:27:04,709 [INFO] [ML] Training DT Model (classification) on 478 samples x 12 features...
+2026-10-07 17:27:04,717 [INFO] [ML] DT Evaluation Complete. Metrics: {'accuracy': 0.6666666666666666, 'f1': 0.6153846153846154}
+2026-10-07 17:27:04,718 [INFO] [ML] [dataset.csv | Fold 5] Evaluating GB (NA Strategy: impute)
+2026-10-07 17:27:04,723 [INFO] [ML] Training GB Model (classification) on 239 samples x 12 features...
+2026-10-07 17:27:04,807 [INFO] [ML] GB Evaluation Complete. Metrics: {'accuracy': 0.85, 'f1': 0.8301886792452831}
+2026-10-07 17:27:04,816 [INFO] [ML] Training GB Model (classification) on 239 samples x 12 features...
+2026-10-07 17:27:04,897 [INFO] [ML] GB Evaluation Complete. Metrics: {'accuracy': 0.6, 'f1': 0.6}
+2026-10-07 17:27:04,903 [INFO] [ML] Training GB Model (classification) on 478 samples x 12 features...
+2026-10-07 17:27:05,075 [INFO] [ML] GB Evaluation Complete. Metrics: {'accuracy': 0.7833333333333333, 'f1': 0.7450980392156863}
+2026-10-07 17:27:05,077 [INFO] [ML] [dataset.csv | Fold 5] Evaluating AB (NA Strategy: impute)
+2026-10-07 17:27:05,083 [INFO] [ML] Training AB Model (classification) on 239 samples x 12 features...
+2026-10-07 17:27:05,194 [INFO] [ML] AB Evaluation Complete. Metrics: {'accuracy': 0.8333333333333334, 'f1': 0.8076923076923077}
+2026-10-07 17:27:05,201 [INFO] [ML] Training AB Model (classification) on 239 samples x 12 features...
+2026-10-07 17:27:05,286 [INFO] [ML] AB Evaluation Complete. Metrics: {'accuracy': 0.65, 'f1': 0.631578947368421}
+2026-10-07 17:27:05,294 [INFO] [ML] Training AB Model (classification) on 478 samples x 12 features...
+2026-10-07 17:27:05,433 [INFO] [ML] AB Evaluation Complete. Metrics: {'accuracy': 0.7833333333333333, 'f1': 0.7547169811320755}
+2026-10-07 17:27:05,436 [INFO] [ML] [dataset.csv | Fold 5] Evaluating KNN (NA Strategy: impute)
+2026-10-07 17:27:05,443 [INFO] [ML] Training KNN Model (classification) on 239 samples x 12 features...
+2026-10-07 17:27:05,458 [INFO] [ML] KNN Evaluation Complete. Metrics: {'accuracy': 0.5666666666666667, 'f1': 0.0}
+2026-10-07 17:27:05,464 [INFO] [ML] Training KNN Model (classification) on 239 samples x 12 features...
+2026-10-07 17:27:05,469 [INFO] [ML] KNN Evaluation Complete. Metrics: {'accuracy': 0.5666666666666667, 'f1': 0.23529411764705882}
+2026-10-07 17:27:05,474 [INFO] [ML] Training KNN Model (classification) on 478 samples x 12 features...
+2026-10-07 17:27:05,481 [INFO] [ML] KNN Evaluation Complete. Metrics: {'accuracy': 0.5666666666666667, 'f1': 0.1875}
+2026-10-07 17:27:05,481 [INFO] [ML] [dataset.csv | Fold 5] Evaluating MLP (NA Strategy: impute)
+2026-10-07 17:27:05,487 [INFO] [ML] Training MLP Model (classification) on 239 samples x 12 features...
+2026-10-07 17:27:05,502 [INFO] [ML] MLP Evaluation Complete. Metrics: {'accuracy': 0.55, 'f1': 0.0}
+2026-10-07 17:27:05,505 [INFO] [ML] Training MLP Model (classification) on 239 samples x 12 features...
+2026-10-07 17:27:05,521 [INFO] [ML] MLP Evaluation Complete. Metrics: {'accuracy': 0.5333333333333333, 'f1': 0.391304347826087}
+2026-10-07 17:27:05,525 [INFO] [ML] Training MLP Model (classification) on 478 samples x 12 features...
+2026-10-07 17:27:05,538 [INFO] [ML] MLP Evaluation Complete. Metrics: {'accuracy': 0.3, 'f1': 0.4}
+2026-10-07 17:27:05,539 [INFO] [ML] [dataset.csv | Fold 5] Evaluating SVM (NA Strategy: impute)
+2026-10-07 17:27:05,543 [INFO] [ML] Training SVM Model (classification) on 239 samples x 12 features...
+2026-10-07 17:27:05,551 [INFO] [ML] SVM Evaluation Complete. Metrics: {'accuracy': 0.5666666666666667, 'f1': 0.0}
+2026-10-07 17:27:05,554 [INFO] [ML] Training SVM Model (classification) on 239 samples x 12 features...
+2026-10-07 17:27:05,560 [INFO] [ML] SVM Evaluation Complete. Metrics: {'accuracy': 0.5666666666666667, 'f1': 0.2777777777777778}
+2026-10-07 17:27:05,564 [INFO] [ML] Training SVM Model (classification) on 478 samples x 12 features...
+2026-10-07 17:27:05,574 [INFO] [ML] SVM Evaluation Complete. Metrics: {'accuracy': 0.5833333333333334, 'f1': 0.13793103448275862}
+2026-10-07 17:27:05,869 [INFO] [DATA] [dataset.csv | Fold 6] Split Complete: Train=239, Test=60
+2026-10-07 17:27:05,869 [INFO] [DATA] [dataset.csv | Fold 6] Strategy: random | Join: True | Context: 47 | Target Gen: 239
+2026-10-07 17:27:05,870 [INFO] Context Selection: Strategy='random' | RequestedRows=47 | PoolSize=239
+2026-10-07 17:27:05,872 [INFO] Random Selection: Picking 47 rows at random.
+2026-10-07 17:27:05,873 [INFO] [dataset.csv | Fold 6] Pre-Generation Geometry -> Train: 239 | Context: 47 | Target Gen: 239
+2026-10-07 17:27:05,874 [INFO] PromptManager: Successfully rendered 'generation_init.j2'.
+2026-10-07 17:27:05,875 [INFO] Starting LocalOpenAI generation... Total payload: 0. Num empty requested: 239. Chunk limit: 30. Derived subsets: 1
+2026-10-07 17:27:05,875 [INFO] Zero-Shot Mode Activated: Generating 239 rows across 8 chunks.
+2026-10-07 17:27:05,875 [INFO] Budgeting generation context for model gpt-4.1-nano (Max: 1047576 tok).
+2026-10-07 17:27:05,876 [INFO] Turn 1: Budgeting 47 context rows out of 47 requested.
+2026-10-07 17:27:05,876 [INFO] PromptManager: Successfully rendered 'generation_global_ctx.j2'.
+2026-10-07 17:27:05,877 [INFO] Processing chunk 1/8. Prompt generation...
+2026-10-07 17:27:05,877 [INFO] PromptManager: Successfully rendered 'generation_final.j2'.
+2026-10-07 17:27:05,878 [INFO] --- [SERVICE] CALLING LOCAL LLM: gpt-4.1-nano (Timeout: 600s) ---
