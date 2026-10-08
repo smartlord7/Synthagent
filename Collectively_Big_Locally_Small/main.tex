@@ -8,6 +8,7 @@
 \setlist[enumerate]{itemsep=2pt}
 \usepackage{pifont}
 \usepackage[ruled,vlined,linesnumbered]{algorithm2e}
+\SetAlFnt{\small}
 \usepackage{multirow}
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta,positioning}
@@ -33,7 +34,7 @@
 \newcommand{\eff}{\mathrm{eff}}
 \newcommand{\yes}{\textcolor{famC}{\ding{51}}}
 \newcommand{\no}{\textcolor{famO}{\ding{55}}}
-\newcommand{\partly}{\textcolor{famT}{$\circ$}}
+\newcommand{\partly}{\textcolor{famT}{$\boldsymbol{\circ}$}}
 
 \AtEndPreamble{%
   \theoremstyle{acmdefinition}
@@ -806,7 +807,56 @@ Two features of GHB deserve emphasis. Keeping the privatized component low-dimen
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=\linewidth]{figures/fig_ghb_placeholder}
+\begin{tikzpicture}[x=1bp,y=1bp,
+  hosp/.style={fill=teal100,draw=famC,line width=0.8pt},
+  link/.style={draw=famC!70,line width=0.8pt},
+  layer/.style={fill=#1!12,draw=#1,line width=0.4pt,rounded corners=2pt},
+  ltxt/.style={anchor=west,font=\scriptsize\sffamily,inner sep=0pt,text width=142.26pt}]
+% inside-hospital panel
+\path[fill=white,draw=famT,line width=0.8pt,dashed,rounded corners=6pt] (-16.674,-62.733) rectangle (141.400,69.244);
+\draw[famT!60,line width=0.8pt,dashed] (-125.46,4.93) -- (-17.07,69.64);
+\draw[famT!60,line width=0.8pt,dashed] (-125.46,-4.93) -- (-17.07,-63.13);
+% hospitals (circle area proportional to n_k)
+\path[hosp] (-130.395,45.355) circle (7.795);
+\path[hosp] (-170.080,25.510) circle (4.960);
+\path[hosp] (-93.540,22.680) circle (10.630);
+\path[hosp] (-175.750,-17.010) circle (4.250);
+\path[fill=amber100,draw=famT,line width=1.2pt] (-130.395,0) circle (6.375);
+\path[hosp] (-87.875,-22.680) circle (5.665);
+\path[hosp] (-141.735,-48.190) circle (4.250);
+\path[hosp] (-104.885,-53.860) circle (7.085);
+\node[inner sep=0pt,font=\scriptsize] at (-130.395,0) {$k$};
+% agreements
+\draw[link] (-137.72,41.69) -- (-165.29,27.91);
+\draw[link] (-123.42,41.06) -- (-102.94,28.46);
+\draw[link] (-170.79,20.20) -- (-175.14,-12.40);
+\draw[link] (-165.57,22.61) -- (-136.26,3.77);
+\draw[link] (-124.45,3.66) -- (-102.94,16.90);
+\draw[link] (-124.24,-3.28) -- (-93.23,-19.82);
+\draw[link] (-172.32,-20.15) -- (-145.16,-45.05);
+\draw[link] (-137.14,-48.90) -- (-112.28,-52.72);
+\draw[link] (-101.30,-47.29) -- (-90.78,-28.00);
+\draw[link] (-131.99,-6.79) -- (-140.67,-43.66);
+\draw[link,dashed] (-122.60,42.82) .. controls (-96.997,33.945) and (-82.733,10.089) .. (-87.031,-16.669);
+\node[align=center,font=\scriptsize\itshape,text width=95pt,anchor=north] at (-130.395,-60.34) {sparse collaboration graph $\mathcal{G}$; circle area $\propto n_k$; dashed: an added long-range agreement};
+% layers
+\path[layer=grayc] (-11.493,46.489) rectangle (136.219,64.064);
+\path[layer=famE] (-11.493,25.680) rectangle (136.219,43.255);
+\path[layer=famC] (-11.493,4.870) rectangle (136.219,22.450);
+\path[layer=famO] (-11.493,-15.940) rectangle (136.219,1.640);
+\path[layer=violetc] (-11.493,-36.740) rectangle (136.219,-19.170);
+\path[layer=famT] (-11.493,-57.550) rectangle (136.219,-39.980);
+\node[ltxt] at (-8.50,55.276) {\textbf{L0} public foundation encoder $f_{\phi_0}$\hfill P2};
+\node[ltxt] at (-8.50,34.467) {\textbf{L1} local SSL adapters on unlabeled data\hfill P4};
+\node[ltxt] at (-8.50,13.660) {\textbf{L2} head $\theta_k$: local $\hat{\theta}_k$ + borrowed $\tilde{\mu}$\hfill P1};
+\node[ltxt] at (-8.50,-7.150) {\textbf{L3} knowledge anchor $\mu_0$\hfill P3};
+\node[ltxt] at (-8.50,-27.955) {\textbf{L4} site conformal calibration};
+\node[ltxt] at (-8.50,-48.765) {\textbf{L5} targeted labeling from posterior variance\hfill P5};
+\node[anchor=base,font=\scriptsize\itshape,inner sep=0pt] at (62.08,74.82) {inside hospital $k$};
+% note
+\path[fill=white,draw=famC,line width=0.4pt,rounded corners=2pt] (-193.24,67.20) rectangle (-67.55,88.71);
+\node[align=center,font=\tiny,inner sep=0pt,text width=4.3cm] at (-130.395,77.955) {only privatized releases $\hat{\theta}_j+\xi_j$ travel\\ on edges; gossip is free post-processing};
+\end{tikzpicture}
 \caption{Graph Hierarchical Borrowing (GHB). Left: hospitals of very different sizes connected by a sparse set of agreements, without a central server. Right: the model held by each hospital, with the provenance channel used at each layer. Only the low-dimensional head participates in privatized exchange.}
 \label{fig:ghb}
 \end{figure}
@@ -841,9 +891,10 @@ The argument for GHB rests on four results that are each well established, combi
 \begin{table}[t]
 \caption{Approaches for sparse, siloed hospital networks against requirements (R1) to (R5), as design properties of each method in its standard form. \yes{} satisfied; \partly{} partially or optionally; \no{} not satisfied. Entries for GHB hold by construction under the assumptions of Section~\ref{sec:blueprint} and have not yet been validated empirically.}
 \label{tab:approaches}
+\small
 \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}Xccccc@{}}
 \toprule
-Approach & \makecell{(R1)\\local data} & \makecell{(R2)\\formal DP} & \makecell{(R3)\\no server} & \makecell{(R4)\\small sites gain} & \makecell{(R5)\\heterogeneity}\\
+Approach & \shortstack{(R1)\\local data} & \shortstack{(R2)\\formal DP} & \shortstack{(R3)\\no server} & \shortstack{(R4)\\small sites gain} & \shortstack{(R5)\\heterogeneity}\\
 \midrule
 Centralized pooling & \no & \no & \no & \partly & \partly\\
 Federated averaging \cite{mcmahan2017communication} & \yes & \partly & \no & \no & \no\\
@@ -865,7 +916,7 @@ GHB answers the question posed at the start of this section only under explicit 
 \section{Open Problems and Research Agenda}\label{sec:agenda}
 
 The problems below follow the structure of the paper. The first two concern measuring smallness and evaluating models under it (Sections~\ref{sec:definition} and~\ref{sec:evidence}), the next five arise from the blueprint (Section~\ref{sec:blueprint}), and the last four concern channels and cells whose potential is not yet matched by evidence (Sections~\ref{sec:solutions} and~\ref{sec:evidence}).
-\begin{enumerate}[leftmargin=*]
+\begin{enumerate}[leftmargin=*,itemsep=3pt]
 \item \textbf{Smallness-aware reporting.} Papers should report $n^{\eff}$, $\sigma$ and the scarcity profile of Table~\ref{tab:scarcity}, alongside the TRIPOD+AI items \cite{collins2024tripod}. This requires agreed estimators for each factor of Equation~\eqref{eq:neff}, especially $\rho_S$ when the deployment population is not yet observed.
 \item \textbf{Federated evaluation.} The evaluation of a model is itself small-data (Section~\ref{sec:evidence}). Protocols for privacy-preserving external validation across silos, including calibration and subgroup performance, are as important as protocols for training.
 \item \textbf{Private estimation of heterogeneity.} The value of collaboration is governed by $\tau^2$ (Equation~\eqref{eq:borrowed}), yet hospitals rarely know it before joining a consortium. Private, few-round estimators of $\tau^2$ would let a hospital predict its benefit before committing.
