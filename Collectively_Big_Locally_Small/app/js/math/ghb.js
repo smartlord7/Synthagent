@@ -133,16 +133,57 @@ export function dersimonianLaird(x, r, avg) {
   });
 }
 
+const TAU_GRID = (() => { const g = [0]; for (let i = 0; i < 160; i++) g.push(10 ** (-3.5 + 4.5 * i / 159)); return g; })();
+
 /**
- * What the network gives each hospital: tau^2, the inverse-variance leave-one-out mean and its MSE.
+ * Posterior mean of tau^2 under a half-Cauchy(scale) prior on tau, mu integrated out under a flat prior
+ * (ghb.tau2_bayes). Needs every release, which hospitals can obtain by flooding; it is post-processing.
+ * @param {ArrayLike<number>} x releases
+ * @param {ArrayLike<number>} r public release variances
+ * @param {number} [scale=0.5] half-Cauchy scale
+ * @returns {number} E[tau^2 | releases]
+ * @see Remark 8.3, Simulation 3
+ */
+export function tau2Bayes(x, r, scale = 0.5) {
+  const K = x.length, G = TAU_GRID.length, lp = new Float64Array(G);
+  let mx = -Infinity;
+  for (let g = 0; g < G; g++) {
+    const t = TAU_GRID[g]; let sw = 0, swx = 0, slv = 0;
+    for (let i = 0; i < K; i++) { const V = t * t + r[i]; sw += 1 / V; swx += x[i] / V; slv += Math.log(V); }
+    const mu = swx / sw; let Q = 0;
+    for (let i = 0; i < K; i++) Q += (x[i] - mu) ** 2 / (t * t + r[i]);
+    lp[g] = -0.5 * slv - 0.5 * Math.log(sw) - 0.5 * Q - Math.log1p((t / scale) ** 2);
+    if (lp[g] > mx) mx = lp[g];
+  }
+  let a = 0, b = 0;
+  for (let g = 0; g < G; g++) {
+    const dt = g === 0 ? TAU_GRID[1] - TAU_GRID[0] : g === G - 1 ? TAU_GRID[G - 1] - TAU_GRID[G - 2] : (TAU_GRID[g + 1] - TAU_GRID[g - 1]) / 2;
+    const p = Math.exp(lp[g] - mx) * dt; a += p * TAU_GRID[g] ** 2; b += p;
+  }
+  return a / b;
+}
+
+/**
+ * What the network gives each hospital: tau^2, the leave-one-out population estimate and its MSE.
  * @param {ArrayLike<number>} x releases
  * @param {ArrayLike<number>} r public release variances
  * @param {(y:ArrayLike<number>)=>Float64Array} avg averaging operator
+ * @param {{tau2?:number|null, estimator?:'dl'|'bayes'|'oracle', scale?:number, weights?:'iv'|'equal'}} [opt]
+ *   tau^2 estimator (DerSimonian-Laird by default; 'oracle' uses opt.tau2) and leave-one-out weights
  * @returns {{t2:Float64Array, mu:Float64Array, M:Float64Array}}
- * @see Algorithm 1 (second gossip), Proposition 8.4 (iii)
+ * @see Algorithm 1 (second gossip), Remark 8.3, Proposition 8.4 (iii)
  */
-export function borrow(x, r, avg) {
-  const K = x.length, t2 = dersimonianLaird(x, r, avg), w = map(K, (i) => 1 / (t2[i] + r[i]));
+export function borrow(x, r, avg, opt = {}) {
+  const K = x.length, est = opt.estimator || 'dl';
+  let t2;
+  if (est === 'oracle') { t2 = new Float64Array(K); t2.fill(opt.tau2); }
+  else if (est === 'bayes') { t2 = new Float64Array(K); t2.fill(tau2Bayes(x, r, opt.scale ?? 0.5)); }
+  else t2 = dersimonianLaird(x, r, avg);
+  if (opt.weights === 'equal') {
+    const Ax = avg(x), Atot = avg(map(K, (i) => t2[i] + r[i]));
+    return { t2, mu: map(K, (k) => (K * Ax[k] - x[k]) / (K - 1)), M: map(K, (k) => Math.max((K * Atot[k] - (t2[k] + r[k])) / ((K - 1) ** 2), 1e-12)) };
+  }
+  const w = map(K, (i) => 1 / (t2[i] + r[i]));
   const Aw = avg(w), Awx = avg(map(K, (i) => w[i] * x[i]));
   const Sw = map(K, (k) => Math.max(K * Aw[k] - w[k], 1e-12));
   return { t2, mu: map(K, (k) => (K * Awx[k] - w[k] * x[k]) / Sw[k]), M: map(K, (k) => 1 / Sw[k]) };
