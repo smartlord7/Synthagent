@@ -8,3 +8,12 @@
 main.pdf
 comment.cut
 __pycache__/
+prisma/data/screened.jsonl.gz
+prisma/data/*.log
+supplement/*.aux
+supplement/*.bbl
+supplement/*.blg
+supplement/*.fdb_latexmk
+supplement/*.fls
+supplement/*.log
+supplement/*.out

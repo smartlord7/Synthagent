@@ -1,0 +1,25 @@
+{
+ "n_extra_scarcity": 39,
+ "n_extra_method": 16,
+ "n_pubmed_corpus": 140,
+ "protocol": {
+  "hits": 5885,
+  "recall_dev": 0.17142857142857143,
+  "recall_test": 0.2714285714285714
+ },
+ "scarcity_broadened": {
+  "hits": 40584,
+  "recall_dev": 0.38571428571428573,
+  "recall_test": 0.44285714285714284
+ },
+ "method_broadened": {
+  "hits": 11178,
+  "recall_dev": 0.21428571428571427,
+  "recall_test": 0.3142857142857143
+ },
+ "both_broadened": {
+  "hits": 75983,
+  "recall_dev": 0.5142857142857142,
+  "recall_test": 0.5428571428571428
+ }
+}

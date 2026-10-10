@@ -1,0 +1,27 @@
+{
+ "search_date": "2026-10-08",
+ "run_on": "2026-10-08",
+ "sources": {
+  "pubmed": {
+   "query": "(\"small data\"[tiab] OR \"small sample*\"[tiab] OR \"limited data\"[tiab] OR \"data scarcity\"[tiab] OR \"few-shot\"[tiab] OR \"low-resource\"[tiab] OR \"rare disease*\"[tiab] OR \"label-efficient\"[tiab] OR \"data-efficient\"[tiab] OR federated[tiab] OR decentralized[tiab] OR decentralised[tiab] OR \"privacy-preserving\"[tiab]) AND (health*[tiab] OR clinical[tiab] OR medic*[tiab] OR hospital*[tiab] OR patient*[tiab]) AND (\"machine learning\"[tiab] OR \"deep learning\"[tiab] OR \"transfer learning\"[tiab] OR \"synthetic data\"[tiab] OR \"data augmentation\"[tiab] OR \"active learning\"[tiab] OR \"semi-supervised\"[tiab] OR \"self-supervised\"[tiab] OR \"foundation model*\"[tiab] OR \"hierarchical model*\"[tiab]) AND 2010/01/01:2026/10/08[dp]",
+   "hits": 5885,
+   "retrieved": 5879
+  },
+  "medrxiv": {
+   "query": "(TITLE_ABS:\"small data\" OR TITLE_ABS:\"small sample*\" OR TITLE_ABS:\"limited data\" OR TITLE_ABS:\"data scarcity\" OR TITLE_ABS:\"few-shot\" OR TITLE_ABS:\"low-resource\" OR TITLE_ABS:\"rare disease*\" OR TITLE_ABS:\"label-efficient\" OR TITLE_ABS:\"data-efficient\" OR TITLE_ABS:federated OR TITLE_ABS:decentralized OR TITLE_ABS:decentralised OR TITLE_ABS:\"privacy-preserving\") AND (TITLE_ABS:health* OR TITLE_ABS:clinical OR TITLE_ABS:medic* OR TITLE_ABS:hospital* OR TITLE_ABS:patient*) AND (TITLE_ABS:\"machine learning\" OR TITLE_ABS:\"deep learning\" OR TITLE_ABS:\"transfer learning\" OR TITLE_ABS:\"synthetic data\" OR TITLE_ABS:\"data augmentation\" OR TITLE_ABS:\"active learning\" OR TITLE_ABS:\"semi-supervised\" OR TITLE_ABS:\"self-supervised\" OR TITLE_ABS:\"foundation model*\" OR TITLE_ABS:\"hierarchical model*\") AND SRC:PPR AND PUBLISHER:\"medRxiv\" AND FIRST_PDATE:[2010-01-01 TO 2026-10-08]",
+   "hits": 271,
+   "retrieved": 271
+  },
+  "arxiv_epmc": {
+   "query": "(TITLE_ABS:\"small data\" OR TITLE_ABS:\"small sample*\" OR TITLE_ABS:\"limited data\" OR TITLE_ABS:\"data scarcity\" OR TITLE_ABS:\"few-shot\" OR TITLE_ABS:\"low-resource\" OR TITLE_ABS:\"rare disease*\" OR TITLE_ABS:\"label-efficient\" OR TITLE_ABS:\"data-efficient\" OR TITLE_ABS:federated OR TITLE_ABS:decentralized OR TITLE_ABS:decentralised OR TITLE_ABS:\"privacy-preserving\") AND (TITLE_ABS:health* OR TITLE_ABS:clinical OR TITLE_ABS:medic* OR TITLE_ABS:hospital* OR TITLE_ABS:patient*) AND (TITLE_ABS:\"machine learning\" OR TITLE_ABS:\"deep learning\" OR TITLE_ABS:\"transfer learning\" OR TITLE_ABS:\"synthetic data\" OR TITLE_ABS:\"data augmentation\" OR TITLE_ABS:\"active learning\" OR TITLE_ABS:\"semi-supervised\" OR TITLE_ABS:\"self-supervised\" OR TITLE_ABS:\"foundation model*\" OR TITLE_ABS:\"hierarchical model*\") AND SRC:PPR AND PUBLISHER:\"arXiv\" AND FIRST_PDATE:[2010-01-01 TO 2026-10-08]",
+   "hits": 68,
+   "retrieved": 68
+  }
+ },
+ "not_executed": {
+  "Scopus": "requires an Elsevier API key and institutional subscription",
+  "Web of Science": "requires a Clarivate subscription (Web of Science Starter or Expanded API key)",
+  "IEEE Xplore": "requires an IEEE Xplore API key",
+  "ACM Digital Library": "no public search API; export results as BibTeX from dl.acm.org"
+ }
+}

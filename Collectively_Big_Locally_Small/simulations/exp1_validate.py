@@ -91,6 +91,7 @@ def main():
     b.set_title(r"Proposition 8.2, $n_j\in\{20,\dots,2000\}$", fontsize=7.5)
     ghb.FIGDIR.mkdir(parents=True, exist_ok=True); ghb.RESDIR.mkdir(parents=True, exist_ok=True)
     ghb.tidy(a, b)
+    ghb.tidy(a, b)
     style.save(fig, ghb.FIGDIR / "s1_validate.pdf")
 
     def z(r):

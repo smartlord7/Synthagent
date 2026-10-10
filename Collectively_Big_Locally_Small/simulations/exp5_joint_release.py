@@ -100,6 +100,7 @@ def main():
     axes[0].set_ylabel("Borrowed patients $B$")
     axes[1].legend(frameon=False, fontsize=6.3, loc="lower right")
     ghb.tidy(*axes)
+    ghb.tidy(*axes)
     style.save(fig, ghb.FIGDIR / "s5_joint_release.pdf")
     json.dump(dict(eps=EPS.tolist(), out=out), open(ghb.RESDIR / "s5_joint_release.json", "w"), indent=1)
 

@@ -1,6 +1,13 @@
-\documentclass[acmsmall,screen,nonacm]{acmart}
+% Submission to ACM Computing Surveys (review mode: line numbers, ACM metadata).
+% For a preprint without ACM metadata, swap the two \documentclass lines.
+\documentclass[acmsmall,screen,review]{acmart}
+% \documentclass[acmsmall,screen,nonacm]{acmart}
+\acmJournal{CSUR}
+\setcopyright{none}
 
 \citestyle{acmauthoryear}
+\input{prisma/prisma_numbers}
+\input{supplement/results/sim_numbers}
 
 \usepackage{tabularx}
 \usepackage{enumitem}
@@ -73,7 +80,7 @@
   \country{Portugal}}
 
 \begin{abstract}
-Health systems produce data at an enormous rate, yet most clinical learning problems are small. A rare disease registry holds a few hundred patients, an intensive care unit sees a handful of the outcome it wants to predict, a regional hospital owns a fraction of the cases needed to validate a model, and the data that would close the gap sit in other institutions that cannot legally or practically share them. ``Small data'' is invoked constantly in the literature but is rarely defined in a way that can be measured, compared, or reasoned about. This survey and position paper does four things. First, it gives a task-relative formal definition of small data through an effective sample size and a smallness index that combine learning-theoretic sample complexity with the clinical sample-size criteria used in prediction modeling. Second, it introduces a new two-axis taxonomy. The first axis classifies ten forms of scarcity in healthcare by the term of the smallness index they degrade, grouped into ontic, epistemic, temporal-contextual and custodial scarcity. The second axis classifies every remedy by the provenance of the information it injects (pooling, proxy, prior, unlabeled data, procurement, re-expression), and we prove that re-expression, which includes augmentation and synthetic data, cannot add information about the target that was not already present in the data or in the generator. Third, we code a curated corpus of 290 works on both axes and use it to review the solution families across imaging, electronic health records, omics and tabular data, to summarize the quantitative evidence, and to locate where it is thin. Only 18 of the 290 works are multi-institution studies, all of them on pooling, and temporal obsolescence, measurement poverty and stratum sparsity are barely addressed by any channel. Fourth, for sparse networks of hospitals that operate as data silos, we derive a privacy-preserving hierarchical borrowing scheme that runs by gossip over the existing collaboration graph without a central server. We show that it adds the same number of ``virtual patients'', $\sigma^2/(\tau^2+M)$, to every site, so that the smallest hospitals gain the most, that differential privacy enters only through the population-level estimate, and that the gossip phase incurs no additional privacy cost. We close with a research agenda.
+Health systems produce data at an enormous rate, yet most clinical learning problems are small. A rare disease registry holds a few hundred patients, an intensive care unit sees a handful of the outcome it wants to predict, a regional hospital owns a fraction of the cases needed to validate a model, and the data that would close the gap sit in other institutions that cannot legally or practically share them. ``Small data'' is invoked constantly in the literature but is rarely defined in a way that can be measured, compared, or reasoned about. This survey and position paper does four things. First, it gives a task-relative formal definition of small data through an effective sample size and a smallness index that combine learning-theoretic sample complexity with the clinical sample-size criteria used in prediction modeling. Second, it introduces a new two-axis taxonomy. The first axis classifies ten forms of scarcity in healthcare by the term of the smallness index they degrade, grouped into ontic, epistemic, temporal-contextual and custodial scarcity. The second axis classifies every remedy by the provenance of the information it injects (pooling, proxy, prior, unlabeled data, procurement, re-expression), and we prove that re-expression, which includes augmentation and synthetic data, cannot add information about the target that was not already present in the data or in the generator. Third, we code a corpus of 290 works on both axes, check it against a systematic search of \PrismaEligible{} database records reported to PRISMA 2020, and use it to review the solution families across imaging, electronic health records, omics and tabular data, to summarize the quantitative evidence, and to locate where it is thin. Only 18 of the 290 works are multi-institution studies, all of them on pooling, and temporal obsolescence and measurement poverty are barely addressed by any channel, in the corpus and in the wider literature alike. Fourth, for sparse networks of hospitals that operate as data silos, we derive a privacy-preserving hierarchical borrowing scheme that runs by gossip over the existing collaboration graph without a central server. We show that, in expectation over sites, it adds nearly the same number of ``virtual patients'', $\sigma^2/(\tau^2+M)$, to every site, so that the smallest hospitals gain the most, that differential privacy enters only through the population-level estimate, and that the gossip phase incurs no additional privacy cost, and we check these properties by simulation. We close with a research agenda.
 \end{abstract}
 
 \begin{CCSXML}
@@ -149,12 +156,12 @@ The term ``small data'' appears in social science \cite{kitchin2015small}, in pe
 \caption{Structure of the paper. The definition of Section~\ref{sec:definition} produces the two axes of the taxonomy, which serve as the coding scheme of the survey and shape the design of the blueprint.}
 \label{fig:structure}
 \end{figure*}
-\item \textbf{A coded survey.} We classify a curated corpus of 290 works on both axes (Section~\ref{sec:method}, Appendix~\ref{app:corpus}), review the solutions channel by channel (Section~\ref{sec:solutions}), and compare where the literature has actually worked with where the taxonomy says it could, which exposes specific empty cells (Section~\ref{sec:evidence}).
-\item \textbf{A blueprint for siloed hospital networks.} For sparse networks of hospitals without a trusted central server, we derive a privacy-preserving hierarchical borrowing scheme with closed-form risk, explicit privacy cost and convergence on sparse graphs (Section~\ref{sec:blueprint}), and argue that it is a principled default for this setting. The ingredients are standard; their combination for serverless hospital networks, and its empirical evaluation, are what remain open.
+\item \textbf{A coded survey.} We classify a curated corpus of 290 works on both axes (Section~\ref{sec:method}; the full coding is in the online supplement), review the solutions channel by channel (Section~\ref{sec:solutions}), and compare where the literature has actually worked with where the taxonomy says it could, which exposes specific empty cells (Section~\ref{sec:evidence}).
+\item \textbf{A blueprint for siloed hospital networks.} For sparse networks of hospitals without a trusted central server, we derive a privacy-preserving hierarchical borrowing scheme with closed-form risk, explicit privacy cost and convergence on sparse graphs (Section~\ref{sec:blueprint}), argue that it is a principled default for this setting, and test it in seven simulations (Section~\ref{sec:S8_7}). The ingredients are standard; their combination for serverless hospital networks, and its evaluation on real hospital data, are what remain open.
 \item \textbf{A research agenda} with concrete open problems (Section~\ref{sec:agenda}).
 \end{enumerate}
 
-\paragraph{Scope and method} We cover supervised and semi-supervised prediction from clinical data: imaging, structured electronic health records (EHR), clinical text, omics and tabular registries. We do not cover causal effect estimation from small trials in depth, although several of our results apply to it. How the corpus was assembled and coded, and what remains to be done before the review can be called systematic, is described in Section~\ref{sec:method}. Existing surveys cover individual families, such as federated learning in healthcare \cite{nguyen2022federated,rieke2020future,xu2021federated}, few-shot learning \cite{wang2020generalizing}, meta-learning \cite{hospedales2022meta}, imperfect medical datasets \cite{cheplygina2019not,tajbakhsh2020embracing}, informed machine learning \cite{rueden2023informed} and synthetic data \cite{chen2021synthetic,jordon2022synthetic}. Among the surveys we found, none defines small data formally, none organizes remedies by information provenance, and none treats the sparse, serverless hospital network as a first-class setting.
+\paragraph{Scope and method} We cover supervised and semi-supervised prediction from clinical data: imaging, structured electronic health records (EHR), clinical text, omics and tabular registries. We do not cover causal effect estimation from small trials in depth, although several of our results apply to it. How the corpus was assembled and coded, and how a systematic database search reported to PRISMA 2020 complements it, is described in Section~\ref{sec:method}. Existing surveys cover individual families, such as federated learning in healthcare \cite{nguyen2022federated,rieke2020future,xu2021federated}, few-shot learning \cite{wang2020generalizing}, meta-learning \cite{hospedales2022meta}, imperfect medical datasets \cite{cheplygina2019not,tajbakhsh2020embracing}, informed machine learning \cite{rueden2023informed} and synthetic data \cite{chen2021synthetic,jordon2022synthetic}. Among the surveys we found, none defines small data formally, none organizes remedies by information provenance, and none treats the sparse, serverless hospital network as a first-class setting.
 
 \paragraph{How the parts connect} The paper is built as a single argument, shown in Figure~\ref{fig:structure}. We first make smallness measurable (Section~\ref{sec:definition}). The terms of that measure tell us \emph{why} a dataset is small, which gives the scarcity axis of the taxonomy (Section~\ref{sec:scarcity}). Knowing why points to \emph{where} the missing information could come from, which gives the provenance axis (Section~\ref{sec:provenance}). The two axes then serve as the coding scheme for a corpus of 290 works (Section~\ref{sec:method}), which organizes the survey of existing methods (Section~\ref{sec:solutions}) and the reading of their evidence (Section~\ref{sec:evidence}). The gaps that this reading exposes, together with the definition of siloed smallness from Section~\ref{sec:definition}, determine the design of the blueprint (Section~\ref{sec:blueprint}), and what remains unsolved becomes the agenda (Section~\ref{sec:agenda}).
 
@@ -171,7 +178,7 @@ The paradox of the introduction can only be studied once it can be measured. Thi
 \toprule
 Symbol & Meaning\\
 \midrule
-$\mathcal{T}=(P,\mathcal{H},\ell,\varepsilon,\delta)$ & learning task: target distribution, hypothesis class, loss, tolerance, confidence\\
+$\mathcal{T}=(P,\mathcal{P},\mathcal{H},\ell,\varepsilon,\delta)$ & learning task: target distribution, family of distributions the learner must handle, hypothesis class, loss, tolerance, confidence\\
 $n$, $n^{\eff}$ & nominal number of records; effective sample size (Definition~\ref{def:ess})\\
 $n^{\star}_{\mathcal{T}}$ & sample complexity of $\mathcal{T}$ (Definition~\ref{def:samplecomplexity})\\
 $\sigma_{\mathcal{T}}(\mathcal{D})$ & smallness index $n^{\star}_{\mathcal{T}}/n^{\eff}(\mathcal{D})$ (Definition~\ref{def:smallness})\\
@@ -192,16 +199,16 @@ Only the third group is quantitative, and it is tied to regression models. Learn
 
 \subsection{Setup and notation}
 
-A learning \emph{task} is a tuple $\mathcal{T}=(P,\mathcal{H},\ell,\varepsilon,\delta)$, where $P$ is a distribution over $\mathcal{X}\times\mathcal{Y}$ describing the target population at the point of use, $\mathcal{H}$ a hypothesis class, $\ell$ a loss bounded in $[0,1]$, and $(\varepsilon,\delta)$ the required excess risk and confidence. The risk of $h$ is $R(h)=\mathbb{E}_{(x,y)\sim P}\,\ell(h(x),y)$. Notation used throughout is collected in Table~\ref{tab:notation}.
+A learning \emph{task} is a tuple $\mathcal{T}=(P,\mathcal{P},\mathcal{H},\ell,\varepsilon,\delta)$, where $P$ is a distribution over $\mathcal{X}\times\mathcal{Y}$ describing the target population at the point of use, $\mathcal{P}\ni P$ is the family of distributions that are consistent with what is known about the task before seeing data, $\mathcal{H}$ a hypothesis class, $\ell$ a loss bounded in $[0,1]$, and $(\varepsilon,\delta)$ the required excess risk and confidence. The risk of $h$ under $Q$ is $R_Q(h)=\mathbb{E}_{(x,y)\sim Q}\,\ell(h(x),y)$, and $R=R_P$. The family $\mathcal{P}$ is needed because $P$ itself is unknown: a learner that knew $P$ could output the best hypothesis without any data, so sample complexity is only meaningful as a guarantee that holds for every distribution the learner cannot rule out. Notation used throughout is collected in Table~\ref{tab:notation}.
 
 \begin{definition}[Sample complexity of a task]\label{def:samplecomplexity}
-The sample complexity $n^{\star}_{\mathcal{T}}$ is the smallest $n$ for which there is a learner $A$ such that, for $\mathcal{D}\sim P^n$ independent and identically distributed (i.i.d.) and fully and correctly labeled,
+The sample complexity $n^{\star}_{\mathcal{T}}$ is the smallest $n$ for which there is a learner $A$ such that, for every $Q\in\mathcal{P}$ and $\mathcal{D}\sim Q^n$ independent and identically distributed (i.i.d.) and fully and correctly labeled,
 \[
-\Pr_{\mathcal{D}\sim P^n} \Big[R(A(\mathcal{D})) - \inf_{h\in\mathcal{H}} R(h) \le \varepsilon\Big] \;\ge\; 1-\delta.
+\Pr_{\mathcal{D}\sim Q^n} \Big[R_Q(A(\mathcal{D})) - \inf_{h\in\mathcal{H}} R_Q(h) \le \varepsilon\Big] \;\ge\; 1-\delta.
 \]
 \end{definition}
 
-$n^{\star}$ is rarely known exactly, but it has usable proxies. For agnostic learning of a class with VC dimension $d$, $n^{\star}=\Theta\bigl((d+\log(1/\delta))/\varepsilon^2\bigr)$ \cite{shalevshwartz2014understanding}, and data-dependent versions replace $d$ with Rademacher complexity \cite{bartlett2002rademacher}. For logistic and survival prediction models, the criteria of Riley et al. give closed forms. Their first criterion, which targets a global shrinkage factor $S$ (typically $0.9$) for a model with $p$ candidate parameters and anticipated Cox-Snell $R^2_{\mathrm{CS}}$, is
+$n^{\star}$ is rarely known exactly, but it has usable proxies. For binary classification with the 0-1 loss, $\mathcal{P}$ the set of all distributions (agnostic learning) and $\mathcal{H}$ of VC dimension $d$, $n^{\star}=\Theta\bigl((d+\log(1/\delta))/\varepsilon^2\bigr)$ \cite{shalevshwartz2014understanding}, and data-dependent versions replace $d$ with Rademacher complexity \cite{bartlett2002rademacher}. For logistic and survival prediction models, the criteria of Riley et al. give closed forms. They are not sample complexities in the sense of Definition~\ref{def:samplecomplexity} but regression-specific surrogates, which give the size at which a model with $p$ parameters meets targets on shrinkage, optimism and the precision of the intercept; we use them as proxies for $n^{\star}$ when the task is a clinical prediction model, and $\sigma$ then inherits the error of the proxy. Their first criterion, which targets a global shrinkage factor $S$ (typically $0.9$) for a model with $p$ candidate parameters and anticipated Cox-Snell $R^2_{\mathrm{CS}}$, is
 \begin{equation}\label{eq:riley}
 n^{\star} \;\ge\; \frac{p}{(S-1)\,\ln\bigl(1-R^2_{\mathrm{CS}}/S\bigr)} \qquad \text{\cite{riley2019minimumsample}.}
 \end{equation}
@@ -212,11 +219,11 @@ Either way, $n^{\star}$ grows with model complexity and with the precision deman
 Clinical records are not i.i.d., not all labeled, not all correctly labeled, and not drawn from the population where the model will be used. Each of these reduces the information a record carries.
 
 \begin{definition}[Effective sample size]\label{def:ess}
-Let $\mathcal{D}$ contain $n$ records. Its effective sample size $n^{\eff}(\mathcal{D})$ is the number of i.i.d., correctly labeled records drawn from the target distribution $P$ that would give an estimator with the same variance as the one obtained from $\mathcal{D}$. To first order, when the mechanisms below act independently,
+Let $\mathcal{D}$ contain $n$ records, and fix a target quantity $\psi(P)$, such as a model parameter or the risk of a fixed model, with an estimator $\hat{\psi}$ that is efficient under i.i.d.\ sampling from $P$. The effective sample size $n^{\eff}(\mathcal{D})$ is the number of i.i.d., correctly labeled records drawn from $P$ for which $\hat{\psi}$ would have the same variance as the best estimator of $\psi(P)$ that can be computed from $\mathcal{D}$. To first order, when the mechanisms below act independently,
 \begin{equation}\label{eq:neff}
 n^{\eff} \;=\; n\cdot\underbrace{\frac{1}{\mathrm{DEFF}}}_{\text{clustering}}\cdot\underbrace{\rho_L}_{\text{labels}}\cdot\underbrace{(1-2\eta)^2}_{\text{label noise}}\cdot\underbrace{\rho_S}_{\text{shift}},
 \end{equation}
-where $\mathrm{DEFF}=1+(\bar{m}-1)\,\mathrm{ICC}$ is the design effect for $\bar{m}$ records per patient with intra-class correlation ICC \cite{kish1965survey}; $\rho_L$ is the fraction of records with labels missing completely at random; $\eta<1/2$ is a symmetric label-noise rate, whose effect on sample complexity scales as $(1-2\eta)^{-2}$ \cite{angluin1988learning}; and $\rho_S=(\sum_i w_i)^2/(n\sum_i w_i^2)$ is Kish's efficiency of the importance weights $w_i=p_P(x_i)/p_{\mathcal{D}}(x_i)$ needed to transport the sample to $P$ \cite{kish1965survey}. For a binary outcome with prevalence $\pi$, the information about the decision boundary is controlled by the minority class, $n^{\eff}_{\mathrm{ev}}=n^{\eff}\cdot\min(\pi,1-\pi)$.
+where $\mathrm{DEFF}=1+(\bar{m}-1)\,\mathrm{ICC}$ is the design effect for $\bar{m}$ records per patient with intra-class correlation ICC \cite{kish1965survey}; $\rho_L$ is the fraction of records with labels missing completely at random; $\eta<1/2$ is a symmetric label-noise rate, whose effect on sample complexity scales as $(1-2\eta)^{-2}$ \cite{angluin1988learning} (for the prevalence of a binary label the exact factor is $(1-2\eta)^2\,\pi(1-\pi)/\tilde{\pi}(1-\tilde{\pi})\le(1-2\eta)^2$, where $\tilde{\pi}$ is the prevalence of the noisy labels); and $\rho_S=(\sum_i w_i)^2/(n\sum_i w_i^2)$ is Kish's efficiency of the importance weights $w_i=p_P(x_i)/p_{\mathcal{D}}(x_i)$ needed to transport the sample to $P$ \cite{kish1965survey}. The weights exist only if $P$ is absolutely continuous with respect to the distribution that generated $\mathcal{D}$; where $P$ puts mass on inputs that $\mathcal{D}$ cannot contain, no weighting recovers the information, and the effective sample size for that region is zero. For a binary outcome with prevalence $\pi$, the information about the decision boundary is controlled by the minority class, $n^{\eff}_{\mathrm{ev}}=n^{\eff}\cdot\min(\pi,1-\pi)$.
 \end{definition}
 
 Equation~\eqref{eq:neff} is deliberately simple. Each factor is a standard, estimable quantity, and each can be replaced by a more refined estimator (for instance, the fraction of missing information under multiple imputation) without changing the structure. The factors multiply because each is a ratio of variances under an independent mechanism; when mechanisms interact, the product is an approximation. None of the factors is new, and Equation~\eqref{eq:neff} should be read as a first-order heuristic: it is meant to compare datasets and to show where information is lost, not to replace a variance computed for a specific estimator. What it adds is a single place where the clinical and the learning-theoretic notions of sample size meet, relative to a task.
@@ -228,7 +235,7 @@ The smallness index of a dataset $\mathcal{D}$ for task $\mathcal{T}$ is $\sigma
 The thresholds are conventions, chosen so that each regime corresponds to a qualitatively different strategy. In the strained regime, regularization, simpler models and careful validation usually close the gap. In the small regime, information has to be imported from outside the dataset. In the extreme regime, only strong priors or pooling at a scale beyond any single institution will help.
 
 \begin{example}[An ICU deterioration model]\label{ex:icu}
-A hospital has $n=2{,}000$ ICU stays from patients with on average $\bar{m}=1.6$ stays each and $\mathrm{ICC}=0.5$, so $\mathrm{DEFF}=1.3$. Seventy percent of stays have an adjudicated outcome, adjudication disagrees with a reference standard in 10\% of cases, and the case mix differs from the deployment population with Kish efficiency $0.6$. By Equation~\eqref{eq:neff}, $n^{\eff}\approx 414$, and at an outcome prevalence of 8\% the dataset contains about 33 effective events. For a model with $p=20$ parameters and an anticipated $R^2_{\mathrm{CS}}$ of 15\% of its maximum, Equation~\eqref{eq:riley} gives $n^{\star}\approx 2{,}707$. Hence $\sigma\approx 6.5$: a dataset that looks moderate is strained, close to small. Figure~\ref{fig:deflation} shows the decomposition.
+A hospital has $n=2{,}000$ ICU stays from patients with on average $\bar{m}=1.6$ stays each and $\mathrm{ICC}=0.5$, so $\mathrm{DEFF}=1.3$. Seventy percent of stays have an adjudicated outcome, adjudication disagrees with a reference standard in 10\% of cases (which we treat as a symmetric noise rate $\eta=0.1$), and the case mix differs from the deployment population with Kish efficiency $0.6$. By Equation~\eqref{eq:neff}, $n^{\eff}\approx 414$, and at an outcome prevalence of 8\% the dataset contains about 33 effective events. For a model with $p=20$ parameters and an anticipated $R^2_{\mathrm{CS}}$ of 15\% of its maximum, Equation~\eqref{eq:riley} gives $n^{\star}\approx 2{,}707$. Hence $\sigma\approx 6.5$: a dataset that looks moderate is strained, close to small. Figure~\ref{fig:deflation} shows the decomposition.
 \end{example}
 
 \begin{figure}[t]
@@ -317,7 +324,7 @@ Here the patients exist and are recorded, but each record says less about the ta
 
 \textbf{E2, measurement poverty.} Missing values that are not missing at random, billing codes that reflect reimbursement more than pathology, and disagreement between raters all reduce the information per record. In Equation~\eqref{eq:neff} this acts through $\eta$ and through the missing-information fraction.
 
-\textbf{E3, dimensional excess.} Genomic, transcriptomic and imaging data have $d\gg n$. In this case $n^{\star}$ grows with $d$, often faster than any realistic cohort, unless strong structural assumptions such as sparsity are imposed \cite{buhlmann2011statistics,tibshirani1996regression}. Dimensional excess is the only class in which smallness can be created by the choice of representation, and therefore partly removed by changing it.
+\textbf{E3, dimensional excess.} Genomic, transcriptomic and imaging data have $d\gg n$. In this case $n^{\star}$ grows with $d$, often faster than any realistic cohort, unless strong structural assumptions such as sparsity are imposed \cite{buhlmann2011statistics,tibshirani1996regression}. Dimensional excess differs from the other classes in that smallness can be created by the choice of representation, and therefore partly removed by changing it.
 
 \subsection{Temporal-contextual scarcity (T): the data are about somewhere else}
 
@@ -353,7 +360,7 @@ C2 Consent and access limits & usable fraction per purpose & selection bias in t
 \end{tabularx}
 \end{table}
 
-\paragraph{Using the scarcity profile} Table~\ref{tab:scarcity} summarizes the ten classes with the quantity to estimate for each and the characteristic failure when it is ignored. We suggest that studies report this profile alongside $n^{\eff}$ and $\sigma$. It takes a few lines and would make results across small-data papers comparable for the first time.
+\paragraph{Using the scarcity profile} Table~\ref{tab:scarcity} summarizes the ten classes with the quantity to estimate for each and the characteristic failure when it is ignored. We suggest that studies report this profile alongside $n^{\eff}$ and $\sigma$. It takes a few lines and would make results across small-data papers far easier to compare.
 
 \paragraph{From diagnosis to remedy} A scarcity profile identifies which factor of $\sigma$ is degraded, but not how to repair it. Every repair has to bring in information about the target from somewhere, and the possible sources are limited. The second axis of the taxonomy, introduced next, classifies remedies by that source.
 
@@ -364,21 +371,21 @@ The second axis of the taxonomy classifies remedies, and it is the axis along wh
 
 \subsection{A conservation principle}
 
-Let $\theta$ denote the unknown quantity we want to learn: a parameter, a regression function, or a decision rule for the target population. Let $\mathcal{D}$ be the local data and let $M$ denote any external resource used by a method, such as a pretrained network, a knowledge base, or a published risk score.
+Let $\theta$ denote the unknown quantity we want to learn: a parameter, a regression function, or a decision rule for the target population. Let $\mathcal{D}$ be the local data and let $Z$ denote any external resource used by a method, such as a pretrained network, a knowledge base, or a published risk score.
 
 \begin{proposition}[No free lunch for re-expression]\label{prop:nfl}
-Let $\tilde{\mathcal{D}}=g(\mathcal{D},M,U)$ be any dataset produced by a (possibly randomized) procedure $g$, where $U$ is randomness independent of $(\theta,\mathcal{D},M)$. Then
+Let $\tilde{\mathcal{D}}=g(\mathcal{D},Z,U)$ be any dataset produced by a (possibly randomized) procedure $g$, where $U$ is randomness independent of $(\theta,\mathcal{D},Z)$. Then
 \[
-I(\theta;\mathcal{D},\tilde{\mathcal{D}}) \;\le\; I(\theta;\mathcal{D},M).
+I(\theta;\mathcal{D},\tilde{\mathcal{D}}) \;\le\; I(\theta;\mathcal{D},Z).
 \]
-In particular, if $M$ is independent of $(\theta,\mathcal{D})$, or absent, then $I(\theta;\mathcal{D},\tilde{\mathcal{D}})=I(\theta;\mathcal{D})$.
+In particular, if $Z$ is independent of $(\theta,\mathcal{D})$, or absent, then $I(\theta;\mathcal{D},\tilde{\mathcal{D}})=I(\theta;\mathcal{D})$. Moreover, for any loss $L$ and any estimator $\hat{\theta}(\mathcal{D},\tilde{\mathcal{D}})$, the randomized estimator $(\mathcal{D},Z,U)\mapsto\hat{\theta}(\mathcal{D},g(\mathcal{D},Z,U))$ has the same risk at every value of $\theta$. Hence the minimax and Bayes risks attainable from $(\mathcal{D},\tilde{\mathcal{D}})$ are no smaller than those attainable from $(\mathcal{D},Z)$ with randomized estimators, and, for a loss convex in the estimate, no smaller than those attainable from $(\mathcal{D},Z)$ without randomization.
 \end{proposition}
 
 \begin{proof}
-Since $U$ is independent of $(\theta,\mathcal{D},M)$ and $\tilde{\mathcal{D}}$ is a function of $(\mathcal{D},M,U)$, the chain $\theta\to(\mathcal{D},M)\to(\mathcal{D},M,\tilde{\mathcal{D}})$ is Markov. By the data processing inequality \cite{cover2006elements}, $I(\theta;\mathcal{D},M,\tilde{\mathcal{D}})\le I(\theta;\mathcal{D},M)$, and by the chain rule $I(\theta;\mathcal{D},\tilde{\mathcal{D}})\le I(\theta;\mathcal{D},M,\tilde{\mathcal{D}})$. For the second claim, $I(\theta;\mathcal{D},M)=I(\theta;\mathcal{D})+I(\theta;M\mid\mathcal{D})$ and $I(\theta;M\mid\mathcal{D})\le I(\theta,\mathcal{D};M)=0$ when $M$ is independent of $(\theta,\mathcal{D})$. The reverse inequality $I(\theta;\mathcal{D},\tilde{\mathcal{D}})\ge I(\theta;\mathcal{D})$ holds trivially.
+Since $U$ is independent of $(\theta,\mathcal{D},Z)$ and $\tilde{\mathcal{D}}$ is a function of $(\mathcal{D},Z,U)$, the chain $\theta\to(\mathcal{D},Z)\to(\mathcal{D},Z,\tilde{\mathcal{D}})$ is Markov. By the data processing inequality \cite{cover2006elements}, $I(\theta;\mathcal{D},Z,\tilde{\mathcal{D}})\le I(\theta;\mathcal{D},Z)$, and by the chain rule $I(\theta;\mathcal{D},\tilde{\mathcal{D}})\le I(\theta;\mathcal{D},Z,\tilde{\mathcal{D}})$. For the second claim, $I(\theta;\mathcal{D},Z)=I(\theta;\mathcal{D})+I(\theta;Z\mid\mathcal{D})$ and $I(\theta;Z\mid\mathcal{D})\le I(\theta,\mathcal{D};Z)=0$ when $Z$ is independent of $(\theta,\mathcal{D})$. The reverse inequality $I(\theta;\mathcal{D},\tilde{\mathcal{D}})\ge I(\theta;\mathcal{D})$ holds trivially. For the risk statement, the two estimators coincide as functions of $(\mathcal{D},Z,U)$, so their risks agree for every $\theta$, and the set of estimators based on $(\mathcal{D},\tilde{\mathcal{D}})$ is contained in the set of randomized estimators based on $(\mathcal{D},Z)$. For a convex loss, replacing a randomized estimator $\delta(\mathcal{D},Z,U)$ by $\mathbb{E}_U\,\delta(\mathcal{D},Z,U)$ does not increase the risk at any $\theta$, by Jensen's inequality.
 \end{proof}
 
-The proposition is elementary, but its consequences are not widely appreciated in the applied literature. Lower bounds on estimation error, such as those obtained from Fano's inequality, depend on the data only through mutual information. So no augmentation, oversampling or synthetic generation can lower the minimax risk for $\theta$ below what $(\mathcal{D},M)$ allows. Re-expression can still help in practice, and often does, for three reasons that the proposition makes explicit: the generator or augmentation family carries prior knowledge $M$ (rotation invariance in histology, anatomical plausibility in a pretrained generator); the downstream learner may use the re-expressed data more efficiently, which is a computational rather than an informational gain; or the synthetic data are used for a purpose other than learning $\theta$, such as software testing. What re-expression cannot do is replace the missing patients.
+The proposition is elementary, but its consequences are not widely appreciated in the applied literature. The information statement treats $\theta$ as random; the risk statement holds for every fixed $\theta$ and every loss, and does not rely on lower bounds such as Fano's inequality. Together they say that no augmentation, oversampling or synthetic generation can lower the minimax or Bayes risk for $\theta$ below what $(\mathcal{D},Z)$ allows. Re-expression can still help in practice, and often does, for three reasons that the proposition makes explicit: the generator or augmentation family carries prior knowledge $Z$ (rotation invariance in histology, anatomical plausibility in a pretrained generator); the downstream learner may use the re-expressed data more efficiently, which is a computational rather than an informational gain; or the synthetic data are used for a purpose other than learning $\theta$, such as software testing. What re-expression cannot do is replace the missing patients.
 
 \subsection{Six provenance channels}
 
@@ -386,7 +393,7 @@ Write the posterior for the parameter of site $k$ as
 \begin{equation}\label{eq:posterior}
 p(\theta_k\mid\mathcal{D}_k,\mathcal{S}) \;\propto\; \underbrace{p(\mathcal{D}_k\mid\theta_k)}_{\text{likelihood: local data}} \;\cdot\; \underbrace{p(\theta_k\mid\mathcal{S})}_{\text{prior: everything else}},
 \end{equation}
-where $\mathcal{S}$ denotes all information other than the local labeled sample. Every remedy for small data does one of two things: it enlarges the likelihood term by adding observations that bear on $\theta_k$, or it sharpens the prior term by bringing in information from $\mathcal{S}$. The six channels below exhaust the possible sources; Figure~\ref{fig:provenance} shows them.
+where $\mathcal{S}$ denotes all information other than the local labeled sample, and the local data are assumed to depend on $\mathcal{S}$ only through $\theta_k$. Every remedy for small data does one of two things: it enlarges the likelihood term by adding observations that bear on $\theta_k$, or it sharpens the prior term by bringing in information from $\mathcal{S}$. The six channels below exhaust the possible sources by construction, because they answer three questions about any input to a method other than $\mathcal{D}_k$. Is it data? If not, it is knowledge (P3). If it is data, was it newly acquired for the task? If so, it is procurement (P5). If it is existing data, does it carry labels for the same task and population? Labeled data for the same task held by other custodians is pooling (P1); data from a different task or population, labeled or not, is proxy (P2); unlabeled inputs from the target population are P4. A method whose only input is $\mathcal{D}_k$ itself, transformed, is re-expression (P6). Figure~\ref{fig:provenance} shows the six channels.
 
 \begin{description}[leftmargin=0pt,topsep=3pt,itemsep=3pt,parsep=0pt]
 \item[P1 Pooling.] Labeled data for the same task from other custodians: data sharing, consortia, distributed statistics, federated and decentralized learning. Information crosses a custodial boundary, so pooling carries a privacy cost, and heterogeneity between custodians limits what it can deliver.
@@ -394,7 +401,7 @@ where $\mathcal{S}$ denotes all information other than the local labeled sample.
 \item[P3 Prior.] Non-data knowledge: physiology, pharmacology, clinical guidelines, ontologies, causal structure, published effect sizes, expert elicitation. It enters as constraints, priors or architecture.
 \item[P4 Unlabeled.] Unlabeled data from the target population: semi-supervised and self-supervised learning, weak supervision. Unlabeled inputs are informative about $\theta$ only when the input distribution and the conditional of the label share parameters, which theory links to the causal direction of the task \cite{scholkopf2012causal}.
 \item[P5 Procurement.] New labeled observations obtained by deliberate action: prospective collection, active learning, targeted annotation. This is the only channel that increases the local likelihood term with fresh, relevant information.
-\item[P6 Re-expression.] Transformations of existing data: augmentation, resampling, synthetic data, imputation. By Proposition~\ref{prop:nfl} it adds no information beyond $(\mathcal{D},M)$; whatever it contributes comes from the prior knowledge in $M$.
+\item[P6 Re-expression.] Transformations of existing data: augmentation, resampling, synthetic data, imputation. By Proposition~\ref{prop:nfl} it adds no information beyond $(\mathcal{D},Z)$; whatever it contributes comes from the prior knowledge in $Z$.
 \end{description}
 
 \begin{figure*}[t]
@@ -437,7 +444,7 @@ Two attributes of each channel matter for system design. The first is whether in
 
 \subsection{Matching scarcity to provenance}\label{sec:matching}
 
-The two axes together give a matrix (Figure~\ref{fig:matrix}) that answers a practical question: given the scarcity profile of a problem, which channels can in principle help? The entries are our judgment, informed by the mechanisms of Section~\ref{sec:provenance} and by the literature, graded from none to strong. They are claims about potential, not measurements, and Section~\ref{sec:evidence} sets them against where the coded corpus has actually worked (Figure~\ref{fig:gapmap}). Three patterns stand out. Ontic scarcity (O1 to O3) can only be addressed by pooling at a scale beyond the local site or by strong priors, since procurement is bounded by the world supply. Custodial scarcity (C1, C2) is addressed almost exclusively by pooling, which is why privacy-preserving pooling is the central technical problem for siloed healthcare. And re-expression is weak against every class, which follows from Proposition~\ref{prop:nfl} and matches the evidence.
+The two axes together give a matrix (Figure~\ref{fig:matrix}) that answers a practical question: given the scarcity profile of a problem, which channels can in principle help? The entries are our judgment, informed by the mechanisms of Section~\ref{sec:provenance} and by the literature, graded from none to strong. They are claims about potential, not measurements, and Section~\ref{sec:evidence} sets them against where the coded corpus has actually worked (Figure~\ref{fig:gapmap}). Three patterns stand out. Ontic scarcity (O1 to O3) is addressed most strongly by pooling at a scale beyond the local site and by priors; procurement helps with event and stratum sparsity but is bounded by the world supply of cases for rare conditions. Custodial scarcity (C1, C2) is addressed by pooling far more than by any other channel, which is why privacy-preserving pooling is the central technical problem for siloed healthcare. And re-expression is weak against every class, which follows from Proposition~\ref{prop:nfl} and matches the evidence.
 
 The matrix is a set of claims about what can work in principle. The next three sections test it against what has actually been built and measured: Section~\ref{sec:method} describes how we assembled and coded the literature, Section~\ref{sec:solutions} reviews the methods channel by channel, and Section~\ref{sec:evidence} asks what the reported results, and the corpus as a whole, do and do not support.
 
@@ -487,30 +494,43 @@ Contribution type & method, theory, study, multi-site, resource, review, evidenc
 \end{tabularx}
 \end{table}
 
-\noindent The bibliography has 335 entries; 45 are excluded background, which leaves a coded corpus of 290 works published between 1956 and 2025, 204 of them since 2019.
+\noindent Of the \PrismaBibTotal{} works identified in this way, \PrismaBgTotal{} were excluded as background (X1: \PrismaBgXOne, X2: \PrismaBgXTwo, X3: \PrismaBgXThree), which leaves a coded corpus of 290 works published between 1956 and 2025, 204 of them since 2019.
 
 \subsection{Coding scheme}
 
-Each work was coded on the five attributes of Table~\ref{tab:coding}. Channels and scarcity classes are those of Sections~\ref{sec:scarcity} and~\ref{sec:provenance}. A work has exactly one primary channel, the one through which most of its information gain is claimed, and at most one secondary channel; 48 of the 257 works that propose or study a remedy have one. Works that document a problem without proposing a remedy (33) are coded with the channel ``none''. Scarcity classes are multi-label and were assigned from the problem the work states it addresses and from its evaluation setting, not from what the method could do in principle. Contribution type records the primary contribution. A work is coded as a multi-site study only when its main contribution is training or validating on data held by two or more independent institutions; method papers that also report an external validation remain methods, and simulated partitions of a single dataset count as single-dataset evidence. The full coding is listed in Appendix~\ref{app:corpus} and released with the paper as a CSV file together with the scripts that produce every count and figure in Section~\ref{sec:evidence}.
+Each work was coded on the five attributes of Table~\ref{tab:coding}. Channels and scarcity classes are those of Sections~\ref{sec:scarcity} and~\ref{sec:provenance}. A work has exactly one primary channel, the one through which most of its information gain is claimed, and at most one secondary channel; 48 of the 257 works that propose or study a remedy have one. Works that document a problem without proposing a remedy (33) are coded with the channel ``none''. Scarcity classes are multi-label and were assigned from the problem the work states it addresses and from its evaluation setting, not from what the method could do in principle. Contribution type records the primary contribution. A work is coded as a multi-site study only when its main contribution is training or validating on data held by two or more independent institutions; method papers that also report an external validation remain methods, and simulated partitions of a single dataset count as single-dataset evidence. The full coding is listed in the online supplement and released with the paper as a CSV file together with the scripts that produce every count and figure in Section~\ref{sec:evidence}.
 
-\subsection{Threats to validity}
+\subsection{Systematic search}\label{sec:search}
 
-Four limitations qualify everything in the next two sections. First, \emph{the corpus is curated, not exhaustive}. It was built to cover every cell of the taxonomy and to support the argument of Section~\ref{sec:blueprint}, so pooling is over-represented by design (102 of 290 works), and counts describe the corpus, not the field. Absolute counts should not be compared across channels; the shape of coverage within a channel, and the cells that remain empty after a deliberate effort to fill them, are more informative. Second, \emph{coding was done by a single coder}, the first author, and inter-rater agreement has not been measured. Third, the primary channel is a judgment about where a method's gain comes from, and some works, foundation models trained with self-supervision for example, sit between two channels. Fourth, recent work is under-represented because of indexing and citation lag, so the decline after 2022 in Figure~\ref{fig:corpus} is not a trend.
+The snowballed corpus was complemented by a systematic database search, executed on \PrismaSearchDate{} and reported following PRISMA 2020 \cite{page2021prisma} (Figure~\ref{fig:prisma}). Its purpose is to test the corpus, not to replace it: we ask how much of the corpus a reproducible search recovers, and whether the coverage profile and the gaps of Section~\ref{sec:evidence} hold in the wider literature.
 
-\paragraph{Protocol for a systematic extension} To make the review systematic, we specify the search that would replace the curated stage. Databases: PubMed, Scopus, Web of Science, IEEE Xplore and the ACM Digital Library, with arXiv and medRxiv for preprints, from 2010 to the search date. Query, adapted to each database's syntax:
+\paragraph{Sources and query} PubMed was searched through the NCBI E-utilities, and medRxiv and the arXiv records indexed by Europe PMC through the Europe PMC API, from 2010 to the search date, in titles and abstracts. Europe PMC indexes only the life-science categories of arXiv, so computer-science preprints that are not also published in an indexed venue are not covered. Scopus, Web of Science, IEEE Xplore and the ACM Digital Library require subscriptions or API keys and were not searched; the scripts accept their exports, which are deduplicated and screened with the rest. The query, adapted to each source's syntax (both spellings replace the inner wildcard of decentrali*ed, which neither source supports), was:
 \begin{quote}
 \footnotesize\ttfamily
 ("small data" OR "small sample*" OR "limited data" OR "data scarcity" OR "few-shot" OR "low-resource" OR "rare disease*" OR "label-efficient" OR "data-efficient" OR federated OR decentrali*ed OR "privacy-preserving") AND (health* OR clinical OR medic* OR hospital* OR patient*) AND ("machine learning" OR "deep learning" OR "transfer learning" OR "synthetic data" OR "data augmentation" OR "active learning" OR "semi-supervised" OR "self-supervised" OR "foundation model*" OR "hierarchical model*")
 \end{quote}
-Two reviewers screen titles and abstracts, then full texts, against criteria I1, I2 and X1 to X3, resolving disagreement by discussion and reporting Cohen's kappa; the same two reviewers code a random 20\% of included works independently to estimate coding reliability; and the flow is reported as a PRISMA 2020 diagram \cite{page2021prisma}.
 
-\paragraph{Author note} This protocol has not yet been executed. All counts in Section~\ref{sec:evidence} and appendix~\ref{app:corpus} refer to the curated corpus described above. Before submission, the search should be run, the PRISMA flow added here, and the counts and figures regenerated from the resulting CSV with the scripts provided.
+\paragraph{Screening} Records were deduplicated by DOI and normalized title, and titles and abstracts were screened against criteria I1, I2 and X1 to X3 by explicit rules, so that the screening can be rerun exactly. The rules exclude records whose only scarcity term refers to a resource-limited setting rather than to scarce data, to a sample-size limitation stated in passing, or to decentralized trials or care; records that are guidelines or statements; and records with no learning method. A single reviewer checked the rules on \PrismaVerifyN{} records, drawn in two random samples from both sides of the decision. Two rules that misfired in these checks were removed, and the final rules reached a precision of \PrismaVerifyPrecision{} and a negative predictive value of \PrismaVerifyNPV{} against the reviewer's judgments. The screening is therefore deliberately sensitive: about a third of the eligible records are false positives, which the field-level analysis below tolerates but a synthesis would not. Eligible records were not assessed in full text.
 
-With the corpus defined, we turn to its content, channel by channel.
+\begin{figure}[t]
+\centering
+\input{figures/fig_prisma}
+\caption{PRISMA 2020 flow diagram. Left: the database search; its eligible records are coded by dictionary for the field-level map of Section~\ref{sec:search} and are not part of the coded synthesis. Right: the seed set and snowballing of Section~\ref{sec:method}, which give the 290 works coded in full and analyzed in Sections~\ref{sec:solutions} and~\ref{sec:evidence}.}
+\label{fig:prisma}
+\end{figure}
 
+\paragraph{How much of the corpus the search finds} Of the \PrismaCorpusInScope{} corpus works that were published since 2010 and evaluated on health data, \PrismaCorpusIndexed{} are indexed in the searched sources, and the query retrieved \PrismaCorpusRetrieved{} of them (\PrismaRecall). The missed works are mostly evidence of type I2, such as studies of external validation failure, hidden stratification or sample size, which describe a scarcity problem without the remedy vocabulary of the query, and methods that report a gain on a small dataset without naming scarcity. Broadening the vocabulary does not solve this: a version of the query with 39 additional scarcity terms and 16 additional method terms returned about 76{,}000 PubMed records and still found only about half of the corpus. This is the pattern that \citet{greenhalgh2005effectiveness} found for complex evidence, where protocol-driven searches located about a third of the relevant sources and snowballing most of the rest, and it is why the coded synthesis rests on the snowballed corpus while the search serves as a check on it.
+
+\paragraph{The field-level map} The \PrismaEligible{} eligible records were coded with dictionaries that encode the definitions of Sections~\ref{sec:scarcity} and~\ref{sec:provenance}. On the \PrismaCoderN{} corpus works with an abstract in Europe PMC, the dictionary coder agreed with the manual primary channel in \PrismaCoderAgree{} of cases (Cohen's $\kappa=\PrismaCoderKappa$), and recovered \PrismaCoderClassRecall{} of the manually assigned scarcity classes. In the field, pooling is the most frequent primary channel (\PrismaFieldA), followed by proxy (\PrismaFieldB) and re-expression (\PrismaFieldF); prior (\PrismaFieldC), unlabeled (\PrismaFieldD) and procurement (\PrismaFieldE) are rare, and \PrismaFieldNone{} of records match no channel. Pooling holds a similar share of the corpus (102 of 290 works), so its dominance is a property of the literature and not only of our selection. Cell counts of the two maps are moderately correlated (Spearman $\rho=\PrismaCellRho$), and \PrismaGapsConfirmed{} of the \PrismaGapsTotal{} gap cells of Figure~\ref{fig:gapmap} also fall in the bottom third of the field-level map: the temporal-obsolescence row and procurement for measurement poverty are as empty in the wider literature as in the corpus. Three gaps are not confirmed. Dimensional excess addressed by pooling is well populated in the field, mostly by federated and privacy-preserving genomic studies, and dimensional excess addressed by unlabeled data moderately so; both are under-covered by the corpus rather than by the literature. Stratum sparsity addressed by pooling also appears well populated, but most of its records match only the generic term bias, and the records that explicitly borrow strength across strata are almost all trial designs, such as basket trials and Bayesian subgroup analyses, which are outside the scope of this review (Section~\ref{sec:intro}). Finally, \PrismaSince{} of the eligible records were published in 2023 or later, which confirms that the decline after 2022 in Figure~\ref{fig:corpus} reflects the corpus and not the field.
+
+\subsection{Threats to validity}
+
+Four limitations qualify everything in the next two sections. First, \emph{the coded corpus is curated, not exhaustive}. It was built to cover every cell of the taxonomy and to support the argument of Section~\ref{sec:blueprint}, and counts describe the corpus, not the field. The systematic search of Section~\ref{sec:search} bounds this limitation: it confirms the dominance of pooling and seven of the ten gaps, and it identifies three cells and the most recent years as under-covered by the corpus. Second, \emph{coding was done by a single coder}, the first author, and inter-rater agreement has not been measured; the agreement with an independent dictionary coder ($\kappa=\PrismaCoderKappa$) is a check of consistency, not a substitute. Third, the primary channel is a judgment about where a method's gain comes from, and some works, foundation models trained with self-supervision for example, sit between two channels. Fourth, the search covered PubMed, medRxiv and the life-science part of arXiv but not the subscription databases or the computer-science part of arXiv, and its eligible records were screened by rules checked on a sample rather than read in full, so the field-level map is a check on proportions, not a second corpus.
+
+%% ===================================================================
 \section{Existing Solutions, Organized by Provenance}\label{sec:solutions}
 
- We now review solution families in the order of the provenance channels of Section~\ref{sec:provenance}. For each family we describe the mechanism, the scarcity classes of Figure~\ref{fig:scarcity} it addresses, the healthcare evidence, and the conditions under which it fails. Pooling receives the most space, because it is the only strong channel against custodial scarcity and therefore the foundation of Section~\ref{sec:blueprint}. Table~\ref{tab:families} gives a compact overview. By primary channel, the corpus holds 102 pooling, 60 proxy, 25 prior, 23 unlabeled, 15 procurement and 32 re-expression works, plus 33 that document a problem without proposing a remedy; Table~\ref{tab:corpus} in the appendix lists and codes every one of them.
+ We now review solution families in the order of the provenance channels of Section~\ref{sec:provenance}. For each family we describe the mechanism, the scarcity classes of Figure~\ref{fig:scarcity} it addresses, the healthcare evidence, and the conditions under which it fails. Pooling receives the most space, because it is the only strong channel against custodial scarcity and therefore the foundation of Section~\ref{sec:blueprint}. Table~\ref{tab:families} gives a compact overview. By primary channel, the corpus holds 102 pooling, 60 proxy, 25 prior, 23 unlabeled, 15 procurement and 32 re-expression works, plus 33 that document a problem without proposing a remedy; the online supplement lists and codes every one of them.
 
 \subsection{P1 Pooling: bringing the same task from other custodians}\label{sec:S6_1}
 
@@ -543,7 +563,7 @@ The central difficulty is heterogeneity. When site distributions differ, local u
 
 \subsection{P3 Prior: knowledge that is not data}\label{sec:S6_3}
 
-\paragraph{Bayesian and hierarchical modeling} Bayesian inference makes the prior explicit \cite{gelman2013bayesian}. Hierarchical models are the canonical way to share strength across groups, and their frequentist counterpart, shrinkage, is provably better than separate estimation in three or more dimensions \cite{efron1973steins,stein1956inadmissibility}. Penalized regression \cite{hastie2009elements,tibshirani1996regression} is the prior in disguise, and its use is recommended for small clinical prediction datasets, although it does not replace adequate sample size \cite{riley2020calculating,smeden2019sample}. The clinical evidence is more cautious than the theory. Shrinkage improved small-sample prognostic models in early comparisons \cite{steyerberg2000prognostic}, but later studies showed that it does not guarantee better performance and is least reliable precisely when samples are smallest, because the amount of shrinkage is itself estimated with large uncertainty \cite{riley2021penalization,vancalster2020regression}. This is the same problem that the blueprint of Section~\ref{sec:blueprint} faces when it estimates the heterogeneity $\tau^2$, and Proposition~\ref{prop:borrowing} quantifies it.
+\paragraph{Bayesian and hierarchical modeling} Bayesian inference makes the prior explicit \cite{gelman2013bayesian}. Hierarchical models are the canonical way to share strength across groups, and their frequentist counterpart, shrinkage, dominates separate estimation under squared error in the Gaussian model with three or more groups \cite{efron1973steins,stein1956inadmissibility}. Penalized regression \cite{hastie2009elements,tibshirani1996regression} is the prior in disguise, and its use is recommended for small clinical prediction datasets, although it does not replace adequate sample size \cite{riley2020calculating,smeden2019sample}. The clinical evidence is more cautious than the theory. Shrinkage improved small-sample prognostic models in early comparisons \cite{steyerberg2000prognostic}, but later studies showed that it does not guarantee better performance and is least reliable precisely when samples are smallest, because the amount of shrinkage is itself estimated with large uncertainty \cite{riley2021penalization,vancalster2020regression}. This is the same problem that the blueprint of Section~\ref{sec:blueprint} faces when it estimates the heterogeneity $\tau^2$, and Proposition~\ref{prop:borrowing} quantifies it.
 
 \paragraph{Mechanistic and physics-informed models} When the system has known dynamics, as in pharmacokinetics, cardiovascular hemodynamics or tumor growth, embedding them as constraints or residuals dramatically reduces the data needed \cite{karniadakis2021physics,raissi2019physics}. \citet{rueden2023informed} classify how knowledge can enter learning: through the training data, the hypothesis set, the learning algorithm or the final hypothesis. Medical examples include physics-informed networks for cardiac activation mapping \cite{sahlicostabal2020physics} and arterial blood pressure \cite{kissas2020machine}, biologically informed networks for sparse experimental data \cite{lagergren2020biologically}, and neural ordinary differential equations for pharmacokinetics \cite{lu2021neural}. Human concept learning from one example, formalized as probabilistic program induction \cite{lake2015human}, is the limiting case of what a strong prior can do.
 
@@ -633,7 +653,7 @@ Figure~\ref{fig:corpus} profiles the corpus. Two thirds of the 290 works (204) a
 \label{fig:gapmap}
 \end{figure}
 
-Figure~\ref{fig:gapmap} sets the coverage of each cell of the taxonomy against the judged potential of Figure~\ref{fig:matrix}. Coverage is very uneven. Label poverty (E1, 100 works) and custodial fragmentation (C1, 97 works) dominate, and they are served by different channels: E1 mainly by proxy (56) and unlabeled data (33), C1 almost only by pooling (93). Temporal obsolescence (T1) and measurement poverty (E2) are targeted by 8 works each, and stratum sparsity (O3) by 10, although these are the classes that the external-validation failures of Section~\ref{sec:intro} point to. Ten cells judged at least moderately promising contain two works or fewer; they are outlined in red. Four of them lie in the T1 row and four in the procurement column. Channels are also rarely combined. Of the 257 remedy works, 48 have a secondary channel, mostly self-supervised pretraining that mixes proxy and unlabeled information (16) and personalized pooling that mixes pooling with a prior or a shared representation (11). No work in the corpus combines pooling with procurement.
+Figure~\ref{fig:gapmap} sets the coverage of each cell of the taxonomy against the judged potential of Figure~\ref{fig:matrix}. Coverage is very uneven. Label poverty (E1, 100 works) and custodial fragmentation (C1, 97 works) dominate, and they are served by different channels: E1 mainly by proxy (56) and unlabeled data (33), C1 almost only by pooling (93). Temporal obsolescence (T1) and measurement poverty (E2) are targeted by 8 works each, and stratum sparsity (O3) by 10, although these are the classes that the external-validation failures of Section~\ref{sec:intro} point to. Ten cells judged at least moderately promising contain two works or fewer; they are outlined in red. The systematic search of Section~\ref{sec:search} confirms seven of them in the wider literature; the exceptions are dimensional excess addressed by pooling or by unlabeled data, which the corpus under-covers, and stratum sparsity addressed by pooling, where the wider literature borrows across strata mainly in trial design. Four of them lie in the T1 row and four in the procurement column. Channels are also rarely combined. Of the 257 remedy works, 48 have a secondary channel, mostly self-supervised pretraining that mixes proxy and unlabeled information (16) and personalized pooling that mixes pooling with a prior or a shared representation (11). No work in the corpus combines pooling with procurement.
 
 \subsection{What the reported results show}\label{sec:S7_2}
 
@@ -676,7 +696,7 @@ C & \citet{bagdasaryan2019differential} & DP training reduces accuracy more for 
 
 \paragraph{5. Privacy costs are paid by the smallest} DP noise is calibrated to sensitivity, which scales inversely with sample size, and its accuracy cost falls disproportionately on small datasets and minority groups \cite{bagdasaryan2019differential,tramer2021differentially}. A privacy mechanism designed without attention to small sites can cancel the benefit of pooling for exactly the participants who need it. Section~\ref{sec:blueprint} designs around this.
 
-\paragraph{6. Research effort follows convenient data, not severe scarcity} The corpus profile shows two dense regions, label poverty in imaging and custodial fragmentation through pooling, and three nearly empty rows: temporal obsolescence, measurement poverty and stratum sparsity. Procurement, which clinical research treats as the first remedy, is the smallest channel and is never combined with pooling. The empty cells of Figure~\ref{fig:gapmap} are not evidence that those remedies fail; they are untested, and they are where new work is most likely to change practice.
+\paragraph{6. Research effort follows convenient data, not severe scarcity} The corpus profile shows two dense regions, label poverty in imaging and custodial fragmentation through pooling, and three nearly empty rows: temporal obsolescence, measurement poverty and stratum sparsity. The first two are as empty in the systematic search as in the corpus. Procurement, which clinical research treats as the first remedy, is the smallest channel and is never combined with pooling. The empty cells of Figure~\ref{fig:gapmap} are not evidence that those remedies fail; they are untested, and they are where new work is most likely to change practice.
 
 \subsection{Limitations by channel}\label{sec:S7_3}
 
@@ -713,7 +733,7 @@ with all $u_k,e_k$ independent. Here $\tau^2$ is the between-hospital heterogene
 \centering
 \includegraphics[width=0.49\linewidth]{figures/fig_risk}\hfill
 \includegraphics[width=0.49\linewidth]{figures/fig_ess_gain}
-\caption{Left: risk of hospital $k$ as a function of its size $n_k$, with $K=12$, other hospitals of 200 patients, $\sigma^2=1$, $\tau^2=0.02$ and $\delta=10^{-5}$. Full pooling is excellent for small sites until it hits the heterogeneity floor $\tau^2$, and then harms large ones; hierarchical borrowing (Proposition~\ref{prop:borrowing}) is never worse than either. Privacy at $\epsilon=1$ is almost free; at $\epsilon=0.1$ it reduces but does not remove the gain. Right: relative gain in effective sample size $n^{\eff}_k/n_k$ for a hospital with $n_k=50$, as a function of heterogeneity and privacy budget, from Equations~\eqref{eq:borrowed} and~\eqref{eq:M}.}
+\caption{Left: risk of hospital $k$ as a function of its size $n_k$, with $K=12$, other hospitals of 200 patients, $\sigma^2=1$, $\tau^2=0.02$ and $\delta=10^{-5}$. Full pooling is excellent for small sites until it hits the heterogeneity floor $\tau^2$, and then harms large ones; hierarchical borrowing (Proposition~\ref{prop:borrowing}), with $\tau^2$ and $M$ known, is never worse than either in expected risk. Privacy at $\epsilon=1$ is almost free; at $\epsilon=0.1$ it reduces but does not remove the gain. Right: relative gain in effective sample size $n^{\eff}_k/n_k$ for a hospital with $n_k=50$, as a function of heterogeneity and privacy budget, from Equations~\eqref{eq:borrowed} and~\eqref{eq:M}.}
 \label{fig:risk}
 \end{figure}
 
@@ -728,17 +748,19 @@ n_k^{\eff}=\frac{\sigma^2}{R_k^{\star}}=n_k+\underbrace{\frac{\sigma^2}{\tau^2+M
 \end{equation}
 \end{proposition}
 \begin{proof}
-$\tilde{\theta}_k-\theta_k=\alpha e_k+(1-\alpha)(\tilde{\mu}-\mu)-(1-\alpha)u_k$. The three terms are independent with zero mean (the middle term has second moment $M$), so $R_k(\alpha)=\alpha^2 v_k+(1-\alpha)^2(\tau^2+M)$. This is a convex quadratic in $\alpha$, minimized at $\alpha_k^{\star}$; substituting gives $R_k^{\star}$. The bound follows because $R_k^{\star}$ is half the harmonic mean of $v_k$ and $\tau^2+M$. Finally $\sigma^2/R_k^{\star}=\sigma^2/v_k+\sigma^2/(\tau^2+M)=n_k+B$.
+$\tilde{\theta}_k-\theta_k=\alpha e_k+(1-\alpha)(\tilde{\mu}-\mu)-(1-\alpha)u_k$. The three terms are mutually independent, and the first and last have zero mean, so the cross terms vanish; the middle term has second moment $M$. Hence $R_k(\alpha)=\alpha^2 v_k+(1-\alpha)^2(\tau^2+M)$. This is a convex quadratic in $\alpha$, minimized at $\alpha_k^{\star}$; substituting gives $R_k^{\star}$. The bound follows because $R_k^{\star}$ is half the harmonic mean of $v_k$ and $\tau^2+M$. Finally $\sigma^2/R_k^{\star}=\sigma^2/v_k+\sigma^2/(\tau^2+M)=n_k+B$.
 \end{proof}
 
-Equation~\eqref{eq:borrowed} is the central quantity of the blueprint. Collaboration gives every hospital the same number $B$ of \emph{virtual patients}, regardless of its size. A hospital with 30 patients and one with 3,000 both gain $B$; the first may double or triple its effective sample, the second barely notices. Requirement (R4) is therefore satisfied by construction. $B$ is limited by heterogeneity: as $\tau^2\to\infty$, $B\to 0$ and each hospital should act alone; as $\tau^2\to 0$ with $M\to 0$, $B\to\infty$ and full pooling is optimal. Hierarchical borrowing interpolates between the two, using the data to decide where. It never does worse than local estimation, which is not true of a global model (Figure~\ref{fig:risk}).
+Two remarks fix the scope of Proposition~\ref{prop:borrowing}. First, the proof uses only first and second moments and independence, so it does not need the normality of Equation~\eqref{eq:model}; normality matters only for reading $R_k^{\star}$ as a posterior variance. Second, $R_k$ is an expectation over the site effect $u_k$ as well as over the data: it is the risk of a hospital drawn from the population of hospitals, not of a particular one. For an unbiased $\tilde{\mu}$ and a given $u_k$, the risk is $\alpha^2 v_k+(1-\alpha)^2(M+u_k^2)$, which exceeds $v_k$ when $|u_k|$ is large compared with $\tau$. A genuinely atypical hospital can therefore lose by borrowing. This is why $\tau^2$ is estimated from the data rather than assumed small, and why the structured prior of Section~\ref{sec:S8_4} lets similarity decide which hospitals borrow from which.
+
+Equation~\eqref{eq:borrowed} is the central quantity of the blueprint. Collaboration gives every hospital almost the same number $B$ of \emph{virtual patients}, regardless of its size; $B$ depends on $k$ only through the leave-one-out error $M$, which varies little across hospitals when there are many of them. A hospital with 30 patients and one with 3,000 both gain $B$; the first may double or triple its effective sample, the second barely notices. Requirement (R4) is therefore satisfied by construction. $B$ is limited by heterogeneity: as $\tau^2\to\infty$, $B\to 0$ and each hospital should act alone; as $\tau^2\to 0$ with $M\to 0$, $B\to\infty$ and full pooling is optimal. Hierarchical borrowing interpolates between the two, using the data to decide where. With $\tau^2$ and $M$ known it never does worse than local estimation, which is not true of a global model (Figure~\ref{fig:risk}); when both are estimated from the privatized releases the loss is small in simulation, but no longer zero (Section~\ref{sec:S8_7}).
 
 \subsection{The cost of privacy}\label{sec:S8_3}
 
 Proposition~\ref{prop:borrowing} holds for any estimate $\tilde{\mu}$. Requirements (R2) and (R3) constrain how that estimate can be obtained, and the next two results quantify what each constraint costs. Hospital $k$ needs $\tilde{\mu}$ from the others, and each release must be private (R2). Note what does not need privatizing: hospital $k$ uses its own estimate $\hat{\theta}_k$ without noise, since that never leaves the hospital. Privacy affects only $M$.
 
 \begin{proposition}[Privatized population estimate]\label{prop:privatized}
-Suppose the per-patient contributions to $\hat{\theta}_j$ are clipped so that replacing one patient changes $\hat{\theta}_j$ by at most $\Delta_j=2C/n_j$. Each hospital $j$ releases $\hat{\theta}_j+\xi_j$ with $\xi_j\sim\mathcal{N}(0,s_j^2)$ and $s_j=\Delta_j\sqrt{2\ln(1.25/\delta)}/\epsilon$, which is $(\epsilon,\delta)$-differentially private for $\epsilon\in(0,1)$ by the Gaussian mechanism \cite{dwork2014algorithmic}. For the leave-one-out average $\tilde{\mu}=\frac{1}{K-1}\sum_{j\neq k}(\hat{\theta}_j+\xi_j)$,
+Suppose $\hat{\theta}_j$ is the mean of per-patient contributions clipped to $[-C,C]$, so that replacing one patient changes $\hat{\theta}_j$ by at most $\Delta_j=2C/n_j$, and that clipping introduces no bias. Each hospital $j$ releases $\hat{\theta}_j+\xi_j$ with $\xi_j\sim\mathcal{N}(0,s_j^2)$ and $s_j=\Delta_j\sqrt{2\ln(1.25/\delta)}/\epsilon$, which is $(\epsilon,\delta)$-differentially private for $\epsilon\in(0,1)$ by the Gaussian mechanism \cite{dwork2014algorithmic}. For the leave-one-out average $\tilde{\mu}=\frac{1}{K-1}\sum_{j\neq k}(\hat{\theta}_j+\xi_j)$,
 \begin{equation}\label{eq:M}
 M=\frac{1}{(K-1)^2}\sum_{j\neq k}\Bigl(\tau^2+\frac{\sigma^2}{n_j}+\frac{8C^2\ln(1.25/\delta)}{n_j^2\,\epsilon^2}\Bigr).
 \end{equation}
@@ -751,8 +773,10 @@ The terms $u_j+e_j+\xi_j$ are independent with zero mean and variances $\tau^2+\
 Three consequences follow. First, privacy noise is divided by $(K-1)$, so it vanishes as the network grows, while the local estimate remains noise-free. Second, the privacy term scales as $n_j^{-2}$ while the sampling term scales as $n_j^{-1}$: privacy is cheap for large contributors and expensive for tiny ones. This is the formal version of observation 5 in Section~\ref{sec:evidence}. The remedy is to let small hospitals release jointly: with secure aggregation \cite{bonawitz2017practical} among neighbours, noise can be calibrated to the sensitivity of the sum, which is set by the total size of the group rather than by each member. Third, inverse-variance weighting of the releases, rather than equal weights, reduces $M$ further and is what a practical implementation should use; Equation~\eqref{eq:M} is the simplest case.
 
 \begin{remark}[Estimating $\tau^2$]\label{rem:tau}
-$\alpha_k^{\star}$ depends on $\tau^2$, which is itself unknown. Method-of-moments estimators from random-effects meta-analysis \cite{dersimonian1986meta} need only the released $\hat{\theta}_j+\xi_j$ and their known variances, so they inherit the privacy guarantee by post-processing. With few hospitals, $\tau^2$ is poorly estimated and a weakly informative prior on it is advisable \cite{gelman2013bayesian}.
+$\alpha_k^{\star}$ depends on $\tau^2$, which is itself unknown. Method-of-moments estimators from random-effects meta-analysis \cite{dersimonian1986meta} need only the released $\hat{\theta}_j+\xi_j$ and their variances $\sigma^2/n_j+s_j^2$, which are public, so they inherit the privacy guarantee by post-processing. With few hospitals, $\tau^2$ is poorly estimated and a weakly informative prior on it is advisable \cite{gelman2013bayesian}.
 \end{remark}
+
+\paragraph{Scope of the privacy guarantee} Four conditions delimit what Proposition~\ref{prop:privatized} guarantees. (a) Neighbouring datasets differ in one patient's record at one hospital. A patient whose records are held by $m$ hospitals appears in $m$ releases, and by composition is protected at level $(m\epsilon,m\delta)$. (b) The site sizes $n_j$ and the per-patient variance $\sigma^2$ are treated as public; if they are not, they must be released privately as well. (c) A head $\theta_k\in\mathbb{R}^p$ must be released as one vector, with per-patient contributions clipped in $\ell_2$ norm to $C$ and isotropic noise calibrated to the $\ell_2$ sensitivity $2C/n_j$, which gives $(\epsilon,\delta)$ for the whole vector; calibrating each coordinate separately would compose to $(p\epsilon,p\delta)$. (d) For estimators that are not means of clipped contributions, $\Delta_j$ is replaced by the sensitivity of that estimator, for instance $2L/(n_j\lambda)$ for a minimizer of a $\lambda$-strongly convex regularized empirical risk with an $L$-Lipschitz loss \cite{chaudhuri2011differentially}.
 
 \subsection{Computation on a sparse graph without a server}\label{sec:S8_4}
 
@@ -763,14 +787,16 @@ The leave-one-out average needs every hospital's release. Without a server, the 
 \[
 \bigl\|x^t-\bar{x}\mathbf{1}\bigr\|_2\;\le\;\lambda^t\,\bigl\|x^0-\bar{x}\mathbf{1}\bigr\|_2,
 \]
-so that the estimate held by any hospital after $t$ rounds has root mean squared error at most $\sqrt{M}+\lambda^t\sqrt{\mathbb{E}\|x^0-\bar{x}\mathbf{1}\|_2^2}$, where $M$ is computed as in Equation~\eqref{eq:M} for the full average.
+so that the estimate held by any hospital after $t$ rounds has root mean squared error at most $\sqrt{M_{\mathrm{all}}}+\lambda^t\sqrt{\mathbb{E}\|x^0-\bar{x}\mathbf{1}\|_2^2}$ as an estimate of $\mu$, where $M_{\mathrm{all}}=K^{-2}\sum_{j}(\tau^2+\sigma^2/n_j+s_j^2)$ is the mean squared error of the full average. (iii) Hospital $k$ obtains its leave-one-out estimate as $\tilde{\mu}_k^t=(Kx_k^t-x_k^0)/(K-1)$. It converges to the leave-one-out average of Proposition~\ref{prop:privatized}, and differs from it by $K(x_k^t-\bar{x})/(K-1)$, whose root mean square is at most $\frac{K}{K-1}\lambda^t\sqrt{\mathbb{E}\|x^0-\bar{x}\mathbf{1}\|_2^2}$.
 \end{proposition}
 
 \begin{proof}
-(i) is the post-processing property of differential privacy \cite{dwork2014algorithmic}: the gossip iterates are a deterministic function of the released values, and each hospital's subsequent computations on its own data are never released. (ii) Since $W$ is symmetric and doubly stochastic, $\mathbf{1}$ is an eigenvector with eigenvalue 1 and $x^t-\bar{x}\mathbf{1}=W^t(x^0-\bar{x}\mathbf{1})$ lies in the orthogonal complement of $\mathbf{1}$, on which $\|W\|_2=\lambda$. Connectivity and a positive diagonal make $W$ irreducible and aperiodic, so $\lambda<1$ \cite{xiao2004fast}. The error bound follows from the triangle inequality in $L^2$, since each coordinate deviation is bounded by the norm of the whole vector.
+(i) is the post-processing property of differential privacy \cite{dwork2014algorithmic}: the gossip iterates are a deterministic function of the released values, and each hospital's subsequent computations on its own data are never released. (ii) Since $W$ is symmetric and doubly stochastic, $\mathbf{1}$ is an eigenvector with eigenvalue 1 and $x^t-\bar{x}\mathbf{1}=W^t(x^0-\bar{x}\mathbf{1})$ lies in the orthogonal complement of $\mathbf{1}$, on which $\|W\|_2=\lambda$. Connectivity and a positive diagonal make $W$ irreducible and aperiodic, so $\lambda<1$ \cite{xiao2004fast}. The error bound follows from the triangle inequality in $L^2$, since each coordinate deviation is bounded by the norm of the whole vector. (iii) Since $\sum_{j\neq k}x_j^0=K\bar{x}-x_k^0$, the leave-one-out average is $(K\bar{x}-x_k^0)/(K-1)$, and subtracting it from $\tilde{\mu}_k^t$ leaves $K(x_k^t-\bar{x})/(K-1)$, which is bounded as in (ii).
 \end{proof}
 
-The number of rounds needed for accuracy $\gamma$ is about $\log(1/\gamma)/(1-\lambda)$, so the spectral gap $1-\lambda$ of the collaboration graph determines the communication cost. The spectral gap is related to how well the graph is connected through Cheeger-type inequalities \cite{chung1997spectral}. Figure~\ref{fig:gossip} shows this for 24 hospitals under four realistic topologies. A chain of bilateral agreements arranged in a ring mixes slowly; dense regional clusters joined by single bridges are not much better, because the bridges are bottlenecks; a few additional random or two-hop links improve mixing by orders of magnitude. The practical lesson is that \emph{which} agreements a network signs matters more than \emph{how many}: adding a handful of long-range edges is worth more than densifying regions. Privacy amplification by decentralization \cite{cyffers2022privacy} gives a further benefit on sparse graphs, because each hospital observes only what reaches it through its neighbours.
+Part (iii) also bounds the one departure from Proposition~\ref{prop:borrowing} that gossip introduces: after finitely many rounds, $\tilde{\mu}_k^t$ still contains a fraction of hospital $k$'s own release, so it is not exactly independent of $(u_k,e_k)$. The residual dependence decays as $\lambda^t$, and a hospital should use $\tilde{\mu}_k^t$ only once $\lambda^t$ is small; Section~\ref{sec:S8_7} shows what happens otherwise.
+
+The number of rounds needed for accuracy $\gamma$ is about $\log(1/\gamma)/(1-\lambda)$, so the spectral gap $1-\lambda$ of the collaboration graph determines the communication cost. The spectral gap is related to how well the graph is connected through Cheeger-type inequalities \cite{chung1997spectral}. Figure~\ref{fig:gossip} shows this for 24 hospitals under four realistic topologies. A chain of bilateral agreements arranged in a ring mixes slowly; dense regional clusters joined by single bridges are not much better, because the bridges are bottlenecks; a few additional random or two-hop links triple the spectral gap, which after a hundred rounds lowers the consensus error by orders of magnitude. The practical lesson is that \emph{which} agreements a network signs matters more than \emph{how many}: adding a handful of long-range edges is worth more than densifying regions. Privacy amplification by decentralization \cite{cyffers2022privacy} gives a further benefit on sparse graphs, because each hospital observes only what reaches it through its neighbours.
 
 \begin{figure}[t]
 \centering
@@ -781,7 +807,7 @@ The number of rounds needed for accuracy $\gamma$ is about $\log(1/\gamma)/(1-\l
 
 \paragraph{Structured heterogeneity} The exchangeable model \eqref{eq:model} treats all other hospitals as equally relevant. When similarity is structured, for instance by region or case mix, the prior can follow a similarity graph with weights $a_{kl}\ge 0$, which may differ from the communication graph. A Gaussian Markov random field prior \cite{rue2005gaussian} with graph Laplacian $L$ gives the maximum a posteriori problem
 \begin{equation}\label{eq:gmrf}
-\min_{\boldsymbol{\theta}}\;\sum_k\frac{(\theta_k-\hat{\theta}_k)^2}{2v_k}+\frac{\beta}{2}\sum_{(k,l)}a_{kl}(\theta_k-\theta_l)^2+\frac{\gamma}{2}\sum_k(\theta_k-\mu_0)^2,
+\min_{\boldsymbol{\theta}}\;\sum_k\frac{(\theta_k-\hat{\theta}_k)^2}{2v_k}+\frac{\beta}{2}\sum_{k<l}a_{kl}(\theta_k-\theta_l)^2+\frac{\gamma}{2}\sum_k(\theta_k-\mu_0)^2,
 \end{equation}
 whose solution satisfies the linear system $(V^{-1}+\beta L+\gamma I)\boldsymbol{\theta}=V^{-1}\hat{\boldsymbol{\theta}}+\gamma\mu_0\mathbf{1}$ with $V=\mathrm{diag}(v_k)$. The Jacobi iteration
 \[
@@ -863,21 +889,19 @@ Two features of GHB deserve emphasis. Keeping the privatized component low-dimen
 
 \begin{algorithm}[t]
 \caption{Graph Hierarchical Borrowing (one round of model fitting)}\label{alg:ghb}
-\KwIn{graph $\mathcal{G}$ with gossip matrix $W$; privacy budget $(\epsilon,\delta)$; clipping bound $C$; public encoder $f_{\phi_0}$; knowledge anchor $\mu_0$}
+\KwIn{graph $\mathcal{G}$ with gossip matrix $W$ and $T$ rounds; privacy budget $(\epsilon,\delta)$; public encoder $f_{\phi_0}$; knowledge anchor $\mu_0$ with stated uncertainty $\sigma_0^2$; public per-patient variance proxy $\bar{\sigma}^2\in\mathbb{R}^p$ (e.g.\ the inverse Fisher information of the anchor on public data)}
 \ForEach{hospital $k$ in parallel}{
   adapt $f_{\phi_0}$ to local unlabeled data with adapters (L1)\;
-  fit head $\hat{\theta}_k\in\mathbb{R}^p$ with clipped per-patient contributions; estimate $V_k=\widehat{\mathrm{Var}}(\hat{\theta}_k)$\;
-  release $r_k=\hat{\theta}_k+\xi_k$, $\xi_k\sim\mathcal{N}(0,s_k^2I_p)$, $s_k=\frac{2C}{n_k}\sqrt{2\ln(1.25/\delta)}/\epsilon$\tcp*{only privatized output}
+  fit head $\hat{\theta}_k\in\mathbb{R}^p$ and its covariance $V_k$ (both kept local), with $\ell_2$ sensitivity $\Delta_k$ to replacing one patient\;
+  release $r_k=\hat{\theta}_k+\xi_k$, $\xi_k\sim\mathcal{N}(0,s_k^2I_p)$, $s_k=\Delta_k\sqrt{2\ln(1.25/\delta)}/\epsilon$\tcp*{the only released quantity}
+  set public weights $\omega_k=\bar{\sigma}^2/n_k+s_k^2$ (coordinatewise)\;
 }
-initialize $x_k^0\leftarrow(r_k,\,V_k+s_k^2I,\,1)$ at every $k$\;
-\For{$t=0,\dots,T-1$}{
-  \ForEach{hospital $k$}{
-    $x_k^{t+1}\leftarrow\sum_{l\in\{k\}\cup\mathcal{N}(k)}W_{kl}\,x_l^t$\tcp*{gossip: free post-processing}
-  }
-}
+gossip $T$ rounds on $(r_k/\omega_k,\,r_k^2/\omega_k,\,1/\omega_k,\,1/\omega_k^2)$; each $k$ estimates $\hat{\tau}^2$ by moments\tcp*{post-processing}
+gossip $T$ rounds on $(w_k r_k,\,w_k)$ with $w_k=1/(\hat{\tau}^2+\omega_k)$\tcp*{post-processing}
 \ForEach{hospital $k$}{
-  recover $\tilde{\mu}$ (removing $k$'s own share) and estimate $\tau^2$ by moments\;
-  $\tilde{\theta}_k\leftarrow\alpha_k^{\star}\hat{\theta}_k+(1-\alpha_k^{\star})\tilde{\mu}$, with $\alpha_k^{\star}=(\tau^2+M)(\tau^2+M+v_k)^{-1}$ coordinatewise, shrinking toward $\mu_0$ when $K$ is small\;
+  remove $k$'s own share to get $\tilde{\mu}_k$ and $M_k=1/\sum_{j\neq k}w_j$ (Proposition~\ref{prop:gossip}(iii))\;
+  combine with the anchor (skipped if there is none): $\tilde{\mu}_k\leftarrow(\tilde{\mu}_k/M_k+\mu_0/\sigma_0^2)/(1/M_k+1/\sigma_0^2)$, $M_k\leftarrow(1/M_k+1/\sigma_0^2)^{-1}$\;
+  fit the local head with prior $\mathcal{N}(\tilde{\mu}_k,\mathrm{diag}(\hat{\tau}^2+M_k))$; in the Gaussian case this is $\tilde{\theta}_k=\alpha_k^{\star}\hat{\theta}_k+(1-\alpha_k^{\star})\tilde{\mu}_k$ with $\alpha_k^{\star}$ of Proposition~\ref{prop:borrowing}\;
   calibrate with conformal prediction on local held-out data (L4); rank unlabeled patients by posterior variance (L5)\;
 }
 \end{algorithm}
@@ -886,10 +910,10 @@ initialize $x_k^0\leftarrow(r_k,\,V_k+s_k^2I,\,1)$ at every $k$\;
 
 Table~\ref{tab:approaches} compares GHB with the alternatives on requirements (R1) to (R5). Centralized pooling violates (R1). Federated averaging violates (R3) and, under heterogeneity, (R4) and (R5). Personalized federated learning satisfies (R4) and (R5) but still needs a server. Existing decentralized approaches satisfy (R3); Swarm Learning does not provide formal differential privacy by default, while ProxyFL does but shares full proxy models. Synthetic data sharing satisfies (R1) and (R3) only at the cost of utility or privacy. Distributed meta-analysis is the closest classical relative and satisfies most requirements, but does not exploit learned representations or graph structure. The comparison is one of design properties, not of measured performance: the GHB row records what holds by construction under the assumptions of Propositions~\ref{prop:borrowing}, \ref{prop:privatized} and~\ref{prop:gossip}, while the other rows describe each method in its standard form, and most of them can be extended to satisfy more requirements.
 
-The argument for GHB rests on four results that are each well established, combined in a way that, to our knowledge, has not been set out for this setting. None of the four is new, and the case for GHB is that it is the simplest combination that meets all five requirements at once, not that it outperforms the alternatives; that has to be shown empirically. Hierarchical shrinkage is admissible and minimax-motivated for group estimation \cite{efron1973steins,stein1956inadmissibility}, and Proposition~\ref{prop:borrowing} shows it remains optimal, in closed form, when the prior is estimated imperfectly. Differential privacy composes and is closed under post-processing \cite{dwork2014algorithmic}, which makes the gossip phase free (Proposition~\ref{prop:gossip}). Gossip converges at a rate set by the spectral gap \cite{boyd2006randomized,xiao2004fast}, which turns network design into a measurable quantity. And shared representations reduce the problem to a low-dimensional one \cite{maurer2016benefit,tripuraneni2020theory}, which is what keeps privacy noise small. Each component can be replaced by a stronger one, such as secure aggregation within regions, Bayesian treatment of $\tau^2$, or nonlinear heads, without changing the architecture.
+The argument for GHB rests on four results that are each well established, combined in a way that, to our knowledge, has not been set out for this setting. None of the four is new, and the case for GHB is that it is the simplest combination that meets all five requirements at once, not that it outperforms the alternatives; that has to be shown empirically. Separate estimation of three or more group means is inadmissible under squared error, and empirical Bayes shrinkage toward a common mean dominates it in the Gaussian model with equal variances \cite{efron1973steins,stein1956inadmissibility}; Proposition~\ref{prop:borrowing} gives the best combination of a local and a population estimate in closed form when the population estimate is itself imperfect. Differential privacy composes and is closed under post-processing \cite{dwork2014algorithmic}, which makes the gossip phase free (Proposition~\ref{prop:gossip}). Gossip converges at a rate set by the spectral gap \cite{boyd2006randomized,xiao2004fast}, which turns network design into a measurable quantity. And shared representations reduce the problem to a low-dimensional one \cite{maurer2016benefit,tripuraneni2020theory}, which is what keeps privacy noise small. Each component can be replaced by a stronger one, such as secure aggregation within regions, Bayesian treatment of $\tau^2$, or nonlinear heads, without changing the architecture.
 
 \begin{table}[t]
-\caption{Approaches for sparse, siloed hospital networks against requirements (R1) to (R5), as design properties of each method in its standard form. \yes{} satisfied; \partly{} partially or optionally; \no{} not satisfied. Entries for GHB hold by construction under the assumptions of Section~\ref{sec:blueprint} and have not yet been validated empirically.}
+\caption{Approaches for sparse, siloed hospital networks against requirements (R1) to (R5), as design properties of each method in its standard form. \yes{} satisfied; \partly{} partially or optionally; \no{} not satisfied. Entries for GHB hold by construction under the assumptions of Section~\ref{sec:blueprint}; they have been checked in simulation (Section~\ref{sec:S8_7}) but not on data from real hospital networks.}
 \label{tab:approaches}
 \small
 \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}Xccccc@{}}
@@ -910,6 +934,58 @@ Distributed meta-analysis \cite{dersimonian1986meta,duan2020learning} & \yes & \
 
 \paragraph{Threat model and limits} GHB protects patients against honest-but-curious neighbours and any observer of the messages, under the DP guarantee of each release. It does not protect against a hospital that lies about its estimate; robust aggregation \cite{blanchard2017machine} or reputation weighting would be needed. The privacy guarantee is per release, so repeated rounds compose and must be accounted for, for instance with R\'{e}nyi differential privacy \cite{mironov2017renyi}. The Gaussian analysis is asymptotic; for very small $n_k$ the normal approximation of $\hat{\theta}_k$ is poor and a fully Bayesian treatment of each head is preferable. The framework is theoretical and its empirical evaluation on cross-silo benchmarks such as FLamby \cite{ogierduterrail2022flamby} is the first item of future work.
 
+\subsection{Simulation study}\label{sec:S8_7}
+
+The propositions take $\tau^2$ and $M$ as known and the model as Gaussian. We test what is lost when neither holds, in seven Monte Carlo simulations; Table~\ref{tab:sims} summarizes them, and the online supplement gives the full design of each. Unless stated otherwise, the network has 24 hospitals whose sizes are drawn once from a log-normal distribution with median 100 (16 to 479 patients), $\sigma^2=1$, $\delta=10^{-5}$ and $C=1$, and the privatized releases are averaged by 60 rounds of gossip on the ring with two-hop links of Figure~\ref{fig:gossip}. \emph{Plug-in GHB} estimates everything it needs from the privatized releases and public quantities only: $\tau^2$ by DerSimonian-Laird (Remark~\ref{rem:tau}), the leave-one-out population estimate by inverse-variance weighting, and $M$ from those weights. Risk is reported relative to local estimation, $R_k/v_k$, so that values below 1 mean that a hospital gains. The code and every number are released with the paper.
+
+\begin{table}[t]
+\caption{The seven simulations of the blueprint and their main results. Relative risk is $R_k/v_k$ (below 1: the hospital gains); $\epsilon=1$ unless stated.}
+\label{tab:sims}
+\footnotesize
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{2.6cm}>{\raggedright\arraybackslash}p{3.4cm}X@{}}
+\toprule
+Simulation & Question & Result\\
+\midrule
+1 Closed forms & Do Propositions~\ref{prop:borrowing} and~\ref{prop:privatized} match simulation? & \SimOneWithin{} of \SimOneChecks{} comparisons within two standard errors; largest relative deviation \SimOneMaxRel\\
+2 Heterogeneity & Is plug-in GHB ever worse than local estimation? & Worst hospital at most \SimTwoWorstGHB{} for $\tau^2\in[10^{-4},1]$; a global model reaches \SimTwoWorstPool\\
+3 Equity, network size & Who gains, and how many hospitals are needed? & Gain in $n^{\eff}$ \SimThreeSmall{} for small, \SimThreeLarge{} for large hospitals; with 3 hospitals relative risk \SimThreeKThreeDL{} against \SimThreeKThreeOracle{} with known $\tau^2$\\
+4 Gossip rounds & How many rounds are needed? & Within 2\% of exact averaging after \SimFourRandomTwo{} to \SimFourRingTwo{} rounds, against \SimFourRandomPred{} to \SimFourRingPred{} from the worst-case bound\\
+5 Joint release & Does secure aggregation among small hospitals help? & Only if all hospitals are small: $B$ from \SimFiveSmallGOneEpsTenth{} to \SimFiveSmallGEightEpsTenth{} at $\epsilon=0.1$; from \SimFiveMixedGOneEpsTenth{} to \SimFiveMixedGEightEpsTenth{} in a mixed network\\
+6 Regional structure & When does the GMRF prior of Equation~\eqref{eq:gmrf} pay off? & Worse when regions barely differ (\SimSixGMRFLow{} against \SimSixGHBLow), far better when they differ (\SimSixGMRFHigh{} against \SimSixGHBHigh)\\
+7 Logistic heads & Does it work beyond the Gaussian model? & Excess log-loss \SimSevenLocal{} local, \SimSevenGHB{} GHB, \SimSevenGlobal{} global without privacy; no gain at $\epsilon=0.3$\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\paragraph{Estimation costs little, and no hospital loses on average} Simulation 1 confirms the closed forms behind Figure~\ref{fig:risk}. Simulation 2 (Figure~\ref{fig:sim-het}) varies the heterogeneity over four orders of magnitude. Plug-in GHB stays at or below local estimation for every hospital, up to Monte Carlo error, while a single global model, which is the best choice when $\tau^2$ is tiny, becomes up to \SimTwoMeanPool{} times worse on average and \SimTwoWorstPool{} times worse for its worst hospital. The price of estimating $\tau^2$ is paid when heterogeneity is smallest: at $\tau^2=10^{-4}$ the plug-in reaches a mean relative risk of \SimTwoMinGHB{} against \SimTwoMinOracle{} with the true value. Gossip costs nothing once it has mixed. Simulation 4 shows that this takes 11 to 35 rounds on the topologies of Figure~\ref{fig:gossip}, far fewer than the worst-case bound of Proposition~\ref{prop:gossip} requires, but that a hospital using the estimate after a single round on the ring is worse off than alone.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{supplement/figures/s2_heterogeneity}
+\caption{Simulation 2: risk relative to local estimation against heterogeneity, for 24 hospitals of 16 to 479 patients. Plug-in GHB estimates $\tau^2$ and $M$ from privatized releases averaged by gossip; the oracle uses the true $\tau^2$; the global model is the sample-size weighted mean of all site estimates, computed without privacy.}
+\label{fig:sim-het}
+\end{figure}
+
+\paragraph{The smallest hospitals gain most} Simulation 3 (Figure~\ref{fig:sim-equity}, left) checks requirement (R4) hospital by hospital. Every hospital gains about the same number of virtual patients, $B\approx\SimThreeB$, so those with 60 patients or fewer multiply their effective sample size by \SimThreeSmall{} on average and those with 300 or more by \SimThreeLarge. A global model helps the small hospitals less (\SimThreePoolSmall) and cuts the effective sample size of the large ones to \SimThreePoolLarge{} of their own. With few hospitals, $\tau^2$ is poorly estimated (Figure~\ref{fig:sim-equity}, right). A weakly informative half-Cauchy prior on $\tau$, as Remark~\ref{rem:tau} recommends, helps from four hospitals upward, but with three hospitals most of the gain is lost.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{supplement/figures/s3_equity}
+\caption{Simulation 3. Left: effective sample size relative to own size for each hospital at $\tau^2=0.02$, $\epsilon=1$; the line is $1+B/n_k$ from Equation~\eqref{eq:borrowed}. Right: mean relative risk against the number of hospitals for three ways of obtaining $\tau^2$.}
+\label{fig:sim-equity}
+\end{figure}
+
+\paragraph{Privacy is the binding constraint beyond the Gaussian model} Simulation 7 (Figure~\ref{fig:sim-logistic}) replaces the Gaussian model by logistic-regression heads on four features. Each hospital releases its anchored ridge estimate with Gaussian noise calibrated to its sensitivity (output perturbation), and GHB borrows coordinatewise with the published anchor $\mu_0$ of layer L3. At $\tau^2=0.05$ and $\epsilon=1$, GHB reduces the excess log-loss of local estimation by \SimSevenReduction, close to a global model trained on the pooled data without privacy, and no hospital is worse off on average. Without privacy GHB beats the global model (\SimSevenGHBNoDP{} against \SimSevenGlobal), and at $\epsilon=0.3$ its gain disappears (\SimSevenGHBTenth{} against \SimSevenLocalTenth{} for local estimation). The privacy cost that the Gaussian analysis locates in $M$ is therefore real, and for small hospitals it is large. Simulation 5 tests the remedy proposed in Section~\ref{sec:S8_3}, joint release through secure aggregation, and finds it worthwhile only in networks where every hospital is small; where some hospitals are large, they dominate the population estimate anyway. Simulation 6 shows the value of structure: when hospitals differ by region, the GMRF prior keeps a relative risk of \SimSixGMRFHigh{} where the exchangeable prior falls to \SimSixGHBHigh, and when they do not, it loses to the exchangeable prior.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{supplement/figures/s7_logistic}
+\caption{Simulation 7, logistic-regression heads. Left: excess log-loss relative to local estimation for each hospital ($\tau^2=0.05$). Right: mean excess log-loss over the true model against heterogeneity. Local estimation uses the published anchor as its prior; the global model is fitted on pooled data without privacy.}
+\label{fig:sim-logistic}
+\end{figure}
+
+\paragraph{What the simulations do not show} Three components of Simulation 7 (undoing the ridge shrinkage of the releases, the half-Cauchy prior on $\tau$ and the use of the anchor) were added after a first version, without them, did worse than local estimation; each follows the design above, but they were chosen with knowledge of that failure. The simulations test internal consistency under Equation~\eqref{eq:model} and its logistic analogue. They say nothing about real hospital networks, where effects are not Gaussian, sizes and heterogeneity are not known in advance, and participants may not be honest.
+
 GHB answers the question posed at the start of this section only under explicit assumptions: Gaussian site effects, honest participants and a known collaboration graph. Relaxing each of them, and the measurement problems raised in Sections~\ref{sec:definition} and~\ref{sec:evidence}, defines most of the open problems that follow.
 
 %% ===================================================================
@@ -927,13 +1003,13 @@ The problems below follow the structure of the paper. The first two concern meas
 \item \textbf{Priors for clinical tabular data.} TabPFN shows that a well-designed synthetic prior can beat tuned baselines on small tables \cite{hollmann2025accurate}. Priors built from clinical knowledge, such as plausible effect directions, monotonicity and interactions, are a natural next step and a principled use of synthetic data that does not conflict with Proposition~\ref{prop:nfl}, because the information comes from the prior, not from the samples.
 \item \textbf{Language models as priors, carefully.} Large language models carry medical knowledge \cite{singhal2023large} and can act as priors for tabular and few-shot tasks \cite{hegselmann2023tabllm}. Measuring how much information they actually contribute about a specific local $\theta$, as opposed to population-level generalities, is open.
 \item \textbf{Intrinsically small problems.} For conditions where the world supply is below $n^{\star}$, the right question is how to combine global pooling, mechanistic knowledge and patient-level ``n of 1'' inference \cite{estrin2014small,hekler2019we}. This needs methods that are explicit about which part of the answer comes from which channel.
-\item \textbf{The empty cells.} The gap map (Figure~\ref{fig:gapmap}) lists ten combinations judged promising that the corpus barely touches. Three stand out: methods that down-weight obsolete data in a principled way (T1), which today is handled by ad hoc retraining windows; procurement inside a consortium, where the posterior variance of Section~\ref{sec:blueprint} tells every hospital which patients to label next and nobody has studied the joint design (P5 with P1); and pooling aimed at small subgroups rather than small sites (O3 with P1), for which Equation~\eqref{eq:borrowed} applies with strata in place of hospitals.
+\item \textbf{The empty cells.} The gap map (Figure~\ref{fig:gapmap}) lists ten combinations judged promising that the corpus barely touches. Three stand out: methods that down-weight obsolete data in a principled way (T1), which today is handled by ad hoc retraining windows; procurement inside a consortium, where the posterior variance of Section~\ref{sec:blueprint} tells every hospital which patients to label next and nobody has studied the joint design (P5 with P1); and pooling aimed at small subgroups rather than small sites (O3 with P1), for which Equation~\eqref{eq:borrowed} applies with strata in place of hospitals, and which the wider literature has developed for trial design but not for prediction models.
 \end{enumerate}
 
 %% ===================================================================
 \section{Conclusion}\label{sec:conclusion}
 
-Small data are the normal condition of clinical machine learning, not an exception to it. Treating smallness as a measurable, task-relative property, through the effective sample size and the smallness index, makes it possible to say how small a problem is and why. The Scarcity-Provenance taxonomy turns that diagnosis into a choice of remedy: identify which term of $\sigma$ is degraded, then import information from a channel that can address it, keeping in mind that re-expression adds none. Coding 290 works with it shows where the field has looked so far: at label poverty, and at custodial fragmentation through pooling, with very little on obsolete data, noisy measurements or small subgroups, and with multi-institution evidence only for pooling. For the common case of many small hospitals that cannot share data and have no central coordinator, hierarchical borrowing with privatized releases and gossip gives every hospital the same number of virtual patients, pays the privacy cost only in the shared estimate, and runs over whatever collaboration graph exists. The model in which these results are exact is simple, but the conclusions it supports, that collaboration should be personalized, that privacy should be spent at the population level, and that network topology matters, hold well beyond it.
+Small data are the normal condition of clinical machine learning, not an exception to it. Treating smallness as a measurable, task-relative property, through the effective sample size and the smallness index, makes it possible to say how small a problem is and why. The Scarcity-Provenance taxonomy turns that diagnosis into a choice of remedy: identify which term of $\sigma$ is degraded, then import information from a channel that can address it, keeping in mind that re-expression adds none. Coding 290 works with it shows where the field has looked so far: at label poverty, and at custodial fragmentation through pooling, with very little on obsolete data or noisy measurements, in the corpus and in the wider literature alike, and with multi-institution evidence only for pooling. For the common case of many small hospitals that cannot share data and have no central coordinator, hierarchical borrowing with privatized releases and gossip gives every hospital nearly the same number of virtual patients, pays the privacy cost only in the shared estimate, and runs over whatever collaboration graph exists. The model in which these results are exact is simple. Simulation shows that its conclusions, that collaboration should be personalized, that privacy should be spent at the population level, and that network topology matters, largely survive the estimation of every unknown quantity and the move to logistic models, although strict privacy budgets can erase the gain; whether they hold in real hospital networks is the main question this paper leaves open.
 
 \begin{acks}
 This work is funded by national funds through FCT - Foundation for Science and Technology, I.P., within the scope of the research unit UID/00326 - Centre for Informatics and Systems of the University of Coimbra, \url{https://doi.org/10.54499/UID/00326/2025}.
@@ -942,332 +1018,7 @@ This work is funded by national funds through FCT - Foundation for Science and T
 
 
 \bibliographystyle{ACM-Reference-Format-recovered}
+\nocite{brasil2019artificial,brown2020language,kairouz2021advances}
 \bibliography{references}
-
-\appendix
-
-\section{The Coded Corpus}\label{app:corpus}
-
-Table~\ref{tab:corpus} lists all 290 works of the corpus with their coding under the scheme of Table~\ref{tab:coding}. The same data are released as a CSV file, together with the scripts that compute every count in Sections~\ref{sec:method} and~\ref{sec:evidence} and draw Figures~\ref{fig:corpus} and~\ref{fig:gapmap}.
-
-{\scriptsize
-\setlength{\tabcolsep}{4pt}
-\renewcommand{\arraystretch}{0.95}
-\begin{longtable}{@{}p{5.6cm}llll@{}}
-\caption{The coded corpus (290 works), grouped by primary provenance channel and sorted by year. Sec.: secondary channel. Scarcity: classes of Figure~\ref{fig:scarcity} the work targets or documents. Type: Method, Theory, Study (single-dataset empirical study), Multi-site (training or validation across institutions), Resource (dataset, benchmark or infrastructure), Review, Evidence (documented failure or risk). General: method not specific to health data.}\label{tab:corpus}\\
-\toprule
-Work & Modality & Sec. & Scarcity & Type\\
-\midrule
-\endfirsthead
-\toprule
-Work & Modality & Sec. & Scarcity & Type\\
-\midrule
-\endhead
-\bottomrule
-\endfoot
-\multicolumn{5}{@{}l}{\emph{P1 Pooling} (102)}\\
-\citet{dersimonian1986meta} & Tabular & P3 & C1, T2 & Method\\
-\citet{sweeney2002k} & Tabular &  & C2 & Method\\
-\citet{xiao2004fast} & General &  & C1 & Theory\\
-\citet{boyd2006randomized} & General &  & C1 & Theory\\
-\citet{dwork2006calibrating} & General &  & C2 & Theory\\
-\citet{gentry2009fully} & General &  & C2 & Theory\\
-\citet{nedic2009distributed} & General &  & C1 & Theory\\
-\citet{riley2010meta} & Tabular &  & C1, O2 & Review\\
-\citet{overhage2012validation} & EHR &  & C2 & Resource\\
-\citet{wu2012grid} & Tabular &  & C1 & Method\\
-\citet{jiang2013webglore} & Tabular &  & C1 & Resource\\
-\citet{gaye2014datashield} & Tabular &  & C1, C2 & Resource\\
-\citet{hripcsak2015observational} & EHR &  & C1, C2 & Resource\\
-\citet{lu2015webdisco} & Tabular &  & C1 & Resource\\
-\citet{abadi2016deep} & General &  & C2 & Method\\
-\citet{jochems2016distributed} & Tabular &  & C1 & Multi-site\\
-\citet{johnson2016mimic} & EHR &  & C1, C2 & Resource\\
-\citet{mandel2016smart} & EHR &  & C2 & Resource\\
-\citet{blanchard2017machine} & General &  & C1 & Method\\
-\citet{bonawitz2017practical} & General &  & C1, C2 & Method\\
-\citet{jochems2017developing} & Tabular &  & C1 & Multi-site\\
-\citet{kim2017federated} & EHR &  & C1 & Method\\
-\citet{lian2017can} & General &  & C1 & Theory\\
-\citet{mcmahan2017communication} & General &  & C1 & Method\\
-\citet{mironov2017renyi} & General &  & C2 & Theory\\
-\citet{papernot2017semi} & General & P4 & C2 & Method\\
-\citet{smith2017federated} & General & P3 & C1, T2 & Method\\
-\citet{vanhaesebrouck2017decentralized} & General & P3 & C1, T2 & Method\\
-\citet{bellet2018personalized} & General & P3 & C1, T2 & Method\\
-\citet{brisimi2018federated} & EHR &  & C1 & Method\\
-\citet{chang2018distributed} & Imaging &  & C1 & Multi-site\\
-\citet{cho2018secure} & Omics &  & C1, C2 & Method\\
-\citet{gupta2018distributed} & General &  & C1 & Method\\
-\citet{lee2018privacy} & EHR &  & C1, C2 & Method\\
-\citet{mcmahan2018learning} & General &  & C1, C2 & Method\\
-\citet{reps2018design} & EHR &  & C2 & Resource\\
-\citet{vepakomma2018split} & Multimodal &  & C1, C2 & Method\\
-\citet{zhao2018federated} & General &  & C1, T2 & Method\\
-\citet{choudhury2019differential} & EHR &  & C1, C2 & Method\\
-\citet{huang2019patient} & EHR &  & C1, T2 & Multi-site\\
-\citet{jordan2019communication} & General &  & C1 & Theory\\
-\citet{li2019privacy} & Imaging &  & C1, C2 & Method\\
-\citet{mohri2019agnostic} & General &  & C1, O3 & Method\\
-\citet{poirot2019split} & Imaging &  & C1, C2 & Method\\
-\citet{raisaro2019medco} & Multimodal &  & C1, C2 & Method\\
-\citet{roy2019braintorrent} & Imaging &  & C1 & Method\\
-\citet{sheller2019multi} & Imaging &  & C1 & Method\\
-\citet{suchard2019comprehensive} & EHR &  & C1, C2, O2 & Multi-site\\
-\citet{yang2019federated} & General &  & C1 & Review\\
-\citet{beyan2020distributed} & Multimodal &  & C1, C2 & Resource\\
-\citet{chen2020fedhealth} & Signals & P2 & C1, T2 & Method\\
-\citet{deist2020distributed} & Tabular &  & C1 & Multi-site\\
-\citet{tdinh2020personalized} & General & P3 & C1, T2 & Method\\
-\citet{duan2020learninglocal} & EHR &  & C1, O2 & Method\\
-\citet{duan2020learning} & EHR &  & C1, O2 & Method\\
-\citet{fallah2020personalized} & General & P2 & C1, T2 & Method\\
-\citet{ghosh2020efficient} & General &  & C1, T2 & Method\\
-\citet{hsieh2020non} & General &  & C1, T2 & Method\\
-\citet{kaissis2020secure} & Imaging &  & C1, C2 & Review\\
-\citet{karimireddy2020scaffold} & General &  & C1, T2 & Method\\
-\citet{koloskova2020unified} & General &  & C1 & Theory\\
-\citet{li2020federated} & General &  & C1, T2 & Method\\
-\citet{li2020multi} & Imaging & P2 & C1, T2 & Multi-site\\
-\citet{lin2020ensemble} & General & P4 & C1, T2 & Method\\
-\citet{rieke2020future} & Multimodal &  & C1, C2 & Review\\
-\citet{roth2020federated} & Imaging &  & C1, T2 & Multi-site\\
-\citet{sheller2020federated} & Imaging &  & C1, O1 & Multi-site\\
-\citet{wei2020federated} & General &  & C1, C2 & Method\\
-\citet{bai2021advancing} & Imaging &  & C1, T1 & Multi-site\\
-\citet{collins2021exploiting} & General & P2 & C1, T2 & Method\\
-\citet{dayan2021federated} & Multimodal &  & C1, T1, O2 & Multi-site\\
-\citet{dou2021federated} & Imaging &  & C1, T1 & Multi-site\\
-\citet{froelicher2021truly} & Omics &  & C1, C2 & Method\\
-\citet{guo2021multi} & Imaging &  & C1 & Method\\
-\citet{huang2021personalized} & General &  & C1, T2 & Method\\
-\citet{kairouz2021advances} & General &  & C1 & Review\\
-\citet{kaissis2021end} & Imaging &  & C1, C2 & Method\\
-\citet{li2021ditto} & General & P3 & C1, T2 & Method\\
-\citet{li2021fedbn} & General &  & C1, T2 & Method\\
-\citet{liu2021feddg} & Imaging & P6 & C1, T2 & Method\\
-\citet{marfoq2021federated} & General &  & C1, T2 & Method\\
-\citet{sarma2021federated} & Imaging &  & C1 & Multi-site\\
-\citet{tramer2021differentially} & General & P2 & C2 & Method\\
-\citet{vaid2021federated} & EHR &  & C1, T1 & Multi-site\\
-\citet{warnatherresthal2021swarm} & Multimodal &  & C1, O3 & Multi-site\\
-\citet{xu2021federated} & Multimodal &  & C1 & Review\\
-\citet{ziller2021medical} & Imaging &  & C2 & Method\\
-\citet{adnan2022federated} & Imaging &  & C1, C2 & Method\\
-\citet{cyffers2022privacy} & General &  & C1, C2 & Theory\\
-\citet{jiang2022harmofl} & Imaging &  & C1, T2 & Method\\
-\citet{lu2022federated} & Imaging &  & C1, E1 & Method\\
-\citet{nguyen2022federated} & Multimodal &  & C1 & Review\\
-\citet{ogierduterrail2022flamby} & Multimodal &  & C1, T2 & Resource\\
-\citet{pati2022federated} & Imaging &  & C1, O1 & Multi-site\\
-\citet{saldanha2022swarm} & Imaging &  & C1 & Multi-site\\
-\citet{tedeschini2022decentralized} & Imaging &  & C1 & Method\\
-\citet{xu2022closing} & Imaging &  & C1, T2 & Method\\
-\citet{kalra2023decentralized} & Imaging &  & C1, C2 & Method\\
-\citet{lu2023federated} & General &  & C1 & Method\\
-\citet{ogierduterrail2023federated} & Imaging &  & C1, O1 & Multi-site\\
-\citet{tan2023personalized} & General &  & C1, T2 & Review\\
-\citet{yan2023label} & Imaging & P4 & C1, E1 & Method\\
-\midrule
-\multicolumn{5}{@{}l}{\emph{P2 Proxy} (60)}\\
-\citet{baxter2000model} & General &  & O1, E1 & Theory\\
-\citet{bendavid2010theory} & General &  & T2 & Theory\\
-\citet{pan2010survey} & General &  & E1, T2 & Review\\
-\citet{choi2016doctor} & EHR &  & E1, T2 & Method\\
-\citet{gulshan2016development} & Imaging &  & E1 & Study\\
-\citet{maurer2016benefit} & General &  & O1 & Theory\\
-\citet{shin2016deep} & Imaging &  & E1 & Study\\
-\citet{tajbakhsh2016convolutional} & Imaging &  & E1 & Study\\
-\citet{esteva2017dermatologist} & Imaging &  & E1 & Study\\
-\citet{finn2017model} & General &  & O1, E1 & Method\\
-\citet{kamnitsas2017unsupervised} & Imaging & P4 & T2 & Method\\
-\citet{snell2017prototypical} & General &  & O1, E1 & Method\\
-\citet{alsentzer2019publicly} & Text &  & E1 & Method\\
-\citet{chen2019med3d} & Imaging &  & E1 & Method\\
-\citet{gurovich2019identifying} & Imaging &  & O1 & Method\\
-\citet{prabhu2019few} & Imaging &  & O1, O3 & Method\\
-\citet{raghu2019transfusion} & Imaging &  & E1 & Study\\
-\citet{zhang2019metapred} & EHR &  & O1, E1 & Method\\
-\citet{brown2020language} & General &  & E1 & Method\\
-\citet{lee2020biobert} & Text &  & E1 & Method\\
-\citet{li2020behrt} & EHR &  & E1, E3 & Method\\
-\citet{mahajan2020meta} & Imaging &  & O1 & Method\\
-\citet{roy2020squeeze} & Imaging &  & E1, O1 & Method\\
-\citet{tripuraneni2020theory} & General &  & E1 & Theory\\
-\citet{wang2020generalizing} & General &  & O1, E1 & Review\\
-\citet{azizi2021big} & Imaging & P4 & E1, T2 & Method\\
-\citet{du2021few} & General &  & E1 & Theory\\
-\citet{huang2021gloria} & Imaging & P4 & E1 & Method\\
-\citet{radford2021learning} & General &  & E1 & Method\\
-\citet{rasmy2021med} & EHR &  & E1, O2 & Method\\
-\citet{sowrirajan2021moco} & Imaging & P4 & E1 & Method\\
-\citet{steinberg2021language} & EHR &  & E1 & Method\\
-\citet{zhou2021models} & Imaging & P4 & E1 & Method\\
-\citet{agrawal2022large} & Text &  & E1 & Method\\
-\citet{guan2022domain} & Imaging &  & T2 & Review\\
-\citet{hospedales2022meta} & General &  & O1, E1 & Review\\
-\citet{hsieh2022gestaltmatcher} & Imaging &  & O1 & Method\\
-\citet{hu2022lora} & General &  & E1 & Method\\
-\citet{mei2022radimagenet} & Imaging &  & E1 & Resource\\
-\citet{tiu2022expert} & Imaging & P4 & E1 & Method\\
-\citet{wang2022medclip} & Imaging & P4 & E1 & Method\\
-\citet{zhang2022contrastive} & Imaging & P4 & E1 & Method\\
-\citet{banerjee2023machine} & Multimodal & P3 & O1 & Review\\
-\citet{hegselmann2023tabllm} & Tabular & P3 & E1, O2 & Method\\
-\citet{hollmann2023tabpfn} & Tabular & P3 & E3, O2 & Method\\
-\citet{jiang2023health} & Text &  & E1 & Method\\
-\citet{moor2023foundation} & Multimodal &  & E1, O1 & Review\\
-\citet{nori2023capabilities} & Text &  & E1 & Study\\
-\citet{singhal2023large} & Text &  & E1 & Method\\
-\citet{theodoris2023transfer} & Omics &  & E1, E3, O1 & Method\\
-\citet{wornow2023shaky} & EHR &  & E1, T2 & Review\\
-\citet{zhou2023foundation} & Imaging & P4 & E1, T2 & Method\\
-\citet{chen2024general} & Imaging &  & E1, O1 & Method\\
-\citet{cui2024scgpt} & Omics &  & E1, E3 & Method\\
-\citet{lu2024visual} & Imaging &  & E1, O1 & Method\\
-\citet{ma2024segment} & Imaging &  & E1 & Method\\
-\citet{pai2024foundation} & Imaging &  & E1, O1 & Method\\
-\citet{vorontsov2024foundation} & Imaging &  & E1, O1 & Method\\
-\citet{xu2024whole} & Imaging &  & E1 & Method\\
-\citet{hollmann2025accurate} & Tabular & P3 & E3, O2 & Method\\
-\midrule
-\multicolumn{5}{@{}l}{\emph{P3 Prior} (25)}\\
-\citet{stein1956inadmissibility} & General & P1 & O1, C1 & Theory\\
-\citet{efron1973steins} & General & P1 & O1, C1 & Theory\\
-\citet{tibshirani1996regression} & General &  & E3 & Method\\
-\citet{steyerberg2000prognostic} & Tabular &  & O2, E3 & Study\\
-\citet{lake2015human} & General &  & O1 & Method\\
-\citet{choi2017gram} & EHR &  & E3, O1 & Method\\
-\citet{rotmensch2017learning} & EHR & P4 & E3 & Method\\
-\citet{ma2018kame} & EHR &  & E3, O1 & Method\\
-\citet{arjovsky2019invariant} & General &  & T1, T2 & Method\\
-\citet{raissi2019physics} & General &  & O1, E3 & Method\\
-\citet{shang2019gamenet} & EHR &  & E3 & Method\\
-\citet{subbaswamy2019preventing} & EHR &  & T2 & Method\\
-\citet{castro2020causality} & Imaging &  & T2, E2 & Review\\
-\citet{kissas2020machine} & Imaging &  & E1 & Method\\
-\citet{lagergren2020biologically} & Tabular &  & E1, E3 & Method\\
-\citet{sahlicostabal2020physics} & Signals &  & O1, E1 & Method\\
-\citet{vancalster2020regression} & Tabular &  & O2 & Study\\
-\citet{gulrajani2021search} & General &  & T2 & Study\\
-\citet{karniadakis2021physics} & General &  & O1, E3 & Review\\
-\citet{kohler2021human} & Text &  & O1 & Resource\\
-\citet{lu2021neural} & Tabular &  & O1 & Method\\
-\citet{riley2021penalization} & Tabular &  & O2 & Study\\
-\citet{scholkopf2021causal} & General &  & T2 & Review\\
-\citet{zhang2021empirical} & Multimodal &  & T2 & Study\\
-\citet{rueden2023informed} & General &  & O1, E3 & Review\\
-\midrule
-\multicolumn{5}{@{}l}{\emph{P4 Unlabeled} (23)}\\
-\citet{scholkopf2012causal} & General &  & E1 & Theory\\
-\citet{agarwal2016learning} & EHR &  & E1, E2 & Method\\
-\citet{halpern2016electronic} & EHR & P3 & E1, E2 & Method\\
-\citet{bai2017semi} & Imaging &  & E1 & Method\\
-\citet{ratner2017snorkel} & General & P3 & E1, E2 & Method\\
-\citet{wang2017chestx} & Imaging &  & E1, E2 & Resource\\
-\citet{ilse2018attention} & Imaging &  & E1 & Method\\
-\citet{campanella2019clinical} & Imaging &  & E1 & Method\\
-\citet{cheplygina2019not} & Imaging & P2 & E1 & Review\\
-\citet{fries2019weakly} & Imaging &  & E1 & Method\\
-\citet{irvin2019chexpert} & Imaging &  & E1, E2 & Resource\\
-\citet{wang2019clinical} & Text & P3 & E1 & Method\\
-\citet{yu2019uncertainty} & Imaging &  & E1 & Method\\
-\citet{chaitanya2020contrastive} & Imaging & P2 & E1 & Method\\
-\citet{chen2020simple} & General & P2 & E1 & Method\\
-\citet{ouyang2020self} & Imaging & P2 & E1, O1 & Method\\
-\citet{sohn2020fixmatch} & General &  & E1 & Method\\
-\citet{tajbakhsh2020embracing} & Imaging & P6 & E1, E2 & Review\\
-\citet{taleb20203d} & Imaging & P2 & E1 & Method\\
-\citet{li2021transformation} & Imaging &  & E1 & Method\\
-\citet{lu2021data} & Imaging &  & E1 & Method\\
-\citet{he2022masked} & General & P2 & E1 & Method\\
-\citet{krishnan2022self} & Multimodal & P2 & E1 & Review\\
-\midrule
-\multicolumn{5}{@{}l}{\emph{P5 Procurement} (15)}\\
-\citet{peduzzi1996simulation} & Tabular &  & O2 & Theory\\
-\citet{settles2009active} & General &  & E1 & Review\\
-\citet{figueroa2012predicting} & Text &  & E1 & Method\\
-\citet{cho2015much} & Imaging &  & E1 & Study\\
-\citet{gal2017deep} & General &  & E1 & Method\\
-\citet{yang2017suggestive} & Imaging &  & E1 & Method\\
-\citet{smailagic2018medal} & Imaging &  & E1 & Method\\
-\citet{balki2019sample} & Imaging &  & E1, O1 & Review\\
-\citet{ghorbani2019data} & General &  & C1 & Method\\
-\citet{riley2019minimumsample} & Tabular &  & O2, E3 & Theory\\
-\citet{riley2019minimum} & Tabular &  & E3 & Theory\\
-\citet{smeden2019sample} & Tabular & P3 & O2 & Theory\\
-\citet{riley2020calculating} & Tabular &  & O2, E3 & Theory\\
-\citet{budd2021survey} & Imaging &  & E1 & Review\\
-\citet{nath2021diminishing} & Imaging &  & E1 & Method\\
-\midrule
-\multicolumn{5}{@{}l}{\emph{P6 Re-expression} (32)}\\
-\citet{chawla2002smote} & Tabular &  & O2 & Method\\
-\citet{goodfellow2014generative} & General &  & E1 & Method\\
-\citet{choi2017generating} & EHR &  & C2 & Method\\
-\citet{bowles2018gan} & Imaging &  & E1 & Method\\
-\citet{fernandez2018smote} & Tabular &  & O2 & Review\\
-\citet{fridadar2018gan} & Imaging &  & E1, O2 & Study\\
-\citet{shin2018medical} & Imaging &  & E1, C2 & Method\\
-\citet{walonoski2018synthea} & EHR & P3 & C2 & Resource\\
-\citet{zhang2018mixup} & General &  & E1 & Method\\
-\citet{baowaly2019synthesizing} & EHR &  & C2 & Method\\
-\citet{beaulieujones2019privacy} & Tabular & P1 & C2 & Method\\
-\citet{jordon2019pate} & Tabular & P1 & C2 & Method\\
-\citet{shorten2019survey} & General &  & E1 & Review\\
-\citet{xu2019modeling} & Tabular &  & C2 & Method\\
-\citet{yi2019generative} & Imaging &  & E1 & Review\\
-\citet{zhao2019data} & Imaging &  & E1 & Method\\
-\citet{goncalves2020generation} & EHR &  & C2 & Study\\
-\citet{ho2020denoising} & General &  & E1 & Method\\
-\citet{yoon2020anonymization} & EHR &  & C2 & Method\\
-\citet{zhang2020ensuring} & EHR &  & C2 & Method\\
-\citet{chaitanya2021semi} & Imaging & P4 & E1 & Method\\
-\citet{chen2021synthetic} & Multimodal &  & C2, O1 & Review\\
-\citet{chlap2021review} & Imaging &  & E1 & Review\\
-\citet{jordon2022synthetic} & General &  & C2 & Review\\
-\citet{stadler2022synthetic} & Tabular &  & C2 & Study\\
-\citet{goorbergh2022harm} & Tabular &  & O2 & Study\\
-\citet{borisov2023language} & Tabular & P2 & C2 & Method\\
-\citet{kazerouni2023diffusion} & Imaging &  & E1 & Review\\
-\citet{khader2023denoising} & Imaging &  & E1, C2 & Method\\
-\citet{kotelnikov2023tabddpm} & Tabular &  & C2 & Method\\
-\citet{ktena2024generative} & Imaging &  & O3, T2 & Method\\
-\citet{shumailov2024ai} & General &  & O3 & Evidence\\
-\midrule
-\multicolumn{5}{@{}l}{\emph{No remedy: documented scarcity, failure or risk} (33)}\\
-\citet{elemam2011systematic} & Tabular &  & C2 & Review\\
-\citet{button2013power} & General &  & O2 & Evidence\\
-\citet{shokri2017membership} & General &  & C2 & Evidence\\
-\citet{varoquaux2018cross} & Imaging &  & O1, O2 & Evidence\\
-\citet{zech2018variable} & Imaging &  & T2 & Evidence\\
-\citet{bagdasaryan2019differential} & General &  & O3, C2 & Evidence\\
-\citet{brasil2019artificial} & Multimodal &  & O1 & Review\\
-\citet{christodoulou2019systematic} & Tabular &  & O2 & Review\\
-\citet{jayaraman2019evaluating} & General &  & C2 & Evidence\\
-\citet{kim2019design} & Imaging &  & T2 & Review\\
-\citet{liu2019comparison} & Imaging &  & T2 & Review\\
-\citet{obermeyer2019dissecting} & EHR &  & O3 & Evidence\\
-\citet{rocher2019estimating} & Tabular &  & C2 & Evidence\\
-\citet{schwarz2019identification} & Imaging &  & C2 & Evidence\\
-\citet{zhu2019deep} & General &  & C1, C2 & Evidence\\
-\citet{geiping2020inverting} & General &  & C1, C2 & Evidence\\
-\citet{nagendran2020artificial} & Imaging &  & T2 & Review\\
-\citet{nguengangwakap2020estimating} & Tabular &  & O1 & Evidence\\
-\citet{oakdenrayner2020hidden} & Imaging &  & O3 & Evidence\\
-\citet{schaefer2020use} & Multimodal &  & O1 & Review\\
-\citet{willemink2020preparing} & Imaging &  & E1, E2, C2 & Review\\
-\citet{wynants2020prediction} & Multimodal &  & O2, T1 & Evidence\\
-\citet{chen2021ethical} & Multimodal &  & O3 & Review\\
-\citet{finlayson2021clinician} & Multimodal &  & T1, T2 & Evidence\\
-\citet{koh2021wilds} & Multimodal &  & T2 & Resource\\
-\citet{roberts2021common} & Imaging &  & O2, T1 & Evidence\\
-\citet{wong2021external} & EHR &  & T2 & Evidence\\
-\citet{carlini2022membership} & General &  & C2 & Evidence\\
-\citet{gichoya2022ai} & Imaging &  & O3, T2 & Evidence\\
-\citet{packhauser2022deep} & Imaging &  & C2 & Evidence\\
-\citet{varoquaux2022machine} & Imaging &  & O1, T2 & Evidence\\
-\citet{yu2022external} & Imaging &  & T2 & Review\\
-\citet{hatamizadeh2023do} & Imaging &  & C1, C2 & Evidence\\
-\end{longtable}}
 
 \end{document}

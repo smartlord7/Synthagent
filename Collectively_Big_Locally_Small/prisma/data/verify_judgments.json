@@ -1,0 +1,810 @@
+{
+"reviewer": "first author's protocol, applied by a single reviewer to title and abstract",
+"criteria": "I1, I2, X1-X3 of Section 5.2",
+"samples": [
+"verify_sample.json (seed 2026)",
+"verify_sample2.json (seed 7)"
+],
+"judgments": [
+{
+"id": "41915519",
+"eligible": true
+},
+{
+"id": "39622697",
+"eligible": true
+},
+{
+"id": "34753514",
+"eligible": true
+},
+{
+"id": "34327515",
+"eligible": true
+},
+{
+"id": "42044461",
+"eligible": false
+},
+{
+"id": "40918253",
+"eligible": false
+},
+{
+"id": "30399527",
+"eligible": false
+},
+{
+"id": "37425854",
+"eligible": true
+},
+{
+"id": "PPR1267707",
+"eligible": false
+},
+{
+"id": "31630012",
+"eligible": true
+},
+{
+"id": "35157695",
+"eligible": true
+},
+{
+"id": "PPR263403",
+"eligible": false
+},
+{
+"id": "36778519",
+"eligible": false
+},
+{
+"id": "40757668",
+"eligible": true
+},
+{
+"id": "42826575",
+"eligible": false
+},
+{
+"id": "42200970",
+"eligible": false
+},
+{
+"id": "41977960",
+"eligible": false
+},
+{
+"id": "40128502",
+"eligible": true
+},
+{
+"id": "42072855",
+"eligible": true
+},
+{
+"id": "36504698",
+"eligible": true
+},
+{
+"id": "42754118",
+"eligible": false
+},
+{
+"id": "35171766",
+"eligible": true
+},
+{
+"id": "39714484",
+"eligible": true
+},
+{
+"id": "41069048",
+"eligible": true
+},
+{
+"id": "38024281",
+"eligible": false
+},
+{
+"id": "40627238",
+"eligible": true
+},
+{
+"id": "39017949",
+"eligible": false
+},
+{
+"id": "38826026",
+"eligible": false
+},
+{
+"id": "38431142",
+"eligible": true
+},
+{
+"id": "34189540",
+"eligible": false
+},
+{
+"id": "42235476",
+"eligible": true
+},
+{
+"id": "39196746",
+"eligible": true
+},
+{
+"id": "42139083",
+"eligible": true
+},
+{
+"id": "30261823",
+"eligible": true
+},
+{
+"id": "32568677",
+"eligible": false
+},
+{
+"id": "40040103",
+"eligible": true
+},
+{
+"id": "40121926",
+"eligible": true
+},
+{
+"id": "36251917",
+"eligible": true
+},
+{
+"id": "41723754",
+"eligible": false
+},
+{
+"id": "PPR1247098",
+"eligible": true
+},
+{
+"id": "39818098",
+"eligible": true
+},
+{
+"id": "42644811",
+"eligible": false
+},
+{
+"id": "38600282",
+"eligible": true
+},
+{
+"id": "38701636",
+"eligible": true
+},
+{
+"id": "36120410",
+"eligible": true
+},
+{
+"id": "37367947",
+"eligible": true
+},
+{
+"id": "42129608",
+"eligible": false
+},
+{
+"id": "37988152",
+"eligible": true
+},
+{
+"id": "PPR556571",
+"eligible": false
+},
+{
+"id": "30634920",
+"eligible": true
+},
+{
+"id": "34891717",
+"eligible": true
+},
+{
+"id": "41930261",
+"eligible": true
+},
+{
+"id": "37289609",
+"eligible": true
+},
+{
+"id": "34533465",
+"eligible": false
+},
+{
+"id": "35144242",
+"eligible": true
+},
+{
+"id": "38007948",
+"eligible": false
+},
+{
+"id": "33561508",
+"eligible": true
+},
+{
+"id": "40553344",
+"eligible": false
+},
+{
+"id": "37454280",
+"eligible": false
+},
+{
+"id": "28065767",
+"eligible": false
+},
+{
+"id": "29678027",
+"eligible": true
+},
+{
+"id": "40506904",
+"eligible": true
+},
+{
+"id": "40299320",
+"eligible": false
+},
+{
+"id": "40181367",
+"eligible": false
+},
+{
+"id": "35573621",
+"eligible": false
+},
+{
+"id": "42739147",
+"eligible": true
+},
+{
+"id": "39753800",
+"eligible": false
+},
+{
+"id": "41762830",
+"eligible": false
+},
+{
+"id": "36528134",
+"eligible": false
+},
+{
+"id": "42317938",
+"eligible": false
+},
+{
+"id": "35199063",
+"eligible": true
+},
+{
+"id": "42625241",
+"eligible": false
+},
+{
+"id": "PPR1060006",
+"eligible": false
+},
+{
+"id": "37738107",
+"eligible": false
+},
+{
+"id": "40146029",
+"eligible": false
+},
+{
+"id": "32360892",
+"eligible": false
+},
+{
+"id": "38406798",
+"eligible": false
+},
+{
+"id": "42384315",
+"eligible": false
+},
+{
+"id": "37508906",
+"eligible": true
+},
+{
+"id": "39238537",
+"eligible": false
+},
+{
+"id": "40837777",
+"eligible": false
+},
+{
+"id": "40564042",
+"eligible": false
+},
+{
+"id": "42245005",
+"eligible": true
+},
+{
+"id": "40473283",
+"eligible": false
+},
+{
+"id": "32558996",
+"eligible": true
+},
+{
+"id": "41755159",
+"eligible": false
+},
+{
+"id": "34104876",
+"eligible": false
+},
+{
+"id": "32382048",
+"eligible": false
+},
+{
+"id": "42344002",
+"eligible": false
+},
+{
+"id": "39165116",
+"eligible": false
+},
+{
+"id": "37822851",
+"eligible": false
+},
+{
+"id": "40674369",
+"eligible": false
+},
+{
+"id": "38343260",
+"eligible": false
+},
+{
+"id": "40565458",
+"eligible": false
+},
+{
+"id": "37554627",
+"eligible": false
+},
+{
+"id": "29060833",
+"eligible": false
+},
+{
+"id": "PPR1057997",
+"eligible": false
+},
+{
+"id": "PPR110507",
+"eligible": false
+},
+{
+"id": "39987322",
+"eligible": false
+},
+{
+"id": "41666476",
+"eligible": false
+},
+{
+"id": "39880490",
+"eligible": false
+},
+{
+"id": "40989372",
+"eligible": false
+},
+{
+"id": "38445881",
+"eligible": false
+},
+{
+"id": "41387796",
+"eligible": false
+},
+{
+"id": "39974461",
+"eligible": false
+},
+{
+"id": "35696847",
+"eligible": false
+},
+{
+"id": "38867287",
+"eligible": true
+},
+{
+"id": "40349546",
+"eligible": false
+},
+{
+"id": "37862082",
+"eligible": false
+},
+{
+"id": "40781468",
+"eligible": false
+},
+{
+"id": "41864920",
+"eligible": false
+},
+{
+"id": "41450855",
+"eligible": false
+},
+{
+"id": "34892698",
+"eligible": false
+},
+{
+"id": "41590267",
+"eligible": false
+},
+{
+"id": "42805095",
+"eligible": false
+},
+{
+"id": "42712371",
+"eligible": false
+},
+{
+"id": "42191877",
+"eligible": false
+},
+{
+"id": "38711954",
+"eligible": false
+},
+{
+"id": "32755886",
+"eligible": false
+},
+{
+"id": "39593725",
+"eligible": false
+},
+{
+"id": "39573895",
+"eligible": true
+},
+{
+"id": "41646219",
+"eligible": true
+},
+{
+"id": "38083408",
+"eligible": true
+},
+{
+"id": "42460879",
+"eligible": false
+},
+{
+"id": "42278776",
+"eligible": true
+},
+{
+"id": "32746371",
+"eligible": true
+},
+{
+"id": "42121994",
+"eligible": true
+},
+{
+"id": "38700959",
+"eligible": true
+},
+{
+"id": "PPR688447",
+"eligible": true
+},
+{
+"id": "42389333",
+"eligible": false
+},
+{
+"id": "34507093",
+"eligible": false
+},
+{
+"id": "41056812",
+"eligible": true
+},
+{
+"id": "42533015",
+"eligible": true
+},
+{
+"id": "42179818",
+"eligible": true
+},
+{
+"id": "37081495",
+"eligible": true
+},
+{
+"id": "37531693",
+"eligible": true
+},
+{
+"id": "42302475",
+"eligible": true
+},
+{
+"id": "40776267",
+"eligible": true
+},
+{
+"id": "42148603",
+"eligible": false
+},
+{
+"id": "31141561",
+"eligible": true
+},
+{
+"id": "37342955",
+"eligible": true
+},
+{
+"id": "42376440",
+"eligible": true
+},
+{
+"id": "24910281",
+"eligible": true
+},
+{
+"id": "41895216",
+"eligible": true
+},
+{
+"id": "40964606",
+"eligible": true
+},
+{
+"id": "PPR256478",
+"eligible": true
+},
+{
+"id": "42361398",
+"eligible": false
+},
+{
+"id": "PPR873671",
+"eligible": true
+},
+{
+"id": "PPR95029",
+"eligible": false
+},
+{
+"id": "38077561",
+"eligible": false
+},
+{
+"id": "42451395",
+"eligible": false
+},
+{
+"id": "40987961",
+"eligible": true
+},
+{
+"id": "42472977",
+"eligible": false
+},
+{
+"id": "30195420",
+"eligible": true
+},
+{
+"id": "41806059",
+"eligible": false
+},
+{
+"id": "40146990",
+"eligible": true
+},
+{
+"id": "37507376",
+"eligible": true
+},
+{
+"id": "41712078",
+"eligible": true
+},
+{
+"id": "32302316",
+"eligible": true
+},
+{
+"id": "41939092",
+"eligible": false
+},
+{
+"id": "38796977",
+"eligible": false
+},
+{
+"id": "41156015",
+"eligible": false
+},
+{
+"id": "38970709",
+"eligible": false
+},
+{
+"id": "30942726",
+"eligible": true
+},
+{
+"id": "36506601",
+"eligible": false
+},
+{
+"id": "41769581",
+"eligible": false
+},
+{
+"id": "42320034",
+"eligible": false
+},
+{
+"id": "38616220",
+"eligible": false
+},
+{
+"id": "37345743",
+"eligible": false
+},
+{
+"id": "41755233",
+"eligible": false
+},
+{
+"id": "40834547",
+"eligible": false
+},
+{
+"id": "42354937",
+"eligible": false
+},
+{
+"id": "39133252",
+"eligible": false
+},
+{
+"id": "37850187",
+"eligible": true
+},
+{
+"id": "42506467",
+"eligible": false
+},
+{
+"id": "38905800",
+"eligible": false
+},
+{
+"id": "42512326",
+"eligible": false
+},
+{
+"id": "37822559",
+"eligible": false
+},
+{
+"id": "41672617",
+"eligible": false
+},
+{
+"id": "39839970",
+"eligible": false
+},
+{
+"id": "36515822",
+"eligible": false
+},
+{
+"id": "39393122",
+"eligible": false
+},
+{
+"id": "40389908",
+"eligible": false
+},
+{
+"id": "33054545",
+"eligible": false
+},
+{
+"id": "41124137",
+"eligible": false
+},
+{
+"id": "40078899",
+"eligible": false
+},
+{
+"id": "38508256",
+"eligible": false
+},
+{
+"id": "40151359",
+"eligible": false
+},
+{
+"id": "40880430",
+"eligible": false
+},
+{
+"id": "41180687",
+"eligible": false
+},
+{
+"id": "41430696",
+"eligible": false
+},
+{
+"id": "32120267",
+"eligible": true
+},
+{
+"id": "41775671",
+"eligible": false
+},
+{
+"id": "36066938",
+"eligible": false
+},
+{
+"id": "32978761",
+"eligible": false
+},
+{
+"id": "41453100",
+"eligible": false
+},
+{
+"id": "42404222",
+"eligible": false
+},
+{
+"id": "38769505",
+"eligible": true
+},
+{
+"id": "41179877",
+"eligible": false
+},
+{
+"id": "39585836",
+"eligible": false
+}
+]
+}
