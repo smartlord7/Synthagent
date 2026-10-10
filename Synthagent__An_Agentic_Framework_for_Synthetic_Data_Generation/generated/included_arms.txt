@@ -7,6 +7,7 @@ no_context_join
 no_post_processing
 no_rule_injection
 ponder_strategy
+raw_prompting
 smote
 strategy_dense
 strategy_diverse

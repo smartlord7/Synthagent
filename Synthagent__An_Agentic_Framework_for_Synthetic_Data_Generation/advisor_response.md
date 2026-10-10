@@ -58,3 +58,9 @@ Cada comentário do PDF anotado e o que mudou no manuscrito.
 - O deployment entre hospitais (Secção IV-F, equações e figura) foi mantido, agora ligado ao problema dos hospitais em silos do survey, e claramente assinalado como não avaliado.
 - Foi adicionada a Tabela IX (variação de F1 por dataset, com o pior caso) para tornar os resultados legíveis.
 - Os números são os mesmos; nenhum resultado foi alterado.
+
+## Revisão narrativa (10 out.)
+
+- O texto foi reescrito como uma narrativa contínua. A introdução vai do contexto clínico à definição de small data, às estratégias, ao porquê dos LLMs e ao problema, e daí à abordagem e às RQs. Cada secção abre com a ligação à anterior e fecha com a transição para a seguinte.
+- O resumo já não nomeia modelos; refere apenas categorias (LLM comercial; LLMs de duas gerações e dois tamanhos; método de interpolação; modelos generativos profundos).
+- Foi adicionada a baseline de prompting direto, a mesma LLM sem a control layer (Tabela IV). Em nenhuma das 60 execuções devolveu o número pedido de registos: entregou em média 87,6% (entre 57% e 103%) e houve 10 respostas inválidas. A fidelidade e a utilidade são as mesmas que com o Synthagent, que custa apenas mais 1,9% de tokens. É a evidência direta do que a control layer acrescenta (RQ1).
