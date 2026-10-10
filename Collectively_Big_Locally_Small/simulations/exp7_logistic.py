@@ -4,12 +4,12 @@
 features plus an intercept, theta_k = mu + u_k with u_k ~ N(0, tau^2 I). Features are clipped so that
 ||x|| <= sqrt(5), which bounds the sensitivity of the released estimate.
 
-Release (requirement R2): each hospital fits the anchored ridge objective
-    (1/n) sum_i loss_i(theta) + (lambda/2) ||theta - mu_0||^2,  lambda = 0.2,
+Release (requirement R2): each hospital fits the ridge objective centred on a fixed public reference c = 0
+    (1/n) sum_i loss_i(theta) + (lambda/2) ||theta - c||^2,  lambda = 0.2,
 whose minimizer has L2 sensitivity 2 sqrt(5) / (n lambda) (Chaudhuri et al., 2011), and releases it
 with isotropic Gaussian noise. mu_0 is a published model (channel P3), equal to mu plus N(0, 0.3^2 I).
-Anyone can then undo the ridge shrinkage to first order, theta = mu_0 + (I + lambda I) I^{-1} (release - mu_0),
-with I the per-patient Fisher information at mu_0 under the public feature distribution; this is
+Anyone can then undo the ridge shrinkage to first order, theta = c + (I + lambda I) I^{-1} (release - c),
+with I the per-patient Fisher information at c under the public feature distribution; this is
 post-processing. The variance of each de-shrunk release is public: [I^{-1}]_dd / n_j plus the
 correspondingly amplified Gaussian-mechanism noise.
 
@@ -94,7 +94,8 @@ def one_rep(rng, n, tau2, eps, avg):
     K = len(n)
     theta = MU + np.sqrt(tau2) * rng.standard_normal((K, P))
     mu0 = MU + ANCHOR_SD * rng.standard_normal(P)
-    Info = fisher_info(rng, mu0)  # public: computed at the anchor on the public feature distribution
+    c = np.zeros(P)  # fixed public reference on which the private releases are centred (not the anchor)
+    Info = fisher_info(rng, c)  # public: computed at c on the public feature distribution
     Iinv = np.linalg.inv(Info)
     A = (Info + LAM * np.eye(P)) @ Iinv  # undoes the ridge shrinkage to first order (post-processing)
     data = []
@@ -103,9 +104,9 @@ def one_rep(rng, n, tau2, eps, avg):
         data.append((X, rng.binomial(1, expit(X @ theta[k])).astype(float)))
     # releases
     s2 = dp_noise_var(n, eps, clip=R_X / LAM)  # (2 C / n)^2 ... with C = R_X / LAM
-    rel = np.array([fit(X, y, mu0, np.full(P, len(y) * LAM)) for X, y in data])
+    rel = np.array([fit(X, y, c, np.full(P, len(y) * LAM)) for X, y in data])
     rel = rel + np.sqrt(s2)[:, None] * rng.standard_normal((K, P))
-    rel = mu0 + (rel - mu0) @ A.T
+    rel = c + (rel - c) @ A.T
     r = np.diag(Iinv)[None, :] / n[:, None] + s2[:, None] * np.diag(A @ A.T)[None, :]
     # network borrowing, coordinatewise (the Averager works on (replicates, K) arrays)
     t2, mu_t, M = (np.empty((K, P)) for _ in range(3))
