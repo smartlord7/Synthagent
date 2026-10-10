@@ -30,7 +30,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 DATA = HERE / "data"
-SOURCES = ["pubmed", "medrxiv", "arxiv", "arxiv_epmc"]
+SOURCES = ["pubmed", "medrxiv", "arxiv_epmc"]
 
 EXCLUDED_TYPES = {"Editorial", "Letter", "Comment", "Published Erratum", "Erratum", "Practice Guideline", "Guideline",
                   "Consensus Statement", "Consensus Development Conference", "Video-Audio Media", "Historical Article",

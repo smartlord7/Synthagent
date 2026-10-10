@@ -3,9 +3,9 @@
 Sources executed:
   PubMed       NCBI E-utilities, title/abstract fields;
   medRxiv      through Europe PMC (preprint source PPR), title/abstract;
-  arXiv        the arXiv API (all fields), with truncated terms expanded to their common forms
-               because the API has no wildcard; the Europe PMC arXiv subset is also queried and
-               merged at deduplication.
+  arXiv        the records Europe PMC indexes (its life-science categories), through Europe PMC.
+               A direct search of the arXiv API (search_arxiv, kept below) was abandoned because
+               the API rejected the full query.
 Sources not executed here, because they need a subscription or an API key: Scopus, Web of Science,
 IEEE Xplore and the ACM Digital Library. Exports from them (RIS or CSV) can be added with
 import_exports.py and are then deduplicated and screened with the rest.
@@ -175,7 +175,8 @@ def main():
     log = dict(search_date=SEARCH_DATE, run_on=str(date.today()), sources={})
     only = set(sys.argv[1:])
     jobs = [("pubmed", search_pubmed), ("medrxiv", lambda: search_epmc("medRxiv")),
-            ("arxiv_epmc", lambda: search_epmc("arXiv")), ("arxiv", search_arxiv)]
+            ("arxiv_epmc", lambda: search_epmc("arXiv"))]
+    # search_arxiv (the arXiv API) is kept for reference but not run: the API rejected the full query.
     if (DATA / "search_log.json").exists():
         log["sources"] = json.load(open(DATA / "search_log.json"))["sources"]
     for name, f in jobs:

@@ -7,9 +7,11 @@ The project was first rebuilt 1:1 from `recovered_main.pdf`, which is kept unmod
 ## Build
 
 ```sh
-latexmk -pdf main.tex                         # the paper (52 pages)
+latexmk -pdf main.tex                         # the paper (54 pages, ACM review mode)
 cd supplement && latexmk -pdf supplement.tex  # the online supplement (26 pages); build main.tex first
 ```
+
+`main.tex` is set up for submission to ACM Computing Surveys (`review` mode: line numbers and ACM metadata). For a preprint, swap the two `\documentclass` lines at the top.
 
 You need TeX Live with `acmart` (v2.03 or later), `algorithm2e`, `pifont`, `makecell`, `xr` and TikZ. All figures and generated numbers are committed, so no Python is needed to build. To regenerate them you need Python 3 with numpy, scipy, matplotlib 3.11 and requests:
 
@@ -39,7 +41,7 @@ python3 prisma/search.py && python3 prisma/screen.py && python3 prisma/fetch_cor
 
 ## Systematic search (`prisma/`)
 
-Section 5.4 of the paper runs the protocol query on PubMed (E-utilities), arXiv (its API), and medRxiv and arXiv via Europe PMC, for 2010 to 8 October 2026.
+Section 5.4 of the paper runs the protocol query on PubMed (E-utilities) and on medRxiv and the life-science part of arXiv via Europe PMC, for 2010 to 8 October 2026.
 
 | Script | Does |
 |---|---|
@@ -79,7 +81,25 @@ Each script writes a figure to `supplement/figures/` and its numbers to `supplem
   - The claim that GHB is never worse than local estimation is now limited to known τ² and M.
   - The caption of Table 6 now says the method was checked in simulation, not on real data.
   - A new subsection, §8.7, presents the simulation study, with Figures 12–14 and Table 7; the supplement gives the full design.
-- **Bibliography.** Added Greenhalgh and Peacock (2005).
+- **Bibliography.**
+  - Added Greenhalgh and Peacock (2005) and Chaudhuri et al. (2011).
+  - Filled pages, volume, number, publisher and DOI for six entries from Crossref (title-matched).
+  - 54 entries still lack page numbers. These are ICLR papers (no page numbers exist), arXiv preprints, and NeurIPS and PMLR papers, whose proceedings sites are blocked by this environment's network policy.
+- **Theory hardened.**
+  - **§2.** Sample complexity is now defined uniformly over a family of distributions; with a single known distribution it is trivially zero. The VC rate has its scope (0-1 loss), Riley's criteria are marked as surrogates, the effective sample size names its estimator, and the shift factor states its support condition.
+  - **§4.**
+    - The external resource is renamed Z to avoid a clash with M in §8.
+    - The no-free-lunch proposition gains a risk statement valid for every θ and every loss, without relying on Fano's inequality.
+    - The six channels are shown to be exhaustive by construction.
+    - The matching text no longer contradicts the matrix.
+  - **§8.**
+    - Proposition 8.1 is shown to need only means and variances, and to bound the risk averaged over sites, not each site's.
+    - "The same B" is now "almost the same B".
+    - Proposition 8.2 states its clipping assumptions, and a new paragraph sets the scope of the privacy guarantee: patients at several hospitals, public site sizes, ℓ2 release of vector heads, and the sensitivity of non-mean estimators.
+    - Proposition 8.4 gains part (iii), the leave-one-out estimate under gossip and its error.
+    - Algorithm 1 no longer gossips the unprivatized variance V_k: only privatized heads leave a hospital.
+    - The admissibility claim is corrected to dominance, the GMRF sum is over unordered pairs, and "orders of magnitude" is made precise.
+- **Search.** The direct arXiv search was dropped; arXiv is covered only through Europe PMC's life-science subset, and the text says so.
 
 ## Recovery from `recovered_main.pdf`
 

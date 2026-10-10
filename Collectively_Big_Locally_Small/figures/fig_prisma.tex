@@ -11,11 +11,11 @@
   arr/.style={-{Stealth[length=1.6mm]}, line width=0.5pt, draw=edgec}]
 % column headers
 \node[hdr=7.45cm] (hdb) at (2.31, 0) {Identification of records via databases};
-\node[hdr=5.25cm] (hot) at (9.25, 0) {Identification via other methods};
+\node[hdr=5.0cm] (hot) at (9.13, 0) {Identification via other methods};
 % identification
 \node[box, anchor=north west] (id) at (-1.45, -0.45) {Records identified ($n=\PrismaIdentTotal$):\\
   PubMed ($n=\PrismaIdentPubMed$)\\ medRxiv via Europe PMC ($n=\PrismaIdentMedRxiv$)\\
-  arXiv API ($n=\PrismaIdentArXiv$)\\ arXiv via Europe PMC ($n=\PrismaIdentArXivEPMC$)};
+  arXiv via Europe PMC ($n=\PrismaIdentArXivEPMC$)};
 \node[box=3.75cm, anchor=north west] (rm) at (2.30, -0.45) {Records removed before screening:\\
   duplicates ($n=\PrismaDuplicates$)\\ no abstract or not in English ($n=\PrismaAutoNoAbstract$)\\
   out-of-scope publication type, X1 ($n=\PrismaAutoType$)};
@@ -29,7 +29,7 @@
   guideline or statement, X1 ($n=\PrismaExclGuideline$)\\
   no learning method ($n=\PrismaExclNoLearning$)};
 \node[box=2.45cm, anchor=north west] (oa) at (6.40, -2.45) {Works assessed in full text ($n=\PrismaBibTotal$)};
-\node[box=2.45cm, anchor=north west] (ox) at (9.35, -2.45) {Excluded as background ($n=\PrismaBgTotal$): textbooks, regulations, guidelines, X1 ($n=\PrismaBgXOne$); scaling with abundant data, X2 ($n=\PrismaBgXTwo$); general theory, X3 ($n=\PrismaBgXThree$)};
+\node[box=2.25cm, anchor=north west] (ox) at (9.30, -2.45) {Excluded as background ($n=\PrismaBgTotal$): textbooks, regulations, guidelines, X1 ($n=\PrismaBgXOne$); scaling with abundant data, X2 ($n=\PrismaBgXTwo$); general theory, X3 ($n=\PrismaBgXThree$)};
 % included
 \node[box, anchor=north west] (el) at (-1.45, -5.55) {Records eligible on title and abstract, coded by dictionary for the field-level map ($n=\PrismaEligible$), of which in the coded corpus ($n=\PrismaCorpusRetrieved$)};
 \node[box=2.45cm, anchor=north west] (in) at (6.40, -5.55) {Works coded in full and included in the synthesis ($n=\PrismaCoded$)};
