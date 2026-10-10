@@ -1,0 +1,106 @@
+{
+ "rows": [
+  [
+   "Sim 2: $\\tau^2$=0.018, $\\epsilon$=1",
+   {
+    "GHB": 0.6998744957235079,
+    "Global (no DP)": 2.435476274571225
+   }
+  ],
+  [
+   "Sim 2: $\\tau^2$=1, $\\epsilon$=1",
+   {
+    "GHB": 0.9882585417177155,
+    "Global (no DP)": 134.2833757766927
+   }
+  ],
+  [
+   "Sim 9: heavy-tailed site effects",
+   {
+    "GHB": 0.6852583121940155,
+    "Robust GHB": 0.6527149767458085,
+    "GHB + opt-out": 0.6670004060690256
+   }
+  ],
+  [
+   "Sim 9: outlier at the smallest hospital (that hospital)",
+   {
+    "GHB": 6.6589788815426605,
+    "Robust GHB": 4.601257274601823,
+    "GHB + opt-out": 4.363127851290132
+   }
+  ],
+  [
+   "Sim 9: outlier at the largest hospital (that hospital)",
+   {
+    "GHB": 1.1069304044266588,
+    "Robust GHB": 1.0592238727496284,
+    "GHB + opt-out": 1.1069304044266588
+   }
+  ],
+  [
+   "Sim 12: 3 dishonest hospitals, lie of 8$\\tau$",
+   {
+    "GHB": 0.9283189063198576,
+    "Robust GHB": 0.8916254343972841
+   }
+  ],
+  [
+   "Sim 12: 3 dishonest hospitals, lie of 30$\\tau$",
+   {
+    "GHB": 0.9956497806433129,
+    "Robust GHB": 0.7235972437959349
+   }
+  ],
+  [
+   "Sim 13: 80% of links fail each round, T=60",
+   {
+    "GHB": 0.7255350573306409
+   }
+  ],
+  [
+   "Sim 8: logistic, $\\tau^2$=0.05",
+   {
+    "GHB": 0.6061562997590597,
+    "Ditto-style": 0.7209572027160236,
+    "Meta-analysis": 1.7763792830411749,
+    "FedAvg": 2.2507705234788595,
+    "Global (no DP)": 0.6093755764278723
+   }
+  ],
+  [
+   "Sim 8: logistic, $\\tau^2$=0.5",
+   {
+    "GHB": 1.0292908628859216,
+    "Ditto-style": 1.0037729182851114,
+    "Meta-analysis": 5.706089438161688,
+    "FedAvg": 6.144437816237473,
+    "Global (no DP)": 4.60375220175002
+   }
+  ],
+  [
+   "Sim 10: logistic, case-mix shift 1.0",
+   {
+    "GHB": 0.6470694651559785,
+    "Ditto-style": 0.7506183540882955,
+    "Meta-analysis": 3.203259853510523,
+    "FedAvg": 3.652557067520654,
+    "Global (no DP)": 0.8660932772305093
+   }
+  ],
+  [
+   "Sim 11: anchor wrong by 2 s.d.",
+   {
+    "GHB": 0.2974144857503213,
+    "GHB, overconfident anchor": 0.8376258955805184,
+    "GHB + conflict check": 0.29755637323815703
+   }
+  ],
+  [
+   "Sim 7: logistic, strict budget $\\epsilon$=0.3",
+   {
+    "GHB": 0.9570439334948779
+   }
+  ]
+ ]
+}

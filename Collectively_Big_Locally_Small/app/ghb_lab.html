@@ -1,0 +1,806 @@
+<title>GHB Simulation Lab</title>
+<style>
+/* Layout: a tabbed bench; each tab is a control column beside a stack of instrument charts, stacking on narrow screens. */
+:root{
+  --bg:#f3f5f8; --panel:#ffffff; --ink:#15202c; --muted:#566373; --line:#d6dce4; --grid:#e7ebf0;
+  --accent:#1f5ea8; --accent-ink:#ffffff;
+  --s-local:#7b8794; --s-pool:#b0731a; --s-oracle:#5b48b0; --s-ghb:#0d7a6f; --s-robust:#a3376d; --s-opt:#c4561b; --s-gmrf:#2f6fbf;
+  --good:#1f7a43; --warn:#a86a00; --bad:#b3261e;
+  --div-neg:#2b6cb0; --div-mid:#f1f3f6; --div-pos:#c0561b;
+  --f-display:"Source Serif 4", Georgia, "Times New Roman", serif;
+  --f-body:"IBM Plex Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --f-mono:"IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0e131a; --panel:#151c25; --ink:#e2e8ef; --muted:#97a3b2; --line:#2a3442; --grid:#1f2833;
+  --accent:#6ea6ec; --accent-ink:#0b1320;
+  --s-local:#8e9aa7; --s-pool:#e0a446; --s-oracle:#a294f0; --s-ghb:#3fc2b2; --s-robust:#e07aac; --s-opt:#f08a4b; --s-gmrf:#6ea6ec;
+  --good:#5cc286; --warn:#e2ad48; --bad:#f07a70;
+  --div-neg:#5b9be0; --div-mid:#222b36; --div-pos:#ee8a4c; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0e131a; --panel:#151c25; --ink:#e2e8ef; --muted:#97a3b2; --line:#2a3442; --grid:#1f2833;
+  --accent:#6ea6ec; --accent-ink:#0b1320;
+  --s-local:#8e9aa7; --s-pool:#e0a446; --s-oracle:#a294f0; --s-ghb:#3fc2b2; --s-robust:#e07aac; --s-opt:#f08a4b; --s-gmrf:#6ea6ec;
+  --good:#5cc286; --warn:#e2ad48; --bad:#f07a70;
+  --div-neg:#5b9be0; --div-mid:#222b36; --div-pos:#ee8a4c; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;margin:0}
+.wrap{max-width:1240px;margin:0 auto;padding-inline:16px;padding-block:20px 48px}
+header h1{font-family:var(--f-display);font-weight:600;font-size:1.65rem;margin:0;text-wrap:balance}
+header p{margin:4px 0 0;color:var(--muted);max-width:70ch}
+.tabs{display:flex;gap:2px;overflow-x:auto;border-bottom:1px solid var(--line);margin-top:18px;scrollbar-width:thin}
+.tabs button{font:inherit;font-size:.9rem;background:none;border:0;border-bottom:2px solid transparent;color:var(--muted);padding:9px 12px;cursor:pointer;white-space:nowrap}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent);font-weight:600}
+.tabs button:hover{color:var(--ink)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.panel{display:grid;grid-template-columns:300px minmax(0,1fr);gap:20px;margin-top:18px}
+@media (max-width:860px){.panel{grid-template-columns:minmax(0,1fr)}}
+.controls{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:14px;display:flex;flex-direction:column;gap:10px;align-self:start}
+.controls h3{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:6px 0 0;font-weight:600}
+.ctl{display:flex;flex-direction:column;gap:2px}
+.ctl label{display:flex;justify-content:space-between;gap:8px;font-size:.86rem}
+.ctl output{font-family:var(--f-mono);font-variant-numeric:tabular-nums;font-size:.82rem;color:var(--accent)}
+.ctl input[type=range]{width:100%;accent-color:var(--accent)}
+.ctl select{font:inherit;font-size:.86rem;padding:4px 6px;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:4px}
+.chk{display:flex;gap:8px;align-items:center;font-size:.86rem}
+.chk input{accent-color:var(--accent)}
+.out{display:flex;flex-direction:column;gap:16px;min-width:0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:14px;min-width:0}
+.card h2{font-family:var(--f-display);font-size:1.08rem;font-weight:600;margin:0 0 2px}
+.card .sub{color:var(--muted);font-size:.84rem;margin:0 0 10px;max-width:80ch}
+canvas.chart{width:100%;display:block}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);border-radius:4px;padding:6px 10px;min-width:118px;background:var(--bg)}
+.chip .k{font-size:.72rem;color:var(--muted);letter-spacing:.04em;text-transform:uppercase}
+.chip .v{font-family:var(--f-mono);font-variant-numeric:tabular-nums;font-size:1.05rem}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.8rem;color:var(--muted);margin-top:6px}
+.legend span::before{content:"";display:inline-block;width:14px;height:3px;background:var(--c);vertical-align:middle;margin-right:5px;border-radius:2px}
+.legend span.dash::before{background:repeating-linear-gradient(90deg,var(--c) 0 4px,transparent 4px 7px)}
+.btns{display:flex;gap:8px;flex-wrap:wrap}
+.btn{font:inherit;font-size:.86rem;padding:6px 12px;border-radius:4px;border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);cursor:pointer}
+.btn.ghost{background:transparent;color:var(--accent)}
+.pill{display:inline-block;font-size:.75rem;font-weight:600;padding:2px 8px;border-radius:999px;border:1px solid currentColor}
+.r-good{color:var(--good)} .r-warn{color:var(--warn)} .r-bad{color:var(--bad)}
+.prog{font-family:var(--f-mono);font-size:.78rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.note{font-size:.82rem;color:var(--muted);margin:0}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+@media (max-width:1100px){.grid2{grid-template-columns:minmax(0,1fr)}}
+.about{max-width:72ch}
+.about h2{font-family:var(--f-display);font-weight:600;font-size:1.15rem;margin:18px 0 4px}
+.about li{margin:4px 0}
+code,.mono{font-family:var(--f-mono);font-size:.88em}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;600&family=Source+Serif+4:opsz,wght@8..60,600&display=swap">
+
+<div class="wrap">
+<header>
+  <h1>GHB Simulation Lab</h1>
+  <p>Interactive companion to <em>Collectively Big, Locally Small</em>: measure how small a dataset is, then watch Graph Hierarchical Borrowing move information between hospitals over a sparse graph, with differential privacy and no server.</p>
+</header>
+<nav class="tabs" role="tablist" aria-label="Sections">
+  <button role="tab" id="tab-calc" aria-controls="p-calc" aria-selected="true">Small-data calculator</button>
+  <button role="tab" id="tab-net" aria-controls="p-net" aria-selected="false" tabindex="-1">Network and gossip</button>
+  <button role="tab" id="tab-borrow" aria-controls="p-borrow" aria-selected="false" tabindex="-1">Borrowing live</button>
+  <button role="tab" id="tab-stress" aria-controls="p-stress" aria-selected="false" tabindex="-1">Stress tests</button>
+  <button role="tab" id="tab-priv" aria-controls="p-priv" aria-selected="false" tabindex="-1">Privacy accounting</button>
+  <button role="tab" id="tab-gmrf" aria-controls="p-gmrf" aria-selected="false" tabindex="-1">Regional structure</button>
+  <button role="tab" id="tab-about" aria-controls="p-about" aria-selected="false" tabindex="-1">About</button>
+</nav>
+
+<section class="panel" id="p-calc" role="tabpanel" aria-labelledby="tab-calc">
+  <div class="controls" id="c-calc"></div>
+  <div class="out">
+    <div class="card">
+      <h2>Smallness index</h2>
+      <p class="sub">n<sub>eff</sub> = n &middot; (1/DEFF) &middot; &rho;<sub>L</sub> &middot; (1&minus;2&eta;)&sup2; &middot; &rho;<sub>S</sub>, DEFF = 1+(m&#772;&minus;1)ICC; Riley's first criterion n* = p / ((S&minus;1) ln(1&minus;R&sup2;<sub>CS</sub>/S)); &sigma; = n*/n<sub>eff</sub>. Defaults reproduce the ICU example of Section 2.</p>
+      <div class="chips" id="calc-chips"></div>
+    </div>
+    <div class="card">
+      <h2>Deflation from n to n<sub>eff</sub></h2>
+      <p class="sub">Each bar is the sample left after one mechanism of Eq. (neff); the dashed line is the Riley requirement n*.</p>
+      <canvas class="chart" id="cv-deflate" data-h="250"></canvas>
+    </div>
+  </div>
+</section>
+
+<section class="panel" id="p-net" role="tabpanel" aria-labelledby="tab-net" hidden>
+  <div class="controls" id="c-net"></div>
+  <div class="out">
+    <div class="card">
+      <h2>Collaboration graph</h2>
+      <p class="sub">Node area is proportional to hospital size; colour is the value each hospital currently holds (blue low, orange high). Faded edges failed in the last round.</p>
+      <div class="chips" id="net-chips"></div>
+      <canvas class="chart" id="cv-graph" data-h="380" style="margin-top:10px"></canvas>
+      <div class="btns" style="margin-top:8px">
+        <button class="btn" id="g-play">Play</button>
+        <button class="btn ghost" id="g-step">Step</button>
+        <button class="btn ghost" id="g-reset">Reset values</button>
+        <span class="prog" id="g-round">round 0</span>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Consensus error</h2>
+      <p class="sub">&Vert;x<sup>t</sup>&minus;x&#772;1&Vert; / &Vert;x<sup>0</sup>&minus;x&#772;1&Vert; on a log scale, against the bound &lambda;<sup>t</sup> of Proposition 8.4 (dashed).</p>
+      <canvas class="chart" id="cv-cons" data-h="240"></canvas>
+      <div class="legend" id="lg-cons"></div>
+    </div>
+  </div>
+</section>
+
+<section class="panel" id="p-borrow" role="tabpanel" aria-labelledby="tab-borrow" hidden>
+  <div class="controls" id="c-borrow"></div>
+  <div class="out">
+    <div class="card">
+      <h2>Risk relative to local estimation</h2>
+      <p class="sub">Monte Carlo R<sub>k</sub>/v<sub>k</sub> for every hospital, sorted by size (x-axis labels are n<sub>k</sub>). Below 1, the hospital gains from the network. <span class="prog" id="b-prog"></span></p>
+      <div class="chips" id="b-chips"></div>
+      <canvas class="chart" id="cv-rel" data-h="280" style="margin-top:10px"></canvas>
+      <div class="legend" id="lg-rel"></div>
+    </div>
+    <div class="card">
+      <h2>Effective sample size gain</h2>
+      <p class="sub">n<sub>eff,k</sub>/n<sub>k</sub> = v<sub>k</sub>/R<sub>k</sub>. Dashed: theory 1 + B/n<sub>k</sub> with B = &sigma;&sup2;/(&tau;&sup2;+M) from Eq. (M). Small hospitals gain most because every hospital receives about the same B.</p>
+      <canvas class="chart" id="cv-gain" data-h="250"></canvas>
+      <div class="legend" id="lg-gain"></div>
+    </div>
+  </div>
+</section>
+
+<section class="panel" id="p-stress" role="tabpanel" aria-labelledby="tab-stress" hidden>
+  <div class="controls" id="c-stress"></div>
+  <div class="out">
+    <div class="card">
+      <h2>(a) Atypical hospitals</h2>
+      <p class="sub">Relative risk binned by the standardized site effect |u<sub>k</sub>|/&tau;. Gaussian GHB, a Student-t<sub>3</sub> prior with the same variance (posterior mean by quadrature), and opt-out (keep the local estimate when |&theta;&#770;<sub>k</sub>&minus;&mu;&#771;<sub>k</sub>|/&radic;(v<sub>k</sub>+&tau;&#770;&sup2;+M<sub>k</sub>) &gt; 3). <span class="prog" id="a-prog"></span></p>
+      <div class="chips" id="a-chips"></div>
+      <canvas class="chart" id="cv-atyp" data-h="260" style="margin-top:10px"></canvas>
+      <div class="legend" id="lg-atyp"></div>
+    </div>
+    <div class="card">
+      <h2>(b) Dishonest hospitals</h2>
+      <p class="sub">The f largest hospitals release &mu;+b&tau; instead of their privatized estimate. Mean relative risk of the honest hospitals for plain GHB and for robust screening (weighted median, MAD spread, drop standardized distance &gt; 3, then DerSimonian&ndash;Laird and inverse-variance pooling). <span class="prog" id="z-prog"></span></p>
+      <canvas class="chart" id="cv-byz" data-h="250"></canvas>
+      <div class="legend" id="lg-byz"></div>
+    </div>
+    <div class="card">
+      <h2>(c) Joint release by small hospitals</h2>
+      <p class="sub">Small hospitals release in groups of g through secure aggregation, so the noise is calibrated to the group size. Closed-form B = &sigma;&sup2;/(&tau;&sup2;+M) with inverse-variance pooling of the releases.</p>
+      <canvas class="chart" id="cv-joint" data-h="250"></canvas>
+      <div class="legend" id="lg-joint"></div>
+    </div>
+  </div>
+</section>
+
+<section class="panel" id="p-priv" role="tabpanel" aria-labelledby="tab-priv" hidden>
+  <div class="controls" id="c-priv"></div>
+  <div class="out">
+    <div class="card">
+      <h2>Noise per release for r refits</h2>
+      <p class="sub">Total budget (&epsilon;,&delta;) split over r releases. Basic composition: each release gets (&epsilon;/r, &delta;/r) with the classical Gaussian mechanism. zCDP: s chosen so &rho; = &Delta;&sup2;/(2s&sup2;) adds up to the total &rho;, with &epsilon; = &rho; + 2&radic;(&rho; ln(1/&delta;)).</p>
+      <div class="chips" id="p-chips"></div>
+      <canvas class="chart" id="cv-noise" data-h="240" style="margin-top:10px"></canvas>
+      <div class="legend" id="lg-noise"></div>
+    </div>
+    <div class="card">
+      <h2>Borrowed patients B after r refits</h2>
+      <p class="sub">B averaged over the hospitals of the size profile, from Eq. (M) with the per-release noise above.</p>
+      <canvas class="chart" id="cv-privB" data-h="240"></canvas>
+      <div class="legend" id="lg-privB"></div>
+    </div>
+  </div>
+</section>
+
+<section class="panel" id="p-gmrf" role="tabpanel" aria-labelledby="tab-gmrf" hidden>
+  <div class="controls" id="c-gmrf"></div>
+  <div class="out">
+    <div class="card">
+      <h2>Exchangeable GHB against the GMRF prior</h2>
+      <p class="sub">&theta;<sub>k</sub> = r<sub>region(k)</sub> + u<sub>k</sub>. GMRF: 100 Jacobi sweeps on the privatized releases over the regional similarity graph, then each hospital's final update with its own noise-free estimate (&gamma; = 0). The curve sweeps &beta; on the same replicates; the marker is your &beta;. <span class="prog" id="m-prog"></span></p>
+      <div class="chips" id="m-chips"></div>
+      <canvas class="chart" id="cv-gmrf" data-h="260" style="margin-top:10px"></canvas>
+      <div class="legend" id="lg-gmrf"></div>
+    </div>
+  </div>
+</section>
+
+<section class="panel" id="p-about" role="tabpanel" aria-labelledby="tab-about" hidden style="display:block">
+  <div class="card about">
+    <h2>What the simulations assume</h2>
+    <ul>
+      <li><strong>Gaussian model.</strong> Hospital k has a parameter &theta;<sub>k</sub> = &mu; + u<sub>k</sub> with u<sub>k</sub> ~ N(0, &tau;&sup2;) and a local estimate &theta;&#770;<sub>k</sub> with variance v<sub>k</sub> = &sigma;&sup2;/n<sub>k</sub>; here &sigma;&sup2; = 1 and &mu; = 0.</li>
+      <li><strong>Honest but curious.</strong> Every hospital follows the protocol and releases what it should, except in the dishonest-hospital stress test.</li>
+      <li><strong>Public sizes.</strong> Site sizes n<sub>k</sub>, the per-patient variance and the noise variances are public, so weights computed from them leak nothing new.</li>
+      <li><strong>Clipping.</strong> Per-patient contributions are clipped in &ell;<sub>2</sub> norm to C, so one patient moves a release by at most 2C/n<sub>k</sub>, and clipping is assumed to add no bias.</li>
+      <li><strong>Only releases leave a hospital.</strong> Each hospital releases one Gaussian-mechanism estimate; gossip, the estimate of &tau;&sup2; and the leave-one-out mean are post-processing and cost no extra privacy. A hospital uses its own estimate without noise.</li>
+      <li><strong>Risk is averaged over hospitals.</strong> Propositions 8.1 and 8.2 hold for a hospital drawn from the population. A particular atypical hospital can lose by borrowing, as the stress test shows.</li>
+      <li><strong>Releases are centred on a fixed public reference.</strong> They are never centred on the knowledge anchor, which would make the anchor part of what is released. The anchor is switched off (&gamma; = 0) in the GMRF tab.</li>
+      <li><strong>Plug-in versus oracle.</strong> The oracle uses the true &tau;&sup2; and the exact equal-weight leave-one-out mean. Plug-in GHB estimates &tau;&sup2; by DerSimonian&ndash;Laird and forms an inverse-variance leave-one-out mean, both through T rounds of Metropolis&ndash;Hastings gossip.</li>
+    </ul>
+    <h2>Source</h2>
+    <p>Formulas follow Section 2 (Eq. neff, Eq. riley, smallness index) and Section 8 (Propositions 8.1, 8.2, 8.4, the GMRF Jacobi update and Algorithm 1) of the paper, and the reference implementations in <code>simulations/</code>. The paper size profile is <code>site_sizes()</code> from <code>simulations/ghb.py</code>; the regional and sparse random graphs for K = 24 are the seeded graphs of <code>scripts/fig_gossip.py</code>. Other graphs and size profiles use this page's own seeded generator, so they differ from numpy draws.</p>
+  </div>
+</section>
+</div>
+
+<script>
+"use strict";
+/*MATH-BEGIN*/
+const PAPER_SIZES=[16,22,42,51,59,60,68,74,82,86,87,91,95,103,148,159,177,197,199,211,228,340,390,479];
+const PAPER_EDGES={
+ regional:[[0,3],[0,4],[0,5],[1,2],[1,3],[1,4],[1,5],[2,4],[2,5],[3,4],[3,20],[5,10],[6,8],[6,9],[6,10],[6,11],[7,8],[7,9],[7,11],[8,9],[8,11],[9,14],[10,11],[12,13],[12,14],[12,15],[12,16],[12,17],[13,14],[13,16],[13,17],[14,15],[14,16],[14,17],[15,16],[15,17],[16,17],[17,19],[18,19],[18,20],[18,21],[18,22],[19,20],[19,22],[20,21],[20,23],[21,22],[21,23],[22,23]],
+ random:[[0,1],[0,3],[0,14],[0,17],[0,18],[1,3],[1,4],[1,16],[2,8],[2,12],[2,18],[2,21],[3,8],[4,5],[4,9],[4,15],[4,21],[4,22],[5,6],[5,8],[5,18],[6,16],[7,10],[7,23],[8,16],[8,20],[9,20],[9,22],[10,23],[11,12],[11,20],[12,15],[12,18],[12,23],[13,22],[14,15],[17,19],[18,21],[18,23],[19,22],[20,21],[21,22]]
+};
+function makeRng(seed){
+  let a=(seed>>>0)||1;
+  const u=()=>{a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};
+  let spare=null;
+  const n=()=>{if(spare!==null){const s=spare;spare=null;return s;}let x,y,s;do{x=2*u()-1;y=2*u()-1;s=x*x+y*y;}while(s>=1||s===0);const m=Math.sqrt(-2*Math.log(s)/s);spare=y*m;return x*m;};
+  const t=nu=>{let c=0;for(let i=0;i<nu;i++){const z=n();c+=z*z;}return n()/Math.sqrt(c/nu);};
+  return {u,n,t};
+}
+// Section 2
+function neffParts(n,mbar,icc,rhoL,eta,rhoS){
+  const deff=1+(mbar-1)*icc;
+  const s1=n/deff,s2=s1*rhoL,s3=s2*(1-2*eta)**2,s4=s3*rhoS;
+  return {deff,steps:[n,s1,s2,s3,s4],neff:s4};
+}
+function r2csMax(prev){return 1-Math.exp(2*(prev*Math.log(prev)+(1-prev)*Math.log(1-prev)));}
+function rileyN(p,frac,prev,S){const R2=frac*r2csMax(prev);return p/((S-1)*Math.log(1-R2/S));}
+function regime(s){return s<=1?["sufficient","r-good"]:s<=10?["strained","r-warn"]:s<=100?["small","r-bad"]:["extreme","r-bad"];}
+// Section 8
+function dpVar(n,eps,delta,C){if(!isFinite(eps))return 0;const sens=2*C/n;return (sens*Math.sqrt(2*Math.log(1.25/delta))/eps)**2;}
+function eqM(sizes,k,tau2,eps,delta,C){let s=0;const K=sizes.length;for(let j=0;j<K;j++)if(j!==k)s+=tau2+1/sizes[j]+dpVar(sizes[j],eps,delta,C);return s/((K-1)**2);}
+function lognormalSizes(K,median,spread,seed,lo=15,hi=1500){
+  const r=makeRng(seed*7919+13);const a=[];
+  for(let i=0;i<K;i++)a.push(Math.min(hi,Math.max(lo,Math.round(Math.exp(Math.log(median)+spread*r.n())))));
+  return a.sort((x,y)=>x-y);
+}
+function edgesToAdj(K,edges){const A=Array.from({length:K},()=>new Float64Array(K));for(const [i,j] of edges){A[i][j]=1;A[j][i]=1;}return A;}
+function topology(kind,K,p,seed){
+  const E=[];
+  if(kind==="ring"||kind==="ring2"){const h=kind==="ring"?1:2;for(let i=0;i<K;i++)for(let s=1;s<=h;s++){const j=(i+s)%K;if(j!==i)E.push([i,j]);}}
+  else if(kind==="regional"){
+    if(K===24&&seed===0)return edgesToAdj(K,PAPER_EDGES.regional);
+    const r=makeRng(1000+seed),C=4,size=Math.floor(K/C);
+    const grp=i=>Math.min(C-1,Math.floor(i/size));
+    const members=c=>{const m=[];for(let i=0;i<K;i++)if(grp(i)===c)m.push(i);return m;};
+    for(let c=0;c<C;c++){const m=members(c);for(let a=0;a<m.length;a++)for(let b=a+1;b<m.length;b++)if(r.u()<0.8)E.push([m[a],m[b]]);}
+    for(let c=0;c<C;c++){const m=members(c),m2=members((c+1)%C);E.push([m[Math.floor(r.u()*m.length)],m2[Math.floor(r.u()*m2.length)]]);}
+  } else {
+    if(K===24&&seed===0&&Math.abs(p-0.15)<1e-9)return edgesToAdj(K,PAPER_EDGES.random);
+    const r=makeRng(2000+seed+Math.round(p*1000)*31);
+    for(let i=0;i<K;i++)for(let j=i+1;j<K;j++)if(r.u()<p)E.push([i,j]);
+  }
+  return edgesToAdj(K,E);
+}
+function connected(A){const K=A.length,seen=new Uint8Array(K),st=[0];seen[0]=1;let c=1;while(st.length){const i=st.pop();for(let j=0;j<K;j++)if(A[i][j]&&!seen[j]){seen[j]=1;c++;st.push(j);}}return c===K;}
+function metropolisHastings(A){
+  const K=A.length,deg=A.map(r=>r.reduce((s,x)=>s+x,0));
+  const W=Array.from({length:K},()=>new Float64Array(K));
+  for(let k=0;k<K;k++){let s=0;for(let l=0;l<K;l++)if(A[k][l]){W[k][l]=1/(1+Math.max(deg[k],deg[l]));s+=W[k][l];}W[k][k]=1-s;}
+  return W;
+}
+function symEig(M){ // cyclic Jacobi, returns eigenvalues
+  const n=M.length,a=M.map(r=>Float64Array.from(r));
+  for(let sweep=0;sweep<100;sweep++){
+    let off=0;for(let i=0;i<n;i++)for(let j=i+1;j<n;j++)off+=a[i][j]*a[i][j];
+    if(off<1e-22)break;
+    for(let p=0;p<n;p++)for(let q=p+1;q<n;q++){
+      if(Math.abs(a[p][q])<1e-300)continue;
+      const th=(a[q][q]-a[p][p])/(2*a[p][q]);
+      const t=Math.sign(th||1)/(Math.abs(th)+Math.sqrt(th*th+1)),c=1/Math.sqrt(t*t+1),s=t*c;
+      for(let k=0;k<n;k++){const akp=a[k][p],akq=a[k][q];a[k][p]=c*akp-s*akq;a[k][q]=s*akp+c*akq;}
+      for(let k=0;k<n;k++){const apk=a[p][k],aqk=a[q][k];a[p][k]=c*apk-s*aqk;a[q][k]=s*apk+c*aqk;}
+    }
+  }
+  return a.map((r,i)=>r[i]).sort((x,y)=>x-y);
+}
+function slem(W){const ev=symEig(W);return Math.max(Math.abs(ev[ev.length-2]),Math.abs(ev[0]));}
+function matMul(A,B){const n=A.length,C=Array.from({length:n},()=>new Float64Array(n));for(let i=0;i<n;i++)for(let k=0;k<n;k++){const a=A[i][k];if(a===0)continue;const Bk=B[k],Ci=C[i];for(let j=0;j<n;j++)Ci[j]+=a*Bk[j];}return C;}
+function matPow(W,T){let R=null,B=W;while(T>0){if(T&1)R=R?matMul(R,B):B;T>>=1;if(T)B=matMul(B,B);}return R;}
+function avgOp(P,K){
+  if(!P)return y=>{let s=0;for(let i=0;i<K;i++)s+=y[i];const m=s/K,o=new Float64Array(K);o.fill(m);return o;};
+  return y=>{const o=new Float64Array(K);for(let k=0;k<K;k++){let s=0;const Pk=P[k];for(let j=0;j<K;j++)s+=Pk[j]*y[j];o[k]=s;}return o;};
+}
+const map=(K,f)=>{const o=new Float64Array(K);for(let i=0;i<K;i++)o[i]=f(i);return o;};
+function dersimonianLaird(x,r,avg){
+  const K=x.length,w=map(K,i=>1/r[i]);
+  const S1=avg(w),Sx=avg(map(K,i=>w[i]*x[i])),Sxx=avg(map(K,i=>w[i]*x[i]*x[i])),S11=avg(map(K,i=>w[i]*w[i]));
+  return map(K,k=>{const s1=Math.max(K*S1[k],1e-12),Q=K*Sxx[k]-(K*Sx[k])**2/s1,den=Math.max(s1-K*S11[k]/s1,1e-12);return Math.max(0,(Q-(K-1))/den);});
+}
+function borrow(x,r,avg){ // plug-in: DL tau2, inverse-variance leave-one-out mean, M
+  const K=x.length,t2=dersimonianLaird(x,r,avg),w=map(K,i=>1/(t2[i]+r[i]));
+  const Aw=avg(w),Awx=avg(map(K,i=>w[i]*x[i]));
+  const Sw=map(K,k=>Math.max(K*Aw[k]-w[k],1e-12));
+  return {t2,mu:map(K,k=>(K*Awx[k]-w[k]*x[k])/Sw[k]),M:map(K,k=>1/Sw[k])};
+}
+function shrink(th,v,b){const K=th.length;return map(K,k=>{const a=(b.t2[k]+b.M[k])/(b.t2[k]+b.M[k]+v[k]);return a*th[k]+(1-a)*b.mu[k];});}
+function oracleHB(th,x,v,s2,tau2){
+  const K=th.length;let sx=0,stot=0;const tot=map(K,i=>tau2+v[i]+s2[i]);
+  for(let i=0;i<K;i++){sx+=x[i];stot+=tot[i];}
+  return map(K,k=>{const mu=(sx-x[k])/(K-1),M=(stot-tot[k])/((K-1)**2),a=(tau2+M)/(tau2+M+v[k]);return a*th[k]+(1-a)*mu;});
+}
+function pooled(th,n){let a=0,b=0;for(let i=0;i<th.length;i++){a+=n[i]*th[i];b+=n[i];}return a/b;}
+// one replicate of the model with Gaussian releases
+function drawRep(rng,n,tau2,eps,delta,C,uFn){
+  const K=n.length,v=map(K,i=>1/n[i]),s2=map(K,i=>dpVar(n[i],eps,delta,C));
+  const theta=map(K,i=>uFn?uFn(i):Math.sqrt(tau2)*rng.n());
+  const th=map(K,i=>theta[i]+Math.sqrt(v[i])*rng.n());
+  const x=map(K,i=>th[i]+Math.sqrt(s2[i])*rng.n());
+  return {v,s2,theta,th,x,r:map(K,i=>v[i]+s2[i])};
+}
+// Student-t3 prior posterior mean by quadrature on z in [-8,8]
+const ZG=(()=>{const g=[];for(let i=0;i<=160;i++)g.push(-8+i*0.1);return g;})();
+function robustPosteriorMean(th,v,mu,varPrior,nu=3){
+  const sv=Math.sqrt(v),sc=Math.sqrt(varPrior*(nu-2)/nu);let lw=new Float64Array(ZG.length),mx=-Infinity;
+  for(let i=0;i<ZG.length;i++){const g=th+sv*ZG[i],q=(g-mu)/sc;lw[i]=-0.5*ZG[i]*ZG[i]-(nu+1)/2*Math.log1p(q*q/nu);if(lw[i]>mx)mx=lw[i];}
+  let a=0,b=0;for(let i=0;i<ZG.length;i++){const w=Math.exp(lw[i]-mx);a+=w*(th+sv*ZG[i]);b+=w;}
+  return a/b;
+}
+function median(arr){const s=Array.from(arr).sort((a,b)=>a-b),m=s.length>>1;return s.length%2?s[m]:(s[m-1]+s[m])/2;}
+function robustScreenGHB(th,x,r,v){
+  const K=x.length,o=Array.from({length:K},(_,i)=>i).sort((a,b)=>x[a]-x[b]);
+  let tw=0;for(const i of o)tw+=1/r[i];
+  let c=0,idx=0;for(const i of o){c+=1/r[i];if(c/tw<0.5)idx++;}
+  const m=x[o[Math.min(idx,K-1)]];
+  const mad=median(map(K,i=>Math.abs(x[i]-m))),t0=Math.max((1.4826*mad)**2-median(r),0);
+  const keep=Array.from({length:K},(_,i)=>Math.abs(x[i]-m)/Math.sqrt(r[i]+t0)<=3);
+  const xk=[],rk=[];for(let i=0;i<K;i++)if(keep[i]){xk.push(x[i]);rk.push(r[i]);}
+  const t2=xk.length>1?dersimonianLaird(Float64Array.from(xk),Float64Array.from(rk),avgOp(null,xk.length))[0]:0;
+  const w=map(K,i=>keep[i]?1/(t2+r[i]):0);let sw=0,swx=0;for(let i=0;i<K;i++){sw+=w[i];swx+=w[i]*x[i];}
+  return {est:map(K,k=>{const S=Math.max(sw-w[k],1e-12),mu=(swx-w[k]*x[k])/S,M=1/S,a=(t2+M)/(t2+M+v[k]);return a*th[k]+(1-a)*mu;}),keep};
+}
+// joint release (closed form)
+function jointB(nSmall,kSmall,nLarge,kLarge,g,tau2,eps,delta,C){
+  const units=[];for(let i=0;i<kSmall;i+=g)units.push(Math.min(g,kSmall-i));
+  let inv=0;
+  for(const m of units){const N=m*nSmall;inv+=1/(tau2*m*nSmall*nSmall/(N*N)+1/N+dpVar(N,eps,delta,C));}
+  for(let i=0;i<kLarge;i++){const N=nLarge;inv+=1/(tau2+1/N+dpVar(N,eps,delta,C));}
+  return 1/(tau2+1/inv);
+}
+// privacy accounting
+function noiseBasic(Delta,eps,delta,r){return Delta*Math.sqrt(2*Math.log(1.25*r/delta))*r/eps;}
+function zcdpRho(eps,delta){const L=Math.log(1/delta),a=-Math.sqrt(L)+Math.sqrt(L+eps);return a*a;}
+function noiseZcdp(Delta,eps,delta,r){const rho=zcdpRho(eps,delta)/r;return Delta/Math.sqrt(2*rho);}
+function meanB(sizes,tau2,s2fn){
+  const K=sizes.length,tot=sizes.map(n=>tau2+1/n+s2fn(n)),S=tot.reduce((a,b)=>a+b,0);
+  let b=0;for(let k=0;k<K;k++)b+=1/(tau2+(S-tot[k])/((K-1)**2));return b/K;
+}
+// GMRF (gamma = 0, complete graph within regions)
+function gmrfEst(th,x,v,r,region,R,beta,sweeps){
+  const K=th.length,deg=new Float64Array(R),cnt=new Float64Array(R);for(let i=0;i<K;i++)cnt[region[i]]++;
+  for(let q=0;q<R;q++)deg[q]=cnt[q]-1;
+  let z=Float64Array.from(x);const rs=new Float64Array(R);
+  for(let s=0;s<sweeps;s++){rs.fill(0);for(let i=0;i<K;i++)rs[region[i]]+=z[i];
+    z=map(K,i=>{const q=region[i];return (x[i]/r[i]+beta*(rs[q]-z[i]))/(1/r[i]+beta*deg[q]);});}
+  rs.fill(0);for(let i=0;i<K;i++)rs[region[i]]+=z[i];
+  return map(K,i=>{const q=region[i];return (th[i]/v[i]+beta*(rs[q]-z[i]))/(1/v[i]+beta*deg[q]);});
+}
+function shuffle(arr,seed){const r=makeRng(seed),a=arr.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(r.u()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+/*MATH-END*/
+
+/* ---------------- UI infrastructure ---------------- */
+const $=id=>document.getElementById(id);
+const reduceMotion=matchMedia("(prefers-reduced-motion: reduce)").matches;
+const fmt=(x,d=3)=>{if(!isFinite(x))return "∞";const a=Math.abs(x);if(a!==0&&(a<1e-3||a>=1e5))return x.toExponential(2);return a>=100?x.toFixed(0):x.toFixed(d);};
+const CTL={};
+function buildControls(cid,specs){
+  const box=$(cid);
+  for(const s of specs){
+    if(s.h){const h=document.createElement("h3");h.textContent=s.h;box.appendChild(h);continue;}
+    const d=document.createElement("div");
+    if(s.type==="check"){d.className="chk";d.innerHTML=`<input type="checkbox" id="${s.id}" ${s.value?"checked":""}><label for="${s.id}">${s.label}</label>`;}
+    else if(s.type==="select"){d.className="ctl";d.innerHTML=`<label for="${s.id}">${s.label}</label><select id="${s.id}">${s.options.map(o=>`<option value="${o[0]}" ${o[0]===s.value?"selected":""}>${o[1]}</option>`).join("")}</select>`;}
+    else{d.className="ctl";const v0=s.log?Math.log10(s.value):s.value;
+      d.innerHTML=`<label for="${s.id}"><span>${s.label}</span><output id="${s.id}-o"></output></label><input type="range" id="${s.id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${v0}">`;}
+    box.appendChild(d);CTL[s.id]=s;
+  }
+  box.addEventListener("input",e=>{if(e.target.id)showVal(e.target.id);});
+  for(const s of specs)if(s.id&&!s.type)showVal(s.id);
+}
+function val(id){const s=CTL[id],el=$(id);if(s.type==="check")return el.checked;if(s.type==="select")return el.value;const x=parseFloat(el.value);return s.log?10**x:x;}
+function showVal(id){const s=CTL[id];if(!s||s.type)return;const o=$(id+"-o");if(o)o.textContent=s.fmt?s.fmt(val(id)):fmt(val(id));}
+function debounce(f,ms){let t;return()=>{clearTimeout(t);t=setTimeout(f,ms);};}
+function chips(id,items){$(id).innerHTML=items.map(([k,v,cls])=>`<div class="chip"><div class="k">${k}</div><div class="v ${cls||""}">${v}</div></div>`).join("");}
+function legend(id,items){$(id).innerHTML=items.map(([name,tok,dash])=>`<span class="${dash?"dash":""}" style="--c:var(${tok})">${name}</span>`).join("");}
+
+// job scheduler: chunks run inside requestAnimationFrame with a shared time budget
+const jobs=new Map();
+function runJob(name,gen){jobs.set(name,gen);if(jobs.size===1)requestAnimationFrame(tick);}
+function tick(){
+  const t0=performance.now();
+  while(jobs.size&&performance.now()-t0<14){
+    for(const [name,g] of jobs){const r=g.next();if(r.done)jobs.delete(name);if(performance.now()-t0>=14)break;}
+  }
+  if(jobs.size){if(document.hidden)setTimeout(tick,30);else requestAnimationFrame(tick);}
+}
+
+// theme colours
+function tok(name){return getComputedStyle(document.documentElement).getPropertyValue(name).trim()||"#888";}
+function hex2rgb(h){h=h.replace("#","");if(h.length===3)h=h.split("").map(c=>c+c).join("");const n=parseInt(h,16);return [n>>16&255,n>>8&255,n&255];}
+function lerpCol(a,b,t){const A=hex2rgb(a),B=hex2rgb(b);return `rgb(${A.map((x,i)=>Math.round(x+(B[i]-x)*t)).join(",")})`;}
+
+// canvas charts
+const charts={};
+function setupCanvas(cv){
+  const w=cv.getBoundingClientRect().width;if(!w)return null;
+  const h=+cv.dataset.h*(window.innerWidth<520?0.82:1),dpr=window.devicePixelRatio||1;
+  cv.style.height=h+"px";cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);
+  const c=cv.getContext("2d");c.setTransform(dpr,0,0,dpr,0,0);return {c,w,h};
+}
+function niceTicks(a,b,n=5){const span=b-a||1,st=10**Math.floor(Math.log10(span/n)),err=span/n/st,step=st*(err>=7.5?10:err>=3.5?5:err>=1.5?2:1);const t=[];for(let x=Math.ceil(a/step)*step;x<=b+step*1e-9;x+=step)t.push(+x.toPrecision(12));return t;}
+function logTicks(a,b){const t=[],lo=Math.floor(Math.log10(a)),hi=Math.ceil(Math.log10(b));const mult=hi-lo<=2?[1,2,5]:[1];for(let e=lo;e<=hi;e++)for(const m of mult){const x=m*10**e;if(x>=a*0.999&&x<=b*1.001)t.push(x);}return t;}
+function plot(id,spec){charts[id]=spec;drawChart(id);}
+function drawChart(id){
+  const spec=charts[id],cv=$(id);if(!spec||!cv)return;
+  if(spec.custom){spec.custom(cv);return;}
+  const S=setupCanvas(cv);if(!S)return;const {c,w,h}=S;
+  const ink=tok("--ink"),muted=tok("--muted"),grid=tok("--grid"),line=tok("--line");
+  const L=54,R=12,T=10,B=spec.x.label?42:26,pw=w-L-R,ph=h-T-B;
+  let xs=[],ys=[];
+  for(const s of spec.series)for(const p of s.pts)if(isFinite(p[0])&&isFinite(p[1])){xs.push(p[0]);ys.push(p[1]);}
+  for(const hl of spec.hlines||[])ys.push(hl.y);
+  if(!xs.length){c.fillStyle=muted;c.font="13px "+tok("--f-body");c.fillText("Computing…",L,T+20);return;}
+  let x0=spec.x.min??Math.min(...xs),x1=spec.x.max??Math.max(...xs),y0=spec.y.min??Math.min(...ys),y1=spec.y.max??Math.max(...ys);
+  if(spec.y.log){y0=Math.max(y0,spec.y.floor||1e-12);if(y1<=y0)y1=y0*10;y0=10**Math.floor(Math.log10(y0)*4)/1;y0=Math.max(y0,spec.y.floor||1e-12);}
+  else{if(spec.y.zero)y0=Math.min(0,y0);const pad=(y1-y0)*0.06||0.1;y1+=pad;if(!spec.y.zero&&spec.y.min==null)y0-=pad;}
+  if(x1===x0){x1=x0+1;}
+  const X=v=>L+(spec.x.log?(Math.log(v)-Math.log(x0))/(Math.log(x1)-Math.log(x0)):(v-x0)/(x1-x0))*pw;
+  const Y=v=>T+ph-(spec.y.log?(Math.log(Math.max(v,y0))-Math.log(y0))/(Math.log(y1)-Math.log(y0)):(v-y0)/(y1-y0))*ph;
+  c.font="11px "+tok("--f-mono");c.lineWidth=1;
+  const yt=spec.y.log?logTicks(y0,y1):niceTicks(y0,y1);
+  c.textAlign="right";c.textBaseline="middle";
+  for(const t of yt){const yy=Math.round(Y(t))+0.5;c.strokeStyle=grid;c.beginPath();c.moveTo(L,yy);c.lineTo(L+pw,yy);c.stroke();c.fillStyle=muted;c.fillText(spec.y.fmt?spec.y.fmt(t):fmt(t,2).replace(/\.?0+$/,"")||"0",L-6,yy);}
+  c.textAlign="center";c.textBaseline="top";
+  if(spec.x.cats){const labs=spec.x.cats,step=Math.max(1,Math.ceil(labs.length/(pw/34)));for(let i=0;i<labs.length;i+=step){c.fillStyle=muted;c.fillText(labs[i],X(i),T+ph+6);}}
+  else{const xt=spec.x.log?logTicks(x0,x1):niceTicks(x0,x1,Math.max(3,Math.floor(pw/70)));for(const t of xt){const xx=Math.round(X(t))+0.5;c.strokeStyle=grid;c.beginPath();c.moveTo(xx,T);c.lineTo(xx,T+ph);c.stroke();c.fillStyle=muted;c.fillText(spec.x.fmt?spec.x.fmt(t):fmt(t,2).replace(/\.?0+$/,"")||"0",xx,T+ph+6);}}
+  c.strokeStyle=line;c.strokeRect(L+0.5,T+0.5,pw,ph);
+  if(spec.x.label){c.fillStyle=muted;c.font="12px "+tok("--f-body");c.fillText(spec.x.label,L+pw/2,T+ph+22);}
+  if(spec.y.label){c.save();c.translate(12,T+ph/2);c.rotate(-Math.PI/2);c.textBaseline="middle";c.fillStyle=muted;c.font="12px "+tok("--f-body");c.fillText(spec.y.label,0,0);c.restore();}
+  c.save();c.beginPath();c.rect(L,T,pw,ph);c.clip();
+  for(const hl of spec.hlines||[]){c.strokeStyle=tok(hl.color||"--muted");c.setLineDash(hl.dash?[5,4]:[]);c.lineWidth=1;c.beginPath();c.moveTo(L,Y(hl.y));c.lineTo(L+pw,Y(hl.y));c.stroke();
+    if(hl.label){c.setLineDash([]);c.fillStyle=muted;c.font="11px "+tok("--f-body");c.textAlign="left";c.textBaseline="bottom";c.fillText(hl.label,L+6,Y(hl.y)-2);}}
+  for(const vl of spec.vlines||[]){c.strokeStyle=tok(vl.color||"--muted");c.setLineDash(vl.dash?[5,4]:[]);c.beginPath();c.moveTo(X(vl.x),T);c.lineTo(X(vl.x),T+ph);c.stroke();}
+  for(const s of spec.series){
+    const col=tok(s.color);c.strokeStyle=col;c.fillStyle=col;c.lineWidth=s.width||1.7;c.setLineDash(s.dash?[5,4]:[]);
+    if(!s.noLine){c.beginPath();let pen=false;for(const p of s.pts){if(!isFinite(p[1])){pen=false;continue;}const px=X(p[0]),py=Y(p[1]);if(pen)c.lineTo(px,py);else{c.moveTo(px,py);pen=true;}}c.stroke();}
+    c.setLineDash([]);
+    if(s.marker){for(const p of s.pts){if(!isFinite(p[1]))continue;c.beginPath();c.arc(X(p[0]),Y(p[1]),s.marker,0,2*Math.PI);c.fill();}}
+  }
+  for(const m of spec.marks||[]){c.fillStyle=tok(m.color);c.strokeStyle=tok("--panel");c.lineWidth=2;c.beginPath();c.arc(X(m.x),Y(m.y),5,0,2*Math.PI);c.fill();c.stroke();}
+  c.restore();
+}
+function redrawVisible(){for(const id in charts){const cv=$(id);if(cv&&cv.offsetParent!==null)drawChart(id);}}
+new ResizeObserver(debounce(redrawVisible,80)).observe(document.querySelector(".wrap"));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",()=>setTimeout(redrawVisible,30));
+new MutationObserver(()=>setTimeout(redrawVisible,30)).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme","class","style"]});
+
+// tabs
+const tabs=[...document.querySelectorAll('[role="tab"]')];
+function selectTab(t,focus){
+  for(const b of tabs){const on=b===t;b.setAttribute("aria-selected",on);b.tabIndex=on?0:-1;$(b.getAttribute("aria-controls")).hidden=!on;}
+  if(focus)t.focus();
+  try{localStorage.setItem("ghb-tab",t.id);}catch(e){}
+  requestAnimationFrame(redrawVisible);
+}
+tabs.forEach((b,i)=>{b.addEventListener("click",()=>selectTab(b));b.addEventListener("keydown",e=>{if(e.key==="ArrowRight"||e.key==="ArrowLeft"){e.preventDefault();selectTab(tabs[(i+(e.key==="ArrowRight"?1:tabs.length-1))%tabs.length],true);}});});
+
+/* ---------------- Tab 1: calculator ---------------- */
+buildControls("c-calc",[
+  {h:"Dataset"},
+  {id:"n",label:"Records n",min:50,max:20000,step:50,value:2000},
+  {id:"mbar",label:"Records per patient m̄",min:1,max:6,step:0.1,value:1.6},
+  {id:"icc",label:"Intra-class correlation",min:0,max:1,step:0.01,value:0.5},
+  {id:"rhoL",label:"Labeled fraction ρ_L",min:0.05,max:1,step:0.01,value:0.7},
+  {id:"eta",label:"Label noise η",min:0,max:0.45,step:0.01,value:0.1},
+  {id:"rhoS",label:"Kish shift efficiency ρ_S",min:0.05,max:1,step:0.01,value:0.6},
+  {id:"prev",label:"Outcome prevalence π",min:0.005,max:0.5,step:0.005,value:0.08},
+  {h:"Riley criterion"},
+  {id:"pp",label:"Candidate parameters p",min:2,max:100,step:1,value:20},
+  {id:"r2f",label:"R²_CS, share of its maximum",min:0.02,max:0.6,step:0.01,value:0.15,fmt:x=>(100*x).toFixed(0)+"%"},
+  {id:"S",label:"Target shrinkage S",min:0.8,max:0.98,step:0.01,value:0.9}
+]);
+function updateCalc(){
+  const n=val("n"),P=neffParts(n,val("mbar"),val("icc"),val("rhoL"),val("eta"),val("rhoS"));
+  const prev=val("prev"),nstar=rileyN(val("pp"),val("r2f"),prev,val("S")),sig=nstar/P.neff,[rg,cls]=regime(sig);
+  chips("calc-chips",[["n_eff",fmt(P.neff,0)],["Effective events",fmt(P.neff*Math.min(prev,1-prev),1)],["Riley n*",Math.ceil(nstar).toLocaleString("en-US")],["Smallness σ",sig.toFixed(2)],["Regime",`<span class="pill ${cls}">${rg}</span>`],["DEFF",P.deff.toFixed(2)],["max R²_CS",r2csMax(prev).toFixed(3)]]);
+  const labels=["Nominal n","after clustering","after missing labels","after label noise","after shift = n_eff"];
+  plot("cv-deflate",{custom:cv=>{
+    const S=setupCanvas(cv);if(!S)return;const {c,w,h}=S;const steps=P.steps,max=Math.max(steps[0],nstar)*1.05;
+    const L=Math.min(170,w*0.38),R=60,rowH=(h-30)/steps.length,X=v=>L+(v/max)*(w-L-R);
+    c.font="12px "+tok("--f-body");c.textBaseline="middle";
+    for(let i=0;i<steps.length;i++){const y=10+i*rowH,bh=rowH*0.58;
+      if(i>0){c.fillStyle=tok("--grid");c.fillRect(X(steps[i]),y+(rowH-bh)/2,X(steps[i-1])-X(steps[i]),bh);}
+      c.fillStyle=tok(i===steps.length-1?"--s-ghb":"--accent");c.globalAlpha=i===steps.length-1?1:0.25+0.15*(steps.length-1-i);
+      c.fillRect(L,y+(rowH-bh)/2,X(steps[i])-L,bh);c.globalAlpha=1;
+      c.fillStyle=tok("--muted");c.textAlign="right";c.fillText(labels[i],L-8,y+rowH/2);
+      c.fillStyle=tok("--ink");c.textAlign="left";c.font="12px "+tok("--f-mono");c.fillText(Math.round(steps[i]).toLocaleString("en-US"),X(steps[i])+5,y+rowH/2);c.font="12px "+tok("--f-body");}
+    c.strokeStyle=tok("--bad");c.setLineDash([5,4]);c.beginPath();c.moveTo(X(nstar),4);c.lineTo(X(nstar),h-22);c.stroke();c.setLineDash([]);
+    c.fillStyle=tok("--bad");c.textAlign="center";c.fillText("n* = "+Math.ceil(nstar).toLocaleString("en-US"),Math.min(X(nstar),w-40),h-10);
+  }});
+}
+$("c-calc").addEventListener("input",updateCalc);
+
+/* ---------------- Tab 2: network and gossip ---------------- */
+buildControls("c-net",[
+  {id:"topo",label:"Topology",type:"select",value:"ring",options:[["ring","Ring (degree 2)"],["ring2","Ring + 2-hop (degree 4)"],["regional","Regional clusters + bridges"],["random","Sparse random"]]},
+  {id:"K",label:"Hospitals K",min:6,max:48,step:1,value:24},
+  {id:"prand",label:"Random edge probability p",min:0.05,max:0.5,step:0.01,value:0.15},
+  {id:"gseed",label:"Graph seed (0 = paper graph at K = 24)",min:0,max:30,step:1,value:0},
+  {id:"gamma",label:"Target accuracy γ",min:-6,max:-1,step:0.5,value:1e-3,log:true},
+  {id:"pfail",label:"Link failure probability per round",min:0,max:0.9,step:0.05,value:0},
+  {id:"speed",label:"Rounds per second",min:1,max:30,step:1,value:reduceMotion?3:10}
+]);
+const G={};
+function buildNet(){
+  const K=val("K"),kind=val("topo");
+  G.A=topology(kind,K,val("prand"),val("gseed"));G.K=K;G.W=metropolisHastings(G.A);
+  G.conn=connected(G.A);G.lam=G.conn?slem(G.W):1;
+  G.sizes=K===24?shuffle(PAPER_SIZES,5):shuffle(lognormalSizes(K,100,1,11),5);
+  G.edges=[];for(let i=0;i<K;i++)for(let j=i+1;j<K;j++)if(G.A[i][j])G.edges.push([i,j]);
+  const rounds=Math.log(1/val("gamma"))/(1-G.lam);
+  chips("net-chips",[["SLEM λ",G.conn?G.lam.toFixed(3):"1 (disconnected)",G.conn?"":"r-bad"],["Spectral gap",(1-G.lam).toFixed(3)],["Predicted rounds",G.conn?Math.ceil(rounds):"∞"],["Edges",G.edges.length],["Mean degree",(2*G.edges.length/K).toFixed(1)]]);
+  resetGossip();
+}
+function resetGossip(){
+  const r=makeRng(17+G.K),K=G.K;
+  G.x0=map(K,i=>r.n()+Math.sqrt(1/G.sizes[i])*r.n());G.x=Float64Array.from(G.x0);
+  G.xbar=G.x0.reduce((a,b)=>a+b,0)/K;G.e0=Math.hypot(...G.x0.map(v=>v-G.xbar));
+  G.t=0;G.err=[[0,1]];G.failed=new Set();G.rng=makeRng(99);drawNet();
+}
+function gossipStep(){
+  const K=G.K,p=val("pfail");let W=G.W;G.failed=new Set();
+  if(p>0){const At=Array.from({length:K},()=>new Float64Array(K));
+    for(const [i,j] of G.edges){if(G.rng.u()>=p){At[i][j]=At[j][i]=1;}else G.failed.add(i+"-"+j);}W=metropolisHastings(At);}
+  const nx=new Float64Array(K);for(let k=0;k<K;k++){let s=0;for(let l=0;l<K;l++)s+=W[k][l]*G.x[l];nx[k]=s;}
+  G.x=nx;G.t++;G.err.push([G.t,Math.max(Math.hypot(...G.x.map(v=>v-G.xbar))/G.e0,1e-16)]);drawNet();
+}
+function drawNet(){
+  $("g-round").textContent="round "+G.t;
+  const ext=Math.max(...G.x0.map(v=>Math.abs(v-G.xbar)))||1;
+  plot("cv-graph",{custom:cv=>{
+    const S=setupCanvas(cv);if(!S)return;const {c,w,h}=S,K=G.K,cx=w/2,cy=h/2,rad=Math.min(w,h)/2-30;
+    const pos=i=>[cx+rad*Math.cos(2*Math.PI*i/K-Math.PI/2),cy+rad*Math.sin(2*Math.PI*i/K-Math.PI/2)];
+    const maxN=Math.max(...G.sizes);
+    for(const [i,j] of G.edges){const f=G.failed.has(i+"-"+j);c.strokeStyle=tok(f?"--grid":"--line");c.lineWidth=f?1:1.4;c.setLineDash(f?[3,3]:[]);const a=pos(i),b=pos(j);c.beginPath();c.moveTo(...a);c.lineTo(...b);c.stroke();}
+    c.setLineDash([]);
+    const neg=tok("--div-neg"),mid=tok("--div-mid"),posc=tok("--div-pos");
+    for(let i=0;i<K;i++){const [x,y]=pos(i),r=Math.max(3,Math.sqrt(G.sizes[i]/maxN)*Math.min(22,rad*0.9*Math.PI/K*1.4)),t=Math.max(-1,Math.min(1,(G.x[i]-G.xbar)/ext));
+      c.fillStyle=t<0?lerpCol(mid,neg,-t):lerpCol(mid,posc,t);c.strokeStyle=tok("--ink");c.lineWidth=1;c.beginPath();c.arc(x,y,r,0,2*Math.PI);c.fill();c.stroke();}
+    c.fillStyle=tok("--muted");c.font="11px "+tok("--f-mono");c.textAlign="center";c.fillText("x̄ = "+G.xbar.toFixed(3),cx,cy);
+  }});
+  const lam=G.lam,tmax=Math.max(60,G.t);
+  plot("cv-cons",{x:{min:0,max:tmax,label:"gossip round t"},y:{log:true,label:"consensus error",floor:1e-8},
+    series:[{pts:Array.from({length:tmax+1},(_,t)=>[t,Math.max(lam**t,1e-8)]),color:"--muted",dash:true,width:1.2},{pts:G.err,color:"--accent",width:2}]});
+}
+legend("lg-cons",[["observed","--accent"],["bound λ^t (no failures)","--muted",true]]);
+let playTimer=null;
+function setPlay(on){
+  if(playTimer){clearTimeout(playTimer);playTimer=null;}
+  $("g-play").textContent=on?"Pause":"Play";
+  if(on){const loop=()=>{gossipStep();if(G.t>=400){setPlay(false);return;}playTimer=setTimeout(loop,1000/val("speed"));};loop();}
+}
+$("g-play").addEventListener("click",()=>setPlay(!playTimer));
+$("g-step").addEventListener("click",()=>{setPlay(false);gossipStep();});
+$("g-reset").addEventListener("click",()=>{setPlay(false);resetGossip();});
+$("c-net").addEventListener("input",e=>{if(["topo","K","prand","gseed","gamma"].includes(e.target.id)){setPlay(false);buildNet();}});
+
+/* ---------------- Tab 3: borrowing live ---------------- */
+buildControls("c-borrow",[
+  {h:"Model and privacy"},
+  {id:"b-tau2",label:"Heterogeneity τ²",min:-4,max:0,step:0.05,value:0.02,log:true},
+  {id:"b-eps",label:"Privacy budget ε",min:-1.5,max:1,step:0.05,value:1,log:true},
+  {id:"b-nodp",label:"No differential privacy",type:"check",value:false},
+  {id:"b-delta",label:"δ",min:-8,max:-3,step:0.5,value:1e-5,log:true},
+  {id:"b-C",label:"Clip C",min:0.1,max:5,step:0.1,value:1},
+  {h:"Hospitals"},
+  {id:"b-paper",label:"Paper sizes (site_sizes(), K = 24)",type:"check",value:true},
+  {id:"b-K",label:"Hospitals K",min:6,max:48,step:1,value:24},
+  {id:"b-med",label:"Median size",min:10,max:1000,step:5,value:100},
+  {id:"b-spread",label:"Log-normal spread",min:0.1,max:2,step:0.05,value:1},
+  {id:"b-seed",label:"Size seed",min:1,max:99,step:1,value:11},
+  {h:"Gossip and Monte Carlo"},
+  {id:"b-topo",label:"Gossip graph",type:"select",value:"ring2",options:[["exact","Exact average (server reference)"],["ring","Ring"],["ring2","Ring + 2-hop"],["regional","Regional clusters + bridges"],["random","Sparse random p = 0.15"]]},
+  {id:"b-T",label:"Gossip rounds T",min:1,max:200,step:1,value:60},
+  {id:"b-R",label:"Replicates",min:500,max:20000,step:500,value:4000}
+]);
+function borrowSizes(){return val("b-paper")?PAPER_SIZES.slice():lognormalSizes(val("b-K"),val("b-med"),val("b-spread"),val("b-seed"));}
+function runBorrow(){
+  const n=borrowSizes(),K=n.length,tau2=val("b-tau2"),eps=val("b-nodp")?Infinity:val("b-eps"),delta=val("b-delta"),C=val("b-C");
+  const topo=val("b-topo"),T=val("b-T"),Rtot=val("b-R");
+  const P=topo==="exact"?null:matPow(metropolisHastings(topology(topo,K,0.15,0)),T),avg=avgOp(P,K);
+  const acc={pool:new Float64Array(K),oracle:new Float64Array(K),ghb:new Float64Array(K)};
+  const v=n.map(x=>1/x),Mk=n.map((_,k)=>eqM(n,k,tau2,eps,delta,C)),Bk=Mk.map(M=>1/(tau2+M));
+  const cats=n.map(String);
+  legend("lg-rel",[["local (= 1)","--s-local",true],["global pooled","--s-pool"],["oracle GHB","--s-oracle"],["plug-in GHB","--s-ghb"]]);
+  legend("lg-gain",[["oracle GHB","--s-oracle"],["plug-in GHB","--s-ghb"],["theory 1 + B/n_k","--muted",true]]);
+  let done=0;const rng=makeRng(2024);
+  function render(final){
+    const rel=m=>Array.from(acc[m],(s,k)=>s/done/v[k]);
+    const rp=rel("pool"),ro=rel("oracle"),rg=rel("ghb"),mean=a=>a.reduce((x,y)=>x+y,0)/a.length;
+    plot("cv-rel",{x:{cats,label:"hospital size n_k (sorted)",min:-0.5,max:K-0.5},y:{zero:true,label:"R_k / v_k"},hlines:[{y:1,color:"--s-local",dash:true}],
+      series:[{pts:rp.map((y,k)=>[k,y]),color:"--s-pool",marker:2.5,width:1.2},{pts:ro.map((y,k)=>[k,y]),color:"--s-oracle",marker:2.5,width:1.2},{pts:rg.map((y,k)=>[k,y]),color:"--s-ghb",marker:3,width:2}]});
+    plot("cv-gain",{x:{cats,label:"hospital size n_k (sorted)",min:-0.5,max:K-0.5},y:{log:true,label:"n_eff,k / n_k"},hlines:[{y:1,color:"--s-local"}],
+      series:[{pts:n.map((x,k)=>[k,1+Bk[k]/x]),color:"--muted",dash:true,width:1.3},{pts:ro.map((y,k)=>[k,1/y]),color:"--s-oracle",marker:2.5,width:1.2},{pts:rg.map((y,k)=>[k,1/y]),color:"--s-ghb",marker:3,width:2}]});
+    const mB=mean(Bk);
+    chips("b-chips",[["Plug-in mean",mean(rg).toFixed(3),"mono"],["Plug-in worst",Math.max(...rg).toFixed(3),Math.max(...rg)>1.02?"r-bad":""],["Oracle mean",mean(ro).toFixed(3)],["Pooled mean",mean(rp).toFixed(3)],["Pooled worst",Math.max(...rp).toFixed(2),Math.max(...rp)>1?"r-bad":""],["B (virtual patients)",fmt(mB,1)]]);
+    $("b-prog").textContent=final?`${done.toLocaleString("en-US")} replicates`:`running ${done}/${Rtot}`;
+  }
+  runJob("borrow",(function*(){
+    while(done<Rtot){
+      for(let i=0;i<100&&done<Rtot;i++,done++){
+        const d=drawRep(rng,n,tau2,eps,delta,C),pm=pooled(d.th,n),orc=oracleHB(d.th,d.x,d.v,d.s2,tau2),g=shrink(d.th,d.v,borrow(d.x,d.r,avg));
+        for(let k=0;k<K;k++){acc.pool[k]+=(pm-d.theta[k])**2;acc.oracle[k]+=(orc[k]-d.theta[k])**2;acc.ghb[k]+=(g[k]-d.theta[k])**2;}
+      }
+      if(done%1000===0||done>=Rtot)render(done>=Rtot);
+      yield;
+    }
+  })());
+}
+const runBorrowD=debounce(runBorrow,250);
+$("c-borrow").addEventListener("input",runBorrowD);
+
+/* ---------------- Tab 4: stress tests ---------------- */
+buildControls("c-stress",[
+  {h:"Shared"},
+  {id:"s-tau2",label:"Heterogeneity τ²",min:-3,max:-0.5,step:0.05,value:0.02,log:true},
+  {id:"s-eps",label:"Privacy budget ε",min:-1,max:1,step:0.05,value:1,log:true},
+  {h:"(a) Atypical hospitals"},
+  {id:"a-kind",label:"Site effects",type:"select",value:"t3",options:[["gauss","Gaussian"],["t3","Student-t3 (same variance)"],["outlier","Gaussian + one outlier"]]},
+  {id:"a-mult",label:"Outlier at k·τ, k",min:2,max:12,step:0.5,value:6},
+  {id:"a-where",label:"Outlier placed at",type:"select",value:"small",options:[["small","smallest hospital"],["large","largest hospital"]]},
+  {id:"a-R",label:"Replicates",min:500,max:8000,step:500,value:3000},
+  {h:"(b) Dishonest hospitals"},
+  {id:"z-f",label:"Dishonest hospitals f (largest)",min:1,max:6,step:1,value:3},
+  {id:"z-R",label:"Replicates per b",min:200,max:3000,step:100,value:800},
+  {h:"(c) Joint release"},
+  {id:"j-ks",label:"Small hospitals",min:2,max:48,step:1,value:16},
+  {id:"j-ns",label:"Patients per small hospital",min:5,max:200,step:5,value:20},
+  {id:"j-kl",label:"Large hospitals",min:0,max:24,step:1,value:8},
+  {id:"j-nl",label:"Patients per large hospital",min:50,max:2000,step:50,value:200}
+]);
+const ABINS=[0,0.5,1,1.5,2,2.5,3,4,5,7,12];
+function runAtyp(){
+  const n=PAPER_SIZES,K=n.length,tau2=val("s-tau2"),tau=Math.sqrt(tau2),eps=val("s-eps"),kind=val("a-kind"),mult=val("a-mult"),j0=val("a-where")==="small"?0:K-1,Rtot=val("a-R");
+  const avg=avgOp(matPow(metropolisHastings(topology("ring2",K,0,0)),60),K);
+  const nb=ABINS.length-1,meth=["ghb","rob","opt"],S={},Cn=new Float64Array(nb),tot={ghb:0,rob:0,opt:0},out={ghb:0,rob:0,opt:0};
+  for(const m of meth)S[m]=new Float64Array(nb);
+  const rng=makeRng(909);let done=0;
+  legend("lg-atyp",[["local (= 1)","--s-local",true],["Gaussian GHB","--s-ghb"],["Student-t3 prior","--s-robust"],["GHB + opt-out","--s-opt"]]);
+  const v=n.map(x=>1/x);
+  function render(final){
+    const mid=ABINS.slice(0,-1).map((b,i)=>(b+ABINS[i+1])/2);
+    const ser=(m,col)=>({pts:mid.map((x,i)=>[x,Cn[i]>30?S[m][i]/Cn[i]:NaN]),color:col,marker:3});
+    plot("cv-atyp",{x:{min:0,max:9.5,label:"|u_k| / τ"},y:{zero:true,label:"R / v_k"},hlines:[{y:1,color:"--s-local",dash:true}],series:[ser("ghb","--s-ghb"),ser("rob","--s-robust"),ser("opt","--s-opt")]});
+    const c=[["GHB mean",(tot.ghb/done/K).toFixed(3)],["t3 prior mean",(tot.rob/done/K).toFixed(3)],["Opt-out mean",(tot.opt/done/K).toFixed(3)]];
+    if(kind==="outlier")c.push(["Outlier: GHB",(out.ghb/done).toFixed(2),out.ghb/done>1?"r-bad":""],["Outlier: t3",(out.rob/done).toFixed(2)],["Outlier: opt-out",(out.opt/done).toFixed(2)]);
+    chips("a-chips",c);$("a-prog").textContent=final?`${done} replicates, ring + 2-hop gossip, 60 rounds`:`running ${done}/${Rtot}`;
+  }
+  runJob("atyp",(function*(){
+    while(done<Rtot){
+      for(let i=0;i<40&&done<Rtot;i++,done++){
+        const u=map(K,k=>kind==="t3"?tau/Math.sqrt(3)*rng.t(3):(kind==="outlier"&&k===j0?mult*tau:tau*rng.n()));
+        const d=drawRep(rng,n,tau2,eps,1e-5,1,k=>u[k]),b=borrow(d.x,d.r,avg),g=shrink(d.th,d.v,b);
+        for(let k=0;k<K;k++){
+          const vp=b.t2[k]+b.M[k],rob=robustPosteriorMean(d.th[k],d.v[k],b.mu[k],Math.max(vp,1e-12));
+          const z=Math.abs(d.th[k]-b.mu[k])/Math.sqrt(d.v[k]+vp),opt=z>3?d.th[k]:g[k];
+          const e={ghb:(g[k]-u[k])**2/v[k],rob:(rob-u[k])**2/v[k],opt:(opt-u[k])**2/v[k]};
+          let bi=0;const au=Math.abs(u[k])/tau;while(bi<nb-1&&au>=ABINS[bi+1])bi++;
+          Cn[bi]++;for(const m of meth){S[m][bi]+=e[m];tot[m]+=e[m];if(kind==="outlier"&&k===j0)out[m]+=e[m];}
+        }
+      }
+      if(done%400===0||done>=Rtot)render(done>=Rtot);
+      yield;
+    }
+  })());
+}
+const BS=[0,1,2,3,5,8,12,20,30];
+function runByz(){
+  const n=PAPER_SIZES,K=n.length,tau2=val("s-tau2"),tau=Math.sqrt(tau2),eps=val("s-eps"),f=val("z-f"),Rb=val("z-R");
+  const res={plain:[],rob:[],kept:[]},rng=makeRng(1212),v=n.map(x=>1/x),avg=avgOp(null,K);
+  legend("lg-byz",[["local (= 1)","--s-local",true],["plain GHB","--s-ghb"],["robust screening","--s-robust"]]);
+  function render(final,bi){
+    plot("cv-byz",{x:{min:0,max:30,label:"attack size b (release μ + b·τ)"},y:{zero:true,label:"honest mean R / v_k"},hlines:[{y:1,color:"--s-local",dash:true}],
+      series:[{pts:res.plain,color:"--s-ghb",marker:3},{pts:res.rob,color:"--s-robust",marker:3}]});
+    $("z-prog").textContent=final?`${Rb} replicates per b; attackers kept by screening at b = 30: ${(100*res.kept[res.kept.length-1]).toFixed(0)}%`:`running b = ${BS[bi]}`;
+  }
+  runJob("byz",(function*(){
+    for(let bi=0;bi<BS.length;bi++){
+      let sp=0,sr=0,kept=0;
+      for(let r=0;r<Rb;r++){
+        const d=drawRep(rng,n,tau2,eps,1e-5,1);
+        for(let k=K-f;k<K;k++)d.x[k]=BS[bi]*tau;
+        const g=shrink(d.th,d.v,borrow(d.x,d.r,avg)),R=robustScreenGHB(d.th,d.x,d.r,d.v);
+        for(let k=0;k<K-f;k++){sp+=(g[k]-d.theta[k])**2/v[k];sr+=(R.est[k]-d.theta[k])**2/v[k];}
+        for(let k=K-f;k<K;k++)kept+=R.keep[k]?1:0;
+        if(r%60===59)yield;
+      }
+      res.plain.push([BS[bi],sp/Rb/(K-f)]);res.rob.push([BS[bi],sr/Rb/(K-f)]);res.kept.push(kept/Rb/f);
+      render(bi===BS.length-1,bi);yield;
+    }
+  })());
+}
+function drawJoint(){
+  const tau2=val("s-tau2"),ks=val("j-ks"),ns=val("j-ns"),kl=val("j-kl"),nl=val("j-nl");
+  const E=[];for(let i=0;i<=40;i++)E.push(10**(-1.5+2*i/40));
+  const cols={1:"--bad",2:"--s-opt",4:"--s-gmrf",8:"--s-ghb"};
+  plot("cv-joint",{x:{log:true,min:E[0],max:E[E.length-1],label:"privacy budget ε"},y:{log:true,label:"borrowed patients B"},hlines:[{y:1/tau2,color:"--muted",dash:true,label:"limit σ²/τ²"}],
+    series:[1,2,4,8].map(g=>({pts:E.map(e=>[e,jointB(ns,ks,nl,kl,g,tau2,e,1e-5,1)]),color:cols[g]}))});
+  legend("lg-joint",[["individual release","--bad"],["groups of 2","--s-opt"],["groups of 4","--s-gmrf"],["groups of 8","--s-ghb"]]);
+}
+const runAtypD=debounce(runAtyp,250),runByzD=debounce(runByz,250);
+$("c-stress").addEventListener("input",e=>{const id=e.target.id;
+  if(id.startsWith("j-")){drawJoint();return;}
+  if(id.startsWith("a-")){runAtypD();return;}
+  if(id.startsWith("z-")){runByzD();return;}
+  drawJoint();runAtypD();runByzD();});
+
+/* ---------------- Tab 5: privacy accounting ---------------- */
+buildControls("c-priv",[
+  {id:"p-eps",label:"Total budget ε",min:-1,max:1,step:0.05,value:1,log:true},
+  {id:"p-delta",label:"Total δ",min:-8,max:-3,step:0.5,value:1e-5,log:true},
+  {id:"p-r",label:"Refits r (highlighted)",min:1,max:50,step:1,value:10},
+  {id:"p-n",label:"Reference hospital size n",min:10,max:1000,step:5,value:50},
+  {id:"p-C",label:"Clip C",min:0.1,max:5,step:0.1,value:1},
+  {id:"p-tau2",label:"Heterogeneity τ² (for B)",min:-4,max:0,step:0.05,value:0.02,log:true}
+]);
+function updatePriv(){
+  const eps=val("p-eps"),delta=val("p-delta"),r0=val("p-r"),nref=val("p-n"),C=val("p-C"),tau2=val("p-tau2");
+  const D=nn=>2*C/nn,rs=[];for(let r=1;r<=50;r++)rs.push(r);
+  const sB=r=>noiseBasic(D(nref),eps,delta,r),sZ=r=>noiseZcdp(D(nref),eps,delta,r);
+  const BB=r=>meanB(PAPER_SIZES,tau2,nn=>noiseBasic(D(nn),eps,delta,r)**2),BZ=r=>meanB(PAPER_SIZES,tau2,nn=>noiseZcdp(D(nn),eps,delta,r)**2);
+  plot("cv-noise",{x:{log:true,min:1,max:50,label:"number of refits r"},y:{log:true,label:"noise sd s per release"},
+    series:[{pts:rs.map(r=>[r,sB(r)]),color:"--s-pool"},{pts:rs.map(r=>[r,sZ(r)]),color:"--s-ghb"}],marks:[{x:r0,y:sB(r0),color:"--s-pool"},{x:r0,y:sZ(r0),color:"--s-ghb"}]});
+  plot("cv-privB",{x:{log:true,min:1,max:50,label:"number of refits r"},y:{log:true,label:"mean B"},hlines:[{y:1/tau2,color:"--muted",dash:true,label:"limit σ²/τ²"}],
+    series:[{pts:rs.map(r=>[r,BB(r)]),color:"--s-pool"},{pts:rs.map(r=>[r,BZ(r)]),color:"--s-ghb"}],marks:[{x:r0,y:BB(r0),color:"--s-pool"},{x:r0,y:BZ(r0),color:"--s-ghb"}]});
+  legend("lg-noise",[["basic composition","--s-pool"],["zCDP","--s-ghb"]]);legend("lg-privB",[["basic composition","--s-pool"],["zCDP","--s-ghb"]]);
+  const rho=zcdpRho(eps,delta);
+  chips("p-chips",[["Per release (basic)",`ε ${fmt(eps/r0,3)}`],["s basic at r",fmt(sB(r0),4)],["s zCDP at r",fmt(sZ(r0),4)],["Noise ratio",(sB(r0)/sZ(r0)).toFixed(2)+"×"],["Total ρ",fmt(rho,4)],["B basic / zCDP",`${fmt(BB(r0),1)} / ${fmt(BZ(r0),1)}`]]);
+}
+$("c-priv").addEventListener("input",updatePriv);
+
+/* ---------------- Tab 6: GMRF ---------------- */
+buildControls("c-gmrf",[
+  {id:"m-reg",label:"Regions",min:2,max:8,step:1,value:4},
+  {id:"m-tr",label:"Between-region τ_r²",min:-3.5,max:-0.5,step:0.05,value:0.02,log:true},
+  {id:"m-tw",label:"Within-region τ_w²",min:-4,max:-1,step:0.05,value:0.002,log:true},
+  {id:"m-beta",label:"Smoothing β",min:0,max:4,step:0.05,value:100,log:true},
+  {id:"m-eps",label:"Privacy budget ε",min:-1,max:1,step:0.05,value:1,log:true},
+  {id:"m-R",label:"Replicates",min:100,max:3000,step:100,value:500}
+]);
+function runGmrf(){
+  const Rg=val("m-reg"),n=shuffle(PAPER_SIZES,66),K=n.length,tr=val("m-tr"),tw=val("m-tw"),beta=val("m-beta"),eps=val("m-eps"),Rtot=val("m-R");
+  const region=Array.from({length:K},(_,i)=>Math.min(Rg-1,Math.floor(i/Math.floor(K/Rg)))),v=n.map(x=>1/x);
+  const betas=[];for(let i=0;i<=16;i++)betas.push(10**(i*0.25));
+  const accB=new Float64Array(betas.length);let accG=0,accU=0,done=0;const avg=avgOp(null,K),rng=makeRng(606);
+  legend("lg-gmrf",[["GMRF over β","--s-gmrf"],["exchangeable GHB","--s-ghb",true],["local (= 1)","--s-local",true],["your β","--s-robust"]]);
+  function render(final){
+    const curve=betas.map((b,i)=>[b,accB[i]/done/K]),mine=accU/done/K,g=accG/done/K;
+    let bi=0;for(let i=1;i<curve.length;i++)if(curve[i][1]<curve[bi][1])bi=i;
+    plot("cv-gmrf",{x:{log:true,min:1,max:1e4,label:"smoothing β"},y:{zero:true,label:"mean R / v_k"},hlines:[{y:1,color:"--s-local",dash:true},{y:g,color:"--s-ghb",dash:true}],
+      series:[{pts:curve,color:"--s-gmrf",marker:2.5}],marks:[{x:beta,y:mine,color:"--s-robust"}]});
+    chips("m-chips",[["Exchangeable GHB",g.toFixed(3)],["GMRF at your β",mine.toFixed(3),mine<g?"r-good":""],["Best β on grid",fmt(curve[bi][0],0)],["GMRF at best β",curve[bi][1].toFixed(3)]]);
+    $("m-prog").textContent=final?`${done} replicates (best β chosen on the same replicates, so it is optimistic)`:`running ${done}/${Rtot}`;
+  }
+  runJob("gmrf",(function*(){
+    while(done<Rtot){
+      for(let i=0;i<5&&done<Rtot;i++,done++){
+        const re=Array.from({length:Rg},()=>Math.sqrt(tr)*rng.n()),th0=map(K,k=>re[region[k]]+Math.sqrt(tw)*rng.n());
+        const d=drawRep(rng,n,0,eps,1e-5,1,k=>th0[k]);
+        const g=shrink(d.th,d.v,borrow(d.x,d.r,avg));for(let k=0;k<K;k++)accG+=(g[k]-th0[k])**2/v[k];
+        for(let bi=0;bi<betas.length;bi++){const e=gmrfEst(d.th,d.x,d.v,d.r,region,Rg,betas[bi],100);for(let k=0;k<K;k++)accB[bi]+=(e[k]-th0[k])**2/v[k];}
+        const e=gmrfEst(d.th,d.x,d.v,d.r,region,Rg,beta,100);for(let k=0;k<K;k++)accU+=(e[k]-th0[k])**2/v[k];
+      }
+      if(done%50===0||done>=Rtot)render(done>=Rtot);
+      yield;
+    }
+  })());
+}
+$("c-gmrf").addEventListener("input",debounce(runGmrf,250));
+
+/* ---------------- start ---------------- */
+updateCalc();buildNet();runBorrow();drawJoint();runAtyp();runByz();updatePriv();runGmrf();
+try{const t=localStorage.getItem("ghb-tab");if(t&&$(t))selectTab($(t));}catch(e){}
+</script>

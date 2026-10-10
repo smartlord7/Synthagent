@@ -1,0 +1,26 @@
+% Privacy boundary of GHB (what crosses the custodial boundary). Colours from the preamble.
+\begin{tikzpicture}[x=1cm, y=1cm, font=\scriptsize,
+  blk/.style={draw=#1, fill=#1!10, line width=0.5pt, rounded corners=2pt, align=center, inner sep=3pt, text width=2.55cm},
+  blk/.default=famC,
+  arr/.style={-{Stealth[length=1.6mm]}, line width=0.6pt, draw=edgec},
+  priv/.style={-{Stealth[length=1.8mm]}, line width=1.1pt, draw=famT}]
+% hospital k
+\path[draw=famC, line width=0.8pt, dashed, rounded corners=4pt] (-0.25,-3.55) rectangle (6.15,0.55);
+\node[anchor=north west, font=\scriptsize\bfseries, text=famC] at (-0.15,0.48) {Hospital $k$: inside the custodial boundary};
+\node[blk=grayc] (data) at (1.2,-0.55) {patient records\\ $n_k$ patients};
+\node[blk] (fit) at (4.5,-0.55) {local head $\hat{\theta}_k$, covariance $V_k$\\ (never released)};
+\node[blk=famT] (noise) at (4.5,-1.95) {clip, ridge centred on a public reference, add $\mathcal{N}(0,s_k^2 I)$};
+\node[blk] (final) at (1.2,-2.85) {borrowed estimate\\ $\tilde{\theta}_k=\alpha_k\hat{\theta}_k+(1-\alpha_k)\tilde{\mu}_k$};
+% outside
+\node[blk=famE, text width=3.3cm] (net) at (9.25,-1.95) {gossip over the agreement graph\\ releases $r_j$ and public $n_j$ only};
+\node[blk=famE, text width=3.3cm] (post) at (9.25,-3.25) {post-processing: $\hat{\tau}^2$, $\tilde{\mu}_k$, $M_k$, optional screening};
+\node[blk=famO, text width=3.3cm] (anchor) at (9.25,-0.45) {published anchor $\mu_0$ (public knowledge, L3)};
+% arrows
+\draw[arr] (data) -- (fit);
+\draw[arr] (fit) -- (noise);
+\draw[priv] (noise.east) -- node[above, text=famT, font=\scriptsize\bfseries] {$r_k$ only} (net.west);
+\draw[arr] (net) -- (post);
+\draw[arr] (post.west) -- (final.east |- post.west);
+\draw[arr] (anchor.west) -- ++(-0.55,0) |- ([yshift=4pt]final.east);
+\draw[arr] (fit.south west) to[out=-120, in=30] (final.north east);
+\end{tikzpicture}
