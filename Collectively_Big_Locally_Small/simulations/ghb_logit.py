@@ -42,6 +42,7 @@ GRID = np.r_[0.0, np.logspace(-3.5, 1, 160)]  # grid of tau for its posterior
 Q = 12                # posterior quantiles of tau used as mixture components
 SCALE = 0.5           # half-Cauchy scale of the prior on tau (Remark 8.3)
 PRIOR_SD = 2.5        # weakly informative default prior on each coefficient
+PRIOR_SDS = (0.5, 1.0, 2.5)  # scales integrated out by the evidence-weighted default prior (revision after real data)
 Z_CONFLICT = 3.0      # anchor conflict threshold
 
 
@@ -155,10 +156,14 @@ def tau2_quantiles(th, r, q=Q):
 
 
 def combine(X, y, means, variances, prior_sd=PRIOR_SD):
-    """Posterior mean of theta_k under a mixture of Gaussian priors, by Laplace approximation per component."""
+    """Posterior mean of theta_k under a mixture of Gaussian priors, by Laplace approximation per component.
+
+    prior_sd: scale of the default prior, or a tuple of scales, which are then integrated out like tau: every
+    (component, scale) pair is a mixture component with equal prior weight, weighted by the hospital's own evidence."""
+    sds = prior_sd if isinstance(prior_sd, tuple) else (prior_sd,)
     fits, logev = [], []
-    for m, v in zip(means, variances):
-        pr = 1.0 / np.maximum(v, 1e-8) + 1.0 / prior_sd ** 2
+    for m, v, sd_ in [(m, v, q) for m, v in zip(means, variances) for q in sds]:
+        pr = 1.0 / np.maximum(v, 1e-8) + 1.0 / sd_ ** 2
         m = (m / np.maximum(v, 1e-8)) / pr
         t = fit(X, y, m, pr)
         s = X @ t
