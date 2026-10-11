@@ -364,8 +364,44 @@ def real_heart():
     write("s_real_heart_hyper.tex", rows)
 
 
+def real_networks():
+    s = load("real_networks.json")["res"]
+    order = ["medpar", "TCGA-LUSC", "TCGA-HNSC", "TCGA-BLCA", "TCGA-STAD", "TCGA-LIHC", "TCGA-KIRC"]
+    cols = ["GHB (DP, eps=1)", "GHB (DP, eps=3)", "GHB (DP, eps=10)", "GHB (no DP)", "Global (pooled, no DP)",
+            "Local GD, tuned stopping", "DP-FedAvg + fine-tuning", "Ditto-style (DP)"]
+    priv = ["GHB (DP, eps=1)", "DP-FedAvg + fine-tuning", "Ditto-style (DP)"]
+    for key, fname in (("rel", "t_real_networks.tex"), ("rel_small", "s_real_networks_small.tex")):
+        rows = []
+        for nm in order:
+            r = s[nm]
+            info = r["info"]
+            best = min(priv, key=lambda m: r[m][key])
+            cells = []
+            for m in cols:
+                v = f"{r[m][key]:.3f}"
+                cells.append(f"\\textbf{{{v}}}" if m == best else v)
+            rows.append(f"{info['label']} & {info['K']} & {sum(info['n']):,}".replace(",", "{,}") + f" & {100 * info['prevalence']:.0f} & {r['Local']['ll']:.3f} & "
+                        + " & ".join(cells) + r"\\")
+        write(fname, rows)
+    rows = []
+    for nm in order:
+        r = s[nm]
+        cells = [f"{r[m]['worst']:.2f}" for m in ["GHB (DP, eps=1)", "GHB (DP, eps=3)", "GHB (DP, eps=10)", "GHB (no DP)", "Global (pooled, no DP)",
+                                                   "DP-FedAvg + fine-tuning"]]
+        cells += [f"{100 * r[m]['share_gain']:.0f}" for m in ["GHB (DP, eps=3)", "GHB (no DP)", "DP-FedAvg + fine-tuning"]]
+        cells += [f"{r[m]['auc']:.3f}" for m in ["Local", "GHB (DP, eps=3)", "GHB (no DP)", "Global (pooled, no DP)"]]
+        rows.append(f"{r['info']['label']} & " + " & ".join(cells) + r"\\")
+    write("s_real_networks_worst.tex", rows)
+    rows = []
+    for nm in order:
+        ch = s[nm]["chosen"]
+        f = lambda c: c.split("|", 1)[1].replace("eta=", "$\\eta$=").replace("lambda=", "$\\lambda$=").replace("|", ", ")
+        rows.append(f"{s[nm]['info']['label']} & {f(ch['Local GD, tuned stopping'])} & {f(ch['DP-FedAvg + fine-tuning'])} & {f(ch['Ditto-style (DP)'])}" + r"\\")
+    write("s_real_networks_hyper.tex", rows)
+
+
 def main():
-    for fn in (sim8, sim15, sim16, sim17, sim18, real_heart, sim1, sim2, sim3, sim4, sim5, sim6, sim7, sim9, sim11, sim12, sim13, sim14):
+    for fn in (sim8, sim15, sim16, sim17, sim18, real_heart, real_networks, sim1, sim2, sim3, sim4, sim5, sim6, sim7, sim9, sim11, sim12, sim13, sim14):
         fn()
     print("tables:", sorted(p.name for p in OUT.glob("*.tex")))
 
