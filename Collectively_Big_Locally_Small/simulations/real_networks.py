@@ -68,7 +68,8 @@ for _e in BASE_EPS:
     TUNED[f"Ditto-style (DP), eps={_e:g}"] = [f"DIT{_e:g}|lambda={lam}" for lam in DITTO_GRID]
 GHB_NAMES = [f"GHB (DP, eps={e:g})" for e in EPS_GHB]
 METHODS = (["Local"] + GHB_NAMES + ["GHB (no DP)", "GHB, empirical features (no DP)", "Global (pooled, no DP)", "Local GD, tuned stopping",
-                                    "Local, tuned prior", "GHB, tuned prior (no DP)"]
+                                    "Local, tuned prior", "GHB, tuned prior (no DP)", "Local, evidence prior"]
+           + [f"GHB-EB {e:g}" for e in EPS_GHB] + ["GHB-EB inf"]
            + [f"Meta-analysis (DP), eps={e:g}" for e in BASE_EPS]
            + [k for k in TUNED if k not in ("Local GD, tuned stopping", "Local, tuned prior", "GHB, tuned prior (no DP)")])
 
@@ -155,6 +156,8 @@ def ghb_fit(rng, train, n, pub, avg, eps, tuned=None):
         est, key = tuned
         for s_ in PRIOR_SDS:
             est[f"{key}|sd={s_}"] = out if s_ == GL.PRIOR_SD else GL.estimate(train, th, r, drop, mu0, avg, anchor_sd=None, prior_sd=s_)
+        # the evidence-weighted default prior (dev/PREREG_prior.md): the same releases, so no extra random draws
+        est[key.replace("GHBP", "GHB-EB ")] = GL.estimate(train, th, r, drop, mu0, avg, anchor_sd=None, prior_sd=GL.PRIOR_SDS)
     return out, th, r
 
 
@@ -163,10 +166,11 @@ def estimates(rng, train, pub, avg, W):
     K = len(n)
     est = {"Local": np.array([fit(X, y, np.zeros(P), PRIOR) for X, y in train])}
     rel = {}
+    est["Local, evidence prior"] = np.array([GL.combine(X, y, [np.zeros(P)], [np.full(P, 1e12)], GL.PRIOR_SDS) for X, y in train])
     for s_ in PRIOR_SDS:
         est[f"LOCP|sd={s_}"] = np.array([fit(X, y, np.zeros(P), np.full(P, 1 / s_ ** 2)) for X, y in train])
     for e, name in zip(EPS_GHB, GHB_NAMES):
-        est[name], th, r = ghb_fit(rng, train, n, pub, avg, e, (est, f"GHBP{e:g}") if e in BASE_EPS else None)
+        est[name], th, r = ghb_fit(rng, train, n, pub, avg, e, (est, f"GHBP{e:g}"))
         rel[e] = (th, r)
     est["GHB (no DP)"], _, _ = ghb_fit(rng, train, n, pub, avg, np.inf, (est, "GHBPinf"))
     est["GHB, empirical features (no DP)"], _, _ = ghb_fit(rng, train, n, GL.Public(np.vstack([X for X, _ in train])), avg, np.inf)

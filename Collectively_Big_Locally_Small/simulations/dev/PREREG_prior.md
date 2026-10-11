@@ -19,8 +19,9 @@ tau2=0.01 0.94, 0.05 0.97, 0.2 1.01, 0.5 1.03; eps=0.3 0.94; no DP 1.02; wrong a
 no anchor 0.96; no anchor with median hospital size 25: 0.61.
 UCI Heart Disease (the development network), relative to local: never worse than GHB as reported by more than 0.1%,
 better by 0-0.6%.
-Development criteria (fixed before the development runs were inspected in detail: at most 5% worse than GHB in any
-simulation setting, no loss above 1% on UCI Heart Disease): met.
+Development criteria, written down after these development runs (so they document, not test): at most 5% worse
+than GHB as reported in any simulation setting, no loss above 1% on UCI Heart Disease. Both hold. The confirmation
+criteria below are fixed before the confirmation run.
 
 ## Confirmation (to be run once, reported whatever the outcome)
 Networks: Arizona Medicare and the six TCGA networks of `real_networks.py`, same protocol and seeds.
