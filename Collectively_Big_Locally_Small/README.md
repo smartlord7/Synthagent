@@ -19,7 +19,7 @@ You need TeX Live with `acmart` (v2.03 or later), `algorithm2e`, `pifont`, `make
 
 ```sh
 python3 scripts/make_figures.py      # Figures 2 and 6-10 of the paper
-python3 simulations/run_all.py       # Simulations 1-15, forest plot, macros (about 20 minutes)
+python3 simulations/run_all.py       # Simulations 1-17, forest plot, macros (about 45 minutes)
 python3 simulations/make_numbers.py  # supplement/results/sim_numbers.tex, s7_table.tex, s15_table.tex, s15_hyper.tex
 # systematic search: queries the databases (slow), then screens, codes and counts
 python3 prisma/search.py && python3 prisma/screen.py && python3 prisma/fetch_corpus_abstracts.py \
@@ -81,6 +81,8 @@ The subscription databases were not searched. To add them, run the query in each
 | `exp13_dropout.py` | 13. Link failures during gossip |
 | `exp14_accounting.py` | 14. Repeated releases (basic composition vs zCDP) |
 | `exp15_literature.py`, `literature.py` | 15. Iterative federated learning at the same zCDP budget: DP-FedAvg (with fine-tuning), decentralized DP-SGD, clustered DP-FedAvg, and a local control from the anchor |
+| `exp16_ablation.py`, `ghb_variants.py` | 16. Ablation: each component of GHB removed or replaced, paired within replicates; Gaussian part in closed form |
+| `exp17_sensitivity.py` | 17. Sensitivity to GHB's settings and to network conditions (K, sizes, ε, δ, topology) |
 | `fig_forest.py` | Summary forest plot of Simulations 2-15 |
 | `make_numbers.py` | LaTeX macros and tables read by the paper and supplement |
 

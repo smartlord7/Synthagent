@@ -170,7 +170,7 @@ def figures(A, B):
         ax.plot(xs, [B[f"{cond}|{v}"]["GHB"]["worst"] for v in vals], color=style.RED700, ls=":", marker="v", ms=2.5, lw=0.9, label="GHB, worst hospital")
         ax.axhline(1, color=style.SLATE800, lw=0.6)
         short = {"Ring (degree 2)": "ring", "Regional clusters + bridges": "regional", "Sparse random (p=0.15)": "random", "Ring + 2-hop (degree 4)": "ring+2"}
-        ax.set_xticks(xs, [short.get(v, "no DP" if v == np.inf else f"{v:g}") for v in vals], fontsize=5.2, rotation=45 if cond in ("topology", "delta") else 0)
+        ax.set_xticks(xs, [short[v] if isinstance(v, str) else ("no DP" if v == np.inf else f"{v:g}") for v in vals], fontsize=5.2, rotation=45 if cond in ("topology", "delta", "eps") else 0)
         ax.set_title(titles[cond], fontsize=6.5)
         ax.set_ylim(0, 1.3)
         ax.tick_params(axis="y", labelsize=5.5)
