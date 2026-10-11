@@ -7,8 +7,8 @@ The project was first rebuilt 1:1 from `recovered_main.pdf`, which is kept unmod
 ## Build
 
 ```sh
-latexmk -pdf main.tex                         # the paper (58 pages, ACM review mode)
-cd supplement && latexmk -pdf supplement.tex  # the online supplement (32 pages); build main.tex first
+latexmk -pdf main.tex                         # the paper (59 pages, ACM review mode)
+cd supplement && latexmk -pdf supplement.tex  # the online supplement (34 pages); build main.tex first
 ```
 
 `main.tex` is set up for submission to ACM Computing Surveys (`review` mode: line numbers and ACM metadata). For a preprint, swap the two `\documentclass` lines at the top.
@@ -61,7 +61,7 @@ The subscription databases were not searched. To add them, run the query in each
 
 ## Simulations (`simulations/`)
 
-`ghb.py` implements plug-in GHB: a DerSimonian–Laird or half-Cauchy-posterior estimate of τ², an inverse-variance leave-one-out mean by gossip, and shrinkage. It also implements the Gaussian baselines. `logit_world.py` is the logistic-regression world (private releases centred on a fixed public reference, case-mix shift, wrong anchors, and the federated, meta-analytic and Ditto-style baselines).
+`ghb.py` implements plug-in GHB: a DerSimonian–Laird or half-Cauchy-posterior estimate of τ², an inverse-variance leave-one-out mean by gossip, and shrinkage. It also implements the Gaussian baselines. `ghb_logit.py` is GHB for logistic heads: privatized score releases at the anchor (zCDP), public moment-matching inversion, and each hospital's posterior mean with τ integrated out; `ghb.ghb_full_bayes` is the same rule in the Gaussian model. `logit_world.py` is the logistic-regression world (private releases centred on a fixed public reference, case-mix shift, wrong anchors, and the federated, meta-analytic and Ditto-style baselines).
 
 | Script | Simulation |
 |---|---|
@@ -82,7 +82,7 @@ The subscription databases were not searched. To add them, run the query in each
 | `fig_forest.py` | Summary forest plot of Simulations 2-15 |
 | `make_numbers.py` | LaTeX macros and tables read by the paper and supplement |
 
-Each script writes a figure to `supplement/figures/` and its numbers to `supplement/results/`. All seeds are fixed. The closed forms are in `scripts/blueprint.py`.
+`dev/` holds the prototypes and development runs (separate seeds) that led to the revised GHB and to three extensions that were not adopted; see `dev/README.md`. Each script writes a figure to `supplement/figures/` and its numbers to `supplement/results/`. All seeds are fixed. The closed forms are in `scripts/blueprint.py`.
 
 ## Changes since the recovery
 
@@ -117,6 +117,7 @@ Each script writes a figure to `supplement/figures/` and its numbers to `supplem
   - Algorithm 1 now centres releases on a fixed public reference, and lists the optional safeguards: anchor conflict check, opt-out, release screening.
   - The privacy scope gains repeated-release accounting.
 - **Simulation 15.** Iterative federated baselines at the same privacy budget, with tuned hyperparameters. DP-FedAvg with fine-tuning ties with GHB at moderate heterogeneity and wins when hospitals are nearly identical or the budget is strict, at the cost of making large hospitals worse off than alone. GHB wins with stronger or regional heterogeneity and with a wrong anchor. GHB was not changed after these results; its conservative estimate of τ² is identified as the bottleneck.
+- **GHB revised after Simulation 15.** Logistic heads now release a privatized score at the anchor, inverted by public moment matching; each hospital integrates τ out over its posterior, weighted by its own marginal likelihood; the anchor conflict check is on by default. Developed on separate seeds and checked on four held-out settings. GHB is now the most accurate private method in six of ten settings of Simulation 15 and within 10% of the best wherever any method gains; three extensions (joint release, two rounds, a two-level regional prior) were tried and not adopted (supplement, Section S3).
 - **Search.** The direct arXiv search was dropped; arXiv is covered only through Europe PMC's life-science subset, and the text says so.
 
 ## Recovery from `recovered_main.pdf`

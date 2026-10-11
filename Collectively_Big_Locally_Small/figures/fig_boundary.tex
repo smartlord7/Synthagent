@@ -8,12 +8,12 @@
 \path[draw=famC, line width=0.8pt, dashed, rounded corners=4pt] (-0.25,-3.55) rectangle (6.15,0.55);
 \node[anchor=north west, font=\scriptsize\bfseries, text=famC] at (-0.15,0.48) {Hospital $k$: inside the custodial boundary};
 \node[blk=grayc] (data) at (1.2,-0.55) {patient records\\ $n_k$ patients};
-\node[blk] (fit) at (4.5,-0.55) {local head $\hat{\theta}_k$, covariance $V_k$\\ (never released)};
-\node[blk=famT] (noise) at (4.5,-1.95) {clip, ridge centred on a public reference, add $\mathcal{N}(0,s_k^2 I)$};
-\node[blk] (final) at (1.2,-2.85) {borrowed estimate\\ $\tilde{\theta}_k=\alpha_k\hat{\theta}_k+(1-\alpha_k)\tilde{\mu}_k$};
+\node[blk] (fit) at (4.5,-0.55) {local head $\hat{\theta}_k$\\ (never released)};
+\node[blk=famT] (noise) at (4.5,-1.95) {statistic $z_k$ (estimate or score at $\mu_0$), add $\mathcal{N}(0,s_k^2 I)$};
+\node[blk] (final) at (1.2,-2.85) {borrowed estimate:\\ posterior mean of $\theta_k$, $\tau$ integrated out};
 % outside
 \node[blk=famE, text width=3.3cm] (net) at (9.25,-1.95) {gossip over the agreement graph\\ releases $r_j$ and public $n_j$ only};
-\node[blk=famE, text width=3.3cm] (post) at (9.25,-3.25) {post-processing: $\hat{\tau}^2$, $\tilde{\mu}_k$, $M_k$, optional screening};
+\node[blk=famE, text width=3.3cm] (post) at (9.25,-3.25) {post-processing: inversion, posterior of $\tau$, $\tilde{\mu}_k$, $M_k$, conflict check};
 \node[blk=famO, text width=3.3cm] (anchor) at (9.25,-0.45) {published anchor $\mu_0$ (public knowledge, L3)};
 % arrows
 \draw[arr] (data) -- (fit);
