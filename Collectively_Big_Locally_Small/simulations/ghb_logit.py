@@ -154,11 +154,11 @@ def tau2_quantiles(th, r, q=Q):
     return out
 
 
-def combine(X, y, means, variances):
+def combine(X, y, means, variances, prior_sd=PRIOR_SD):
     """Posterior mean of theta_k under a mixture of Gaussian priors, by Laplace approximation per component."""
     fits, logev = [], []
     for m, v in zip(means, variances):
-        pr = 1.0 / np.maximum(v, 1e-8) + 1.0 / PRIOR_SD ** 2
+        pr = 1.0 / np.maximum(v, 1e-8) + 1.0 / prior_sd ** 2
         m = (m / np.maximum(v, 1e-8)) / pr
         t = fit(X, y, m, pr)
         s = X @ t
@@ -188,9 +188,10 @@ def invert(pub, g, sd, n, mu0, avg, anchor_sd=0.3, check=True, pool_prior_sd=Non
     return th, r, drop
 
 
-def estimate(data, th, r, drop, mu0, avg, anchor_sd=0.3, oracle_tau2=None):
-    """GHB estimates (K, P) from inverted releases. With oracle_tau2, tau^2 is known (a single component)."""
+def estimate(data, th, r, drop, mu0, avg, anchor_sd=0.3, oracle_tau2=None, prior_sd=PRIOR_SD):
+    """GHB estimates (K, P) from inverted releases. With oracle_tau2, tau^2 is known (a single component).
+    prior_sd: scale of the default prior in each hospital's final fit (PRIOR_SD as reported)."""
     t2 = tau2_quantiles(th, r) if oracle_tau2 is None else np.full((1, P), oracle_tau2)
     comps = [anchor(*network(th, r, avg, t2[q]), mu0, anchor_sd, drop) + (t2[q],) for q in range(len(t2))]
-    return np.array([combine(X, y, [c[0][k] for c in comps], [c[1][k] + c[2] for c in comps])
+    return np.array([combine(X, y, [c[0][k] for c in comps], [c[1][k] + c[2] for c in comps], prior_sd)
                      for k, (X, y) in enumerate(data)])

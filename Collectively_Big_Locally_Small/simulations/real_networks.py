@@ -56,16 +56,21 @@ CLU_GRID = [(C, R, eta, E) for C in (2, 3) for R in (1, 3, 10) for eta in (0.2, 
 DITTO_GRID = (0.01, 0.1, 0.3, 1.0, 3.0, 10.0, 30.0, 100.0)
 LGD_STEPS = (1, 2, 3, 5, 10, 30, 100)
 FAMILIES = ["DP-FedAvg", "DP-FedAvg + fine-tuning", "Decentralized DP-SGD", "Clustered DP-FedAvg", "Ditto-style (DP)"]
-TUNED = {"Local GD, tuned stopping": [f"LGD|E={E}" for E in LGD_STEPS]}
+TUNED = {"Local GD, tuned stopping": [f"LGD|E={E}" for E in LGD_STEPS],
+         "Local, tuned prior": [f"LOCP|sd={s_}" for s_ in (0.5, 1.0, 2.5)],
+         "GHB, tuned prior (no DP)": [f"GHBPinf|sd={s_}" for s_ in (0.5, 1.0, 2.5)]}
 for _e in BASE_EPS:
+    TUNED[f"GHB, tuned prior (DP), eps={_e:g}"] = [f"GHBP{_e:g}|sd={s_}" for s_ in (0.5, 1.0, 2.5)]
     TUNED[f"DP-FedAvg, eps={_e:g}"] = [f"AVG{_e:g}|R={R}|eta={eta}" for R, eta in AVG_GRID]
     TUNED[f"DP-FedAvg + fine-tuning, eps={_e:g}"] = [f"FT{_e:g}|R={R}|eta={eta}|E={E}" for R, eta, E in FT_GRID]
     TUNED[f"Decentralized DP-SGD, eps={_e:g}"] = [f"DEC{_e:g}|R={R}|eta={eta}|E={E}" for R, eta, E in DEC_GRID]
     TUNED[f"Clustered DP-FedAvg, eps={_e:g}"] = [f"CLU{_e:g}|C={C}|R={R}|eta={eta}|E={E}" for C, R, eta, E in CLU_GRID]
     TUNED[f"Ditto-style (DP), eps={_e:g}"] = [f"DIT{_e:g}|lambda={lam}" for lam in DITTO_GRID]
 GHB_NAMES = [f"GHB (DP, eps={e:g})" for e in EPS_GHB]
-METHODS = (["Local"] + GHB_NAMES + ["GHB (no DP)", "GHB, empirical features (no DP)", "Global (pooled, no DP)", "Local GD, tuned stopping"]
-           + [f"Meta-analysis (DP), eps={e:g}" for e in BASE_EPS] + [k for k in TUNED if k != "Local GD, tuned stopping"])
+METHODS = (["Local"] + GHB_NAMES + ["GHB (no DP)", "GHB, empirical features (no DP)", "Global (pooled, no DP)", "Local GD, tuned stopping",
+                                    "Local, tuned prior", "GHB, tuned prior (no DP)"]
+           + [f"Meta-analysis (DP), eps={e:g}" for e in BASE_EPS]
+           + [k for k in TUNED if k not in ("Local GD, tuned stopping", "Local, tuned prior", "GHB, tuned prior (no DP)")])
 
 
 def load_medpar():
@@ -137,11 +142,20 @@ def gossip(K):
     return ghb.Averager(mixing(K), 60)
 
 
-def ghb_fit(rng, train, n, pub, avg, eps):
+PRIOR_SDS = (0.5, 1.0, 2.5)  # default-prior scales offered to GHB and local estimation when tuned like the baselines
+
+
+def ghb_fit(rng, train, n, pub, avg, eps, tuned=None):
+    """GHB at budget eps; with tuned = (est, key), also stores est[key + f"|sd={s}"] for every s in PRIOR_SDS."""
     mu0 = np.zeros(P)
     g, sd = GL.release(rng, train, n, mu0, eps, DELTA)
     th, r, drop = GL.invert(pub, g, sd, n, mu0, avg, anchor_sd=GL.PRIOR_SD, check=False, pool_prior_sd=GL.PRIOR_SD)
-    return GL.estimate(train, th, r, drop, mu0, avg, anchor_sd=None), th, r
+    out = GL.estimate(train, th, r, drop, mu0, avg, anchor_sd=None)
+    if tuned is not None:
+        est, key = tuned
+        for s_ in PRIOR_SDS:
+            est[f"{key}|sd={s_}"] = out if s_ == GL.PRIOR_SD else GL.estimate(train, th, r, drop, mu0, avg, anchor_sd=None, prior_sd=s_)
+    return out, th, r
 
 
 def estimates(rng, train, pub, avg, W):
@@ -149,10 +163,12 @@ def estimates(rng, train, pub, avg, W):
     K = len(n)
     est = {"Local": np.array([fit(X, y, np.zeros(P), PRIOR) for X, y in train])}
     rel = {}
+    for s_ in PRIOR_SDS:
+        est[f"LOCP|sd={s_}"] = np.array([fit(X, y, np.zeros(P), np.full(P, 1 / s_ ** 2)) for X, y in train])
     for e, name in zip(EPS_GHB, GHB_NAMES):
-        est[name], th, r = ghb_fit(rng, train, n, pub, avg, e)
+        est[name], th, r = ghb_fit(rng, train, n, pub, avg, e, (est, f"GHBP{e:g}") if e in BASE_EPS else None)
         rel[e] = (th, r)
-    est["GHB (no DP)"], _, _ = ghb_fit(rng, train, n, pub, avg, np.inf)
+    est["GHB (no DP)"], _, _ = ghb_fit(rng, train, n, pub, avg, np.inf, (est, "GHBPinf"))
     est["GHB, empirical features (no DP)"], _, _ = ghb_fit(rng, train, n, GL.Public(np.vstack([X for X, _ in train])), avg, np.inf)
     Xa = np.vstack([X for X, _ in train]); ya = np.concatenate([y for _, y in train])
     est["Global (pooled, no DP)"] = np.repeat(fit(Xa, ya, np.zeros(P), PRIOR)[None], K, 0)
