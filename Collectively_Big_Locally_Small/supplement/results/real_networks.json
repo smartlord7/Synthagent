@@ -21,11 +21,15 @@
   "medpar": {
    "chosen": {
     "Local GD, tuned stopping": "LGD|E=10",
+    "Local, tuned prior": "LOCP|sd=1.0",
+    "GHB, tuned prior (no DP)": "GHBPinf|sd=1.0",
+    "GHB, tuned prior (DP), eps=1": "GHBP1|sd=1.0",
     "DP-FedAvg, eps=1": "AVG1|R=1|eta=2.0",
     "DP-FedAvg + fine-tuning, eps=1": "FT1|R=1|eta=2.0|E=5",
     "Decentralized DP-SGD, eps=1": "DEC1|R=3|eta=0.2|E=5",
     "Clustered DP-FedAvg, eps=1": "CLU1|C=3|R=1|eta=0.2|E=5",
     "Ditto-style (DP), eps=1": "DIT1|lambda=0.1",
+    "GHB, tuned prior (DP), eps=10": "GHBP10|sd=0.5",
     "DP-FedAvg, eps=10": "AVG10|R=10|eta=2.0",
     "DP-FedAvg + fine-tuning, eps=10": "FT10|R=10|eta=2.0|E=5",
     "Decentralized DP-SGD, eps=10": "DEC10|R=30|eta=0.2|E=5",
@@ -207,6 +211,26 @@
     "share_gain": 0.813953488372093,
     "auc": 0.6068986723674223
    },
+   "Local, tuned prior": {
+    "ll": 0.6297726191913176,
+    "rel": 0.9613928247192781,
+    "rel_se": 0.0016405057008216308,
+    "rel_small": 0.9463987526123316,
+    "rel_small_se": 0.004661828180628945,
+    "worst": 1.0552391421332092,
+    "share_gain": 0.8837209302325582,
+    "auc": 0.5999876353001353
+   },
+   "GHB, tuned prior (no DP)": {
+    "ll": 0.6239215697130224,
+    "rel": 0.9524607803367615,
+    "rel_se": 0.0023611023873480264,
+    "rel_small": 0.9460121955504421,
+    "rel_small_se": 0.006770439694139338,
+    "worst": 1.0846195787904092,
+    "share_gain": 0.7674418604651163,
+    "auc": 0.6195088254463255
+   },
    "Meta-analysis (DP), eps=1": {
     "ll": 1.2048258496392603,
     "rel": 1.8392525994014535,
@@ -226,6 +250,16 @@
     "worst": 1.25654552711996,
     "share_gain": 0.5116279069767442,
     "auc": 0.5598669531482031
+   },
+   "GHB, tuned prior (DP), eps=1": {
+    "ll": 0.6296806192260364,
+    "rel": 0.9612523802099416,
+    "rel_se": 0.0018773814361253288,
+    "rel_small": 0.9473564520883219,
+    "rel_small_se": 0.005277042688056973,
+    "worst": 1.0586746599006371,
+    "share_gain": 0.813953488372093,
+    "auc": 0.6001433387370887
    },
    "DP-FedAvg, eps=1": {
     "ll": 0.6661906557050404,
@@ -276,6 +310,16 @@
     "worst": 1.1598404810855476,
     "share_gain": 0.046511627906976744,
     "auc": 0.5819656727469228
+   },
+   "GHB, tuned prior (DP), eps=10": {
+    "ll": 0.6250939555005667,
+    "rel": 0.9542505108674336,
+    "rel_se": 0.0025807108294569263,
+    "rel_small": 0.9564675929598292,
+    "rel_small_se": 0.007298839803437619,
+    "worst": 1.105423686951738,
+    "share_gain": 0.7906976744186046,
+    "auc": 0.6128182492244992
    },
    "DP-FedAvg, eps=10": {
     "ll": 0.6412613177466742,
@@ -331,11 +375,15 @@
   "TCGA-LUSC": {
    "chosen": {
     "Local GD, tuned stopping": "LGD|E=10",
+    "Local, tuned prior": "LOCP|sd=1.0",
+    "GHB, tuned prior (no DP)": "GHBPinf|sd=2.5",
+    "GHB, tuned prior (DP), eps=1": "GHBP1|sd=1.0",
     "DP-FedAvg, eps=1": "AVG1|R=1|eta=0.5",
     "DP-FedAvg + fine-tuning, eps=1": "FT1|R=1|eta=0.2|E=5",
     "Decentralized DP-SGD, eps=1": "DEC1|R=3|eta=0.2|E=5",
     "Clustered DP-FedAvg, eps=1": "CLU1|C=3|R=1|eta=0.2|E=5",
     "Ditto-style (DP), eps=1": "DIT1|lambda=0.1",
+    "GHB, tuned prior (DP), eps=10": "GHBP10|sd=1.0",
     "DP-FedAvg, eps=10": "AVG10|R=10|eta=0.5",
     "DP-FedAvg + fine-tuning, eps=10": "FT10|R=3|eta=2.0|E=5",
     "Decentralized DP-SGD, eps=10": "DEC10|R=3|eta=0.2|E=5",
@@ -465,6 +513,26 @@
     "share_gain": 0.5882352941176471,
     "auc": 0.6453962670787248
    },
+   "Local, tuned prior": {
+    "ll": 0.6160613233160622,
+    "rel": 0.955030512798752,
+    "rel_se": 0.004446407731844528,
+    "rel_small": 0.923503275594248,
+    "rel_small_se": 0.009148638994153616,
+    "worst": 1.0888296136774949,
+    "share_gain": 0.5882352941176471,
+    "auc": 0.6583547495120364
+   },
+   "GHB, tuned prior (no DP)": {
+    "ll": 0.6317934490184837,
+    "rel": 0.979418766870806,
+    "rel_se": 0.006576128073115394,
+    "rel_small": 0.992748689751901,
+    "rel_small_se": 0.014220182117256227,
+    "worst": 1.2029233503420547,
+    "share_gain": 0.5882352941176471,
+    "auc": 0.6137848690631099
+   },
    "Meta-analysis (DP), eps=1": {
     "ll": 1.8770150116074036,
     "rel": 2.90978599243553,
@@ -484,6 +552,16 @@
     "worst": 1.4502597059629327,
     "share_gain": 0.23529411764705882,
     "auc": 0.4829741379310345
+   },
+   "GHB, tuned prior (DP), eps=1": {
+    "ll": 0.6160861304151618,
+    "rel": 0.9550689692570257,
+    "rel_se": 0.00459180742208312,
+    "rel_small": 0.9216187129002682,
+    "rel_small_se": 0.009515188265089704,
+    "worst": 1.0987361334406707,
+    "share_gain": 0.5882352941176471,
+    "auc": 0.6579252399154196
    },
    "DP-FedAvg, eps=1": {
     "ll": 0.6867983619807857,
@@ -534,6 +612,16 @@
     "worst": 1.7015031606097015,
     "share_gain": 0.0,
     "auc": 0.6213633498698764
+   },
+   "GHB, tuned prior (DP), eps=10": {
+    "ll": 0.6241081800052327,
+    "rel": 0.9675049100371806,
+    "rel_se": 0.005959325227562465,
+    "rel_small": 0.946454829317688,
+    "rel_small_se": 0.011555651034513994,
+    "worst": 1.1503486447980253,
+    "share_gain": 0.5882352941176471,
+    "auc": 0.6369390452179571
    },
    "DP-FedAvg, eps=10": {
     "ll": 0.6595620089815112,
@@ -589,11 +677,15 @@
   "TCGA-HNSC": {
    "chosen": {
     "Local GD, tuned stopping": "LGD|E=3",
+    "Local, tuned prior": "LOCP|sd=0.5",
+    "GHB, tuned prior (no DP)": "GHBPinf|sd=0.5",
+    "GHB, tuned prior (DP), eps=1": "GHBP1|sd=0.5",
     "DP-FedAvg, eps=1": "AVG1|R=1|eta=0.2",
     "DP-FedAvg + fine-tuning, eps=1": "FT1|R=1|eta=0.2|E=5",
     "Decentralized DP-SGD, eps=1": "DEC1|R=3|eta=0.2|E=5",
     "Clustered DP-FedAvg, eps=1": "CLU1|C=2|R=1|eta=0.2|E=5",
     "Ditto-style (DP), eps=1": "DIT1|lambda=0.1",
+    "GHB, tuned prior (DP), eps=10": "GHBP10|sd=0.5",
     "DP-FedAvg, eps=10": "AVG10|R=10|eta=0.5",
     "DP-FedAvg + fine-tuning, eps=10": "FT10|R=10|eta=0.5|E=5",
     "Decentralized DP-SGD, eps=10": "DEC10|R=3|eta=0.2|E=5",
@@ -713,6 +805,26 @@
     "share_gain": 0.75,
     "auc": 0.593925535889413
    },
+   "Local, tuned prior": {
+    "ll": 0.6783912753675108,
+    "rel": 0.9303807807449234,
+    "rel_se": 0.005251030044906717,
+    "rel_small": 0.8559412308821835,
+    "rel_small_se": 0.028182027130218456,
+    "worst": 1.0050690328283483,
+    "share_gain": 0.75,
+    "auc": 0.590932260776164
+   },
+   "GHB, tuned prior (no DP)": {
+    "ll": 0.6821041464060689,
+    "rel": 0.9354728035658059,
+    "rel_se": 0.00584532162604042,
+    "rel_small": 0.8523154227640746,
+    "rel_small_se": 0.03250972847950694,
+    "worst": 1.0323096033722596,
+    "share_gain": 0.6666666666666666,
+    "auc": 0.5705482650726195
+   },
    "Meta-analysis (DP), eps=1": {
     "ll": 3.1571071284447925,
     "rel": 4.329819532933371,
@@ -732,6 +844,16 @@
     "worst": 1.3177319604164706,
     "share_gain": 0.25,
     "auc": 0.5070489889319573
+   },
+   "GHB, tuned prior (DP), eps=1": {
+    "ll": 0.6785295131238159,
+    "rel": 0.930570367133059,
+    "rel_se": 0.005222007026529091,
+    "rel_small": 0.8566441822573838,
+    "rel_small_se": 0.028387610669759596,
+    "worst": 1.0058225346581555,
+    "share_gain": 0.75,
+    "auc": 0.5906382804838183
    },
    "DP-FedAvg, eps=1": {
     "ll": 0.693386928310085,
@@ -782,6 +904,16 @@
     "worst": 1.398015941110164,
     "share_gain": 0.0,
     "auc": 0.5519154252089852
+   },
+   "GHB, tuned prior (DP), eps=10": {
+    "ll": 0.6801558083851533,
+    "rel": 0.9328007523250637,
+    "rel_se": 0.005678053642798089,
+    "rel_small": 0.8460663404905076,
+    "rel_small_se": 0.028055300004451767,
+    "worst": 1.0156352228849619,
+    "share_gain": 0.75,
+    "auc": 0.584190094802223
    },
    "DP-FedAvg, eps=10": {
     "ll": 0.6883589604376379,
@@ -837,11 +969,15 @@
   "TCGA-BLCA": {
    "chosen": {
     "Local GD, tuned stopping": "LGD|E=3",
+    "Local, tuned prior": "LOCP|sd=1.0",
+    "GHB, tuned prior (no DP)": "GHBPinf|sd=1.0",
+    "GHB, tuned prior (DP), eps=1": "GHBP1|sd=1.0",
     "DP-FedAvg, eps=1": "AVG1|R=1|eta=0.2",
     "DP-FedAvg + fine-tuning, eps=1": "FT1|R=3|eta=0.2|E=5",
     "Decentralized DP-SGD, eps=1": "DEC1|R=3|eta=0.2|E=5",
     "Clustered DP-FedAvg, eps=1": "CLU1|C=2|R=1|eta=0.2|E=5",
     "Ditto-style (DP), eps=1": "DIT1|lambda=0.01",
+    "GHB, tuned prior (DP), eps=10": "GHBP10|sd=1.0",
     "DP-FedAvg, eps=10": "AVG10|R=30|eta=0.2",
     "DP-FedAvg + fine-tuning, eps=10": "FT10|R=30|eta=0.2|E=5",
     "Decentralized DP-SGD, eps=10": "DEC10|R=10|eta=0.2|E=5",
@@ -963,6 +1099,26 @@
     "share_gain": 0.6923076923076923,
     "auc": 0.6966956757659237
    },
+   "Local, tuned prior": {
+    "ll": 0.6338938644142497,
+    "rel": 0.9271162807928426,
+    "rel_se": 0.006109105737487004,
+    "rel_small": 0.8408420524673544,
+    "rel_small_se": 0.0158697651505574,
+    "worst": 1.0826951944561125,
+    "share_gain": 0.8461538461538461,
+    "auc": 0.6804403539527506
+   },
+   "GHB, tuned prior (no DP)": {
+    "ll": 0.6360738707068655,
+    "rel": 0.9303046999266713,
+    "rel_se": 0.008672942031433145,
+    "rel_small": 0.8710130547015087,
+    "rel_small_se": 0.0371677772737353,
+    "worst": 1.1371157234964577,
+    "share_gain": 0.6923076923076923,
+    "auc": 0.6807473495283413
+   },
    "Meta-analysis (DP), eps=1": {
     "ll": 3.33704993272826,
     "rel": 4.880680341195431,
@@ -982,6 +1138,16 @@
     "worst": 2.5613077038912127,
     "share_gain": 0.23076923076923078,
     "auc": 0.6401819851406628
+   },
+   "GHB, tuned prior (DP), eps=1": {
+    "ll": 0.6348196808005104,
+    "rel": 0.9284703551780243,
+    "rel_se": 0.006143660567617411,
+    "rel_small": 0.8396938938236613,
+    "rel_small_se": 0.01575623175787408,
+    "worst": 1.0840029410707952,
+    "share_gain": 0.8461538461538461,
+    "auc": 0.679888137574088
    },
    "DP-FedAvg, eps=1": {
     "ll": 0.6946800859982667,
@@ -1032,6 +1198,16 @@
     "worst": 1.6202201086730204,
     "share_gain": 0.07692307692307693,
     "auc": 0.6375749227815344
+   },
+   "GHB, tuned prior (DP), eps=10": {
+    "ll": 0.6250554596761545,
+    "rel": 0.9141894654552364,
+    "rel_se": 0.007713057929072191,
+    "rel_small": 0.812042911840799,
+    "rel_small_se": 0.024553546474877643,
+    "worst": 1.128825486479724,
+    "share_gain": 0.8461538461538461,
+    "auc": 0.6957296101510978
    },
    "DP-FedAvg, eps=10": {
     "ll": 0.6696542976753557,
@@ -1087,11 +1263,15 @@
   "TCGA-STAD": {
    "chosen": {
     "Local GD, tuned stopping": "LGD|E=5",
+    "Local, tuned prior": "LOCP|sd=1.0",
+    "GHB, tuned prior (no DP)": "GHBPinf|sd=1.0",
+    "GHB, tuned prior (DP), eps=1": "GHBP1|sd=1.0",
     "DP-FedAvg, eps=1": "AVG1|R=1|eta=0.2",
     "DP-FedAvg + fine-tuning, eps=1": "FT1|R=1|eta=0.2|E=5",
     "Decentralized DP-SGD, eps=1": "DEC1|R=3|eta=0.2|E=5",
     "Clustered DP-FedAvg, eps=1": "CLU1|C=3|R=1|eta=0.2|E=5",
     "Ditto-style (DP), eps=1": "DIT1|lambda=0.1",
+    "GHB, tuned prior (DP), eps=10": "GHBP10|sd=2.5",
     "DP-FedAvg, eps=10": "AVG10|R=30|eta=0.2",
     "DP-FedAvg + fine-tuning, eps=10": "FT10|R=30|eta=0.2|E=5",
     "Decentralized DP-SGD, eps=10": "DEC10|R=10|eta=0.2|E=5",
@@ -1205,6 +1385,26 @@
     "share_gain": 0.7777777777777778,
     "auc": 0.6557687050921587
    },
+   "Local, tuned prior": {
+    "ll": 0.6406121353532679,
+    "rel": 0.9565505871248834,
+    "rel_se": 0.00503957005804372,
+    "rel_small": 1.0155162208849153,
+    "rel_small_se": 0.04885830674251727,
+    "worst": 0.998346925386913,
+    "share_gain": 0.8888888888888888,
+    "auc": 0.670420376444861
+   },
+   "GHB, tuned prior (no DP)": {
+    "ll": 0.6305779248810934,
+    "rel": 0.9415676834476058,
+    "rel_se": 0.006633356340400774,
+    "rel_small": 1.1534725245695496,
+    "rel_small_se": 0.10277275591151587,
+    "worst": 0.9796319996478803,
+    "share_gain": 0.7777777777777778,
+    "auc": 0.697152257107154
+   },
    "Meta-analysis (DP), eps=1": {
     "ll": 2.2551371047369764,
     "rel": 3.3673304056185183,
@@ -1224,6 +1424,16 @@
     "worst": 1.1703075278912523,
     "share_gain": 0.3333333333333333,
     "auc": 0.5699094033114651
+   },
+   "GHB, tuned prior (DP), eps=1": {
+    "ll": 0.6424100722733738,
+    "rel": 0.9592352343890074,
+    "rel_se": 0.005180854525715164,
+    "rel_small": 1.0261426332548116,
+    "rel_small_se": 0.05025577568803633,
+    "worst": 1.000743570892824,
+    "share_gain": 0.7777777777777778,
+    "auc": 0.6677036472977195
    },
    "DP-FedAvg, eps=1": {
     "ll": 0.6930047866774302,
@@ -1274,6 +1484,16 @@
     "worst": 1.4132337658578122,
     "share_gain": 0.0,
     "auc": 0.631756287097782
+   },
+   "GHB, tuned prior (DP), eps=10": {
+    "ll": 0.6327661107336369,
+    "rel": 0.9448350434404579,
+    "rel_se": 0.005411195897901717,
+    "rel_small": 0.9892425910880968,
+    "rel_small_se": 0.06729385665532364,
+    "worst": 0.9921270661683369,
+    "share_gain": 0.8888888888888888,
+    "auc": 0.689322282099344
    },
    "DP-FedAvg, eps=10": {
     "ll": 0.6751395848072147,
@@ -1329,11 +1549,15 @@
   "TCGA-LIHC": {
    "chosen": {
     "Local GD, tuned stopping": "LGD|E=5",
+    "Local, tuned prior": "LOCP|sd=1.0",
+    "GHB, tuned prior (no DP)": "GHBPinf|sd=1.0",
+    "GHB, tuned prior (DP), eps=1": "GHBP1|sd=1.0",
     "DP-FedAvg, eps=1": "AVG1|R=1|eta=0.2",
     "DP-FedAvg + fine-tuning, eps=1": "FT1|R=1|eta=0.2|E=5",
     "Decentralized DP-SGD, eps=1": "DEC1|R=3|eta=0.2|E=5",
     "Clustered DP-FedAvg, eps=1": "CLU1|C=2|R=1|eta=0.2|E=5",
     "Ditto-style (DP), eps=1": "DIT1|lambda=0.1",
+    "GHB, tuned prior (DP), eps=10": "GHBP10|sd=1.0",
     "DP-FedAvg, eps=10": "AVG10|R=10|eta=0.2",
     "DP-FedAvg + fine-tuning, eps=10": "FT10|R=1|eta=0.2|E=5",
     "Decentralized DP-SGD, eps=10": "DEC10|R=3|eta=0.2|E=5",
@@ -1443,6 +1667,26 @@
     "share_gain": 0.8571428571428571,
     "auc": 0.6954171641791045
    },
+   "Local, tuned prior": {
+    "ll": 0.5649340297756108,
+    "rel": 0.9278324803839751,
+    "rel_se": 0.005984023694329632,
+    "rel_small": 0.8039215835704386,
+    "rel_small_se": 0.05405892570326033,
+    "worst": 3.500559936208929,
+    "share_gain": 0.8571428571428571,
+    "auc": 0.6739720149253732
+   },
+   "GHB, tuned prior (no DP)": {
+    "ll": 0.5727311954129208,
+    "rel": 0.9406383358501499,
+    "rel_se": 0.007324460323726349,
+    "rel_small": 0.8094144665226396,
+    "rel_small_se": 0.05291646031130537,
+    "worst": 6.9127917228278,
+    "share_gain": 0.8571428571428571,
+    "auc": 0.6398466417910448
+   },
    "Meta-analysis (DP), eps=1": {
     "ll": 2.7208188932426176,
     "rel": 4.468599888372073,
@@ -1462,6 +1706,16 @@
     "worst": 39.51107572567938,
     "share_gain": 0.2857142857142857,
     "auc": 0.5178440298507463
+   },
+   "GHB, tuned prior (DP), eps=1": {
+    "ll": 0.5649317821934466,
+    "rel": 0.9278287890153828,
+    "rel_se": 0.005961723931453349,
+    "rel_small": 0.8009411840092012,
+    "rel_small_se": 0.05160089938911986,
+    "worst": 3.7129768223891553,
+    "share_gain": 0.8571428571428571,
+    "auc": 0.6738417910447762
    },
    "DP-FedAvg, eps=1": {
     "ll": 0.6930118305038319,
@@ -1512,6 +1766,16 @@
     "worst": 5.341531992065199,
     "share_gain": 0.0,
     "auc": 0.6318932835820895
+   },
+   "GHB, tuned prior (DP), eps=10": {
+    "ll": 0.5679435244613531,
+    "rel": 0.9327751936421653,
+    "rel_se": 0.006748663709895122,
+    "rel_small": 0.8217557520806212,
+    "rel_small_se": 0.06571019925814116,
+    "worst": 4.683176305098822,
+    "share_gain": 0.8571428571428571,
+    "auc": 0.6583134328358209
    },
    "DP-FedAvg, eps=10": {
     "ll": 0.683202041692044,
@@ -1567,11 +1831,15 @@
   "TCGA-KIRC": {
    "chosen": {
     "Local GD, tuned stopping": "LGD|E=30",
+    "Local, tuned prior": "LOCP|sd=2.5",
+    "GHB, tuned prior (no DP)": "GHBPinf|sd=1.0",
+    "GHB, tuned prior (DP), eps=1": "GHBP1|sd=2.5",
     "DP-FedAvg, eps=1": "AVG1|R=10|eta=0.2",
     "DP-FedAvg + fine-tuning, eps=1": "FT1|R=3|eta=0.2|E=30",
     "Decentralized DP-SGD, eps=1": "DEC1|R=3|eta=0.2|E=30",
     "Clustered DP-FedAvg, eps=1": "CLU1|C=3|R=1|eta=0.2|E=30",
     "Ditto-style (DP), eps=1": "DIT1|lambda=0.1",
+    "GHB, tuned prior (DP), eps=10": "GHBP10|sd=2.5",
     "DP-FedAvg, eps=10": "AVG10|R=10|eta=2.0",
     "DP-FedAvg + fine-tuning, eps=10": "FT10|R=10|eta=2.0|E=30",
     "Decentralized DP-SGD, eps=10": "DEC10|R=30|eta=0.2|E=30",
@@ -1681,6 +1949,26 @@
     "share_gain": 0.2857142857142857,
     "auc": 0.7994162145871007
    },
+   "Local, tuned prior": {
+    "ll": 0.46362229247649106,
+    "rel": 1.0,
+    "rel_se": 0.0,
+    "rel_small": 1.0,
+    "rel_small_se": 0.0,
+    "worst": 1.0,
+    "share_gain": 0.0,
+    "auc": 0.807914707655214
+   },
+   "GHB, tuned prior (no DP)": {
+    "ll": 0.4505267548689756,
+    "rel": 0.9717538655495529,
+    "rel_se": 0.0064483229608103265,
+    "rel_small": 1.0016433148250912,
+    "rel_small_se": 0.03778970410583905,
+    "worst": 1.0054770463557088,
+    "share_gain": 0.5714285714285714,
+    "auc": 0.826289933694997
+   },
    "Meta-analysis (DP), eps=1": {
     "ll": 1.7290240601856572,
     "rel": 3.7293807658598106,
@@ -1700,6 +1988,16 @@
     "worst": 1.5628101042909393,
     "share_gain": 0.14285714285714285,
     "auc": 0.734379746835443
+   },
+   "GHB, tuned prior (DP), eps=1": {
+    "ll": 0.46178042752450843,
+    "rel": 0.9960272295317291,
+    "rel_se": 0.004005998719414629,
+    "rel_small": 1.0216739617591106,
+    "rel_small_se": 0.02927591043701615,
+    "worst": 0.9987837906443452,
+    "share_gain": 0.8571428571428571,
+    "auc": 0.8103654309825196
    },
    "DP-FedAvg, eps=1": {
     "ll": 0.6368293403588273,
@@ -1750,6 +2048,16 @@
     "worst": 1.3517390945141263,
     "share_gain": 0.0,
     "auc": 0.791920132610006
+   },
+   "GHB, tuned prior (DP), eps=10": {
+    "ll": 0.4575639033661648,
+    "rel": 0.9869324896394331,
+    "rel_se": 0.006050490033256384,
+    "rel_small": 1.0676580219481058,
+    "rel_small_se": 0.03389846825420244,
+    "worst": 0.9984229749515804,
+    "share_gain": 0.7142857142857143,
+    "auc": 0.8134822182037372
    },
    "DP-FedAvg, eps=10": {
     "ll": 0.5306893953043502,
@@ -1805,11 +2113,15 @@
   "heart": {
    "chosen": {
     "Local GD, tuned stopping": "LGD|E=100",
+    "Local, tuned prior": "LOCP|sd=1.0",
+    "GHB, tuned prior (no DP)": "GHBPinf|sd=1.0",
+    "GHB, tuned prior (DP), eps=1": "GHBP1|sd=1.0",
     "DP-FedAvg, eps=1": "AVG1|R=30|eta=0.5",
     "DP-FedAvg + fine-tuning, eps=1": "FT1|R=30|eta=0.2|E=30",
     "Decentralized DP-SGD, eps=1": "DEC1|R=30|eta=0.2|E=30",
     "Clustered DP-FedAvg, eps=1": "CLU1|C=2|R=1|eta=2.0|E=30",
     "Ditto-style (DP), eps=1": "DIT1|lambda=0.1",
+    "GHB, tuned prior (DP), eps=10": "GHBP10|sd=1.0",
     "DP-FedAvg, eps=10": "AVG10|R=30|eta=2.0",
     "DP-FedAvg + fine-tuning, eps=10": "FT10|R=30|eta=2.0|E=30",
     "Decentralized DP-SGD, eps=10": "DEC10|R=30|eta=2.0|E=30",
@@ -1913,6 +2225,26 @@
     "share_gain": 0.75,
     "auc": 0.8532092529122988
    },
+   "Local, tuned prior": {
+    "ll": 0.4644133333488425,
+    "rel": 0.9956933952327734,
+    "rel_se": 0.0014600420769132543,
+    "rel_small": 0.9851714678703073,
+    "rel_small_se": 0.00286955655271934,
+    "worst": 1.0052392545660795,
+    "share_gain": 0.75,
+    "auc": 0.8535172730271178
+   },
+   "GHB, tuned prior (no DP)": {
+    "ll": 0.46196646685451664,
+    "rel": 0.9904473597887683,
+    "rel_se": 0.0014532182058031337,
+    "rel_small": 0.9846061286072743,
+    "rel_small_se": 0.0031778193857663283,
+    "worst": 0.9996202367509649,
+    "share_gain": 1.0,
+    "auc": 0.856771578736036
+   },
    "Meta-analysis (DP), eps=1": {
     "ll": 0.6614884302982633,
     "rel": 1.4182186724086594,
@@ -1932,6 +2264,16 @@
     "worst": 1.8303909493082549,
     "share_gain": 0.0,
     "auc": 0.832799356115469
+   },
+   "GHB, tuned prior (DP), eps=1": {
+    "ll": 0.4642439959472985,
+    "rel": 0.9953303390494649,
+    "rel_se": 0.0015202930362245171,
+    "rel_small": 0.9851259905233556,
+    "rel_small_se": 0.0031182644998327723,
+    "worst": 1.0046742894521352,
+    "share_gain": 0.75,
+    "auc": 0.8539513453697197
    },
    "DP-FedAvg, eps=1": {
     "ll": 0.5703888691760097,
@@ -1982,6 +2324,16 @@
     "worst": 1.0368838342774802,
     "share_gain": 0.0,
     "auc": 0.8521142906992863
+   },
+   "GHB, tuned prior (DP), eps=10": {
+    "ll": 0.4621863755922435,
+    "rel": 0.9909188399595241,
+    "rel_se": 0.0014095166142512952,
+    "rel_small": 0.9857952700050252,
+    "rel_small_se": 0.003177292477037505,
+    "worst": 0.9997033994142783,
+    "share_gain": 1.0,
+    "auc": 0.8564359652770807
    },
    "DP-FedAvg, eps=10": {
     "ll": 0.5008979578978165,
