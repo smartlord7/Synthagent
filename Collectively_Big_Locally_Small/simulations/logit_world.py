@@ -31,9 +31,13 @@ def features(rng, m, shift_mean=None):
     return np.hstack([np.ones((m, 1)), z])
 
 
-def world(rng, n, tau2, shift=0.0, anchor_err=0.3):
+def world(rng, n, tau2, shift=0.0, anchor_err=0.3, regions=None):
+    """Draw one world. regions = (G, tau_r2) adds a shared effect N(0, tau_r2 I) per region, hospital k in region k mod G."""
     K = len(n)
     theta = MU + np.sqrt(tau2) * rng.standard_normal((K, P))
+    if regions is not None:
+        G, tau_r2 = regions
+        theta = theta + np.sqrt(tau_r2) * rng.standard_normal((G, P))[np.arange(K) % G]
     means = shift * rng.standard_normal((K, P - 1))
     mu0 = MU + anchor_err * rng.standard_normal(P)
     data = []
@@ -106,9 +110,14 @@ def evaluate(rng, theta_k, mean_k, est):
 
 
 def one_rep(rng, n, tau2, eps, avg, shift=0.0, anchor_err=0.3, anchor_sd=0.3, check=False,
-            ditto_lam=None, ghb_variants=None, baselines=True, deshrink="anchor", centre="zero"):
-    """Excess log-loss and AUC of every method at every hospital for one replicate."""
-    theta, means, mu0, data = world(rng, n, tau2, shift, anchor_err)
+            ditto_lam=None, ghb_variants=None, baselines=True, deshrink="anchor", centre="zero",
+            regions=None, extra=None, oracle_tau2=False):
+    """Excess log-loss and AUC of every method at every hospital for one replicate.
+
+    extra(rng, data, n, mu0, eps) may return further estimates, a dict name -> (K, P) array (Simulation 15).
+    oracle_tau2 adds "GHB, oracle tau2 (DP)": GHB with the true marginal heterogeneity instead of its estimate.
+    """
+    theta, means, mu0, data = world(rng, n, tau2, shift, anchor_err, regions)
     rel, r = releases(rng, data, n, mu0, eps, deshrink, centre)
     t2, mu_t, M = network(rel, r, avg)
     variants = ghb_variants or {"GHB (DP)": dict(anchor_sd=anchor_sd, check=check)}
@@ -116,6 +125,12 @@ def one_rep(rng, n, tau2, eps, avg, shift=0.0, anchor_err=0.3, anchor_sd=0.3, ch
     for name, cfg in variants.items():
         mc, Mc, drop = with_anchor(mu_t, M, mu0, cfg.get("anchor_sd"), cfg.get("check", False))
         priors[name] = (mc, 1.0 / np.maximum(t2 + Mc, 1e-6), drop)
+    if oracle_tau2:
+        t2_true = tau2 + (regions[1] if regions is not None else 0.0)
+        _, mu_o, M_o = network(rel, r, avg, tau2=t2_true)
+        cfg = next(iter(variants.values()))
+        mc, Mc, drop = with_anchor(mu_o, M_o, mu0, cfg.get("anchor_sd"), cfg.get("check", False))
+        priors["GHB, oracle tau2 (DP)"] = (mc, 1.0 / np.maximum(t2_true + Mc, 1e-6), drop)
     if baselines:
         w_n = n / n.sum()
         fedavg = (rel * w_n[:, None]).sum(axis=0)  # one-shot federated averaging of the private releases
@@ -124,6 +139,7 @@ def one_rep(rng, n, tau2, eps, avg, shift=0.0, anchor_err=0.3, anchor_sd=0.3, ch
         meta = (rel * w_iv).sum(axis=0) / w_iv.sum(axis=0)  # random-effects (DerSimonian-Laird) pooled mean
         Xall = np.vstack([X for X, _ in data]); yall = np.concatenate([y for _, y in data])
         pooled = fit(Xall, yall, np.zeros(P), np.full(P, 1e-3))
+    more = extra(rng, data, n, mu0, eps) if extra is not None else {}
     res = {}
     for k, (X, y) in enumerate(data):
         est = {"Local": fit(X, y, mu0, np.ones(P))}
@@ -135,6 +151,8 @@ def one_rep(rng, n, tau2, eps, avg, shift=0.0, anchor_err=0.3, anchor_sd=0.3, ch
             est["Meta-analysis (DP)"] = meta
             for lam in (DITTO_GRID if ditto_lam is None else (ditto_lam,)):
                 est[f"Ditto-style (DP), lambda={lam}"] = fit(X, y, fedavg, np.full(P, lam))
+        for name, th in more.items():
+            est[name] = th[k]
         res[k] = evaluate(rng, theta[k], means[k], est)
     methods = list(res[0])
     kl = {m: np.array([res[k][m][0] for k in range(len(n))]) for m in methods}

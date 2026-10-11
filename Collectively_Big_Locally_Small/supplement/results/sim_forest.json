@@ -101,6 +101,42 @@
    {
     "GHB": 0.9570439334948779
    }
+  ],
+  [
+   "Sim 15: iterative baselines, $\\tau^2$=0.05",
+   {
+    "GHB": 0.5955734170492589,
+    "DP-FedAvg + fine-tuning": 0.5731478526466219,
+    "Decentralized DP-SGD": 0.7468594757932063,
+    "Clustered DP-FedAvg": 0.7428151367255399
+   }
+  ],
+  [
+   "Sim 15: iterative baselines, $\\epsilon$=0.3",
+   {
+    "GHB": 0.9501067364643909,
+    "DP-FedAvg + fine-tuning": 0.7413991684602137,
+    "Decentralized DP-SGD": 0.9198425122365212,
+    "Clustered DP-FedAvg": 0.7294623357519818
+   }
+  ],
+  [
+   "Sim 15: regional heterogeneity",
+   {
+    "GHB": 0.7458636214231908,
+    "DP-FedAvg + fine-tuning": 0.8278521492164641,
+    "Decentralized DP-SGD": 0.9756828823258697,
+    "Clustered DP-FedAvg": 0.9306013311390784
+   }
+  ],
+  [
+   "Sim 15: anchor wrong by 1 s.d.",
+   {
+    "GHB": 0.593406707535947,
+    "DP-FedAvg + fine-tuning": 0.71127335952617,
+    "Decentralized DP-SGD": 1.1923307815720183,
+    "Clustered DP-FedAvg": 1.1894231223276226
+   }
   ]
  ]
 }

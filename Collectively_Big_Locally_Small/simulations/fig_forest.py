@@ -1,4 +1,4 @@
-"""Summary of the evidence: every scenario of Simulations 2-13 on one axis.
+"""Summary of the evidence: every scenario of Simulations 2-15 on one axis.
 
 Each row is a scenario; each marker is a method's error relative to local estimation (Gaussian
 simulations: mean risk R_k/v_k; logistic simulations: mean excess log-loss divided by that of local
@@ -16,9 +16,11 @@ R = ghb.RESDIR
 COL = {"GHB": style.TEAL700, "Robust GHB": style.VIOLET600, "GHB + opt-out": style.AMBER600,
        "Ditto-style": style.BLUE600, "Meta-analysis": "#6b7280", "FedAvg": style.SLATE800,
        "Global (no DP)": style.RED700, "GHB, overconfident anchor": style.RED700,
-       "GHB + conflict check": style.AMBER600}
+       "GHB + conflict check": style.AMBER600, "DP-FedAvg + fine-tuning": "#92400e",
+       "Decentralized DP-SGD": "#be185d", "Clustered DP-FedAvg": style.SLATE800}
 MK = {"GHB": "o", "Robust GHB": "s", "GHB + opt-out": "^", "Ditto-style": "D", "Meta-analysis": "v", "FedAvg": "<",
-      "Global (no DP)": "x", "GHB, overconfident anchor": "P", "GHB + conflict check": "^"}
+      "Global (no DP)": "x", "GHB, overconfident anchor": "P", "GHB + conflict check": "^",
+      "DP-FedAvg + fine-tuning": ">", "Decentralized DP-SGD": "p", "Clustered DP-FedAvg": "^"}
 
 
 def rows():
@@ -58,6 +60,13 @@ def rows():
                  "GHB + conflict check": s11["GHB, overconfident + conflict check"] / s11["Local"]}))
     s7 = json.load(open(R / "s7_logistic.json"))["table"]["tau2=0.05|eps=0.3"]
     out.append(("Sim 7: logistic, strict budget $\\epsilon$=0.3", {"GHB": s7["GHB"]["kl"] / s7["Local"]["kl"]}))
+    s15 = json.load(open(R / "sim15_literature.json"))["res"]
+    for key, title in (("tau2=0.05", "Sim 15: iterative baselines, $\\tau^2$=0.05"), ("eps=0.3", "Sim 15: iterative baselines, $\\epsilon$=0.3"),
+                       ("regional", "Sim 15: regional heterogeneity"), ("anchor=1.0", "Sim 15: anchor wrong by 1 s.d.")):
+        kl = s15[key]["kl"]
+        out.append((title, {m: kl[k] / kl["Local"] for m, k in (("GHB", "GHB (DP)"), ("DP-FedAvg + fine-tuning", "DP-FedAvg + fine-tuning"),
+                                                                 ("Decentralized DP-SGD", "Decentralized DP-SGD"),
+                                                                 ("Clustered DP-FedAvg", "Clustered DP-FedAvg"))}))
     return out
 
 

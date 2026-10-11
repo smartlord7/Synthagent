@@ -7,8 +7,8 @@ The project was first rebuilt 1:1 from `recovered_main.pdf`, which is kept unmod
 ## Build
 
 ```sh
-latexmk -pdf main.tex                         # the paper (56 pages, ACM review mode)
-cd supplement && latexmk -pdf supplement.tex  # the online supplement (30 pages); build main.tex first
+latexmk -pdf main.tex                         # the paper (58 pages, ACM review mode)
+cd supplement && latexmk -pdf supplement.tex  # the online supplement (32 pages); build main.tex first
 ```
 
 `main.tex` is set up for submission to ACM Computing Surveys (`review` mode: line numbers and ACM metadata). For a preprint, swap the two `\documentclass` lines at the top.
@@ -17,8 +17,8 @@ You need TeX Live with `acmart` (v2.03 or later), `algorithm2e`, `pifont`, `make
 
 ```sh
 python3 scripts/make_figures.py      # Figures 2 and 6-10 of the paper
-python3 simulations/run_all.py       # Simulations 1-14, forest plot, macros (about 15 minutes)
-python3 simulations/make_numbers.py  # supplement/results/sim_numbers.tex, s7_table.tex
+python3 simulations/run_all.py       # Simulations 1-15, forest plot, macros (about 20 minutes)
+python3 simulations/make_numbers.py  # supplement/results/sim_numbers.tex, s7_table.tex, s15_table.tex, s15_hyper.tex
 # systematic search: queries the databases (slow), then screens, codes and counts
 python3 prisma/search.py && python3 prisma/screen.py && python3 prisma/fetch_corpus_abstracts.py \
   && python3 prisma/classify.py && python3 prisma/verify.py && python3 prisma/sensitivity.py \
@@ -78,7 +78,8 @@ The subscription databases were not searched. To add them, run the query in each
 | `exp12_byzantine.py` | 12. Dishonest hospitals (release screening) |
 | `exp13_dropout.py` | 13. Link failures during gossip |
 | `exp14_accounting.py` | 14. Repeated releases (basic composition vs zCDP) |
-| `fig_forest.py` | Summary forest plot (Figure 13 of the paper) |
+| `exp15_literature.py`, `literature.py` | 15. Iterative federated learning at the same zCDP budget: DP-FedAvg (with fine-tuning), decentralized DP-SGD, clustered DP-FedAvg, and a local control from the anchor |
+| `fig_forest.py` | Summary forest plot of Simulations 2-15 |
 | `make_numbers.py` | LaTeX macros and tables read by the paper and supplement |
 
 Each script writes a figure to `supplement/figures/` and its numbers to `supplement/results/`. All seeds are fixed. The closed forms are in `scripts/blueprint.py`.
@@ -115,6 +116,7 @@ Each script writes a figure to `supplement/figures/` and its numbers to `supplem
   - A summary forest plot and the privacy-boundary diagram (TikZ) are new.
   - Algorithm 1 now centres releases on a fixed public reference, and lists the optional safeguards: anchor conflict check, opt-out, release screening.
   - The privacy scope gains repeated-release accounting.
+- **Simulation 15.** Iterative federated baselines at the same privacy budget, with tuned hyperparameters. DP-FedAvg with fine-tuning ties with GHB at moderate heterogeneity and wins when hospitals are nearly identical or the budget is strict, at the cost of making large hospitals worse off than alone. GHB wins with stronger or regional heterogeneity and with a wrong anchor. GHB was not changed after these results; its conservative estimate of τ² is identified as the bottleneck.
 - **Search.** The direct arXiv search was dropped; arXiv is covered only through Europe PMC's life-science subset, and the text says so.
 
 ## Recovery from `recovered_main.pdf`
