@@ -30,6 +30,8 @@ def main():
         "TwoMeanPool": f"{s2['Global model (full pooling) | eps=1.0']['max_mean']:.0f}",
         "TwoMinGHB": f2(s2[f"{gname} | eps=1.0"]["min_mean"]),
         "TwoMinOracle": f2(s2["GHB, oracle $\\tau^2$, exact mean | eps=1.0"]["min_mean"]),
+        "TwoWorstFB": f2(max(s2[f"GHB, tau integrated out, gossip T=60 | eps={e}"]["max_worst"] for e in ("None", "1.0"))),
+        "TwoMinFB": f2(s2["GHB, tau integrated out, gossip T=60 | eps=1.0"]["min_mean"]),
         "ThreeB": f"{s3['B']:.0f}", "ThreeSmall": f2(s3["gain_small"]), "ThreeLarge": f2(s3["gain_large"]),
         "ThreeMin": f2(s3["min_gain"]), "ThreePoolSmall": f2(s3["pool_gain_small"]),
         "ThreePoolLarge": f2(s3["pool_gain_large"]),
@@ -94,10 +96,11 @@ def main():
     n["FourteenOne"] = f"{s14['rows'][0]['B_basic']:.1f}"
     s15 = json.load(open(R / "sim15_literature.json"))["res"]
     short15 = {"Local": "Local", "Local GD from anchor": "AnchorGD", "GHB (DP)": "GHB", "GHB, oracle tau2 (DP)": "Oracle",
+               "GHB, earlier version (DP)": "Old",
                "Ditto-style (DP)": "Ditto", "DP-FedAvg": "Fedavg", "DP-FedAvg + fine-tuning": "FT",
                "Decentralized DP-SGD": "Dec", "Clustered DP-FedAvg": "Clus", "Global (pooled, no DP)": "Pooled"}
     tags15 = {"tau2=0.01": "Low", "tau2=0.05": "Mid", "tau2=0.2": "High", "tau2=0.5": "Extreme", "eps=0.3": "Strict",
-              "eps=inf": "NoDP", "regional": "Reg", "anchor=1.0": "Anchor"}
+              "eps=inf": "NoDP", "regional": "Reg", "anchor=1.0": "Anchor", "tau2=0.1,eps=0.5": "Mod", "K=48": "Large"}
     for key, tag in tags15.items():
         r15 = s15[key]
         for m, short in short15.items():
@@ -131,10 +134,10 @@ def main():
 
     # Tables of Simulation 15: excess log-loss per setting, and the tuned hyperparameters
     labels15 = {"tau2=0.01": "$\\tau^2=0.01$", "tau2=0.05": "$\\tau^2=0.05$", "tau2=0.2": "$\\tau^2=0.2$",
-                "tau2=0.5": "$\\tau^2=0.5$", "eps=0.3": "$\\epsilon=0.3$", "eps=inf": "no DP", "regional": "regional",
-                "anchor=1.0": "wrong anchor"}
+                "tau2=0.5": "$\\tau^2=0.5$", "eps=0.3": "$\\epsilon=0.3$", "eps=inf": "no DP", "regional": "regional$^\\ast$",
+                "anchor=1.0": "wrong anchor$^\\ast$", "tau2=0.1,eps=0.5": "$\\tau^2=0.1$, $\\epsilon=0.5^\\ast$", "K=48": "$K=48^\\ast$"}
     cols15 = ["Local", "Local GD from anchor", "GHB (DP)", "Ditto-style (DP)", "DP-FedAvg", "DP-FedAvg + fine-tuning",
-              "Decentralized DP-SGD", "Clustered DP-FedAvg", "GHB, oracle tau2 (DP)", "Global (pooled, no DP)"]
+              "Decentralized DP-SGD", "Clustered DP-FedAvg", "GHB, earlier version (DP)", "GHB, oracle tau2 (DP)", "Global (pooled, no DP)"]
     rows, hrows = [], []
     for key, lab in labels15.items():
         r15 = s15[key]
