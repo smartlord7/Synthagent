@@ -90,7 +90,7 @@ This supplement accompanies the paper \emph{Graph Hierarchical Borrowing: Privat
 
 Section~\ref{M-sec:experiments} of the paper summarizes these simulations; this section gives the full design and every figure. The simulations test GHB (Sections~\ref{M-sec:model} and~\ref{M-sec:heads} of the paper) under its own model and under a logistic analogue. They check internal consistency and expose the cost of estimating the unknown quantities that Propositions~\ref{M-prop:borrowing} to~\ref{M-prop:gossip} take as known; they are not evidence about real hospital networks. Unless stated otherwise, the network has 24 hospitals whose sizes are drawn once from a log-normal distribution with median 100 and clipped (16 to 479 patients), $\sigma^2=1$, $\delta=10^{-5}$, clipping bound $C=1$, and the privatized releases are averaged by 60 rounds of Metropolis-Hastings gossip on the ring with two-hop links of Figure~\ref{M-fig:gossip}. \emph{Plug-in GHB} estimates everything it needs from the privatized releases and public quantities only: $\tau^2$ by DerSimonian-Laird (Remark~\ref{M-rem:tau}), the leave-one-out population estimate by inverse-variance weighting, and its error $M$ from those weights. Risk is reported relative to local estimation, $R_k/v_k$ with $v_k=\sigma^2/n_k$; values below 1 mean that a hospital gains. All code is in \texttt{simulations/} of the companion survey's repository, and \texttt{run\_all.py} regenerates every figure and number in about twenty minutes.
 
-\paragraph{Simulation 1: the closed forms} Figure~\ref{fig:s1} repeats the setting of Figure~\ref{M-fig:risk} with \SimOneReps{} replicates per point. Across \SimOneChecks{} comparisons of a simulated risk or $M$ with its closed form, \SimOneWithin{} lie within two Monte Carlo standard errors, and the largest relative deviation is \SimOneMaxRel. Propositions~\ref{M-prop:borrowing} and~\ref{M-prop:privatized} and the code that draws Figure~\ref{M-fig:risk} agree.
+\paragraph{Simulation 1: the closed forms} Figure~\ref{fig:s1} and Tables~\ref{tab:s1} and~\ref{tab:s1M} repeat the setting of Figure~\ref{M-fig:risk} with \SimOneReps{} replicates per point. Across \SimOneChecks{} comparisons of a simulated risk or $M$ with its closed form, \SimOneWithin{} lie within two Monte Carlo standard errors, and the largest relative deviation is \SimOneMaxRel. Propositions~\ref{M-prop:borrowing} and~\ref{M-prop:privatized} and the code that draws Figure~\ref{M-fig:risk} agree.
 
 \begin{figure}[t]
 \centering
@@ -99,7 +99,36 @@ Section~\ref{M-sec:experiments} of the paper summarizes these simulations; this 
 \label{fig:s1}
 \end{figure}
 
-\paragraph{Simulation 2: heterogeneity} Figure~\ref{fig:s2} varies $\tau^2$ from $10^{-4}$ to 1. Plug-in GHB is never worse than local estimation by more than Monte Carlo error: its worst hospital reaches a relative risk of \SimTwoWorstGHB{} at most. A single global model (the sample-size weighted mean of all site estimates, computed without privacy) is the best choice when $\tau^2$ is tiny, but its mean relative risk reaches \SimTwoMeanPool{} and its worst hospital \SimTwoWorstPool{} at $\tau^2=1$. Estimating $\tau^2$ costs most when heterogeneity is smallest: at $\tau^2=10^{-4}$ and $\epsilon=1$ the plug-in reaches \SimTwoMinGHB{} against \SimTwoMinOracle{} with the true $\tau^2$. Gossip with 60 rounds is indistinguishable from exact averaging.
+\begin{table}[t]
+\caption{Simulation 1: exact values behind Figure~\ref{fig:s1}. Top: risk $R_k$ of a hospital of $n_k$ patients ($\sigma^2=1$), simulated, with the closed form in grey; Global: full pooling without privacy; Hier.: hierarchical borrowing with known $\tau^2$. Bottom: simulated $M$ of the privatized leave-one-out mean, when the 23 other hospitals all have $n_j$ patients, with Equation~\eqref{M-eq:M} in grey.}
+\label{tab:s1}
+\scriptsize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}rlllll@{}}
+\toprule
+$n_k$ & Local & Global & Hier., no DP & Hier., $\epsilon=1$ & Hier., $\epsilon=0.1$\\
+\midrule
+\csname @@input\endcsname ../../Collectively_Big_Locally_Small/supplement/results/tables/s_sim1_risk.tex 
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[t]
+\caption{Simulation 1, continued: $M$ against the size $n_j$ of the other hospitals and the privacy budget; simulated, with Equation~\eqref{M-eq:M} in grey.}
+\label{tab:s1M}
+\scriptsize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}rllllll@{}}
+\toprule
+$n_j$ & $\epsilon=0.05$ & $\epsilon=0.1$ & $\epsilon=0.3$ & $\epsilon=1$ & $\epsilon=3$ & no DP\\
+\midrule
+\csname @@input\endcsname ../../Collectively_Big_Locally_Small/supplement/results/tables/s_sim1_M.tex 
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\paragraph{Simulation 2: heterogeneity} Figure~\ref{fig:s2} and Table~\ref{tab:s2} vary $\tau^2$ from $10^{-4}$ to 1. Plug-in GHB is never worse than local estimation by more than Monte Carlo error: its worst hospital reaches a relative risk of \SimTwoWorstGHB{} at most. A single global model (the sample-size weighted mean of all site estimates, computed without privacy) is the best choice when $\tau^2$ is tiny, but its mean relative risk reaches \SimTwoMeanPool{} and its worst hospital \SimTwoWorstPool{} at $\tau^2=1$. Estimating $\tau^2$ costs most when heterogeneity is smallest: at $\tau^2=10^{-4}$ and $\epsilon=1$ the plug-in reaches \SimTwoMinGHB{} against \SimTwoMinOracle{} with the true $\tau^2$. Gossip with 60 rounds is indistinguishable from exact averaging.
 
 \begin{figure}[t]
 \centering
@@ -108,7 +137,26 @@ Section~\ref{M-sec:experiments} of the paper summarizes these simulations; this 
 \label{fig:s2}
 \end{figure}
 
-\paragraph{Simulation 3: who gains, and how many hospitals are needed} At $\tau^2=0.02$ and $\epsilon=1$ (Figure~\ref{fig:s3}, left), every hospital gains about the same number of virtual patients, $B\approx\SimThreeB$, as Equation~\eqref{M-eq:borrowed} predicts. The hospitals with 60 patients or fewer multiply their effective sample size by \SimThreeSmall{} on average, and those with 300 or more by \SimThreeLarge{}; the smallest gain of any hospital is \SimThreeMin. The global model multiplies the effective sample size of small hospitals by \SimThreePoolSmall{} but cuts that of large hospitals to \SimThreePoolLarge{} of their own. With few hospitals, $\tau^2$ is poorly estimated (Figure~\ref{fig:s3}, right). With three hospitals the mean relative risk is \SimThreeKThreeDL{} with DerSimonian-Laird against \SimThreeKThreeOracle{} with the true $\tau^2$, and the gap closes as the network grows (\SimThreeKFortyEightDL{} against \SimThreeKFortyEightOracle{} with 48 hospitals). The posterior mean of $\tau^2$ under a half-Cauchy(0.5) prior on $\tau$, the weakly informative choice that Remark~\ref{M-rem:tau} recommends, does better than DerSimonian-Laird from four hospitals upward but not with three.
+\begin{table}[t]
+\caption{Simulation 2: exact values behind Figure~\ref{fig:s2}. Relative risk $R_k/v_k$, mean over hospitals and worst hospital, at $\epsilon=1$ (top) and without privacy (bottom). Global: full pooling, without privacy in both blocks; Oracle: GHB with the true $\tau^2$ and exact averaging; Plug-in: DerSimonian-Laird, with exact averaging or 60 gossip rounds; FB: $\tau$ integrated out (Remark~\ref{M-rem:tau}), 60 gossip rounds.}
+\label{tab:s2}
+\scriptsize
+\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{@{}r*{10}{r}@{}}
+\toprule
+& \multicolumn{2}{c}{Global} & \multicolumn{2}{c}{Oracle} & \multicolumn{2}{c}{Plug-in, exact} & \multicolumn{2}{c}{Plug-in, gossip} & \multicolumn{2}{c}{FB, gossip}\\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}\cmidrule(lr){8-9}\cmidrule(l){10-11}
+$\tau^2$ & mean & worst & mean & worst & mean & worst & mean & worst & mean & worst\\
+\midrule
+\csname @@input\endcsname ../../Collectively_Big_Locally_Small/supplement/results/tables/s_sim2_eps1.tex 
+\midrule
+\csname @@input\endcsname ../../Collectively_Big_Locally_Small/supplement/results/tables/s_sim2_nodp.tex 
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\paragraph{Simulation 3: who gains, and how many hospitals are needed} At $\tau^2=0.02$ and $\epsilon=1$ (Figure~\ref{fig:s3}, left), every hospital gains about the same number of virtual patients, $B\approx\SimThreeB$, as Equation~\eqref{M-eq:borrowed} predicts. The hospitals with 60 patients or fewer multiply their effective sample size by \SimThreeSmall{} on average, and those with 300 or more by \SimThreeLarge{}; the smallest gain of any hospital is \SimThreeMin. The global model multiplies the effective sample size of small hospitals by \SimThreePoolSmall{} but cuts that of large hospitals to \SimThreePoolLarge{} of their own. With few hospitals, $\tau^2$ is poorly estimated (Figure~\ref{fig:s3}, right, and Table~\ref{tab:s3}). With three hospitals the mean relative risk is \SimThreeKThreeDL{} with DerSimonian-Laird against \SimThreeKThreeOracle{} with the true $\tau^2$, and the gap closes as the network grows (\SimThreeKFortyEightDL{} against \SimThreeKFortyEightOracle{} with 48 hospitals). The posterior mean of $\tau^2$ under a half-Cauchy(0.5) prior on $\tau$, the weakly informative choice that Remark~\ref{M-rem:tau} recommends, does better than DerSimonian-Laird from four hospitals upward but not with three.
 
 \begin{figure}[t]
 \centering
@@ -117,7 +165,21 @@ Section~\ref{M-sec:experiments} of the paper summarizes these simulations; this 
 \label{fig:s3}
 \end{figure}
 
-\paragraph{Simulation 4: gossip rounds} Figure~\ref{fig:s4} shows the mean relative risk of plug-in GHB after $T$ rounds of gossip on the four topologies of Figure~\ref{M-fig:gossip}. The risk comes within 2\% of its exact-average value after \SimFourRingTwo{} rounds on the ring, \SimFourRegionalTwo{} on the regional clusters, \SimFourRandomTwo{} on the sparse random graph and \SimFourTwohopTwo{} on the ring with two-hop links, far fewer than the rounds that the worst-case bound of Proposition~\ref{M-prop:gossip} requires for a consensus error of 1\% (\SimFourRingPred, \SimFourRegionalPred, \SimFourRandomPred{} and \SimFourTwohopPred). The bound is conservative for the risk: it controls the consensus error of the releases, while the risk depends on that error only through a population estimate that the shrinkage weight already discounts. After a single round on the ring, GHB is worse than local estimation (relative risk 1.13), so a hospital should not use the borrowed estimate before the gossip has mixed.
+\begin{table}[t]
+\caption{Simulation 3: exact values behind Figure~\ref{fig:s3}, right. Mean relative risk against the number of hospitals $K$, for the true $\tau^2$, DerSimonian-Laird, and the posterior mean under a half-Cauchy(0.5) prior on $\tau$.}
+\label{tab:s3}
+\footnotesize
+\begin{tabular}{@{}rrrr@{}}
+\toprule
+$K$ & True $\tau^2$ & DerSimonian-Laird & Posterior mean\\
+\midrule
+\csname @@input\endcsname ../../Collectively_Big_Locally_Small/supplement/results/tables/s_sim3.tex 
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\paragraph{Simulation 4: gossip rounds} Figure~\ref{fig:s4} and Table~\ref{tab:s4} show the mean relative risk of plug-in GHB after $T$ rounds of gossip on the four topologies of Figure~\ref{M-fig:gossip}. The risk comes within 2\% of its exact-average value after \SimFourRingTwo{} rounds on the ring, \SimFourRegionalTwo{} on the regional clusters, \SimFourRandomTwo{} on the sparse random graph and \SimFourTwohopTwo{} on the ring with two-hop links, far fewer than the rounds that the worst-case bound of Proposition~\ref{M-prop:gossip} requires for a consensus error of 1\% (\SimFourRingPred, \SimFourRegionalPred, \SimFourRandomPred{} and \SimFourTwohopPred). The bound is conservative for the risk: it controls the consensus error of the releases, while the risk depends on that error only through a population estimate that the shrinkage weight already discounts. After a single round on the ring, GHB is worse than local estimation (relative risk 1.13), so a hospital should not use the borrowed estimate before the gossip has mixed.
 
 \begin{figure}[t]
 \centering
@@ -126,7 +188,21 @@ Section~\ref{M-sec:experiments} of the paper summarizes these simulations; this 
 \label{fig:s4}
 \end{figure}
 
-\paragraph{Simulation 5: joint release by small hospitals} Section~\ref{M-sec:privacy} proposes that small hospitals release jointly through secure aggregation, so that the privacy noise is calibrated to the group. Figure~\ref{fig:s5} shows that the remedy matters only when every hospital is small. In a network of 16 hospitals of 20 patients and 8 of 200, the large hospitals dominate the inverse-variance weighted population estimate, and groups of eight raise the borrowed patients only from \SimFiveMixedGOneEpsTenth{} to \SimFiveMixedGEightEpsTenth{} at $\epsilon=0.1$. In a network of 24 hospitals of 20 patients, the same grouping raises $B$ from \SimFiveSmallGOneEpsTenth{} to \SimFiveSmallGEightEpsTenth{} at $\epsilon=0.1$ and from \SimFiveSmallGOneEpsOne{} to \SimFiveSmallGEightEpsOne{} at $\epsilon=1$.
+\begin{table}[t]
+\caption{Simulation 4: exact values behind Figure~\ref{fig:s4}. Mean relative risk of plug-in GHB after $T$ gossip rounds on each topology; below, the second-largest eigenvalue modulus $\lambda$ of the gossip matrix, the rounds after which the risk is within 2\% of exact averaging, and the rounds that Proposition~\ref{M-prop:gossip} requires for a consensus error of 1\%.}
+\label{tab:s4}
+\scriptsize
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+$T$ & Ring & Regional & Sparse random & Ring + 2-hop\\
+\midrule
+\csname @@input\endcsname ../../Collectively_Big_Locally_Small/supplement/results/tables/s_sim4.tex 
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\paragraph{Simulation 5: joint release by small hospitals} Section~\ref{M-sec:privacy} proposes that small hospitals release jointly through secure aggregation, so that the privacy noise is calibrated to the group. Figure~\ref{fig:s5} and Table~\ref{tab:s5} show that the remedy matters only when every hospital is small. In a network of 16 hospitals of 20 patients and 8 of 200, the large hospitals dominate the inverse-variance weighted population estimate, and groups of eight raise the borrowed patients only from \SimFiveMixedGOneEpsTenth{} to \SimFiveMixedGEightEpsTenth{} at $\epsilon=0.1$. In a network of 24 hospitals of 20 patients, the same grouping raises $B$ from \SimFiveSmallGOneEpsTenth{} to \SimFiveSmallGEightEpsTenth{} at $\epsilon=0.1$ and from \SimFiveSmallGOneEpsOne{} to \SimFiveSmallGEightEpsOne{} at $\epsilon=1$.
 
 \begin{figure}[t]
 \centering
@@ -135,7 +211,21 @@ Section~\ref{M-sec:experiments} of the paper summarizes these simulations; this 
 \label{fig:s5}
 \end{figure}
 
-\paragraph{Simulation 6: structured heterogeneity} The 24 hospitals are split into four regions of six; $\theta_k$ is the sum of a regional effect with variance $\tau_r^2$ and a hospital effect with variance $\tau_w^2=0.002$. The GMRF prior of Equation~\eqref{M-eq:gmrf} links hospitals of the same region and is computed by Jacobi iterations on the privatized releases, followed by each hospital's local update with its own noise-free estimate. Its anchor term is switched off so that it uses the same information as the exchangeable prior, and its smoothing weight $\beta$ was chosen on separate tuning replicates (the same value, $\beta\approx\SimSixBeta$, was selected at every $\tau_r^2$); the regions are assumed known. Figure~\ref{fig:s6} shows a crossover. When regions barely differ ($\tau_r^2\lesssim 0.003$), the exchangeable prior is better (\SimSixGHBLow{} against \SimSixGMRFLow{} at the smallest $\tau_r^2$), because the GMRF borrows only from five neighbors. When regional differences dominate, the exchangeable prior loses its gain (\SimSixGHBHigh) while the GMRF keeps it (\SimSixGMRFHigh).
+\begin{table}[t]
+\caption{Simulation 5: exact values behind Figure~\ref{fig:s5}. Borrowed patients $B$ for groups of $g$ hospitals releasing jointly, simulated, with the closed form in parentheses. All small: 24 hospitals of 20 patients; mixed: 16 of 20 and 8 of 200 ($\tau^2=0.02$).}
+\label{tab:s5}
+\scriptsize
+\begin{tabular}{@{}lrrrrr@{}}
+\toprule
+Network & $\epsilon$ & $g=1$ & $g=2$ & $g=4$ & $g=8$\\
+\midrule
+\csname @@input\endcsname ../../Collectively_Big_Locally_Small/supplement/results/tables/s_sim5.tex 
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\paragraph{Simulation 6: structured heterogeneity} The 24 hospitals are split into four regions of six; $\theta_k$ is the sum of a regional effect with variance $\tau_r^2$ and a hospital effect with variance $\tau_w^2=0.002$. The GMRF prior of Equation~\eqref{M-eq:gmrf} links hospitals of the same region and is computed by Jacobi iterations on the privatized releases, followed by each hospital's local update with its own noise-free estimate. Its anchor term is switched off so that it uses the same information as the exchangeable prior, and its smoothing weight $\beta$ was chosen on separate tuning replicates (the same value, $\beta\approx\SimSixBeta$, was selected at every $\tau_r^2$); the regions are assumed known. Figure~\ref{fig:s6} and Table~\ref{tab:s6} show a crossover. When regions barely differ ($\tau_r^2\lesssim 0.003$), the exchangeable prior is better (\SimSixGHBLow{} against \SimSixGMRFLow{} at the smallest $\tau_r^2$), because the GMRF borrows only from five neighbors. When regional differences dominate, the exchangeable prior loses its gain (\SimSixGHBHigh) while the GMRF keeps it (\SimSixGMRFHigh).
 
 \begin{figure}[t]
 \centering
@@ -144,21 +234,38 @@ Section~\ref{M-sec:experiments} of the paper summarizes these simulations; this 
 \label{fig:s6}
 \end{figure}
 
+\begin{table}[t]
+\caption{Simulation 6: exact values behind Figure~\ref{fig:s6}. Mean and worst relative risk for the exchangeable prior and the regional GMRF prior against the between-region variance $\tau_r^2$ ($\epsilon=1$).}
+\label{tab:s6}
+\footnotesize
+\begin{tabular}{@{}rrrrr@{}}
+\toprule
+& \multicolumn{2}{c}{Mean} & \multicolumn{2}{c}{Worst hospital}\\
+\cmidrule(lr){2-3}\cmidrule(l){4-5}
+$\tau_r^2$ & Exchangeable & GMRF & Exchangeable & GMRF\\
+\midrule
+\csname @@input\endcsname ../../Collectively_Big_Locally_Small/supplement/results/tables/s_sim6.tex 
+\bottomrule
+\end{tabular}
+\end{table}
+
+
 \paragraph{Simulation 7: logistic-regression heads} This simulation leaves the Gaussian model. Each hospital has its own logistic model on four standardized features and an intercept, $\theta_k=\mu+u_k$ with $u_k\sim\mathcal{N}(0,\tau^2 I)$, and features are clipped so that $\|x\|\le\sqrt{5}$. Here $\mu_0$ is a published model (channel P3), equal to $\mu$ plus noise of standard deviation 0.3. Each hospital releases its mean score at $\mu_0$, $g_k=\frac{1}{n_k}\sum_i x_i(y_i-\sigma(x_i^\top\mu_0))$, plus isotropic Gaussian noise. Its $\ell_2$ sensitivity is $2\sqrt{5}/n_k$, and the noise is calibrated with zero-concentrated DP: $s_k=\Delta_k/\sqrt{2\rho}$ with $\rho+2\sqrt{\rho\ln(1/\delta)}=\epsilon$. Under the public feature distribution, $\mathbb{E}g_k=m(\theta_k)-m(\mu_0)$ with $m(\theta)=\mathbb{E}[x\,\sigma(x^\top\theta)]$, so the releases are mapped to the parameter scale by moment matching, linearized first at the pooled moment estimate and then at each hospital's leave-one-out network estimate; their variances follow by the delta method. The anchor shapes that second point only for hospitals where it passes the conflict check against the anchor-free network estimate. GHB then borrows coordinatewise. Each hospital summarizes the posterior of $\tau$ (half-Cauchy(0.5) prior) by 12 quantiles, combines each component's network estimate with $\mu_0$ by precision weighting unless it dropped the anchor, multiplies by the weakly informative default $\mathcal{N}(0,2.5^2)$ \cite{gelman2008weakly}, and averages its maximum a posteriori fits under the components, weighted by the Laplace approximation of the marginal likelihood of its own data (Remark~\ref{M-rem:tau}). The code is \texttt{simulations/ghb\_logit.py}. The baselines are a local model with prior $\mathcal{N}(\mu_0,I)$, which uses the anchor but no other hospital, and a global model fitted on the pooled data of all hospitals without privacy. Table~\ref{tab:s7} and Figure~\ref{fig:s7} report the excess log-loss over the true model on 4,000 new patients per hospital, averaged over 100 replicates. At $\tau^2=0.05$ and $\epsilon=1$, GHB reduces the excess log-loss of local estimation by \SimSevenReduction{} (\SimSevenLocal{} to \SimSevenGHB), below the global model trained without privacy (\SimSevenGlobal), and no hospital is worse off on average (largest ratio to local \SimSevenWorstRatio, against \SimSevenGlobalWorstRatio{} for the global model). Without privacy GHB reaches \SimSevenGHBNoDP, better than the global model. At $\epsilon=0.3$ it keeps most of its gain (\SimSevenGHBTenth{} against \SimSevenLocalTenth).
 
 \emph{Development note (first version).} Three components of an earlier version of this simulation were added after the first runs failed. The first version used the ridge releases without undoing the shrinkage, estimated $\tau^2$ by DerSimonian-Laird and ignored $\mu_0$. With privacy noise at $\epsilon=1$ its estimates of $\tau^2$ were erratic (median 0, mean several times the truth), and it was worse than local estimation at $\tau^2=0.2$ and at $\epsilon=0.3$. Each component follows the design of the paper (post-processing, Remark~\ref{M-rem:tau} and layer L3), but they were chosen with knowledge of these failures, and the results should be read accordingly. A fourth change came from Simulation 11: the releases were first centred on the anchor ($c=\mu_0$), and the shrinkage was undone with the Fisher information at $\mu_0$. When the anchor was badly wrong, this corrupted every release, and GHB without the anchor reached an excess log-loss of 0.34 against 0.06 for local estimation at an anchor error of two standard deviations. Centring on a fixed reference removes the dependence; Simulations 7, 8, 10 and 11 are reported with it. With anchor-centred releases, Simulation 7 had given a slightly smaller gain at $\epsilon=1$ and no gain at $\epsilon=0.3$. The first version of Simulation 6 also gave the GMRF prior the anchor $\mu_0$, which the exchangeable prior did not have; the version reported here removes it.
 
 \begin{table}[t]
-\caption{Simulation 7. Excess log-loss over the true model (nats; lowest of the three methods in bold) and AUC, mean over 24 hospitals and 100 replicates. Oracle: the true model of each hospital. Global: one model on the pooled data, without privacy.}
+\caption{Simulation 7: exact values behind Figure~\ref{fig:s7}. Excess log-loss over the true model ($10^{-3}$ nats) and AUC, mean over 24 hospitals and 100 replicates, and the largest ratio of any hospital's mean excess log-loss to its local one (Worst). Oracle: the true model of each hospital. Global: one model on the pooled data, without privacy.}
 \label{tab:s7}
-\footnotesize
-\begin{tabular}{@{}llrrrrrrr@{}}
+\scriptsize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}llrrrrrrrrr@{}}
 \toprule
- & & \multicolumn{3}{c}{Excess log-loss} & \multicolumn{4}{c}{AUC}\\
-\cmidrule(lr){3-5}\cmidrule(l){6-9}
-$\tau^2$ & $\epsilon$ & Local & Global & GHB & Local & Global & GHB & Oracle\\
+ & & \multicolumn{3}{c}{Excess log-loss} & \multicolumn{4}{c}{AUC} & \multicolumn{2}{c}{Worst}\\
+\cmidrule(lr){3-5}\cmidrule(lr){6-9}\cmidrule(l){10-11}
+$\tau^2$ & $\epsilon$ & Local & Global & GHB & Local & Global & GHB & Oracle & GHB & Global\\
 \midrule
-\csname @@input\endcsname ../../Collectively_Big_Locally_Small/supplement/results/s7_table.tex 
+\csname @@input\endcsname ../../Collectively_Big_Locally_Small/supplement/results/tables/s_sim7.tex 
 \bottomrule
 \end{tabular}
 \end{table}
@@ -171,9 +278,9 @@ $\tau^2$ & $\epsilon$ & Local & Global & GHB & Local & Global & GHB & Oracle\\
 \end{figure}
 
 %% ===================================================================
-\paragraph{Simulation 8: federated and meta-analytic baselines} The logistic world of Simulation 7, at $\epsilon=1$ and four levels of heterogeneity. All private methods use the same releases, so they satisfy the same guarantee: one-shot federated averaging (the sample-size weighted mean of the releases, one model for every hospital), the random-effects meta-analytic mean (DerSimonian-Laird weights, one model for every hospital), and a Ditto-style personalized model, which fits each hospital's data with a proximal term $\frac{\lambda}{2}\|\theta-\bar{\theta}_{\mathrm{FedAvg}}\|^2$. The weight $\lambda$ is chosen from $\{0.3,1,3,10,30,100\}$ on ten separate tuning replicates per setting, which favours Ditto-style. The global model fitted on the pooled data without privacy is a reference that no private method can match in general. Results (Figure~\ref{fig:s8}, left; 40 replicates per setting): at $\tau^2=0.05$, GHB \SimEightMidGHB, Ditto-style \SimEightMidDitto, pooled \SimEightMidPooled, meta-analysis \SimEightMidMeta, federated averaging \SimEightMidFedavg, local \SimEightMidLocal. At $\tau^2=0.5$, GHB \SimEightHighGHB, Ditto-style \SimEightHighDitto, local \SimEightHighLocal. One-shot federated averaging is weak here because it averages noisy releases without personalization; multi-round federated training with differentially private gradients is compared in Simulation 15.
+\paragraph{Simulation 8: federated and meta-analytic baselines} The logistic world of Simulation 7, at $\epsilon=1$ and four levels of heterogeneity. All private methods use the same releases, so they satisfy the same guarantee: one-shot federated averaging (the sample-size weighted mean of the releases, one model for every hospital), the random-effects meta-analytic mean (DerSimonian-Laird weights, one model for every hospital), and a Ditto-style personalized model, which fits each hospital's data with a proximal term $\frac{\lambda}{2}\|\theta-\bar{\theta}_{\mathrm{FedAvg}}\|^2$. The weight $\lambda$ is chosen from $\{0.3,1,3,10,30,100\}$ on ten separate tuning replicates per setting, which favours Ditto-style. The global model fitted on the pooled data without privacy is a reference that no private method can match in general. Results (Figure~\ref{fig:s8}, left, and Table~\ref{M-tab:sim8} of the paper; 40 replicates per setting): at $\tau^2=0.05$, GHB \SimEightMidGHB, Ditto-style \SimEightMidDitto, pooled \SimEightMidPooled, meta-analysis \SimEightMidMeta, federated averaging \SimEightMidFedavg, local \SimEightMidLocal. At $\tau^2=0.5$, GHB \SimEightHighGHB, Ditto-style \SimEightHighDitto, local \SimEightHighLocal. One-shot federated averaging is weak here because it averages noisy releases without personalization; multi-round federated training with differentially private gradients is compared in Simulation 15.
 
-\paragraph{Simulation 10: case-mix shift} As Simulation 8 at $\tau^2=0.05$, but each hospital draws its features from $\mathcal{N}(m_k,I)$ with $m_k\sim\mathcal{N}(0,s^2I)$, while the de-shrinking still uses the public, unshifted feature distribution (Figure~\ref{fig:s8}, right). At $s=1$: GHB \SimEightShiftGHB, Ditto-style \SimEightShiftDitto, pooled \SimEightShiftPooled, local \SimEightShiftLocal.
+\paragraph{Simulation 10: case-mix shift} As Simulation 8 at $\tau^2=0.05$, but each hospital draws its features from $\mathcal{N}(m_k,I)$ with $m_k\sim\mathcal{N}(0,s^2I)$, while the de-shrinking still uses the public, unshifted feature distribution (Figure~\ref{fig:s8}, right, and Table~\ref{M-tab:sim8} of the paper). At $s=1$: GHB \SimEightShiftGHB, Ditto-style \SimEightShiftDitto, pooled \SimEightShiftPooled, local \SimEightShiftLocal.
 
 \begin{figure}[t]
 \centering
@@ -182,7 +289,7 @@ $\tau^2$ & $\epsilon$ & Local & Global & GHB & Local & Global & GHB & Oracle\\
 \label{fig:s8}
 \end{figure}
 
-\paragraph{Simulation 9: atypical hospitals} The network of Simulation 2 at $\tau^2=0.02$ and $\epsilon=1$, with Gaussian site effects, Student-$t_3$ site effects of the same variance, or Gaussian effects plus one hospital at $u=6\tau$, placed at the smallest or at the largest hospital. Three estimators: Gaussian GHB; robust GHB, which replaces the Gaussian prior $\mathcal{N}(\tilde{\mu}_k,\hat{\tau}^2+M_k)$ by a Student-$t_3$ prior of the same variance (posterior mean by quadrature); and GHB with opt-out, where a hospital keeps its local estimate when $|\hat{\theta}_k-\tilde{\mu}_k|/\sqrt{v_k+\hat{\tau}^2+M_k}>3$. Both variants change only the hospital's own computation and cost no privacy. Mean relative risk: Gaussian effects \SimNineGaussGHB{} (robust \SimNineGaussRobust), $t_3$ effects \SimNineTGHB{} (robust \SimNineTRobust). The outlying hospital: \SimNineSmallGHB{} (robust \SimNineSmallRobust, opt-out \SimNineSmallOpt) when it is the smallest, \SimNineLargeGHB{} (robust \SimNineLargeRobust) when it is the largest (Figure~\ref{fig:s9}). With 16 patients, the standard error of the local estimate is as large as the deviation, so no test based on the hospital's own data can detect it reliably.
+\paragraph{Simulation 9: atypical hospitals} The network of Simulation 2 at $\tau^2=0.02$ and $\epsilon=1$, with Gaussian site effects, Student-$t_3$ site effects of the same variance, or Gaussian effects plus one hospital at $u=6\tau$, placed at the smallest or at the largest hospital. Three estimators: Gaussian GHB; robust GHB, which replaces the Gaussian prior $\mathcal{N}(\tilde{\mu}_k,\hat{\tau}^2+M_k)$ by a Student-$t_3$ prior of the same variance (posterior mean by quadrature); and GHB with opt-out, where a hospital keeps its local estimate when $|\hat{\theta}_k-\tilde{\mu}_k|/\sqrt{v_k+\hat{\tau}^2+M_k}>3$. Both variants change only the hospital's own computation and cost no privacy. Mean relative risk: Gaussian effects \SimNineGaussGHB{} (robust \SimNineGaussRobust), $t_3$ effects \SimNineTGHB{} (robust \SimNineTRobust). The outlying hospital: \SimNineSmallGHB{} (robust \SimNineSmallRobust, opt-out \SimNineSmallOpt) when it is the smallest, \SimNineLargeGHB{} (robust \SimNineLargeRobust) when it is the largest (Figure~\ref{fig:s9}; Tables~\ref{tab:s9} and~\ref{tab:s9bins}). With 16 patients, the standard error of the local estimate is as large as the deviation, so no test based on the hospital's own data can detect it reliably.
 
 \begin{figure}[t]
 \centering
@@ -191,7 +298,36 @@ $\tau^2$ & $\epsilon$ & Local & Global & GHB & Local & Global & GHB & Oracle\\
 \label{fig:s9}
 \end{figure}
 
-\paragraph{Simulation 11: a wrong anchor} The logistic world at $\tau^2=0.05$ and $\epsilon=1$, with the anchor wrong by $\mathcal{N}(0,e^2I)$ for $e$ from 0 to 3. GHB uses the anchor with its uncertainty stated honestly ($e$), overconfidently (0.3 whatever $e$), overconfidently with a conflict check (the anchor is dropped when $|\mu_0-\tilde{\mu}_k|>3\sqrt{0.3^2+M_k}$ in any coordinate), or not at all. The local model uses $\mathcal{N}(\mu_0,I)$ as its prior and degrades with the anchor (Figure~\ref{fig:s11}). Honest uncertainty and the conflict check keep the excess log-loss at or below \SimElevenHonestMax{} at every error, GHB without the anchor at or below \SimElevenNoAnchorMax; an overconfident anchor two standard deviations off reaches \SimElevenOverTwo, and local estimation \SimElevenLocalTwo.
+\begin{table}[t]
+\caption{Simulation 9: exact values behind Figure~\ref{fig:s9}, right. Mean relative risk; with an outlier, for the outlying hospital and for the others.}
+\label{tab:s9}
+\scriptsize
+\begin{tabular}{@{}lrrrrrr@{}}
+\toprule
+& \multicolumn{3}{c}{All hospitals, or the outlier} & \multicolumn{3}{c}{The others}\\
+\cmidrule(lr){2-4}\cmidrule(l){5-7}
+Site effects & GHB & Robust & Opt-out & GHB & Robust & Opt-out\\
+\midrule
+\csname @@input\endcsname ../../Collectively_Big_Locally_Small/supplement/results/tables/s_sim9.tex 
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[t]
+\caption{Simulation 9: exact values behind Figure~\ref{fig:s9}, centre. Relative risk with Student-$t_3$ site effects, by standardized effect $|u_k|/\tau$, with two standard errors in grey; $N$: hospital-replicates in the bin.}
+\label{tab:s9bins}
+\scriptsize
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+$|u_k|/\tau$ & GHB & Robust & Opt-out & $N$\\
+\midrule
+\csname @@input\endcsname ../../Collectively_Big_Locally_Small/supplement/results/tables/s_sim9_bins.tex 
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\paragraph{Simulation 11: a wrong anchor} The logistic world at $\tau^2=0.05$ and $\epsilon=1$, with the anchor wrong by $\mathcal{N}(0,e^2I)$ for $e$ from 0 to 3. GHB uses the anchor with its uncertainty stated honestly ($e$), overconfidently (0.3 whatever $e$), overconfidently with a conflict check (the anchor is dropped when $|\mu_0-\tilde{\mu}_k|>3\sqrt{0.3^2+M_k}$ in any coordinate), or not at all. The local model uses $\mathcal{N}(\mu_0,I)$ as its prior and degrades with the anchor (Figure~\ref{fig:s11} and Table~\ref{tab:s11}). Honest uncertainty and the conflict check keep the excess log-loss at or below \SimElevenHonestMax{} at every error, GHB without the anchor at or below \SimElevenNoAnchorMax; an overconfident anchor two standard deviations off reaches \SimElevenOverTwo, and local estimation \SimElevenLocalTwo.
 
 \begin{figure}[t]
 \centering
@@ -200,7 +336,22 @@ $\tau^2$ & $\epsilon$ & Local & Global & GHB & Local & Global & GHB & Oracle\\
 \label{fig:s11}
 \end{figure}
 
-\paragraph{Simulation 12: dishonest hospitals} The network of Simulation 2 at $\tau^2=0.02$ and $\epsilon=1$. The one or three largest hospitals release $\mu+b\tau$ instead of their privatized estimate; sizes are public, so they cannot change their weights. Robust GHB obtains all releases by flooding, computes an inverse-variance weighted median and a MAD-based spread, drops releases more than three spreads away, and runs GHB on the rest; this is post-processing. Honest hospitals' mean relative risk (Figure~\ref{fig:s12}): plain GHB never exceeds \SimTwelveWorstGHB{}, because a large lie inflates $\hat{\tau}^2$ and switches borrowing off; robust GHB keeps \SimTwelveRobustLarge{} against large lies, but costs \SimTwelveRobustNone{} against \SimTwelveGHBNone{} when nobody lies, because the screen sometimes drops honest outlying releases.
+\begin{table}[t]
+\caption{Simulation 11: exact values behind Figure~\ref{fig:s11}. Mean excess log-loss ($10^{-3}$ nats) against the standard deviation $e$ of the anchor's error, with two standard errors in grey; Honest: stated uncertainty $e$; Over.: stated 0.3; + check: stated 0.3 with the conflict check; Dropped: percentage of hospitals where the check drops the anchor.}
+\label{tab:s11}
+\scriptsize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}rllllll@{}}
+\toprule
+$e$ & Local & Honest & Over. & Over. + check & No anchor & Dropped (\%)\\
+\midrule
+\csname @@input\endcsname ../../Collectively_Big_Locally_Small/supplement/results/tables/s_sim11.tex 
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\paragraph{Simulation 12: dishonest hospitals} The network of Simulation 2 at $\tau^2=0.02$ and $\epsilon=1$. The one or three largest hospitals release $\mu+b\tau$ instead of their privatized estimate; sizes are public, so they cannot change their weights. Robust GHB obtains all releases by flooding, computes an inverse-variance weighted median and a MAD-based spread, drops releases more than three spreads away, and runs GHB on the rest; this is post-processing. Honest hospitals' mean relative risk (Figure~\ref{fig:s12} and Table~\ref{tab:s12}): plain GHB never exceeds \SimTwelveWorstGHB{}, because a large lie inflates $\hat{\tau}^2$ and switches borrowing off; robust GHB keeps \SimTwelveRobustLarge{} against large lies, but costs \SimTwelveRobustNone{} against \SimTwelveGHBNone{} when nobody lies, because the screen sometimes drops honest outlying releases.
 
 \begin{figure}[t]
 \centering
@@ -209,7 +360,23 @@ $\tau^2$ & $\epsilon$ & Local & Global & GHB & Local & Global & GHB & Oracle\\
 \label{fig:s12}
 \end{figure}
 
-\paragraph{Simulation 13: link failures} The network of Simulation 2 with every link failing independently in each round with probability $p$; the Metropolis-Hastings weights are recomputed on the working links, so each round's matrix stays symmetric and doubly stochastic. With $p=0.8$, the mean relative risk is \SimThirteenEightyTwenty{} after 20 rounds and \SimThirteenEighty{} after 60, against \SimThirteenExact{} with exact averaging (Figure~\ref{fig:s13}).
+\begin{table}[t]
+\caption{Simulation 12: exact values behind Figure~\ref{fig:s12}. Honest hospitals' mean relative risk against the size $b$ of the lie (in units of $\tau$), and the percentage of dishonest releases that robust GHB keeps.}
+\label{tab:s12}
+\footnotesize
+\begin{tabular}{@{}rrrrrrr@{}}
+\toprule
+& \multicolumn{3}{c}{One dishonest hospital} & \multicolumn{3}{c}{Three dishonest hospitals}\\
+\cmidrule(lr){2-4}\cmidrule(l){5-7}
+$b$ & GHB & Robust & Kept (\%) & GHB & Robust & Kept (\%)\\
+\midrule
+\csname @@input\endcsname ../../Collectively_Big_Locally_Small/supplement/results/tables/s_sim12.tex 
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\paragraph{Simulation 13: link failures} The network of Simulation 2 with every link failing independently in each round with probability $p$; the Metropolis-Hastings weights are recomputed on the working links, so each round's matrix stays symmetric and doubly stochastic. With $p=0.8$, the mean relative risk is \SimThirteenEightyTwenty{} after 20 rounds and \SimThirteenEighty{} after 60, against \SimThirteenExact{} with exact averaging (Figure~\ref{fig:s13} and Table~\ref{tab:s13}).
 
 \begin{figure}[t]
 \centering
@@ -218,7 +385,21 @@ $\tau^2$ & $\epsilon$ & Local & Global & GHB & Local & Global & GHB & Oracle\\
 \label{fig:s13}
 \end{figure}
 
-\paragraph{Simulation 14: repeated releases} For a total budget of $\epsilon=1$, $\delta=10^{-5}$ spread over $r$ refits on the same patients, the borrowed patients $B$ after the last refit (closed form, network of Simulation 2) under basic composition ($(\epsilon/r,\delta/r)$ per release) and under zero-concentrated accounting (the Gaussian mechanism with noise $s$ is $\rho$-zCDP with $\rho=\Delta^2/(2s^2)$; costs add; $\rho$-zCDP implies $(\rho+2\sqrt{\rho\ln(1/\delta)},\delta)$-DP). After \SimFourteenR{} refits, $B=\SimFourteenBasic$ under basic composition and \SimFourteenZcdp{} under zCDP, against \SimFourteenOne{} for a single release (Figure~\ref{fig:s14}).
+\begin{table}[t]
+\caption{Simulation 13: exact values behind Figure~\ref{fig:s13}, right. Mean relative risk of plug-in GHB after $T$ rounds, for link-failure probability $p$.}
+\label{tab:s13}
+\footnotesize
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+$T$ & $p=0$ & $p=0.2$ & $p=0.5$ & $p=0.8$\\
+\midrule
+\csname @@input\endcsname ../../Collectively_Big_Locally_Small/supplement/results/tables/s_sim13.tex 
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\paragraph{Simulation 14: repeated releases} For a total budget of $\epsilon=1$, $\delta=10^{-5}$ spread over $r$ refits on the same patients, the borrowed patients $B$ after the last refit (closed form, network of Simulation 2) under basic composition ($(\epsilon/r,\delta/r)$ per release) and under zero-concentrated accounting (the Gaussian mechanism with noise $s$ is $\rho$-zCDP with $\rho=\Delta^2/(2s^2)$; costs add; $\rho$-zCDP implies $(\rho+2\sqrt{\rho\ln(1/\delta)},\delta)$-DP). After \SimFourteenR{} refits, $B=\SimFourteenBasic$ under basic composition and \SimFourteenZcdp{} under zCDP, against \SimFourteenOne{} for a single release (Figure~\ref{fig:s14} and Table~\ref{tab:s14}).
 
 \begin{figure}[t]
 \centering
@@ -226,6 +407,20 @@ $\tau^2$ & $\epsilon$ & Local & Global & GHB & Local & Global & GHB & Oracle\\
 \caption{Simulation 14. Borrowed patients after $r$ refits on the same patients, for a fixed total budget.}
 \label{fig:s14}
 \end{figure}
+
+\begin{table}[t]
+\caption{Simulation 14: exact values behind Figure~\ref{fig:s14}. Borrowed patients $B$ after $r$ refits for a total budget $\epsilon=1$, $\delta=10^{-5}$, under basic composition and zero-concentrated accounting, and the ratio of the per-release noise standard deviations (basic over zCDP).}
+\label{tab:s14}
+\footnotesize
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+$r$ & $B$, basic & $B$, zCDP & Noise ratio\\
+\midrule
+\csname @@input\endcsname ../../Collectively_Big_Locally_Small/supplement/results/tables/s_sim14.tex 
+\bottomrule
+\end{tabular}
+\end{table}
+
 
 \paragraph{Simulation 15: iterative federated learning} The logistic world of Simulation 8 (24 hospitals, ring with two-hop links, $\delta=10^{-5}$), GHB against multi-round training at the same privacy budget per hospital. GHB is the revised version of Section~\ref{sec:revision}; the earlier version is reported alongside it. Per-patient gradients of the logistic loss are $(p-y)x$ with $\|x\|\le\sqrt{5}$, so they need no clipping, and replacing one patient moves a hospital's mean gradient by at most $2\sqrt{5}/n_k$. Every iterative method adds Gaussian noise to each hospital's mean gradient in every round and is accounted with zero-concentrated DP: with $R$ rounds, each round spends $\rho/R$, and the total $\rho$ satisfies $\rho+2\sqrt{\rho\ln(1/\delta)}=\epsilon$. GHB's single release is accounted in the same way. All methods start from, or shrink toward, the published anchor $\mu_0$, which GHB also uses.
 \begin{itemize}[leftmargin=*,itemsep=1pt]
@@ -236,7 +431,7 @@ $\tau^2$ & $\epsilon$ & Local & Global & GHB & Local & Global & GHB & Oracle\\
 \item \emph{Local gradient descent from the anchor}, a control that uses no other hospital: $E$ gradient steps on the hospital's own data from $\mu_0$, with early stopping as the only regularizer.
 \item \emph{Ditto-style} as in Simulation 8, and \emph{GHB with the true $\tau^2$} (the marginal heterogeneity, regional plus within-region in the regional world), a reference that no method can use.
 \end{itemize}
-Hyperparameters are chosen on \SimFifteenTune{} separate replicates per setting by the mean excess log-loss, which requires access to the true models: rounds $R\in\{1,2,3,5,10,30,100\}$ ($\{3,10,30,100\}$ for decentralized training), step size $\eta\in\{0.2,0.5,2\}$, fine-tuning steps $E\in\{0,1,2,3,5,10,30,100\}$ and clusters $C\in\{2,3,4\}$. Table~\ref{tab:s15hyper} lists the choices. The only choices at the edge of a grid are $R=1$, the smallest meaningful number of rounds, and $\eta=0.2$ for decentralized training, where smaller steps would approach the anchor-only control. GHB has no tuning parameter. Settings: $\tau^2\in\{0.01,0.05,0.2,0.5\}$ at $\epsilon=1$; $\epsilon\in\{0.3,\infty\}$ at $\tau^2=0.05$; a regional world in which the 24 hospitals form four regions, with between-region variance 0.2 and within-region variance 0.02 per coefficient, where clustering should help; an anchor wrong by $\mathcal{N}(0,I)$ instead of $\mathcal{N}(0,0.3^2I)$; $\tau^2=0.1$ at $\epsilon=0.5$; and a network of 48 hospitals (sizes drawn as for the 24, ring with two-hop links). The last four settings (marked $\ast$) were not used while revising GHB; the development runs used other seeds, an anchor error of two standard deviations and a three-region world. Results are means over \SimFifteenReps{} further replicates (Table~\ref{tab:s15}, Figure~\ref{fig:s15}).
+Hyperparameters are chosen on \SimFifteenTune{} separate replicates per setting by the mean excess log-loss, which requires access to the true models: rounds $R\in\{1,2,3,5,10,30,100\}$ ($\{3,10,30,100\}$ for decentralized training), step size $\eta\in\{0.2,0.5,2\}$, fine-tuning steps $E\in\{0,1,2,3,5,10,30,100\}$ and clusters $C\in\{2,3,4\}$. Table~\ref{tab:s15hyper} lists the choices. The only choices at the edge of a grid are $R=1$, the smallest meaningful number of rounds, and $\eta=0.2$ for decentralized training, where smaller steps would approach the anchor-only control. GHB has no tuning parameter. Settings: $\tau^2\in\{0.01,0.05,0.2,0.5\}$ at $\epsilon=1$; $\epsilon\in\{0.3,\infty\}$ at $\tau^2=0.05$; a regional world in which the 24 hospitals form four regions, with between-region variance 0.2 and within-region variance 0.02 per coefficient, where clustering should help; an anchor wrong by $\mathcal{N}(0,I)$ instead of $\mathcal{N}(0,0.3^2I)$; $\tau^2=0.1$ at $\epsilon=0.5$; and a network of 48 hospitals (sizes drawn as for the 24, ring with two-hop links). The last four settings (marked $\ast$) were not used while revising GHB; the development runs used other seeds, an anchor error of two standard deviations and a three-region world. Results are means over \SimFifteenReps{} further replicates (Table~\ref{tab:s15}, Figure~\ref{fig:s15}); Table~\ref{M-tab:sim15worst} of the paper gives the worst hospital, the share of hospitals that gain, and the largest hospitals.
 
 GHB is the most accurate private method in six of the ten settings ($\tau^2=0.01$ and $0.05$, $\epsilon=0.3$, and the held-out regional, $\tau^2=0.1$/$\epsilon=0.5$ and 48-hospital settings). The tuned Ditto-style model, which shrinks toward the average of GHB's own releases, is slightly more accurate at $\tau^2=0.2$, without privacy and with a wrong anchor; at $\tau^2=0.5$ no private method beats local estimation. GHB is more accurate than DP-FedAvg with fine-tuning, decentralized DP-SGD and clustered training in every private setting. At $\epsilon=0.3$, the local control that starts from the anchor reaches \SimFifteenStrictAnchorGD{} against \SimFifteenStrictGHB{} for GHB, and with a wrong anchor it becomes worse than local estimation (\SimFifteenAnchorAnchorGD{} against \SimFifteenAnchorLocal). GHB's worst hospital is at most \SimFifteenGHBWorstMax{} times its local error in every private setting except $\tau^2=0.5$ (\SimFifteenExtremeGHBWorst), whereas fine-tuning's worst hospital is \SimFifteenFTWorstMin{} to \SimFifteenFTWorstMax{} times worse than alone; the hospitals that lose are the large ones. GHB with the true $\tau^2$ remains better still (\SimFifteenStrictOracle{} at $\epsilon=0.3$), so estimating heterogeneity from noisy releases is what is left to improve. The earlier version of GHB reached \SimFifteenStrictOld{} at $\epsilon=0.3$ and \SimFifteenMidOld{} at $\tau^2=0.05$.
 
@@ -274,22 +469,7 @@ Setting & DP-FedAvg + FT & Decentralized DP-SGD & Clustered DP-FedAvg & Anchor G
 \label{fig:s15}
 \end{figure}
 
-\paragraph{Simulation 16: ablation} The logistic world of Simulation 15 (24 hospitals, ring with two-hop links, $T=60$, $\delta=10^{-5}$), in eight settings: $\tau^2\in\{0.01,0.05,0.2,0.5\}$ at $\epsilon=1$; $\epsilon\in\{0.3,\infty\}$ at $\tau^2=0.05$; an anchor wrong by $\mathcal{N}(0,I)$; and a case-mix shift of one standard deviation. In every replicate, every variant uses the same data, the same public sample and the same standard-normal noise draw, scaled to its own noise level, so that differences between variants are paired. Each variant switches one component of GHB (\texttt{simulations/ghb\_variants.py}, which reproduces the reported estimator to $10^{-10}$ with its default settings): the release (the sufficient statistic $X^\top y$, or a ridge fit with $\lambda=0.2$ centred on zero and undone at the leave-one-out point, instead of the score at the anchor); the second linearization; the rule for $\tau$ (plug-in posterior mean, posterior median or DerSimonian-Laird, or the posterior quantiles without weighting by the hospital's own evidence); the conflict check; the anchor; the default prior; inverse-variance weights in the network mean; gossip against exact averaging; and zero-concentrated against classical calibration of the noise. GHB with the true $\tau^2$, the earlier version of GHB and local estimation are references. Table~\ref{tab:s16} gives the mean excess log-loss of each variant relative to GHB over \SimSixteenReps{} replicates per setting. Part B repeats the ablation of the rule for $\tau$, the weights and the averaging in the Gaussian model of Simulation 2 over 20,000 replicates per setting (Table~\ref{tab:s16gauss}).
-
-\begin{table}[t]
-\caption{Simulation 16. Mean excess log-loss of each variant relative to GHB as reported, on the same data and noise (\SimSixteenReps{} replicates per setting). Bold: paired difference larger than two standard errors.}
-\label{tab:s16}
-\scriptsize
-\setlength{\tabcolsep}{3pt}
-\begin{tabular}{@{}lrrrrrrrr@{}}
-\toprule
-Variant & $\tau^2=0.01$ & $\tau^2=0.05$ & $\tau^2=0.2$ & $\tau^2=0.5$ & $\epsilon=0.3$ & no DP & wrong anchor & shift\\
-\midrule
-\csname @@input\endcsname ../../Collectively_Big_Locally_Small/supplement/results/s16_table.tex 
-\bottomrule
-\end{tabular}
-\end{table}
-
+\paragraph{Simulation 16: ablation} The logistic world of Simulation 15 (24 hospitals, ring with two-hop links, $T=60$, $\delta=10^{-5}$), in eight settings: $\tau^2\in\{0.01,0.05,0.2,0.5\}$ at $\epsilon=1$; $\epsilon\in\{0.3,\infty\}$ at $\tau^2=0.05$; an anchor wrong by $\mathcal{N}(0,I)$; and a case-mix shift of one standard deviation. In every replicate, every variant uses the same data, the same public sample and the same standard-normal noise draw, scaled to its own noise level, so that differences between variants are paired. Each variant switches one component of GHB (\texttt{simulations/ghb\_variants.py}, which reproduces the reported estimator to $10^{-10}$ with its default settings): the release (the sufficient statistic $X^\top y$, or a ridge fit with $\lambda=0.2$ centred on zero and undone at the leave-one-out point, instead of the score at the anchor); the second linearization; the rule for $\tau$ (plug-in posterior mean, posterior median or DerSimonian-Laird, or the posterior quantiles without weighting by the hospital's own evidence); the conflict check; the anchor; the default prior; inverse-variance weights in the network mean; gossip against exact averaging; and zero-concentrated against classical calibration of the noise. GHB with the true $\tau^2$, the earlier version of GHB and local estimation are references. Table~\ref{M-tab:sim16} of the paper gives the mean excess log-loss of each variant relative to GHB over \SimSixteenReps{} replicates per setting. Part B repeats the ablation of the rule for $\tau$, the weights and the averaging in the Gaussian model of Simulation 2 over 20,000 replicates per setting (Table~\ref{tab:s16gauss}).
 \begin{table}[t]
 \caption{Simulation 16, part B: the Gaussian model. Mean relative risk $R_k/v_k$ over the 24 hospitals of Simulation 2 (20,000 replicates per setting). FB: $\tau$ integrated out with the hospital's own evidence (reported); Mean, DL: plug-in posterior mean and DerSimonian-Laird; No ev.: components without own evidence; Equal: equal weights; Exact: exact averaging; $T=10$: gossip with 10 rounds; Oracle: $\tau^2$ known.}
 \label{tab:s16gauss}
@@ -303,7 +483,7 @@ $\tau^2$ & $\epsilon$ & FB & Mean & DL & No ev. & Equal & Exact & $T=10$ & Oracl
 \end{tabular}
 \end{table}
 
-\paragraph{Simulation 17: sensitivity} Part A varies each setting of GHB, the others at their reported values, in three base settings of the logistic world ($\tau^2=0.05$ at $\epsilon=1$ and $0.3$; $\tau^2=0.2$ at $\epsilon=1$), with every value computed on the same data and releases (\SimSeventeenReps{} replicates): the number of posterior quantiles of $\tau$, $Q\in\{1,3,6,12,24\}$ ($Q=1$ is the plug-in posterior median); the half-Cauchy scale of the prior on $\tau$, $\{0.1,0.25,0.5,1,2.5\}$; the standard deviation of the default prior, $\{1,2.5,5,10\}$ or none; the conflict threshold $z\in\{2,2.5,3,4,6\}$; the stated standard deviation of the anchor, $\{0.1,0.3,0.6,1,2\}$, whose true error is 0.3; the number of gossip rounds, $T\in\{5,10,20,40,60,120\}$; and the size of the public sample for the moments, $\{2{,}000,\,5{,}000,\,20{,}000,\,100{,}000\}$. Ranges of the ratio to the reported settings, over all values and base settings: $Q$ \SimSeventeenQMin{} to \SimSeventeenQMax; scale \SimSeventeenScaleMin{} to \SimSeventeenScaleMax; default prior \SimSeventeenPriorMin{} to \SimSeventeenPriorMax; threshold \SimSeventeenZMin{} to \SimSeventeenZMax; stated anchor uncertainty \SimSeventeenAnchorSdMin{} to \SimSeventeenAnchorSdMax; rounds \SimSeventeenTMin{} to \SimSeventeenTMax; public sample \SimSeventeenMMin{} to \SimSeventeenMMax. Part B varies, at $\tau^2=0.05$ and $\epsilon=1$, the number of hospitals ($K\in\{6,12,24,48,96\}$, sizes drawn as in Simulation 2), the median hospital size ($\{25,50,100,200,400\}$), the budget ($\epsilon\in\{0.1,0.2,0.3,0.5,1,2,5,\infty\}$, with zero-concentrated calibration, which is valid for every $\epsilon$), $\delta\in\{10^{-3},10^{-5},10^{-7},10^{-9}\}$ and the four topologies of Figure~\ref{M-fig:gossip} at $K=24$, each with its own seeds and \SimSeventeenReps{} replicates. GHB's error relative to local estimation ranges from \SimSeventeenRelMin{} to \SimSeventeenRelMax, and its worst hospital stays within a factor \SimSeventeenWorstMax{} of its local error. Figures~\ref{M-fig:sim-settings} and~\ref{M-fig:sim-conditions} of the paper show every point.
+\paragraph{Simulation 17: sensitivity} Part A varies each setting of GHB, the others at their reported values, in three base settings of the logistic world ($\tau^2=0.05$ at $\epsilon=1$ and $0.3$; $\tau^2=0.2$ at $\epsilon=1$), with every value computed on the same data and releases (\SimSeventeenReps{} replicates): the number of posterior quantiles of $\tau$, $Q\in\{1,3,6,12,24\}$ ($Q=1$ is the plug-in posterior median); the half-Cauchy scale of the prior on $\tau$, $\{0.1,0.25,0.5,1,2.5\}$; the standard deviation of the default prior, $\{1,2.5,5,10\}$ or none; the conflict threshold $z\in\{2,2.5,3,4,6\}$; the stated standard deviation of the anchor, $\{0.1,0.3,0.6,1,2\}$, whose true error is 0.3; the number of gossip rounds, $T\in\{5,10,20,40,60,120\}$; and the size of the public sample for the moments, $\{2{,}000,\,5{,}000,\,20{,}000,\,100{,}000\}$. Ranges of the ratio to the reported settings, over all values and base settings: $Q$ \SimSeventeenQMin{} to \SimSeventeenQMax; scale \SimSeventeenScaleMin{} to \SimSeventeenScaleMax; default prior \SimSeventeenPriorMin{} to \SimSeventeenPriorMax; threshold \SimSeventeenZMin{} to \SimSeventeenZMax; stated anchor uncertainty \SimSeventeenAnchorSdMin{} to \SimSeventeenAnchorSdMax; rounds \SimSeventeenTMin{} to \SimSeventeenTMax; public sample \SimSeventeenMMin{} to \SimSeventeenMMax. Part B varies, at $\tau^2=0.05$ and $\epsilon=1$, the number of hospitals ($K\in\{6,12,24,48,96\}$, sizes drawn as in Simulation 2), the median hospital size ($\{25,50,100,200,400\}$), the budget ($\epsilon\in\{0.1,0.2,0.3,0.5,1,2,5,\infty\}$, with zero-concentrated calibration, which is valid for every $\epsilon$), $\delta\in\{10^{-3},10^{-5},10^{-7},10^{-9}\}$ and the four topologies of Figure~\ref{M-fig:gossip} at $K=24$, each with its own seeds and \SimSeventeenReps{} replicates. GHB's error relative to local estimation ranges from \SimSeventeenRelMin{} to \SimSeventeenRelMax, and its worst hospital stays within a factor \SimSeventeenWorstMax{} of its local error. Figures~\ref{M-fig:sim-settings} and~\ref{M-fig:sim-conditions} of the paper show every point, and Tables~\ref{M-tab:sim17a} and~\ref{M-tab:sim17b} give the values.
 
 \section{Revision of GHB and Extensions Tried}\label{sec:revision}
 
