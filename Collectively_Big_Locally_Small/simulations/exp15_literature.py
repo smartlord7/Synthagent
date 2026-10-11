@@ -35,43 +35,48 @@ FAMILIES = {
     "Clustered DP-FedAvg": lambda m: m.startswith("Clustered DP-FedAvg|"),
     "Local GD from anchor": lambda m: m.startswith("Local GD from anchor|"),
 }
-SHOW = ("Local", "Local GD from anchor", "GHB (DP)", "GHB, oracle tau2 (DP)", "Ditto-style (DP)", "DP-FedAvg", "DP-FedAvg + fine-tuning", "Decentralized DP-SGD",
+SHOW = ("Local", "Local GD from anchor", "GHB (DP)", "GHB, earlier version (DP)", "GHB, oracle tau2 (DP)", "Ditto-style (DP)", "DP-FedAvg", "DP-FedAvg + fine-tuning", "Decentralized DP-SGD",
         "Clustered DP-FedAvg", "Global (pooled, no DP)")
 COL = {"Local": style.GRAY400, "Local GD from anchor": "#9ca3af", "GHB (DP)": style.TEAL700,
-       "GHB, oracle tau2 (DP)": "#14b8a6", "Ditto-style (DP)": style.BLUE600,
+       "GHB, oracle tau2 (DP)": "#14b8a6", "GHB, earlier version (DP)": "#99c2bd", "Ditto-style (DP)": style.BLUE600,
        "DP-FedAvg": style.AMBER600, "DP-FedAvg + fine-tuning": "#92400e", "Decentralized DP-SGD": "#be185d",
        "Clustered DP-FedAvg": style.SLATE800, "Global (pooled, no DP)": style.RED700}
-MK = {"Local": "o", "Local GD from anchor": "v", "GHB (DP)": "o", "GHB, oracle tau2 (DP)": "*", "Ditto-style (DP)": "D", "DP-FedAvg": "<", "DP-FedAvg + fine-tuning": ">",
+MK = {"Local": "o", "Local GD from anchor": "v", "GHB (DP)": "o", "GHB, oracle tau2 (DP)": "*", "GHB, earlier version (DP)": "h", "Ditto-style (DP)": "D", "DP-FedAvg": "<", "DP-FedAvg + fine-tuning": ">",
       "Decentralized DP-SGD": "p", "Clustered DP-FedAvg": "^", "Global (pooled, no DP)": "x"}
 SETTINGS = [("tau2=0.01", dict(tau2=0.01, eps=1.0)), ("tau2=0.05", dict(tau2=0.05, eps=1.0)),
             ("tau2=0.2", dict(tau2=0.2, eps=1.0)), ("tau2=0.5", dict(tau2=0.5, eps=1.0)),
             ("eps=0.3", dict(tau2=0.05, eps=0.3)), ("eps=inf", dict(tau2=0.05, eps=np.inf)),
             ("regional", dict(tau2=0.02, eps=1.0, regions=(4, 0.2))),
-            ("anchor=1.0", dict(tau2=0.05, eps=1.0, anchor_err=1.0, check=True))]
+            ("anchor=1.0", dict(tau2=0.05, eps=1.0, anchor_err=1.0)),
+            ("tau2=0.1,eps=0.5", dict(tau2=0.1, eps=0.5)), ("K=48", dict(tau2=0.05, eps=1.0, K=48))]
+HELD_OUT = ("regional", "anchor=1.0", "tau2=0.1,eps=0.5", "K=48")  # never used while revising GHB
 
 
-def graph():
-    return ghb.metropolis_hastings(ghb.topologies()["Ring + 2-hop (degree 4)"])
+def graph(K=24):
+    return ghb.metropolis_hastings(ghb.topologies(K)["Ring + 2-hop (degree 4)"])
 
 
 def setting(item):
     i, (label, kw) = item
     rng = np.random.default_rng([15, i])
-    n, W = ghb.site_sizes(), graph()
+    kw = dict(kw)
+    K = kw.pop("K", 24)
+    n, W = ghb.site_sizes(K), graph(K)
     avg = ghb.Averager(W, T)
     extra = lambda keep: (lambda r, data, nn, mu0, eps: LIT.estimates(r, data, nn, mu0, eps, DELTA, W, keep))
-    tune, _, _ = L.run(rng, n, TUNE, avg=avg, extra=extra(None), oracle_tau2=True, **kw)
+    tune, _, _ = L.run(rng, n, TUNE, avg=avg, extra=extra(None), oracle_tau2=True, legacy=True, **kw)
     lam = float(L.best_ditto(tune).split("=")[-1])
     chosen = {f: min((m for m in tune if sel(m)), key=lambda m: tune[m].mean()) for f, sel in FAMILIES.items()}
-    KL, AU, _ = L.run(rng, n, REPS, avg=avg, ditto_lam=lam, extra=extra(set(chosen.values())), oracle_tau2=True, **kw)
+    KL, AU, _ = L.run(rng, n, REPS, avg=avg, ditto_lam=lam, extra=extra(set(chosen.values())), oracle_tau2=True,
+                      legacy=True, **kw)
     ditto = [m for m in KL if m.startswith("Ditto")][0]
     KL["Ditto-style (DP)"], AU["Ditto-style (DP)"] = KL.pop(ditto), AU.pop(ditto)
     for f, m in chosen.items():
         KL[f], AU[f] = KL[m], AU[m]
-    small, large = np.argsort(n)[:8], np.argsort(n)[-8:]
+    small, large = np.argsort(n)[:len(n) // 3], np.argsort(n)[-(len(n) // 3):]
     loc = KL["Local"].mean(axis=0)
     se = lambda v: float(v.std(ddof=1) / np.sqrt(len(v)))
-    out = dict(label=label, kw={k: (str(v) if k == "eps" else v) for k, v in kw.items()}, ditto_lambda=lam, chosen=chosen,
+    out = dict(label=label, K=int(K), held_out=label in HELD_OUT, kw={k: (str(v) if k == "eps" else v) for k, v in kw.items()}, ditto_lambda=lam, chosen=chosen,
                kl={m: float(KL[m].mean()) for m in SHOW}, kl_se={m: se(KL[m].mean(axis=1)) for m in SHOW},
                kl_small={m: float(KL[m][:, small].mean()) for m in SHOW},
                kl_small_se={m: se(KL[m][:, small].mean(axis=1)) for m in SHOW},
@@ -120,8 +125,9 @@ def figure(res):
     b.set_title("(b) All hospitals", fontsize=7.5)
     # (c) the worst hospital: largest ratio of a hospital's mean excess log-loss to its local one
     c = axs[2]
-    keys = ["tau2=0.01", "tau2=0.05", "tau2=0.2", "tau2=0.5", "eps=0.3", "eps=inf", "regional", "anchor=1.0"]
-    labs = [r"$\tau^2$=0.01", r"$\tau^2$=0.05", r"$\tau^2$=0.2", r"$\tau^2$=0.5", r"$\epsilon$=0.3", "no DP", "regional", "wrong anchor"]
+    keys = ["tau2=0.01", "tau2=0.05", "tau2=0.2", "tau2=0.5", "eps=0.3", "eps=inf", "regional", "anchor=1.0", "tau2=0.1,eps=0.5", "K=48"]
+    labs = [r"$\tau^2$=0.01", r"$\tau^2$=0.05", r"$\tau^2$=0.2", r"$\tau^2$=0.5", r"$\epsilon$=0.3", "no DP", "regional*",
+            "wrong anchor*", r"$\tau^2$=0.1, $\epsilon$=0.5*", "K=48*"]
     yy = np.arange(len(keys))[::-1]
     for m in SHOW:
         if m in ("Local", "Global (pooled, no DP)", "DP-FedAvg"):

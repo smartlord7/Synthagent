@@ -24,6 +24,7 @@ def methods(n, A):
         "GHB, oracle $\\tau^2$, exact mean": lambda th, x, s2, t2: ghb.ghb(th, x, n, s2, tau2=t2),
         "GHB, plug-in, exact mean": lambda th, x, s2, t2: ghb.ghb(th, x, n, s2),
         f"GHB, plug-in, gossip T={T}": lambda th, x, s2, t2: ghb.ghb(th, x, n, s2, avg=gossip),
+        f"GHB, tau integrated out, gossip T={T}": lambda th, x, s2, t2: ghb.ghb_full_bayes(th, x, n, s2, avg=gossip),
     }
 
 
@@ -45,8 +46,8 @@ def main():
     A = ghb.topologies()["Ring + 2-hop (degree 4)"]
     res = {eps: sweep(rng, n, eps, A) for eps in (None, 1.0)}
     style.setup()
-    colors = [style.RED700, style.GRAY400, style.TEAL700, style.BLUE600]
-    styles = ["-", ":", "-", "--"]
+    colors = [style.RED700, style.GRAY400, style.TEAL700, style.BLUE600, style.VIOLET600]
+    styles = ["-", ":", "-", "--", "-."]
     fig, axes = plt.subplots(1, 3, figsize=(7.0, 2.35), gridspec_kw=dict(wspace=0.38))
     panels = [(None, "mean", "No privacy: mean over hospitals"),
               (1.0, "mean", r"$\epsilon$=1: mean over hospitals"),

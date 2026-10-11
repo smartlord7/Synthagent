@@ -5,16 +5,21 @@ theta_k = mu + u_k with u_k ~ N(0, tau^2 I). Optional departures from Simulation
   shift       hospital k draws its features from N(m_k, I) with m_k ~ N(0, shift^2 I) (case mix);
   anchor_err  standard deviation of the error of the published anchor mu_0 (truth: mu);
   anchor_sd   the uncertainty the anchor is *stated* to have, which GHB uses (overconfident if smaller);
-  check       GHB drops the anchor when it conflicts with the network estimate (|z| > 3 in any coordinate).
+  check       GHB drops the anchor when it conflicts with the network estimate (|z| > 3 in any coordinate);
+              on by default.
+  regions     (G, tau_r2): a shared effect per region (Simulation 15).
 
-Every method below that uses other hospitals consumes the same privatized releases (output
-perturbation of the anchored ridge fit, as in Simulation 7), so all of them satisfy the same
-(epsilon, delta) guarantee, except "Global (pooled, no DP)", which is a non-private reference.
+GHB is implemented in ghb_logit.py. Every one-shot method below that uses other hospitals consumes the same
+privatized releases (GHB's score releases, inverted to the parameter scale), so all of them satisfy the
+same (epsilon, delta) guarantee, except "Global (pooled, no DP)", which is a non-private reference.
+releases(), network() and with_anchor() are the earlier version of GHB (ridge releases centred on a fixed
+reference, first-order de-shrinking, plug-in tau^2), kept for the development note (legacy=True).
 """
 import numpy as np
 from scipy.special import expit
 
 import ghb
+import ghb_logit as GL
 from blueprint import dp_noise_var
 from exp7_logistic import LAM, MU, N_TEST, P, R_X, auc, fisher_info, fit
 
@@ -109,33 +114,41 @@ def evaluate(rng, theta_k, mean_k, est):
     return out
 
 
-def one_rep(rng, n, tau2, eps, avg, shift=0.0, anchor_err=0.3, anchor_sd=0.3, check=False,
-            ditto_lam=None, ghb_variants=None, baselines=True, deshrink="anchor", centre="zero",
-            regions=None, extra=None, oracle_tau2=False):
+def one_rep(rng, n, tau2, eps, avg, shift=0.0, anchor_err=0.3, anchor_sd=0.3, check=True,
+            ditto_lam=None, ghb_variants=None, baselines=True, regions=None, extra=None, oracle_tau2=False,
+            legacy=False):
     """Excess log-loss and AUC of every method at every hospital for one replicate.
 
-    extra(rng, data, n, mu0, eps) may return further estimates, a dict name -> (K, P) array (Simulation 15).
-    oracle_tau2 adds "GHB, oracle tau2 (DP)": GHB with the true marginal heterogeneity instead of its estimate.
+    GHB is ghb_logit (score releases at the anchor, moment inversion, tau integrated out). ghb_variants maps a
+    name to dict(anchor_sd=..., check=...) and reuses the same releases. extra(rng, data, n, mu0, eps) may return
+    further estimates, a dict name -> (K, P) array (Simulation 15). oracle_tau2 adds "GHB, oracle tau2 (DP)".
     """
     theta, means, mu0, data = world(rng, n, tau2, shift, anchor_err, regions)
-    rel, r = releases(rng, data, n, mu0, eps, deshrink, centre)
-    t2, mu_t, M = network(rel, r, avg)
+    pub = GL.Public(features(rng, 20000))
+    g, sd = GL.release(rng, data, n, mu0, eps)
     variants = ghb_variants or {"GHB (DP)": dict(anchor_sd=anchor_sd, check=check)}
-    priors = {}
+    ests, drops, first = {}, {}, None
     for name, cfg in variants.items():
-        mc, Mc, drop = with_anchor(mu_t, M, mu0, cfg.get("anchor_sd"), cfg.get("check", False))
-        priors[name] = (mc, 1.0 / np.maximum(t2 + Mc, 1e-6), drop)
+        th, r, drop = GL.invert(pub, g, sd, n, mu0, avg, cfg.get("anchor_sd"), cfg.get("check", True))
+        ests[name] = GL.estimate(data, th, r, drop, mu0, avg, cfg.get("anchor_sd"))
+        drops[name] = drop
+        first = first or (th, r, drop, cfg)
     if oracle_tau2:
+        th, r, drop, cfg = first
         t2_true = tau2 + (regions[1] if regions is not None else 0.0)
-        _, mu_o, M_o = network(rel, r, avg, tau2=t2_true)
-        cfg = next(iter(variants.values()))
-        mc, Mc, drop = with_anchor(mu_o, M_o, mu0, cfg.get("anchor_sd"), cfg.get("check", False))
-        priors["GHB, oracle tau2 (DP)"] = (mc, 1.0 / np.maximum(t2_true + Mc, 1e-6), drop)
+        ests["GHB, oracle tau2 (DP)"] = GL.estimate(data, th, r, drop, mu0, avg, cfg.get("anchor_sd"), oracle_tau2=t2_true)
+    if legacy:  # the earlier version of GHB, on its own releases (same budget, classical Gaussian mechanism)
+        rel0, r0 = releases(rng, data, n, mu0, eps)
+        t2o, mu_o, M_o = network(rel0, r0, avg)
+        mc, Mc, _ = with_anchor(mu_o, M_o, mu0, anchor_sd, check)
+        ests["GHB, earlier version (DP)"] = np.array([fit(X, y, mc[k], 1.0 / np.maximum(t2o[k] + Mc[k], 1e-6))
+                                                      for k, (X, y) in enumerate(data)])
     if baselines:
+        rel, r = first[0], first[1]  # the same privatized releases, on the parameter scale
         w_n = n / n.sum()
-        fedavg = (rel * w_n[:, None]).sum(axis=0)  # one-shot federated averaging of the private releases
-        t2_all, _, _ = network(rel, r, ghb.Averager())
-        w_iv = 1.0 / (t2_all[0][None, :] + r)
+        fedavg = (rel * w_n[:, None]).sum(axis=0)  # one-shot federated averaging of the releases
+        t2_all = np.array([ghb.dersimonian_laird(rel[None, :, d], r[None, :, d], ghb.Averager())[0, 0] for d in range(P)])
+        w_iv = 1.0 / (t2_all[None, :] + r)
         meta = (rel * w_iv).sum(axis=0) / w_iv.sum(axis=0)  # random-effects (DerSimonian-Laird) pooled mean
         Xall = np.vstack([X for X, _ in data]); yall = np.concatenate([y for _, y in data])
         pooled = fit(Xall, yall, np.zeros(P), np.full(P, 1e-3))
@@ -143,21 +156,20 @@ def one_rep(rng, n, tau2, eps, avg, shift=0.0, anchor_err=0.3, anchor_sd=0.3, ch
     res = {}
     for k, (X, y) in enumerate(data):
         est = {"Local": fit(X, y, mu0, np.ones(P))}
-        for name, (mc, prec, _) in priors.items():
-            est[name] = fit(X, y, mc[k], prec[k])
+        for name, e in ests.items():
+            est[name] = e[k]
         if baselines:
             est["Global (pooled, no DP)"] = pooled
             est["FedAvg (DP)"] = fedavg
             est["Meta-analysis (DP)"] = meta
             for lam in (DITTO_GRID if ditto_lam is None else (ditto_lam,)):
                 est[f"Ditto-style (DP), lambda={lam}"] = fit(X, y, fedavg, np.full(P, lam))
-        for name, th in more.items():
-            est[name] = th[k]
+        for name, th_ in more.items():
+            est[name] = th_[k]
         res[k] = evaluate(rng, theta[k], means[k], est)
     methods = list(res[0])
     kl = {m: np.array([res[k][m][0] for k in range(len(n))]) for m in methods}
     au = {m: np.array([res[k][m][1] for k in range(len(n))]) for m in methods}
-    drops = {name: p[2] for name, p in priors.items()}
     return kl, au, drops
 
 

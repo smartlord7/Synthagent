@@ -4,22 +4,17 @@
 features plus an intercept, theta_k = mu + u_k with u_k ~ N(0, tau^2 I). Features are clipped so that
 ||x|| <= sqrt(5), which bounds the sensitivity of the released estimate.
 
-Release (requirement R2): each hospital fits the ridge objective centred on a fixed public reference c = 0
-    (1/n) sum_i loss_i(theta) + (lambda/2) ||theta - c||^2,  lambda = 0.2,
-whose minimizer has L2 sensitivity 2 sqrt(5) / (n lambda) (Chaudhuri et al., 2011), and releases it
-with isotropic Gaussian noise. mu_0 is a published model (channel P3), equal to mu plus N(0, 0.3^2 I).
-Anyone can then undo the ridge shrinkage to first order, theta = c + (I + lambda I) I^{-1} (release - c),
-with I the per-patient Fisher information at c under the public feature distribution; this is
-post-processing. The variance of each de-shrunk release is public: [I^{-1}]_dd / n_j plus the
-correspondingly amplified Gaussian-mechanism noise.
+Release (requirement R2): each hospital releases its mean score at the published anchor mu_0, with
+Gaussian noise calibrated by zero-concentrated DP to the sensitivity 2 sqrt(5)/n; the releases are inverted
+to the parameter scale by public moment matching (ghb_logit.py). mu_0 is a published model (channel P3),
+equal to mu plus N(0, 0.3^2 I).
 
 Methods, evaluated on 4,000 fresh patients per hospital:
   Local       MAP with prior N(mu_0, I): uses the published anchor but no other hospital;
   Global      one logistic model fitted on the pooled data of all hospitals (no privacy; generous);
-  GHB         MAP with prior N(mu_tilde_k, diag(tau_hat^2 + M)), coordinatewise borrowing from the
-              privatized releases by gossip on the ring+2-hop graph (T = 60 rounds); tau^2 is the posterior mean
-              under a half-Cauchy(0.5) prior on tau, from all releases (Remark 8.3); the network
-              estimate of mu is combined with the anchor mu_0 by precision weighting (layer L3).
+  GHB         ghb_logit.py: coordinatewise borrowing by gossip on the ring+2-hop graph (T = 60 rounds), the
+              network estimate combined with mu_0 unless they conflict (layer L3), and each hospital's
+              posterior mean with tau integrated out over its posterior (half-Cauchy(0.5) prior, Remark 8.3).
 """
 import json
 
@@ -91,40 +86,26 @@ def fisher_info(rng, mu0, m=20000):
 
 
 def one_rep(rng, n, tau2, eps, avg):
+    import ghb_logit as GL  # imported here: ghb_logit imports fit and P from this module
     K = len(n)
     theta = MU + np.sqrt(tau2) * rng.standard_normal((K, P))
     mu0 = MU + ANCHOR_SD * rng.standard_normal(P)
-    c = np.zeros(P)  # fixed public reference on which the private releases are centred (not the anchor)
-    Info = fisher_info(rng, c)  # public: computed at c on the public feature distribution
-    Iinv = np.linalg.inv(Info)
-    A = (Info + LAM * np.eye(P)) @ Iinv  # undoes the ridge shrinkage to first order (post-processing)
+    pub = GL.Public(features(rng, 20000))
     data = []
     for k in range(K):
         X = features(rng, int(n[k]))
         data.append((X, rng.binomial(1, expit(X @ theta[k])).astype(float)))
-    # releases
-    s2 = dp_noise_var(n, eps, clip=R_X / LAM)  # (2 C / n)^2 ... with C = R_X / LAM
-    rel = np.array([fit(X, y, c, np.full(P, len(y) * LAM)) for X, y in data])
-    rel = rel + np.sqrt(s2)[:, None] * rng.standard_normal((K, P))
-    rel = c + (rel - c) @ A.T
-    r = np.diag(Iinv)[None, :] / n[:, None] + s2[:, None] * np.diag(A @ A.T)[None, :]
-    # network borrowing, coordinatewise (the Averager works on (replicates, K) arrays)
-    t2, mu_t, M = (np.empty((K, P)) for _ in range(3))
-    for d in range(P):
-        a, b, c = ghb.borrow(rel[None, :, d], r[None, :, d], avg, tau2=TAU2_EST)
-        t2[:, d], mu_t[:, d], M[:, d] = a[0], b[0], c[0]
-    # knowledge anchor (L3): combine the network estimate with the published model mu_0, whose
-    # stated uncertainty is ANCHOR_SD^2 per coefficient, by precision weighting
-    prec = 1.0 / M + 1.0 / ANCHOR_SD ** 2
-    mu_t = (mu_t / M + mu0[None, :] / ANCHOR_SD ** 2) / prec
-    M = 1.0 / prec
+    # GHB (ghb_logit.py): privatized scores at the anchor, inverted by public moment matching, tau integrated out
+    g, sd = GL.release(rng, data, n, mu0, eps)
+    th, r, drop = GL.invert(pub, g, sd, n, mu0, avg, ANCHOR_SD)
+    ghb_est = GL.estimate(data, th, r, drop, mu0, avg, ANCHOR_SD)
     Xall = np.vstack([X for X, _ in data]); yall = np.concatenate([y for _, y in data])
     glob = fit(Xall, yall, np.zeros(P), np.full(P, 1e-3))
     out = {m: dict(kl=[], auc=[], mse=[]) for m in ("Local", "Global", "GHB", "Oracle")}
     for k, (X, y) in enumerate(data):
         ests = {"Local": fit(X, y, mu0, np.ones(P)),
                 "Global": glob,
-                "GHB": fit(X, y, mu_t[k], 1.0 / np.maximum(t2[k] + M[k], 1e-6)),
+                "GHB": ghb_est[k],
                 "Oracle": theta[k]}
         Xt = features(rng, N_TEST)
         pt = expit(Xt @ theta[k])

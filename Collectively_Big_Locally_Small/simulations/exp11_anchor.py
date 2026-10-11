@@ -8,8 +8,9 @@ precision weighting using the uncertainty the anchor is *stated* to have:
   + check        overconfident, but the anchor is dropped when it conflicts with the network
                  estimate (|mu_0 - mu_tilde| / sqrt(stated^2 + M) > 3 in any coordinate);
   no anchor      the network estimate alone.
-The local model uses N(mu_0, I) as its prior, as in Simulation 7, so it also degrades. The anchor
-also centres the ridge of the private releases; that is part of what is tested.
+The local model uses N(mu_0, I) as its prior, as in Simulation 7, so it also degrades. Each release is
+the hospital's score evaluated at the anchor (ghb_logit.py), so a wrong anchor also makes the releases
+noisier; that is part of what is tested. The conflict check is GHB's default in the other simulations.
 """
 import json
 
@@ -25,10 +26,10 @@ ERRS = [0.0, 0.3, 1.0, 2.0, 3.0]
 
 
 def variants(e):
-    return {"GHB, anchor uncertainty stated honestly": dict(anchor_sd=max(e, 0.05)),
-            "GHB, anchor overconfident (stated 0.3)": dict(anchor_sd=0.3),
+    return {"GHB, anchor uncertainty stated honestly": dict(anchor_sd=max(e, 0.05), check=False),
+            "GHB, anchor overconfident (stated 0.3)": dict(anchor_sd=0.3, check=False),
             "GHB, overconfident + conflict check": dict(anchor_sd=0.3, check=True),
-            "GHB, no anchor": dict(anchor_sd=None)}
+            "GHB, no anchor": dict(anchor_sd=None, check=False)}
 
 
 def main():

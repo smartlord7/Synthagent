@@ -123,6 +123,37 @@ def ghb(theta_hat, x, n, s2, sigma2=SIGMA2, avg=None, tau2=None, weights="iv"):
     return alpha * theta_hat + (1 - alpha) * mu_t
 
 
+def ghb_full_bayes(theta_hat, x, n, s2, sigma2=SIGMA2, avg=None, q=12, scale=0.5):
+    """GHB with tau integrated out (Remark 8.3, full version): the posterior of tau given the releases under a
+    half-Cauchy(scale) prior is summarized by q equally weighted quantiles; for each, gossip gives mu~_k and M_k;
+    hospital k averages its shrinkage estimates, weighting each component by the density of its own noise-free
+    estimate, N(theta_hat_k; mu~_k, tau_q^2 + M_k + v_k). Closed form; no privacy cost."""
+    v = sigma2 / np.asarray(n, dtype=float)
+    x = np.atleast_2d(x); theta_hat = np.atleast_2d(theta_hat)
+    r = np.broadcast_to(v + s2, x.shape)
+    grid = np.r_[0.0, np.logspace(-3.5, 1, 160)]
+    lp = []
+    for t in grid:
+        V = t * t + r
+        w = 1.0 / V
+        mu = (w * x).sum(1, keepdims=True) / w.sum(1, keepdims=True)
+        lp.append(-0.5 * np.log(V).sum(1) - 0.5 * np.log(w.sum(1)) - 0.5 * (w * (x - mu) ** 2).sum(1) - np.log1p((t / scale) ** 2))
+    lp = np.array(lp)
+    p = np.exp(lp - lp.max(0)) * np.gradient(grid)[:, None]
+    cdf = np.cumsum(p / p.sum(0), axis=0)
+    logw, ests = [], []
+    for j in range(q):
+        t2 = grid[np.argmax(cdf >= (j + 0.5) / q, axis=0)] ** 2
+        _, mu_t, M = borrow(x, r, avg, tau2=np.broadcast_to(t2[:, None], x.shape))
+        V = t2[:, None] + M
+        logw.append(-0.5 * np.log(V + v) - 0.5 * (theta_hat - mu_t) ** 2 / (V + v))
+        a = V / (V + v)
+        ests.append(a * theta_hat + (1 - a) * mu_t)
+    logw = np.array(logw)
+    w = np.exp(logw - logw.max(0))
+    return (w * np.array(ests)).sum(0) / w.sum(0)
+
+
 def oracle_hb(theta_hat, x, n, s2, tau2, sigma2=SIGMA2):
     """Proposition 8.1 exactly: equal-weight leave-one-out mean of releases, true tau^2 and M."""
     K = x.shape[1]
