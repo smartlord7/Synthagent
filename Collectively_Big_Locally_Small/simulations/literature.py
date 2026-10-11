@@ -18,6 +18,8 @@ clipping; replacing one patient moves a hospital's mean gradient by at most 2 sq
                        with its neighbours (Metropolis-Hastings weights on the agreement graph),
                        adapt-then-combine (Lian et al., 2017; swarm learning, Warnat-Herresthal
                        et al., 2021); optional local fine-tuning as above.
+  Local GD from anchor a control without any other hospital: E plain gradient steps from the published
+                       anchor mu_0 on the hospital's own data (early stopping as the only regularizer).
   Clustered DP-FedAvg  IFCA-style clustering (Ghosh et al., 2020) made private: choosing a cluster
                        by local loss each round has sensitivity O(1), not O(1/n_k), so hospitals
                        instead make one private ridge release with half the budget, the releases
@@ -34,9 +36,9 @@ from scipy.special import expit
 from exp7_logistic import LAM, P, R_X, fit
 
 G = np.sqrt(5.0)  # bound on the norm of a per-patient gradient
-ROUNDS = (3, 10, 30, 100)
-DROUNDS = (10, 30, 100)
-ETAS = (0.5, 2.0)
+ROUNDS = (1, 2, 3, 5, 10, 30, 100)
+DROUNDS = (3, 10, 30, 100)
+ETAS = (0.2, 0.5, 2.0)
 FT_STEPS = (0, 1, 2, 3, 5, 10, 30, 100)
 CLUSTERS = (2, 3, 4)
 FT_ETA = 1.0
@@ -116,6 +118,10 @@ def estimates(rng, data, n, mu0, eps, delta, W, keep=None):
     rho, K, out = rho_total(eps, delta), len(n), {}
     want = (lambda name: True) if keep is None else (lambda name: name in keep)
     prefix_wanted = (lambda pre: keep is None or any(k.startswith(pre) for k in keep))
+    if prefix_wanted("Local GD from anchor|"):
+        for E, th in fine_tune(data, np.repeat(np.asarray(mu0, float)[None], K, 0)).items():
+            if E > 0 and want(f"Local GD from anchor|E={E}"):
+                out[f"Local GD from anchor|E={E}"] = th
     for R in ROUNDS:
         for eta in ETAS:
             pre = f"DP-FedAvg|R={R}|eta={eta}|"

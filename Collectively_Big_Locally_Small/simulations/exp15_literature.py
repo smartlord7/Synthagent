@@ -10,7 +10,9 @@ replicates with oracle access to the excess log-loss (generous to the baselines)
 
 Settings: heterogeneity tau^2 in {0.01, 0.05, 0.2, 0.5} at epsilon = 1; privacy epsilon in
 {0.3, 1, no DP} at tau^2 = 0.05; and a regional world (4 regions, between-region variance 0.2,
-within-region 0.02), where clustering should help. Mean excess log-loss over 24 hospitals and REPS
+within-region 0.02), where clustering should help; and a published anchor wrong by N(0, 1) per coefficient,
+which every method starts from or shrinks toward (GHB with its conflict check, an optional safeguard of
+Algorithm 1). Mean excess log-loss over 24 hospitals and REPS
 replicates, with Monte Carlo standard errors, and the same for the 8 smallest and 8 largest hospitals.
 """
 import json
@@ -25,24 +27,27 @@ import literature as LIT
 import logit_world as L
 import style
 
-REPS, TUNE, T, DELTA = 40, 10, 60, 1e-5
+REPS, TUNE, T, DELTA = 60, 20, 60, 1e-5
 FAMILIES = {
     "DP-FedAvg": lambda m: m.startswith("DP-FedAvg|") and m.endswith("|E=0"),
     "DP-FedAvg + fine-tuning": lambda m: m.startswith("DP-FedAvg|"),
     "Decentralized DP-SGD": lambda m: m.startswith("Decentralized DP-SGD|"),
     "Clustered DP-FedAvg": lambda m: m.startswith("Clustered DP-FedAvg|"),
+    "Local GD from anchor": lambda m: m.startswith("Local GD from anchor|"),
 }
-SHOW = ("Local", "GHB (DP)", "Ditto-style (DP)", "DP-FedAvg", "DP-FedAvg + fine-tuning", "Decentralized DP-SGD",
+SHOW = ("Local", "Local GD from anchor", "GHB (DP)", "GHB, oracle tau2 (DP)", "Ditto-style (DP)", "DP-FedAvg", "DP-FedAvg + fine-tuning", "Decentralized DP-SGD",
         "Clustered DP-FedAvg", "Global (pooled, no DP)")
-COL = {"Local": style.GRAY400, "GHB (DP)": style.TEAL700, "Ditto-style (DP)": style.BLUE600,
+COL = {"Local": style.GRAY400, "Local GD from anchor": "#9ca3af", "GHB (DP)": style.TEAL700,
+       "GHB, oracle tau2 (DP)": "#14b8a6", "Ditto-style (DP)": style.BLUE600,
        "DP-FedAvg": style.AMBER600, "DP-FedAvg + fine-tuning": "#92400e", "Decentralized DP-SGD": style.VIOLET600,
        "Clustered DP-FedAvg": style.SLATE800, "Global (pooled, no DP)": style.RED700}
-MK = {"Local": "o", "GHB (DP)": "o", "Ditto-style (DP)": "D", "DP-FedAvg": "<", "DP-FedAvg + fine-tuning": ">",
+MK = {"Local": "o", "Local GD from anchor": "v", "GHB (DP)": "o", "GHB, oracle tau2 (DP)": "*", "Ditto-style (DP)": "D", "DP-FedAvg": "<", "DP-FedAvg + fine-tuning": ">",
       "Decentralized DP-SGD": "s", "Clustered DP-FedAvg": "^", "Global (pooled, no DP)": "x"}
 SETTINGS = [("tau2=0.01", dict(tau2=0.01, eps=1.0)), ("tau2=0.05", dict(tau2=0.05, eps=1.0)),
             ("tau2=0.2", dict(tau2=0.2, eps=1.0)), ("tau2=0.5", dict(tau2=0.5, eps=1.0)),
             ("eps=0.3", dict(tau2=0.05, eps=0.3)), ("eps=inf", dict(tau2=0.05, eps=np.inf)),
-            ("regional", dict(tau2=0.02, eps=1.0, regions=(4, 0.2)))]
+            ("regional", dict(tau2=0.02, eps=1.0, regions=(4, 0.2))),
+            ("anchor=1.0", dict(tau2=0.05, eps=1.0, anchor_err=1.0, check=True))]
 
 
 def graph():
@@ -55,10 +60,10 @@ def setting(item):
     n, W = ghb.site_sizes(), graph()
     avg = ghb.Averager(W, T)
     extra = lambda keep: (lambda r, data, nn, mu0, eps: LIT.estimates(r, data, nn, mu0, eps, DELTA, W, keep))
-    tune, _, _ = L.run(rng, n, TUNE, avg=avg, extra=extra(None), **kw)
+    tune, _, _ = L.run(rng, n, TUNE, avg=avg, extra=extra(None), oracle_tau2=True, **kw)
     lam = float(L.best_ditto(tune).split("=")[-1])
     chosen = {f: min((m for m in tune if sel(m)), key=lambda m: tune[m].mean()) for f, sel in FAMILIES.items()}
-    KL, AU, _ = L.run(rng, n, REPS, avg=avg, ditto_lam=lam, extra=extra(set(chosen.values())), **kw)
+    KL, AU, _ = L.run(rng, n, REPS, avg=avg, ditto_lam=lam, extra=extra(set(chosen.values())), oracle_tau2=True, **kw)
     ditto = [m for m in KL if m.startswith("Ditto")][0]
     KL["Ditto-style (DP)"], AU["Ditto-style (DP)"] = KL.pop(ditto), AU.pop(ditto)
     for f, m in chosen.items():
@@ -78,16 +83,20 @@ def setting(item):
     return label, out
 
 
-def main():
-    with Pool(min(len(SETTINGS), 7)) as pool:
-        res = dict(pool.map(setting, list(enumerate(SETTINGS))))
-    json.dump(dict(reps=REPS, tune=TUNE, res=res), open(ghb.RESDIR / "sim15_literature.json", "w"), indent=1)
+def main(redraw=False):
+    if redraw:
+        res = json.load(open(ghb.RESDIR / "sim15_literature.json"))["res"]
+    else:
+        with Pool(4) as pool:
+            res = dict(pool.map(setting, list(enumerate(SETTINGS))))
+        json.dump(dict(reps=REPS, tune=TUNE, res=res), open(ghb.RESDIR / "sim15_literature.json", "w"), indent=1)
     figure(res)
 
 
 def figure(res):
     style.setup()
-    fig, axs = plt.subplots(1, 3, figsize=(6.8, 2.55), gridspec_kw=dict(wspace=0.32, width_ratios=[1.25, 1, 1.1]))
+    fig, axs = plt.subplots(1, 3, figsize=(6.8, 3.05), gridspec_kw=dict(wspace=0.5, width_ratios=[1.2, 0.9, 1.1]))
+    fig.subplots_adjust(bottom=0.33)
     tau = [0.01, 0.05, 0.2, 0.5]
     a = axs[0]
     for m in SHOW:
@@ -99,34 +108,38 @@ def figure(res):
     a.set_xlabel(r"Heterogeneity $\tau^2$ ($\epsilon$=1)")
     a.set_ylabel("Mean excess log-loss (nats)")
     a.set_title("(a) All hospitals", fontsize=7.5)
-    # (b) privacy budget, smallest third of hospitals
+    # (b) privacy budget, all hospitals
     b = axs[1]
     eps_keys, xs = ["eps=0.3", "tau2=0.05", "eps=inf"], [0, 1, 2]
     for m in SHOW:
-        b.errorbar(xs, [res[k]["kl_small"][m] for k in eps_keys], yerr=[2 * res[k]["kl_small_se"][m] for k in eps_keys],
+        b.errorbar(xs, [res[k]["kl"][m] for k in eps_keys], yerr=[2 * res[k]["kl_se"][m] for k in eps_keys],
                    color=COL[m], marker=MK[m], ms=2.8, lw=1.1, elinewidth=0.6, ls="--" if m.startswith("Global") else "-")
     b.set_xticks(xs, ["0.3", "1", "no DP"])
-    b.set_yscale("log")
+    b.set_xlim(-0.25, 2.25)
     b.set_xlabel(r"Privacy budget $\epsilon$ ($\tau^2$=0.05)")
-    b.set_title("(b) The 8 smallest hospitals", fontsize=7.5)
-    # (c) regional world: relative to local, all and smallest
+    b.set_title("(b) All hospitals", fontsize=7.5)
+    # (c) the worst hospital: largest ratio of a hospital's mean excess log-loss to its local one
     c = axs[2]
-    r = res["regional"]
-    order = [m for m in SHOW if m != "Local"]
-    yy = np.arange(len(order))[::-1]
-    for y, m in zip(yy, order):
-        c.scatter(r["kl"][m] / r["kl"]["Local"], y, color=COL[m], marker=MK[m], s=16, zorder=3)
-        c.scatter(r["kl_small"][m] / r["kl_small"]["Local"], y, facecolors="none", edgecolors=COL[m], marker=MK[m], s=16, zorder=3)
+    keys = ["tau2=0.01", "tau2=0.05", "tau2=0.2", "tau2=0.5", "eps=0.3", "eps=inf", "regional", "anchor=1.0"]
+    labs = [r"$\tau^2$=0.01", r"$\tau^2$=0.05", r"$\tau^2$=0.2", r"$\tau^2$=0.5", r"$\epsilon$=0.3", "no DP", "regional", "wrong anchor"]
+    yy = np.arange(len(keys))[::-1]
+    for m in SHOW:
+        if m in ("Local", "Global (pooled, no DP)", "DP-FedAvg"):
+            continue
+        c.scatter([res[k]["worst_ratio"][m] for k in keys], yy, color=COL[m], marker=MK[m], s=12, zorder=3, linewidths=0.8)
     c.axvline(1, color=style.SLATE800, lw=0.7)
-    c.set_yticks(yy, [m.replace(" (DP)", "").replace("Global (pooled, no DP)", "Pooled, no DP") for m in order], fontsize=6)
+    c.set_yticks(yy, labs, fontsize=6)
     c.set_xscale("log")
-    c.set_xlabel("Error relative to local")
-    c.set_title("(c) Regional world (filled: all; open: smallest 8)", fontsize=7)
+    c.set_xticks([0.5, 1, 2, 4], ["0.5", "1", "2", "4"])
+    c.set_xticks([], minor=True)
+    c.set_xlabel("Worst hospital, relative to local")
+    c.set_title("(c) Worst hospital", fontsize=7.5)
     ghb.tidy(a, b, c)
-    fig.legend(*a.get_legend_handles_labels(), frameon=False, fontsize=5.8, loc="lower center", ncol=4,
-               bbox_to_anchor=(0.5, -0.13))
+    fig.legend(*a.get_legend_handles_labels(), frameon=False, fontsize=6, loc="lower center", ncol=4,
+               bbox_to_anchor=(0.5, 0.0))
     style.save(fig, ghb.FIGDIR / "sim15_literature.pdf")
 
 
 if __name__ == "__main__":
-    main()
+    import sys
+    main(redraw="--redraw" in sys.argv)
