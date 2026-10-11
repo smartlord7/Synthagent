@@ -61,81 +61,81 @@
   [
    "Sim 8: logistic, $\\tau^2$=0.05",
    {
-    "GHB": 0.6061562997590597,
-    "Ditto-style": 0.7209572027160236,
-    "Meta-analysis": 1.7763792830411749,
-    "FedAvg": 2.2507705234788595,
+    "GHB": 0.4882416311798756,
+    "Ditto-style": 0.5698924559732723,
+    "Meta-analysis": 1.1048061976077128,
+    "FedAvg": 1.3302058681090139,
     "Global (no DP)": 0.6093755764278723
    }
   ],
   [
    "Sim 8: logistic, $\\tau^2$=0.5",
    {
-    "GHB": 1.0292908628859216,
-    "Ditto-style": 1.0037729182851114,
-    "Meta-analysis": 5.706089438161688,
-    "FedAvg": 6.144437816237473,
+    "GHB": 1.0347000461069205,
+    "Ditto-style": 0.9722517438313436,
+    "Meta-analysis": 5.085820681092981,
+    "FedAvg": 5.171518049352384,
     "Global (no DP)": 4.60375220175002
    }
   ],
   [
    "Sim 10: logistic, case-mix shift 1.0",
    {
-    "GHB": 0.6470694651559785,
-    "Ditto-style": 0.7506183540882955,
-    "Meta-analysis": 3.203259853510523,
-    "FedAvg": 3.652557067520654,
+    "GHB": 0.5766364328212623,
+    "Ditto-style": 0.6128909119859394,
+    "Meta-analysis": 1.8888934964081654,
+    "FedAvg": 2.029224715352775,
     "Global (no DP)": 0.8660932772305093
    }
   ],
   [
    "Sim 11: anchor wrong by 2 s.d.",
    {
-    "GHB": 0.2974144857503213,
-    "GHB, overconfident anchor": 0.8376258955805184,
-    "GHB + conflict check": 0.29755637323815703
+    "GHB": 0.2749383117927376,
+    "GHB, overconfident anchor": 0.582551404880096,
+    "GHB + conflict check": 0.2754070412856438
    }
   ],
   [
    "Sim 7: logistic, strict budget $\\epsilon$=0.3",
    {
-    "GHB": 0.9570439334948779
+    "GHB": 0.6413703060174043
    }
   ],
   [
    "Sim 15: iterative baselines, $\\tau^2$=0.05",
    {
-    "GHB": 0.5955734170492589,
-    "DP-FedAvg + fine-tuning": 0.5731478526466219,
-    "Decentralized DP-SGD": 0.7468594757932063,
-    "Clustered DP-FedAvg": 0.7428151367255399
+    "GHB": 0.5100970901232593,
+    "DP-FedAvg + fine-tuning": 0.5656534881726856,
+    "Decentralized DP-SGD": 0.7034691529239252,
+    "Clustered DP-FedAvg": 0.7888729208865398
    }
   ],
   [
    "Sim 15: iterative baselines, $\\epsilon$=0.3",
    {
-    "GHB": 0.9501067364643909,
-    "DP-FedAvg + fine-tuning": 0.7413991684602137,
-    "Decentralized DP-SGD": 0.9198425122365212,
-    "Clustered DP-FedAvg": 0.7294623357519818
+    "GHB": 0.6501329950592181,
+    "DP-FedAvg + fine-tuning": 0.7273703576203934,
+    "Decentralized DP-SGD": 0.9188511920854964,
+    "Clustered DP-FedAvg": 0.7661893773144208
    }
   ],
   [
    "Sim 15: regional heterogeneity",
    {
-    "GHB": 0.7458636214231908,
-    "DP-FedAvg + fine-tuning": 0.8278521492164641,
-    "Decentralized DP-SGD": 0.9756828823258697,
-    "Clustered DP-FedAvg": 0.9306013311390784
+    "GHB": 0.7286924703006232,
+    "DP-FedAvg + fine-tuning": 0.870012663112235,
+    "Decentralized DP-SGD": 0.921288608074629,
+    "Clustered DP-FedAvg": 0.9436354065873975
    }
   ],
   [
    "Sim 15: anchor wrong by 1 s.d.",
    {
-    "GHB": 0.593406707535947,
-    "DP-FedAvg + fine-tuning": 0.71127335952617,
-    "Decentralized DP-SGD": 1.1923307815720183,
-    "Clustered DP-FedAvg": 1.1894231223276226
+    "GHB": 0.4678473658460758,
+    "DP-FedAvg + fine-tuning": 0.6079041798781272,
+    "Decentralized DP-SGD": 1.2072659885007395,
+    "Clustered DP-FedAvg": 1.3372940220358067
    }
   ]
  ]
