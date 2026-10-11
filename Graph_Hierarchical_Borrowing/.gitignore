@@ -1,0 +1,16 @@
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+ghb.pdf
+comment.cut
+supplement/*.aux
+supplement/*.bbl
+supplement/*.blg
+supplement/*.fdb_latexmk
+supplement/*.fls
+supplement/*.log
+supplement/*.out

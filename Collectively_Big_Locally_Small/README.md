@@ -1,5 +1,7 @@
 # Collectively Big, Locally Small — LaTeX sources
 
+The work is split into two papers. This folder holds the survey; its companion methods paper on Graph Hierarchical Borrowing (GHB) is in `../Graph_Hierarchical_Borrowing/`, and reads its figures, numbers, code and bibliography from here (see that folder's README). The survey keeps a design-level summary of GHB (Section 8) and points to the companion paper for the method for realistic heads, the full privacy analysis and the simulation study, whose details moved from this supplement to the companion's.
+
 This is the LaTeX project for the survey *Collectively Big, Locally Small: Formalizing Small Data in Healthcare and Learning Privately Across Siloed Hospitals*. It also contains its online supplement and the code behind every figure and number.
 
 The project was first rebuilt 1:1 from `recovered_main.pdf`, which is kept unmodified. That exact reconstruction is commit `425ec47` (see [Recovery](#recovery-from-recovered_mainpdf)). Later commits revise the paper for submission (see [Changes since the recovery](#changes-since-the-recovery)).
@@ -7,8 +9,8 @@ The project was first rebuilt 1:1 from `recovered_main.pdf`, which is kept unmod
 ## Build
 
 ```sh
-latexmk -pdf main.tex                         # the paper (59 pages, ACM review mode)
-cd supplement && latexmk -pdf supplement.tex  # the online supplement (34 pages); build main.tex first
+latexmk -pdf main.tex                         # the paper (52 pages, ACM review mode)
+cd supplement && latexmk -pdf supplement.tex  # the online supplement (21 pages); build main.tex first
 ```
 
 `main.tex` is set up for submission to ACM Computing Surveys (`review` mode: line numbers and ACM metadata). For a preprint, swap the two `\documentclass` lines at the top.
@@ -37,7 +39,7 @@ python3 prisma/search.py && python3 prisma/screen.py && python3 prisma/fetch_cor
 | `scripts/` | Code for the corpus counts and the data figures of the paper |
 | `prisma/` | The systematic search (see below) |
 | `simulations/` | The simulation study of the blueprint (see below) |
-| `supplement/` | Online supplement: `supplement.tex`, its figures, generated results and the corpus table |
+| `supplement/` | Online supplement of the survey (`supplement.tex`: systematic search and corpus table), plus the simulation figures and generated results shared with the companion paper |
 
 ## Systematic search (`prisma/`)
 
