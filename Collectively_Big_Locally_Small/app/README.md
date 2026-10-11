@@ -2,6 +2,8 @@
 
 An interactive companion to the survey *Collectively Big, Locally Small*. It measures how small a dataset is for a task (Section 2), then lets you run, watch and stress-test Graph Hierarchical Borrowing (GHB, Section 8). In GHB, hospitals borrow strength from each other over a sparse graph of agreements, with differential privacy and no central server. Every parameter is configurable, every plot of the paper's simulations can be reproduced with your own setup, and every number is explained next to the equation it comes from.
 
+A hosted copy is at https://claude.ai/artifact/7ZYuDy8A9eur912XQNfELs (private until shared from its Share menu).
+
 ## Run it
 
 The app is plain HTML, CSS and native ES modules. There is no build step and no npm. ES modules need HTTP, so serve the folder rather than opening the file directly:
