@@ -39,10 +39,10 @@ SHOW = ("Local", "Local GD from anchor", "GHB (DP)", "GHB, oracle tau2 (DP)", "D
         "Clustered DP-FedAvg", "Global (pooled, no DP)")
 COL = {"Local": style.GRAY400, "Local GD from anchor": "#9ca3af", "GHB (DP)": style.TEAL700,
        "GHB, oracle tau2 (DP)": "#14b8a6", "Ditto-style (DP)": style.BLUE600,
-       "DP-FedAvg": style.AMBER600, "DP-FedAvg + fine-tuning": "#92400e", "Decentralized DP-SGD": style.VIOLET600,
+       "DP-FedAvg": style.AMBER600, "DP-FedAvg + fine-tuning": "#92400e", "Decentralized DP-SGD": "#be185d",
        "Clustered DP-FedAvg": style.SLATE800, "Global (pooled, no DP)": style.RED700}
 MK = {"Local": "o", "Local GD from anchor": "v", "GHB (DP)": "o", "GHB, oracle tau2 (DP)": "*", "Ditto-style (DP)": "D", "DP-FedAvg": "<", "DP-FedAvg + fine-tuning": ">",
-      "Decentralized DP-SGD": "s", "Clustered DP-FedAvg": "^", "Global (pooled, no DP)": "x"}
+      "Decentralized DP-SGD": "p", "Clustered DP-FedAvg": "^", "Global (pooled, no DP)": "x"}
 SETTINGS = [("tau2=0.01", dict(tau2=0.01, eps=1.0)), ("tau2=0.05", dict(tau2=0.05, eps=1.0)),
             ("tau2=0.2", dict(tau2=0.2, eps=1.0)), ("tau2=0.5", dict(tau2=0.5, eps=1.0)),
             ("eps=0.3", dict(tau2=0.05, eps=0.3)), ("eps=inf", dict(tau2=0.05, eps=np.inf)),

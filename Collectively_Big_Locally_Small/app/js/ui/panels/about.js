@@ -26,6 +26,7 @@ export function initAbout() {
   </ul></div>`);
   add(stage, `<div><h2 class="rd-h2">Limits of this lab</h2><ul class="rd-prose">
     <li>Simulations 7, 8, 10 and 11 use logistic heads in the paper; their presets here are Gaussian analogues and say so.</li>
+    <li>Simulation 15 (multi-round DP-FedAvg, fine-tuning, decentralized DP-SGD and clustered training at the same budget) is reproduced only by <code>simulations/exp15_literature.py</code>.</li>
     <li>Joint release (Simulation 5) and refits (Simulation 14) are shown in closed form, as in the paper's lines; the Monte Carlo engine simulates individual releases.</li>
     <li>The paper's size profile and the K = 24 regional and random graphs are exact copies of the Python seeds. Other sizes and graphs come from this page's own seeded generator, so they differ from numpy draws.</li>
     <li>With link failures, the engine averages over 8 fixed realizations of the failure pattern, as the Python code reuses a finite set of sequences.</li></ul></div>`);

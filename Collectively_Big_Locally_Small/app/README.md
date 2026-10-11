@@ -33,7 +33,7 @@ node --test tests/math.test.mjs
 | Sweeps & figures | Sweep any parameter (linear or log) and plot any metric with ±2 standard errors; one-click reproductions of the paper's figures | Simulations 2–14 |
 | About | Assumptions and limits in plain words | §8.6, §8.7 |
 
-The logistic-regression simulations (7, 8 and 10) need iterative model fitting on thousands of synthetic patients per hospital. They are reproduced by `simulations/` in Python; the app offers their Gaussian analogues.
+The logistic-regression simulations (7, 8 and 10) need iterative model fitting on thousands of synthetic patients per hospital. They are reproduced by `simulations/` in Python; the app offers their Gaussian analogues. Simulation 15 (iterative federated baselines) is in Python only.
 
 ## Architecture
 
