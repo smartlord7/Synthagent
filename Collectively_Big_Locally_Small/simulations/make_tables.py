@@ -378,7 +378,7 @@ def real_networks():
             best = min(priv, key=lambda m: r[m][key])
             cells = []
             for m in cols:
-                v = f"{r[m][key]:.3f}"
+                v = "n/a" if r[m][key] != r[m][key] else f"{r[m][key]:.3f}"
                 cells.append(f"\\textbf{{{v}}}" if m == best else v)
             rows.append(f"{info['label']} & {info['K']} & {sum(info['n']):,}".replace(",", "{,}") + f" & {100 * info['prevalence']:.0f} & {r['Local']['ll']:.3f} & "
                         + " & ".join(cells) + r"\\")
@@ -386,7 +386,7 @@ def real_networks():
     rows = []
     for nm in order:
         r = s[nm]
-        cells = [f"{r[m]['worst']:.2f}" for m in ["GHB (DP, eps=1)", "GHB (DP, eps=3)", "GHB (DP, eps=10)", "GHB (no DP)", "Global (pooled, no DP)",
+        cells = [("n/a" if r[m]["worst"] != r[m]["worst"] else f"{r[m]['worst']:.2f}") for m in ["GHB (DP, eps=1)", "GHB (DP, eps=3)", "GHB (DP, eps=10)", "GHB (no DP)", "Global (pooled, no DP)",
                                                    "DP-FedAvg + fine-tuning"]]
         cells += [f"{100 * r[m]['share_gain']:.0f}" for m in ["GHB (DP, eps=3)", "GHB (no DP)", "DP-FedAvg + fine-tuning"]]
         cells += [f"{r[m]['auc']:.3f}" for m in ["Local", "GHB (DP, eps=3)", "GHB (no DP)", "Global (pooled, no DP)"]]

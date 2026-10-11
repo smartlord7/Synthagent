@@ -40,6 +40,7 @@ from real_heart import folds
 
 DATA = Path(__file__).resolve().parents[1] / "data"
 REPEATS, FOLDS, DELTA, MIN_SITE = 20, 5, 1e-5, 5
+BASE_EPS = (1.0, 10.0)  # budgets at which every private baseline is run, as GHB
 PRIOR = np.full(P, 1 / 2.5 ** 2)
 EPS_GHB = (1.0, 3.0, 10.0)
 TCGA = [("TCGA-LUSC", "Lung squamous"), ("TCGA-HNSC", "Head and neck"), ("TCGA-BLCA", "Bladder"),
@@ -48,14 +49,23 @@ NETWORKS = [("medpar", "Arizona Medicare")] + TCGA
 # nominal public feature distributions, set before looking at the data
 MEDPAR_PUBLIC = dict(age80=0.15, hmo=0.15, urgent=0.25, emergency=0.25)
 TCGA_PUBLIC = dict(age_mean=62, age_sd=12, male=0.5, stage3=0.25, stage4=0.10)
-FT_GRID = [(R, eta, E) for R in (1, 3, 10, 30) for eta in (0.2, 0.5, 2.0) for E in (0, 1, 5, 30)]
+FT_GRID = [(R, eta, E) for R in (1, 3, 10, 30) for eta in (0.2, 0.5, 2.0) for E in (1, 5, 30)]
+AVG_GRID = [(R, eta) for R in (1, 3, 10, 30) for eta in (0.2, 0.5, 2.0)]
+DEC_GRID = [(R, eta, E) for R in (3, 10, 30) for eta in (0.2, 0.5, 2.0) for E in (0, 5, 30)]
+CLU_GRID = [(C, R, eta, E) for C in (2, 3) for R in (1, 3, 10) for eta in (0.2, 0.5, 2.0) for E in (0, 5, 30)]
 DITTO_GRID = (0.01, 0.1, 0.3, 1.0, 3.0, 10.0, 30.0, 100.0)
 LGD_STEPS = (1, 2, 3, 5, 10, 30, 100)
-TUNED = {"Local GD, tuned stopping": [f"LGD|E={E}" for E in LGD_STEPS],
-         "DP-FedAvg + fine-tuning": [f"FT|R={R}|eta={eta}|E={E}" for R, eta, E in FT_GRID],
-         "Ditto-style (DP)": [f"Ditto|lambda={lam}" for lam in DITTO_GRID]}
+FAMILIES = ["DP-FedAvg", "DP-FedAvg + fine-tuning", "Decentralized DP-SGD", "Clustered DP-FedAvg", "Ditto-style (DP)"]
+TUNED = {"Local GD, tuned stopping": [f"LGD|E={E}" for E in LGD_STEPS]}
+for _e in BASE_EPS:
+    TUNED[f"DP-FedAvg, eps={_e:g}"] = [f"AVG{_e:g}|R={R}|eta={eta}" for R, eta in AVG_GRID]
+    TUNED[f"DP-FedAvg + fine-tuning, eps={_e:g}"] = [f"FT{_e:g}|R={R}|eta={eta}|E={E}" for R, eta, E in FT_GRID]
+    TUNED[f"Decentralized DP-SGD, eps={_e:g}"] = [f"DEC{_e:g}|R={R}|eta={eta}|E={E}" for R, eta, E in DEC_GRID]
+    TUNED[f"Clustered DP-FedAvg, eps={_e:g}"] = [f"CLU{_e:g}|C={C}|R={R}|eta={eta}|E={E}" for C, R, eta, E in CLU_GRID]
+    TUNED[f"Ditto-style (DP), eps={_e:g}"] = [f"DIT{_e:g}|lambda={lam}" for lam in DITTO_GRID]
 GHB_NAMES = [f"GHB (DP, eps={e:g})" for e in EPS_GHB]
-METHODS = ["Local"] + GHB_NAMES + ["GHB (no DP)", "GHB, empirical features (no DP)", "Global (pooled, no DP)"] + list(TUNED)
+METHODS = (["Local"] + GHB_NAMES + ["GHB (no DP)", "GHB, empirical features (no DP)", "Global (pooled, no DP)", "Local GD, tuned stopping"]
+           + [f"Meta-analysis (DP), eps={e:g}" for e in BASE_EPS] + [k for k in TUNED if k != "Local GD, tuned stopping"])
 
 
 def load_medpar():
@@ -111,41 +121,69 @@ def public_features(rng, name, m=20000):
     return np.column_stack([np.ones(m), a, rng.random(m) < p["male"], s == 1, s == 2]).astype(float)
 
 
-def gossip(K):
+def mixing(K):
     sys.path.insert(0, str(ghb.ROOT / "scripts"))
     import fig_gossip as fg
-    return ghb.Averager(ghb.metropolis_hastings(fg.ring(K, hops=2 if K > 4 else 1)), 60)
+    return ghb.metropolis_hastings(fg.ring(K, hops=2 if K > 4 else 1))
+
+
+def gossip(K):
+    return ghb.Averager(mixing(K), 60)
 
 
 def ghb_fit(rng, train, n, pub, avg, eps):
     mu0 = np.zeros(P)
     g, sd = GL.release(rng, train, n, mu0, eps, DELTA)
     th, r, drop = GL.invert(pub, g, sd, n, mu0, avg, anchor_sd=GL.PRIOR_SD, check=False, pool_prior_sd=GL.PRIOR_SD)
-    return GL.estimate(train, th, r, drop, mu0, avg, anchor_sd=None), th
+    return GL.estimate(train, th, r, drop, mu0, avg, anchor_sd=None), th, r
 
 
-def estimates(rng, train, pub, avg):
+def estimates(rng, train, pub, avg, W):
     n = np.array([len(y) for _, y in train], float)
+    K = len(n)
     est = {"Local": np.array([fit(X, y, np.zeros(P), PRIOR) for X, y in train])}
-    th1 = None
+    rel = {}
     for e, name in zip(EPS_GHB, GHB_NAMES):
-        est[name], th = ghb_fit(rng, train, n, pub, avg, e)
-        th1 = th if e == 1.0 else th1
-    est["GHB (no DP)"], _ = ghb_fit(rng, train, n, pub, avg, np.inf)
-    est["GHB, empirical features (no DP)"], _ = ghb_fit(rng, train, n, GL.Public(np.vstack([X for X, _ in train])), avg, np.inf)
+        est[name], th, r = ghb_fit(rng, train, n, pub, avg, e)
+        rel[e] = (th, r)
+    est["GHB (no DP)"], _, _ = ghb_fit(rng, train, n, pub, avg, np.inf)
+    est["GHB, empirical features (no DP)"], _, _ = ghb_fit(rng, train, n, GL.Public(np.vstack([X for X, _ in train])), avg, np.inf)
     Xa = np.vstack([X for X, _ in train]); ya = np.concatenate([y for _, y in train])
-    est["Global (pooled, no DP)"] = np.repeat(fit(Xa, ya, np.zeros(P), PRIOR)[None], len(n), 0)
-    for E, th in LIT.fine_tune(train, np.zeros((len(n), P)), steps=LGD_STEPS).items():
+    est["Global (pooled, no DP)"] = np.repeat(fit(Xa, ya, np.zeros(P), PRIOR)[None], K, 0)
+    for E, th in LIT.fine_tune(train, np.zeros((K, P)), steps=LGD_STEPS).items():
         est[f"LGD|E={E}"] = th
-    rho = LIT.rho_total(1.0, DELTA)
-    for R in (1, 3, 10, 30):
-        for eta in (0.2, 0.5, 2.0):
-            g = LIT.fedavg(rng, train, n, np.zeros(P), rho, R, eta)
-            for E, th in LIT.fine_tune(train, np.repeat(g[None], len(n), 0), steps=(0, 1, 5, 30)).items():
-                est[f"FT|R={R}|eta={eta}|E={E}"] = th
-    centre = (th1 * (n / n.sum())[:, None]).sum(0)
-    for lam in DITTO_GRID:
-        est[f"Ditto|lambda={lam}"] = np.array([fit(X, y, centre, np.full(P, lam)) for X, y in train])
+    for e in BASE_EPS:
+        rho, t = LIT.rho_total(e, DELTA), f"{e:g}"
+        th, r = rel[e] if e in rel else ghb_fit(rng, train, n, pub, avg, e)[1:]
+        # one-shot baselines on GHB's own releases at the same budget
+        t2 = np.array([ghb.dersimonian_laird(th[None, :, d], r[None, :, d], ghb.Averager())[0, 0] for d in range(P)])
+        w = 1.0 / (t2[None, :] + r)
+        est[f"Meta-analysis (DP), eps={t}"] = np.repeat(((th * w).sum(0) / w.sum(0))[None], K, 0)
+        centre = (th * (n / n.sum())[:, None]).sum(0)
+        for lam in DITTO_GRID:
+            est[f"DIT{t}|lambda={lam}"] = np.array([fit(X, y, centre, np.full(P, lam)) for X, y in train])
+        for R in (1, 3, 10, 30):
+            for eta in (0.2, 0.5, 2.0):
+                g = LIT.fedavg(rng, train, n, np.zeros(P), rho, R, eta)
+                est[f"AVG{t}|R={R}|eta={eta}"] = np.repeat(g[None], K, 0)
+                for E, thf in LIT.fine_tune(train, np.repeat(g[None], K, 0), steps=(1, 5, 30)).items():
+                    est[f"FT{t}|R={R}|eta={eta}|E={E}"] = thf
+        for R in (3, 10, 30):
+            for eta in (0.2, 0.5, 2.0):
+                th0 = LIT.decentralized(rng, train, n, np.zeros(P), rho, R, eta, W)
+                for E, thf in LIT.fine_tune(train, th0, steps=(0, 5, 30)).items():
+                    est[f"DEC{t}|R={R}|eta={eta}|E={E}"] = thf
+        for C in (2, 3):
+            lab = LIT.private_clusters(rng, train, n, rho / 2, C)
+            for R in (1, 3, 10):
+                for eta in (0.2, 0.5, 2.0):
+                    th0 = np.empty((K, P))
+                    for c in range(C):
+                        mem = np.flatnonzero(lab == c)
+                        if len(mem):
+                            th0[mem] = LIT.fedavg(rng, train, n, np.zeros(P), rho / 2, R, eta, mem)
+                    for E, thf in LIT.fine_tune(train, th0, steps=(0, 5, 30)).items():
+                        est[f"CLU{t}|C={C}|R={R}|eta={eta}|E={E}"] = thf
     return est
 
 
@@ -155,7 +193,8 @@ def run(item):
     data, ids = load(name)
     K = len(data)
     n_all = np.array([len(y) for _, y in data])
-    pub, avg = GL.Public(public_features(rng, name)), gossip(K)
+    pub, W = GL.Public(public_features(rng, name)), mixing(K)
+    avg = ghb.Averager(W, 60)
     # per method: summed log-loss per hospital and split, and pooled test scores per split
     S = {}
     for rep in range(REPEATS):
@@ -167,7 +206,7 @@ def run(item):
                 if len(tr) == 0:  # a hospital with fewer patients than folds sits this fold out of training
                     tr = te
                 train.append((X[tr], y[tr])); test.append((X[te], y[te]))
-            est = estimates(rng, train, pub, avg)
+            est = estimates(rng, train, pub, avg, W)
             for m, e in est.items():
                 rec = S.setdefault(m, dict(ll=np.zeros((REPEATS * FOLDS, K)), cnt=np.zeros((REPEATS * FOLDS, K)), s=[], y=[]))
                 j = rep * FOLDS + f
