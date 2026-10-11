@@ -94,12 +94,16 @@ def release(rng, data, n, mu0, eps, delta=1e-5):
     return g + sd[:, None] * rng.standard_normal(g.shape), sd
 
 
-def linearize(pub, g, sd, n, mu0, points):
-    """theta~_j = a_j + I(a_j)^{-1}(g_j + m(mu_0) - m(a_j)) and its delta-method variances."""
+def linearize(pub, g, sd, n, mu0, points, prior_sd=None):
+    """theta~_j = a_j + I(a_j)^{-1}(g_j + m(mu_0) - m(a_j)) and its delta-method variances.
+
+    prior_sd: if given, I(a_j) is replaced by I(a_j) + I / (n_j prior_sd^2), the information under the default prior,
+    which keeps the inverse finite at extreme points (real data)."""
     th, r, m0 = np.empty_like(g), np.empty_like(g), pub.m(mu0)
     for j in range(len(n)):
         a = points[j]
-        Ii = np.linalg.inv(pub.info(a))
+        extra = 0.0 if prior_sd is None else 1.0 / (n[j] * prior_sd ** 2)
+        Ii = np.linalg.inv(pub.info(a) + extra * np.eye(P))
         th[j] = a + Ii @ (g[j] + m0 - pub.m(a))
         r[j] = np.diag(Ii @ (pub.score_cov(a, mu0) / n[j] + sd[j] ** 2 * np.eye(P)) @ Ii.T)
     return th, r
@@ -171,15 +175,16 @@ def invert(pub, g, sd, n, mu0, avg, anchor_sd=0.3, check=True, pool_prior_sd=Non
     """Releases on the parameter scale: (theta~, variances, anchor decisions). Post-processing only.
 
     pool_prior_sd: if given, the pooled starting point is the posterior mode under N(0, pool_prior_sd^2) for the
-    pooled sample, which keeps it finite when noisy releases fall outside the range of the moment map (real data).
+    pooled sample, and both linearizations use the information under that prior, which keeps them finite when noisy
+    releases fall outside the range of the moment map (real data). None (the default) is the reported simulations.
     """
     n = np.asarray(n, float)
     ridge = 0.0 if pool_prior_sd is None else 1.0 / (n.sum() * pool_prior_sd ** 2)
     a0 = pub.invert((n[:, None] * g).sum(0) / n.sum() + pub.m(mu0), np.zeros(P), ridge=ridge)
-    th0, r0 = linearize(pub, g, sd, n, mu0, np.repeat(a0[None], len(n), 0))
+    th0, r0 = linearize(pub, g, sd, n, mu0, np.repeat(a0[None], len(n), 0), pool_prior_sd)
     mu_l, M_l = network(th0, r0, avg, tau2_quantiles(th0, r0)[Q // 2])
     drop = conflicts(mu_l, M_l, mu0, anchor_sd, check)
-    th, r = linearize(pub, g, sd, n, mu0, anchor(mu_l, M_l, mu0, anchor_sd, drop)[0])
+    th, r = linearize(pub, g, sd, n, mu0, anchor(mu_l, M_l, mu0, anchor_sd, drop)[0], pool_prior_sd)
     return th, r, drop
 
 
