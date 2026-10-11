@@ -366,38 +366,47 @@ def real_heart():
 
 def real_networks():
     s = load("real_networks.json")["res"]
-    order = ["medpar", "TCGA-LUSC", "TCGA-HNSC", "TCGA-BLCA", "TCGA-STAD", "TCGA-LIHC", "TCGA-KIRC"]
-    cols = ["GHB (DP, eps=1)", "GHB (DP, eps=3)", "GHB (DP, eps=10)", "GHB (no DP)", "Global (pooled, no DP)",
-            "Local GD, tuned stopping", "DP-FedAvg + fine-tuning", "Ditto-style (DP)"]
-    priv = ["GHB (DP, eps=1)", "DP-FedAvg + fine-tuning", "Ditto-style (DP)"]
-    for key, fname in (("rel", "t_real_networks.tex"), ("rel_small", "s_real_networks_small.tex")):
-        rows = []
-        for nm in order:
-            r = s[nm]
-            info = r["info"]
-            best = min(priv, key=lambda m: r[m][key])
+    order = [k for k in ("medpar", "TCGA-LUSC", "TCGA-HNSC", "TCGA-BLCA", "TCGA-STAD", "TCGA-LIHC", "TCGA-KIRC", "heart") if k in s]
+    fam = [("GHB", "GHB (DP, eps={e})"), ("DP-FedAvg", "DP-FedAvg, eps={e}"), ("DP-FedAvg + FT", "DP-FedAvg + fine-tuning, eps={e}"),
+           ("Decentralized DP-SGD", "Decentralized DP-SGD, eps={e}"), ("Clustered DP-FedAvg", "Clustered DP-FedAvg, eps={e}"),
+           ("Ditto-style", "Ditto-style (DP), eps={e}"), ("Meta-analysis", "Meta-analysis (DP), eps={e}")]
+    nodp = [("GHB", "GHB (no DP)"), ("Global (pooled)", "Global (pooled, no DP)"), ("Local GD, tuned stopping$^\\ddagger$", "Local GD, tuned stopping")]
+    fmt = lambda v: "n/a" if v != v else (f"{v:.2f}" if v < 9.995 else f"{v:.1f}")
+
+    def block(rows, title, items, key, bold=True):
+        rows.append(f"\\multicolumn{{{len(order) + 1}}}{{@{{}}l}}{{\\emph{{{title}}}}}" + r"\\")
+        vals = {m: [s[nm][m][key] for nm in order] for _, m in items}
+        best = [min((vals[m][j] for _, m in items if vals[m][j] == vals[m][j]), default=None) for j in range(len(order))]
+        for lab, m in items:
             cells = []
-            for m in cols:
-                v = "n/a" if r[m][key] != r[m][key] else f"{r[m][key]:.3f}"
-                cells.append(f"\\textbf{{{v}}}" if m == best else v)
-            rows.append(f"{info['label']} & {info['K']} & {sum(info['n']):,}".replace(",", "{,}") + f" & {100 * info['prevalence']:.0f} & {r['Local']['ll']:.3f} & "
-                        + " & ".join(cells) + r"\\")
+            for j, v in enumerate(vals[m]):
+                c = fmt(v)
+                cells.append(f"\\textbf{{{c}}}" if bold and v == best[j] else c)
+            rows.append(lab + " & " + " & ".join(cells) + r"\\")
+
+    for key, fname in (("rel", "t_real_networks.tex"), ("rel_small", "s_real_networks_small.tex"), ("worst", "s_real_networks_worst.tex")):
+        rows = ["Hospitals $K$ & " + " & ".join(str(s[nm]["info"]["K"]) for nm in order) + r"\\",
+                "Patients & " + " & ".join(f"{sum(s[nm]['info']['n']):,}".replace(",", "{,}") for nm in order) + r"\\",
+                "Died (\\%) & " + " & ".join(f"{100 * s[nm]['info']['prevalence']:.0f}" for nm in order) + r"\\",
+                "Local log-loss & " + " & ".join(f"{s[nm]['Local']['ll']:.3f}" for nm in order) + r"\\", r"\midrule"]
+        block(rows, "$\\epsilon=1$", [(l, m.format(e="1")) for l, m in fam], key, key != "worst")
+        rows.append(r"\midrule")
+        rows.append("GHB, $\\epsilon=3$ & " + " & ".join(fmt(s[nm]["GHB (DP, eps=3)"][key]) for nm in order) + r"\\")
+        rows.append(r"\midrule")
+        block(rows, "$\\epsilon=10$", [(l, m.format(e="10")) for l, m in fam], key, key != "worst")
+        rows.append(r"\midrule")
+        block(rows, "No privacy", nodp, key, False)
         write(fname, rows)
-    rows = []
-    for nm in order:
-        r = s[nm]
-        cells = [("n/a" if r[m]["worst"] != r[m]["worst"] else f"{r[m]['worst']:.2f}") for m in ["GHB (DP, eps=1)", "GHB (DP, eps=3)", "GHB (DP, eps=10)", "GHB (no DP)", "Global (pooled, no DP)",
-                                                   "DP-FedAvg + fine-tuning"]]
-        cells += [f"{100 * r[m]['share_gain']:.0f}" for m in ["GHB (DP, eps=3)", "GHB (no DP)", "DP-FedAvg + fine-tuning"]]
-        cells += [f"{r[m]['auc']:.3f}" for m in ["Local", "GHB (DP, eps=3)", "GHB (no DP)", "Global (pooled, no DP)"]]
-        rows.append(f"{r['info']['label']} & " + " & ".join(cells) + r"\\")
-    write("s_real_networks_worst.tex", rows)
     rows = []
     for nm in order:
         ch = s[nm]["chosen"]
         f = lambda c: c.split("|", 1)[1].replace("eta=", "$\\eta$=").replace("lambda=", "$\\lambda$=").replace("|", ", ")
-        rows.append(f"{s[nm]['info']['label']} & {f(ch['Local GD, tuned stopping'])} & {f(ch['DP-FedAvg + fine-tuning'])} & {f(ch['Ditto-style (DP)'])}" + r"\\")
-    write("s_real_networks_hyper.tex", rows)
+        for e in ("1", "10"):
+            rows.append(f"{s[nm]['info']['label'] if e == '1' else ''} & {e} & " + " & ".join(
+                f(ch[k.format(e=e)]) for k in ("DP-FedAvg, eps={e}", "DP-FedAvg + fine-tuning, eps={e}", "Decentralized DP-SGD, eps={e}",
+                                               "Clustered DP-FedAvg, eps={e}", "Ditto-style (DP), eps={e}")) + r"\\")
+        rows.append(r"\addlinespace")
+    write("s_real_networks_hyper.tex", rows[:-1])
 
 
 def main():

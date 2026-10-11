@@ -45,7 +45,7 @@ PRIOR = np.full(P, 1 / 2.5 ** 2)
 EPS_GHB = (1.0, 3.0, 10.0)
 TCGA = [("TCGA-LUSC", "Lung squamous"), ("TCGA-HNSC", "Head and neck"), ("TCGA-BLCA", "Bladder"),
         ("TCGA-STAD", "Stomach"), ("TCGA-LIHC", "Liver"), ("TCGA-KIRC", "Kidney")]
-NETWORKS = [("medpar", "Arizona Medicare")] + TCGA
+NETWORKS = [("medpar", "Arizona Medicare")] + TCGA + [("heart", "UCI Heart Disease")]
 # nominal public feature distributions, set before looking at the data
 MEDPAR_PUBLIC = dict(age80=0.15, hmo=0.15, urgent=0.25, emergency=0.25)
 TCGA_PUBLIC = dict(age_mean=62, age_sd=12, male=0.5, stage3=0.25, stage4=0.10)
@@ -101,6 +101,9 @@ def load_tcga(project):
 
 
 def load(name):
+    if name == "heart":  # real_heart.py's encoding: age, male, asymptomatic, anginal chest pain
+        import real_heart
+        return real_heart.load(), [s for _, s in real_heart.SITES]
     raw = load_medpar() if name == "medpar" else load_tcga(name)
     data, ids = [], []
     for sid, rows in sorted(raw.items(), key=lambda kv: -len(kv[1])):
@@ -111,6 +114,9 @@ def load(name):
 
 
 def public_features(rng, name, m=20000):
+    if name == "heart":
+        import real_heart
+        return real_heart.public_features(rng, m)
     if name == "medpar":
         p = MEDPAR_PUBLIC
         t = rng.choice(3, m, p=[1 - p["urgent"] - p["emergency"], p["urgent"], p["emergency"]])
@@ -245,34 +251,32 @@ def run(item):
     return name, res
 
 
-SHORT = {"Local": "Local", "GHB (DP, eps=1)": r"GHB, $\epsilon$=1", "GHB (DP, eps=3)": r"GHB, $\epsilon$=3",
-         "GHB (DP, eps=10)": r"GHB, $\epsilon$=10", "GHB (no DP)": "GHB, no DP",
-         "GHB, empirical features (no DP)": "GHB, empirical features", "Global (pooled, no DP)": "Global (no DP)",
-         "Local GD, tuned stopping": "Local GD, tuned", "DP-FedAvg + fine-tuning": r"DP-FedAvg + FT, $\epsilon$=1",
-         "Ditto-style (DP)": r"Ditto-style, $\epsilon$=1"}
-COL = {"Local": style.GRAY400, "GHB (DP, eps=1)": "#99f6e4", "GHB (DP, eps=3)": "#2dd4bf", "GHB (DP, eps=10)": style.TEAL700,
-       "GHB (no DP)": "#134e4a", "GHB, empirical features (no DP)": "#99c2bd", "Global (pooled, no DP)": style.RED700,
-       "Local GD, tuned stopping": "#9ca3af", "DP-FedAvg + fine-tuning": "#92400e", "Ditto-style (DP)": style.BLUE600}
-SHOW = ["GHB (DP, eps=1)", "GHB (DP, eps=3)", "GHB (DP, eps=10)", "GHB (no DP)", "Global (pooled, no DP)",
-        "Local GD, tuned stopping", "DP-FedAvg + fine-tuning", "Ditto-style (DP)"]
+FAM = [("GHB (DP, eps={e})", "GHB", style.TEAL700), ("DP-FedAvg, eps={e}", "DP-FedAvg", style.AMBER600),
+       ("DP-FedAvg + fine-tuning, eps={e}", "DP-FedAvg + FT", "#92400e"), ("Decentralized DP-SGD, eps={e}", "Decentralized DP-SGD", "#be185d"),
+       ("Clustered DP-FedAvg, eps={e}", "Clustered DP-FedAvg", style.SLATE800), ("Ditto-style (DP), eps={e}", "Ditto-style", style.BLUE600),
+       ("Meta-analysis (DP), eps={e}", "Meta-analysis", "#a3a3a3")]
+SHORTNET = {"medpar": "Medicare", "TCGA-LUSC": "LUSC", "TCGA-HNSC": "HNSC", "TCGA-BLCA": "BLCA", "TCGA-STAD": "STAD",
+            "TCGA-LIHC": "LIHC", "TCGA-KIRC": "KIRC", "heart": "Heart"}
 
 
 def figure(res):
     style.setup()
-    names = [n for n, _ in NETWORKS]
-    fig, axs = plt.subplots(1, 2, figsize=(6.8, 2.9), gridspec_kw=dict(wspace=0.3))
-    fig.subplots_adjust(bottom=0.36)
+    names = [n for n, _ in NETWORKS if n in res]
+    fig, axs = plt.subplots(2, 1, figsize=(6.8, 4.6), gridspec_kw=dict(hspace=0.55))
+    fig.subplots_adjust(bottom=0.14)
     x = np.arange(len(names))
-    w = 0.8 / len(SHOW)
-    for ax, key, title in ((axs[0], "rel", "(a) All hospitals"), (axs[1], "rel_small", "(b) Hospitals below the median size")):
-        for i, m in enumerate(SHOW):
-            v = np.array([res[nm][m][key] for nm in names])
-            ax.bar(x + (i - len(SHOW) / 2 + 0.5) * w, np.minimum(v, 1.3), w, color=COL[m], label=SHORT[m], edgecolor="white", linewidth=0.3)
+    w = 0.8 / len(FAM)
+    for ax, e in zip(axs, ("1", "10")):
+        for i, (m, lab, c) in enumerate(FAM):
+            v = np.array([res[nm][m.format(e=e)]["rel"] for nm in names])
+            ax.bar(x + (i - len(FAM) / 2 + 0.5) * w, np.minimum(v, 1.4), w, color=c, label=lab, edgecolor="white", linewidth=0.3)
+        lgd = [res[nm]["Local GD, tuned stopping"]["rel"] for nm in names]
+        ax.scatter(x, lgd, marker="_", s=260, color=style.RED700, zorder=4, linewidths=1.4, label="Local GD, tuned stopping (no other hospital)")
         ax.axhline(1, color=style.SLATE800, lw=0.6)
-        ax.set_ylim(0.6, 1.3)
-        ax.set_xticks(x, [res[nm]["info"]["label"].replace(" ", "\n", 1) + f"\n(K={res[nm]['info']['K']})" for nm in names], fontsize=5.6)
-        ax.set_ylabel("Held-out log-loss relative to local", fontsize=6.5)
-        ax.set_title(title, fontsize=7.5)
+        ax.set_ylim(0.8, 1.4)
+        ax.set_xticks(x, [f"{SHORTNET[nm]} (K={res[nm]['info']['K']})" for nm in names], fontsize=6.3)
+        ax.set_ylabel("Held-out log-loss\nrelative to local", fontsize=6.5)
+        ax.set_title(f"({'a' if e == '1' else 'b'}) Every private method at $\\epsilon$={e} (bars clipped at 1.4)", fontsize=7.5)
         ax.tick_params(axis="y", labelsize=6)
     h, l = axs[0].get_legend_handles_labels()
     fig.legend(h, l, loc="lower center", ncol=4, frameon=False, fontsize=6.2)
@@ -281,8 +285,15 @@ def figure(res):
 
 
 def main():
+    only = [a for a in sys.argv[1:] if not a.startswith("--")]
+    todo = [(i, nw) for i, nw in enumerate(NETWORKS) if not only or nw[0] in only]
     with Pool(4) as pool:
-        res = dict(pool.map(run, list(enumerate(NETWORKS))))
+        res = dict(pool.map(run, todo))
+    out = ghb.RESDIR / "real_networks.json"
+    if only and out.exists():  # add to the stored networks
+        old = json.load(open(out))["res"]
+        old.update(res)
+        res = {nw: old[nw] for nw, _ in NETWORKS if nw in old}
     json.dump(dict(repeats=REPEATS, folds=FOLDS, min_site=MIN_SITE, public=dict(medpar=MEDPAR_PUBLIC, tcga=TCGA_PUBLIC), res=res),
               open(ghb.RESDIR / "real_networks.json", "w"), indent=1)
     figure(res)
