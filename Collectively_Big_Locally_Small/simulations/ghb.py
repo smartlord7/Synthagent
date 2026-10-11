@@ -123,7 +123,7 @@ def ghb(theta_hat, x, n, s2, sigma2=SIGMA2, avg=None, tau2=None, weights="iv"):
     return alpha * theta_hat + (1 - alpha) * mu_t
 
 
-def ghb_full_bayes(theta_hat, x, n, s2, sigma2=SIGMA2, avg=None, q=12, scale=0.5):
+def ghb_full_bayes(theta_hat, x, n, s2, sigma2=SIGMA2, avg=None, q=12, scale=0.5, evidence=True, weights="iv"):
     """GHB with tau integrated out (Remark 8.3, full version): the posterior of tau given the releases under a
     half-Cauchy(scale) prior is summarized by q equally weighted quantiles; for each, gossip gives mu~_k and M_k;
     hospital k averages its shrinkage estimates, weighting each component by the density of its own noise-free
@@ -144,9 +144,9 @@ def ghb_full_bayes(theta_hat, x, n, s2, sigma2=SIGMA2, avg=None, q=12, scale=0.5
     logw, ests = [], []
     for j in range(q):
         t2 = grid[np.argmax(cdf >= (j + 0.5) / q, axis=0)] ** 2
-        _, mu_t, M = borrow(x, r, avg, tau2=np.broadcast_to(t2[:, None], x.shape))
+        _, mu_t, M = borrow(x, r, avg, tau2=np.broadcast_to(t2[:, None], x.shape), weights=weights)
         V = t2[:, None] + M
-        logw.append(-0.5 * np.log(V + v) - 0.5 * (theta_hat - mu_t) ** 2 / (V + v))
+        logw.append(-0.5 * np.log(V + v) - 0.5 * (theta_hat - mu_t) ** 2 / (V + v) if evidence else np.zeros_like(V))
         a = V / (V + v)
         ests.append(a * theta_hat + (1 - a) * mu_t)
     logw = np.array(logw)
