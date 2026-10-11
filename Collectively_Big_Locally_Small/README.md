@@ -7,8 +7,8 @@ The project was first rebuilt 1:1 from `recovered_main.pdf`, which is kept unmod
 ## Build
 
 ```sh
-latexmk -pdf main.tex                         # the paper (54 pages, ACM review mode)
-cd supplement && latexmk -pdf supplement.tex  # the online supplement (26 pages); build main.tex first
+latexmk -pdf main.tex                         # the paper (56 pages, ACM review mode)
+cd supplement && latexmk -pdf supplement.tex  # the online supplement (30 pages); build main.tex first
 ```
 
 `main.tex` is set up for submission to ACM Computing Surveys (`review` mode: line numbers and ACM metadata). For a preprint, swap the two `\documentclass` lines at the top.
@@ -17,7 +17,7 @@ You need TeX Live with `acmart` (v2.03 or later), `algorithm2e`, `pifont`, `make
 
 ```sh
 python3 scripts/make_figures.py      # Figures 2 and 6-10 of the paper
-python3 simulations/run_all.py       # Simulations 1-7 (about 2 minutes)
+python3 simulations/run_all.py       # Simulations 1-14, forest plot, macros (about 15 minutes)
 python3 simulations/make_numbers.py  # supplement/results/sim_numbers.tex, s7_table.tex
 # systematic search: queries the databases (slow), then screens, codes and counts
 python3 prisma/search.py && python3 prisma/screen.py && python3 prisma/fetch_corpus_abstracts.py \
@@ -61,16 +61,27 @@ The subscription databases were not searched. To add them, run the query in each
 
 ## Simulations (`simulations/`)
 
-`ghb.py` implements plug-in GHB: a DerSimonian–Laird or half-Cauchy-posterior estimate of τ², an inverse-variance leave-one-out mean by gossip, and shrinkage. It also implements the baselines. The `exp1`–`exp7` scripts are Simulations 1–7 of the supplement:
-1. Closed forms
-2. Heterogeneity
-3. Equity and the number of hospitals
-4. Gossip rounds
-5. Joint release
-6. GMRF prior
-7. Logistic-regression heads
+`ghb.py` implements plug-in GHB: a DerSimonian–Laird or half-Cauchy-posterior estimate of τ², an inverse-variance leave-one-out mean by gossip, and shrinkage. It also implements the Gaussian baselines. `logit_world.py` is the logistic-regression world (private releases centred on a fixed public reference, case-mix shift, wrong anchors, and the federated, meta-analytic and Ditto-style baselines).
 
-Each script writes a figure to `supplement/figures/` and its numbers to `supplement/results/`. The closed forms are in `scripts/blueprint.py`.
+| Script | Simulation |
+|---|---|
+| `exp1_validate.py` | 1. Closed forms of Propositions 8.1 and 8.2 |
+| `exp2_heterogeneity.py` | 2. Heterogeneity |
+| `exp3_equity.py` | 3. Equity and the number of hospitals |
+| `exp4_gossip.py` | 4. Gossip rounds |
+| `exp5_joint_release.py` | 5. Joint release |
+| `exp6_gmrf.py` | 6. GMRF prior |
+| `exp7_logistic.py` | 7. Logistic-regression heads |
+| `exp8_baselines.py` | 8 and 10. Federated baselines; case-mix shift |
+| `exp9_atypical.py` | 9. Atypical hospitals (robust prior, opt-out) |
+| `exp11_anchor.py` | 11. A wrong anchor (conflict check) |
+| `exp12_byzantine.py` | 12. Dishonest hospitals (release screening) |
+| `exp13_dropout.py` | 13. Link failures during gossip |
+| `exp14_accounting.py` | 14. Repeated releases (basic composition vs zCDP) |
+| `fig_forest.py` | Summary forest plot (Figure 13 of the paper) |
+| `make_numbers.py` | LaTeX macros and tables read by the paper and supplement |
+
+Each script writes a figure to `supplement/figures/` and its numbers to `supplement/results/`. All seeds are fixed. The closed forms are in `scripts/blueprint.py`.
 
 ## Changes since the recovery
 
@@ -99,6 +110,11 @@ Each script writes a figure to `supplement/figures/` and its numbers to `supplem
     - Proposition 8.4 gains part (iii), the leave-one-out estimate under gossip and its error.
     - Algorithm 1 no longer gossips the unprivatized variance V_k: only privatized heads leave a hospital.
     - The admissibility claim is corrected to dominance, the GMRF sum is over unordered pairs, and "orders of magnitude" is made precise.
+- **Simulations 8–14 and §8.7.**
+  - Federated baselines, case-mix shift, atypical and dishonest hospitals, a wrong anchor, link failures and repeated releases.
+  - A summary forest plot and the privacy-boundary diagram (TikZ) are new.
+  - Algorithm 1 now centres releases on a fixed public reference, and lists the optional safeguards: anchor conflict check, opt-out, release screening.
+  - The privacy scope gains repeated-release accounting.
 - **Search.** The direct arXiv search was dropped; arXiv is covered only through Europe PMC's life-science subset, and the text says so.
 
 ## Recovery from `recovered_main.pdf`

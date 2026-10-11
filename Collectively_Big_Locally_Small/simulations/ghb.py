@@ -166,12 +166,3 @@ def tidy(*axes):
     for ax in axes:
         ax.xaxis.set_minor_formatter(NullFormatter())
         ax.yaxis.set_minor_formatter(NullFormatter())
-
-
-def tidy(*axes):
-    """No labels on minor log ticks (they collide on short log axes)."""
-    from matplotlib.ticker import NullFormatter
-
-    for ax in axes:
-        ax.xaxis.set_minor_formatter(NullFormatter())
-        ax.yaxis.set_minor_formatter(NullFormatter())

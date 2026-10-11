@@ -62,7 +62,6 @@ def main():
     axes[0].set_ylabel(r"Risk relative to local, $R_k/v_k$")
     axes[0].legend(frameon=False, fontsize=6, loc="upper left")
     ghb.tidy(*axes)
-    ghb.tidy(*axes)
     style.save(fig, ghb.FIGDIR / "s2_heterogeneity.pdf")
 
     summ = {}

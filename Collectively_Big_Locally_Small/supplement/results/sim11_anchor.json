@@ -1,0 +1,96 @@
+{
+ "errs": [
+  0.0,
+  0.3,
+  1.0,
+  2.0,
+  3.0
+ ],
+ "res": {
+  "0.0": {
+   "kl": {
+    "Local": 0.026992684519997277,
+    "GHB, anchor uncertainty stated honestly": 0.014050097988796988,
+    "GHB, anchor overconfident (stated 0.3)": 0.015661358819175984,
+    "GHB, overconfident + conflict check": 0.015661358819175984,
+    "GHB, no anchor": 0.018241351913527666
+   },
+   "se": {
+    "Local": 0.0007565915424048314,
+    "GHB, anchor uncertainty stated honestly": 0.00040262416942047095,
+    "GHB, anchor overconfident (stated 0.3)": 0.00043174239701768217,
+    "GHB, overconfident + conflict check": 0.00043174239701768217,
+    "GHB, no anchor": 0.0005010009542659904
+   },
+   "dropped": 0.0
+  },
+  "0.3": {
+   "kl": {
+    "Local": 0.027403108263398885,
+    "GHB, anchor uncertainty stated honestly": 0.0168398599897512,
+    "GHB, anchor overconfident (stated 0.3)": 0.0168398599897512,
+    "GHB, overconfident + conflict check": 0.016904418417642748,
+    "GHB, no anchor": 0.018383125319263574
+   },
+   "se": {
+    "Local": 0.0008439884483363148,
+    "GHB, anchor uncertainty stated honestly": 0.0004922643802756924,
+    "GHB, anchor overconfident (stated 0.3)": 0.0004922643802756924,
+    "GHB, overconfident + conflict check": 0.0004987965592232059,
+    "GHB, no anchor": 0.0005466702675296984
+   },
+   "dropped": 0.023958333333333335
+  },
+  "1.0": {
+   "kl": {
+    "Local": 0.031621449533702495,
+    "GHB, anchor uncertainty stated honestly": 0.018540993233928948,
+    "GHB, anchor overconfident (stated 0.3)": 0.02266205670281047,
+    "GHB, overconfident + conflict check": 0.019775550706548017,
+    "GHB, no anchor": 0.018994120588229083
+   },
+   "se": {
+    "Local": 0.0008890873188048624,
+    "GHB, anchor uncertainty stated honestly": 0.00045211637125369556,
+    "GHB, anchor overconfident (stated 0.3)": 0.00112294367513605,
+    "GHB, overconfident + conflict check": 0.0005594094639604315,
+    "GHB, no anchor": 0.00046025797896146115
+   },
+   "dropped": 0.6677083333333333
+  },
+  "2.0": {
+   "kl": {
+    "Local": 0.060467855185132965,
+    "GHB, anchor uncertainty stated honestly": 0.01798401605431122,
+    "GHB, anchor overconfident (stated 0.3)": 0.05064944135328009,
+    "GHB, overconfident + conflict check": 0.017992595686378253,
+    "GHB, no anchor": 0.017992595686378253
+   },
+   "se": {
+    "Local": 0.004552136534676806,
+    "GHB, anchor uncertainty stated honestly": 0.00047769164178198967,
+    "GHB, anchor overconfident (stated 0.3)": 0.0037640810557642633,
+    "GHB, overconfident + conflict check": 0.00048707864558770905,
+    "GHB, no anchor": 0.00048707864558770905
+   },
+   "dropped": 1.0
+  },
+  "3.0": {
+   "kl": {
+    "Local": 0.09691473231346898,
+    "GHB, anchor uncertainty stated honestly": 0.01863503835251738,
+    "GHB, anchor overconfident (stated 0.3)": 0.08925400796696024,
+    "GHB, overconfident + conflict check": 0.018634906838879032,
+    "GHB, no anchor": 0.018634906838879032
+   },
+   "se": {
+    "Local": 0.006316250289015117,
+    "GHB, anchor uncertainty stated honestly": 0.0004918287998398648,
+    "GHB, anchor overconfident (stated 0.3)": 0.00623388162614321,
+    "GHB, overconfident + conflict check": 0.0004962625952227126,
+    "GHB, no anchor": 0.0004962625952227126
+   },
+   "dropped": 1.0
+  }
+ }
+}
