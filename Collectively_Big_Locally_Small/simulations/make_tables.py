@@ -296,8 +296,34 @@ def sim14():
     write("s_sim14.tex", rows)
 
 
+def sim18():
+    s = load("sim18_fairness.json")["res"]
+    names = {"Local": "Local", "GHB (DP)": "GHB", "GHB, S local (DP)": "GHB, $S$ local", "Global (pooled, no DP)": "Global$^\\dagger$",
+             "FedAvg (no DP)": "FedAvg$^\\dagger$", "FAIR-FATE (no DP), F=SP": "FAIR-FATE, SP$^\\dagger$",
+             "FAIR-FATE (no DP), F=EQO": "FAIR-FATE, EQO$^\\dagger$"}
+    titles = {"shared": "Shared disparity ($\\tau_S^2=0.05$)", "varies": "Disparity varies ($\\tau_S^2=0.5$)",
+              "rare": "Rare minority (share 0.1)", "opposite": "Opposite disparities ($\\mu_S=0$, $\\tau_S^2=0.5$)"}
+    rows = []
+    for i, (sc, title) in enumerate(titles.items()):
+        r = s[sc]
+        if i:
+            rows.append(r"\midrule")
+        rows.append(f"\\multicolumn{{10}}{{@{{}}l}}{{\\emph{{{title}}}}}" + r"\\")
+        priv = ["Local", "GHB (DP)", "GHB, S local (DP)"]
+        best1 = min(priv, key=lambda m: r[m]["kl1"])
+        bestd = min(priv, key=lambda m: r[m]["dis"])
+        for m, lab in names.items():
+            o = r[m]
+            rows.append(f"{lab} & {milli(o['kl'], o['kl_se'])} & {milli(o['kl1'], o['kl1_se'], m == best1)} & {milli(o['kl0'])} & "
+                        + (f"\\textbf{{{o['dis']:.3f}}}" if m == bestd else f"{o['dis']:.3f}")
+                        + f" & {100 * o['cal']:.1f} & {o['worst']:.2f} & {o['SP']:.2f} & {o['EO']:.2f} & {o['EQO']:.2f}" + r"\\")
+        t = r["True model"]
+        rows.append(f"True models & & & & & & & {t['SP']:.2f} & {t['EO']:.2f} & {t['EQO']:.2f}" + r"\\")
+    write("t_sim18.tex", rows)
+
+
 def main():
-    for fn in (sim8, sim15, sim16, sim17, sim1, sim2, sim3, sim4, sim5, sim6, sim7, sim9, sim11, sim12, sim13, sim14):
+    for fn in (sim8, sim15, sim16, sim17, sim18, sim1, sim2, sim3, sim4, sim5, sim6, sim7, sim9, sim11, sim12, sim13, sim14):
         fn()
     print("tables:", sorted(p.name for p in OUT.glob("*.tex")))
 

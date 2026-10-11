@@ -39,6 +39,6 @@ Regenerating the simulations (`python3 ../Collectively_Big_Locally_Small/simulat
 | 3 Problem setting | Requirements (R1)–(R5), why existing data-exchange agreements are not enough, threat model, comparison of approaches |
 | 4 Theory (Gaussian model) | Borrowing with an imperfect population estimate; the cost of privacy and its scope; gossip; unknown heterogeneity (τ integrated out); structured heterogeneity |
 | 5 GHB for model heads | Architecture L0–L5; score releases and moment-matching recovery; protocol (Algorithm 1) and privacy boundary; why a principled default |
-| 6 Experiments (`sections/experiments.tex`) | Seventeen simulations: evaluation protocol, estimation, equity, one-shot and iterative baselines, privacy, adversarial tests, ablation of every component, sensitivity to every setting and to network conditions |
+| 6 Experiments (`sections/experiments.tex`) | Eighteen simulations: evaluation protocol, estimation, equity, one-shot and iterative baselines, privacy, adversarial tests, ablation of every component, sensitivity to every setting and to network conditions, group fairness against FAIR-FATE |
 | 7 Discussion | When to use GHB; limits; what the simulations do not show; open problems |
 | Supplement | Full design of every simulation; the revision of GHB, development runs and extensions tried |

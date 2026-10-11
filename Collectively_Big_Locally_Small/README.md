@@ -84,6 +84,7 @@ The subscription databases were not searched. To add them, run the query in each
 | `exp15_literature.py`, `literature.py` | 15. Iterative federated learning at the same zCDP budget: DP-FedAvg (with fine-tuning), decentralized DP-SGD, clustered DP-FedAvg, and a local control from the anchor |
 | `exp16_ablation.py`, `ghb_variants.py` | 16. Ablation: each component of GHB removed or replaced, paired within replicates; Gaussian part in closed form |
 | `exp17_sensitivity.py` | 17. Sensitivity to GHB's settings and to network conditions (K, sizes, ε, δ, topology) |
+| `exp18_fairness.py` | 18. Group fairness: a protected attribute, GHB against FAIR-FATE (Salazar et al. 2023) and federated averaging |
 | `fig_forest.py` | Summary forest plot of Simulations 2-15 |
 | `make_numbers.py` | LaTeX macros and tables read by the paper and supplement |
 | `make_tables.py` | Table bodies with the exact values behind each simulation figure, read by the GHB paper and its supplement |
