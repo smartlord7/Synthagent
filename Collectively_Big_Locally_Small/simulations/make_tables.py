@@ -367,10 +367,11 @@ def real_heart():
 def real_networks():
     s = load("real_networks.json")["res"]
     order = [k for k in ("medpar", "TCGA-LUSC", "TCGA-HNSC", "TCGA-BLCA", "TCGA-STAD", "TCGA-LIHC", "TCGA-KIRC", "heart") if k in s]
-    fam = [("GHB", "GHB (DP, eps={e})"), ("DP-FedAvg", "DP-FedAvg, eps={e}"), ("DP-FedAvg + FT", "DP-FedAvg + fine-tuning, eps={e}"),
+    fam = [("GHB", "GHB (DP, eps={e})"), ("GHB, tuned prior", "GHB, tuned prior (DP), eps={e}"), ("DP-FedAvg", "DP-FedAvg, eps={e}"), ("DP-FedAvg + FT", "DP-FedAvg + fine-tuning, eps={e}"),
            ("Decentralized DP-SGD", "Decentralized DP-SGD, eps={e}"), ("Clustered DP-FedAvg", "Clustered DP-FedAvg, eps={e}"),
            ("Ditto-style", "Ditto-style (DP), eps={e}"), ("Meta-analysis", "Meta-analysis (DP), eps={e}")]
-    nodp = [("GHB", "GHB (no DP)"), ("Global (pooled)", "Global (pooled, no DP)"), ("Local GD, tuned stopping$^\\ddagger$", "Local GD, tuned stopping")]
+    nodp = [("GHB", "GHB (no DP)"), ("GHB, tuned prior", "GHB, tuned prior (no DP)"), ("Global (pooled)", "Global (pooled, no DP)"),
+            ("Local, tuned prior$^\\ddagger$", "Local, tuned prior"), ("Local GD, tuned stopping$^\\ddagger$", "Local GD, tuned stopping")]
     fmt = lambda v: "n/a" if v != v else (f"{v:.2f}" if v < 9.995 else f"{v:.1f}")
 
     def block(rows, title, items, key, bold=True):
@@ -395,7 +396,7 @@ def real_networks():
         rows.append(r"\midrule")
         block(rows, "$\\epsilon=10$", [(l, m.format(e="10")) for l, m in fam], key, key != "worst")
         rows.append(r"\midrule")
-        block(rows, "No privacy", nodp, key, False)
+        block(rows, "No privacy ($\\ddagger$: no other hospital)", nodp, key, False)
         write(fname, rows)
     rows = []
     for nm in order:

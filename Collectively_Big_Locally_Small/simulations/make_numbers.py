@@ -227,8 +227,9 @@ def main():
         tagn = {"medpar": "Medpar", "TCGA-LUSC": "Lusc", "TCGA-HNSC": "Hnsc", "TCGA-BLCA": "Blca", "TCGA-STAD": "Stad",
                 "TCGA-LIHC": "Lihc", "TCGA-KIRC": "Kirc", "heart": "Heart"}
         mt = {"Local": "Local", "GHB (DP, eps=1)": "GHBOne", "GHB (DP, eps=3)": "GHBThree", "GHB (DP, eps=10)": "GHBTen",
-              "GHB (no DP)": "GHBNoDP", "Global (pooled, no DP)": "Global", "Local GD, tuned stopping": "LGD"}
-        for fam, t in (("DP-FedAvg", "Avg"), ("DP-FedAvg + fine-tuning", "FT"), ("Decentralized DP-SGD", "Dec"),
+              "GHB (no DP)": "GHBNoDP", "Global (pooled, no DP)": "Global", "Local GD, tuned stopping": "LGD",
+              "Local, tuned prior": "LocP", "GHB, tuned prior (no DP)": "GHBPNoDP"}
+        for fam, t in (("GHB, tuned prior (DP)", "GHBP"), ("DP-FedAvg", "Avg"), ("DP-FedAvg + fine-tuning", "FT"), ("Decentralized DP-SGD", "Dec"),
                        ("Clustered DP-FedAvg", "Clu"), ("Ditto-style (DP)", "Ditto"), ("Meta-analysis (DP)", "Meta")):
             mt[f"{fam}, eps=1"] = t + "One"
             mt[f"{fam}, eps=10"] = t + "Ten"

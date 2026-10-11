@@ -267,7 +267,7 @@ def run(item):
     return name, res
 
 
-FAM = [("GHB (DP, eps={e})", "GHB", style.TEAL700), ("DP-FedAvg, eps={e}", "DP-FedAvg", style.AMBER600),
+FAM = [("GHB (DP, eps={e})", "GHB", style.TEAL700), ("GHB, tuned prior (DP), eps={e}", "GHB, tuned prior", "#2dd4bf"), ("DP-FedAvg, eps={e}", "DP-FedAvg", style.AMBER600),
        ("DP-FedAvg + fine-tuning, eps={e}", "DP-FedAvg + FT", "#92400e"), ("Decentralized DP-SGD, eps={e}", "Decentralized DP-SGD", "#be185d"),
        ("Clustered DP-FedAvg, eps={e}", "Clustered DP-FedAvg", style.SLATE800), ("Ditto-style (DP), eps={e}", "Ditto-style", style.BLUE600),
        ("Meta-analysis (DP), eps={e}", "Meta-analysis", "#a3a3a3")]
@@ -286,8 +286,9 @@ def figure(res):
         for i, (m, lab, c) in enumerate(FAM):
             v = np.array([res[nm][m.format(e=e)]["rel"] for nm in names])
             ax.bar(x + (i - len(FAM) / 2 + 0.5) * w, np.minimum(v, 1.4), w, color=c, label=lab, edgecolor="white", linewidth=0.3)
-        lgd = [res[nm]["Local GD, tuned stopping"]["rel"] for nm in names]
-        ax.scatter(x, lgd, marker="_", s=260, color=style.RED700, zorder=4, linewidths=1.4, label="Local GD, tuned stopping (no other hospital)")
+        lgd = [min(res[nm]["Local GD, tuned stopping"]["rel"], res[nm]["Local, tuned prior"]["rel"]) for nm in names]
+        ax.scatter(x, lgd, marker="_", s=300, color=style.RED700, zorder=4, linewidths=1.4,
+                   label="Best tuned local model (no other hospital)")
         ax.axhline(1, color=style.SLATE800, lw=0.6)
         ax.set_ylim(0.8, 1.4)
         ax.set_xticks(x, [f"{SHORTNET[nm]} (K={res[nm]['info']['K']})" for nm in names], fontsize=6.3)
