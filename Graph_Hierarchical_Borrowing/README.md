@@ -8,8 +8,8 @@ This paper develops GHB as a method, with its theory, privacy analysis and full 
 ## Build
 
 ```sh
-latexmk -pdf ghb.tex                                   # the paper (31 pages, ACM review mode)
-cd supplement && latexmk -pdf ghb_supplement.tex       # its online supplement (15 pages); build ghb.tex first
+latexmk -pdf ghb.tex                                   # the paper (33 pages, ACM review mode)
+cd supplement && latexmk -pdf ghb_supplement.tex       # its online supplement (18 pages); build ghb.tex first
 ```
 
 `ghb.tex` is set up for ACM Transactions on Computing for Healthcare (`review` mode). For a preprint, swap the
@@ -24,6 +24,7 @@ Nothing is duplicated. The paper reads from the survey's folder:
 | Figures of the theory (risk, gain, gossip, privacy boundary) | `../Collectively_Big_Locally_Small/figures/` |
 | Simulation figures and tables | `../Collectively_Big_Locally_Small/supplement/figures/`, `.../supplement/results/` |
 | Generated numbers (LaTeX macros) | `../Collectively_Big_Locally_Small/supplement/results/sim_numbers.tex` |
+| Tables of exact values behind each simulation figure (`make_tables.py`) | `../Collectively_Big_Locally_Small/supplement/results/tables/` |
 | Simulation code (`run_all.py`, `ghb.py`, `ghb_logit.py`, `dev/`) | `../Collectively_Big_Locally_Small/simulations/` |
 | Bibliography and style | `../Collectively_Big_Locally_Small/references.bib`, `ACM-Reference-Format-recovered.bst` |
 

@@ -21,6 +21,7 @@ You need TeX Live with `acmart` (v2.03 or later), `algorithm2e`, `pifont`, `make
 python3 scripts/make_figures.py      # Figures 2 and 6-10 of the paper
 python3 simulations/run_all.py       # Simulations 1-17, forest plot, macros (about 45 minutes)
 python3 simulations/make_numbers.py  # supplement/results/sim_numbers.tex, s7_table.tex, s15_table.tex, s15_hyper.tex
+python3 simulations/make_tables.py   # supplement/results/tables/*.tex: exact values behind every simulation figure (GHB paper and its supplement)
 # systematic search: queries the databases (slow), then screens, codes and counts
 python3 prisma/search.py && python3 prisma/screen.py && python3 prisma/fetch_corpus_abstracts.py \
   && python3 prisma/classify.py && python3 prisma/verify.py && python3 prisma/sensitivity.py \
@@ -85,6 +86,7 @@ The subscription databases were not searched. To add them, run the query in each
 | `exp17_sensitivity.py` | 17. Sensitivity to GHB's settings and to network conditions (K, sizes, ε, δ, topology) |
 | `fig_forest.py` | Summary forest plot of Simulations 2-15 |
 | `make_numbers.py` | LaTeX macros and tables read by the paper and supplement |
+| `make_tables.py` | Table bodies with the exact values behind each simulation figure, read by the GHB paper and its supplement |
 
 `dev/` holds the prototypes and development runs (separate seeds) that led to the revised GHB and to three extensions that were not adopted; see `dev/README.md`. Each script writes a figure to `supplement/figures/` and its numbers to `supplement/results/`. All seeds are fixed. The closed forms are in `scripts/blueprint.py`.
 
