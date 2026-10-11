@@ -322,8 +322,50 @@ def sim18():
     write("t_sim18.tex", rows)
 
 
+def real_heart():
+    s = load("real_heart.json")
+    res = s["res"]
+    tags = ("20", "40", "80", "all")
+    names = {"Local": "Local", "GHB (DP)": "GHB, $\\epsilon=1$", "GHB (DP, eps=5)": "GHB, $\\epsilon=5$",
+             "DP-FedAvg + fine-tuning": "DP-FedAvg + FT, $\\epsilon=1$", "Ditto-style (DP)": "Ditto-style, $\\epsilon=1$",
+             "Local GD, tuned stopping": "Local GD, tuned stopping", "GHB (no DP)": "GHB, no DP$^\\dagger$",
+             "GHB, empirical features (no DP)": "GHB, empirical features$^\\dagger$", "Global (pooled, no DP)": "Global$^\\dagger$"}
+    rows = ["Local log-loss & " + " & ".join(f"\\multicolumn{{2}}{{c}}{{{res[t]['Local']['ll_mean']:.3f}}}" for t in tags) + r"\\",
+            r"\midrule"]
+    for m, lab in names.items():
+        if m == "Local GD, tuned stopping":
+            rows.append(r"\midrule")
+        if m == "GHB (no DP)":
+            rows.append(r"\midrule")
+        cells = []
+        for t in tags:
+            r = res[t][m]
+            cells.append(f"{r['rel']:.3f} \\textcolor{{gray}}{{\\tiny({2 * r['rel_paired_se']:.3f})}}")
+            cells.append(f"{r['worst']:.2f}")
+        rows.append(lab + " & " + " & ".join(cells) + r"\\")
+    write("t_real_heart.tex", rows)
+    rows = []
+    sites = s["info"]["sites"]
+    for t, lab in (("40", "at most 40 training patients"), ("all", "all training patients")):
+        rows.append(f"\\multicolumn{{13}}{{@{{}}l}}{{\\emph{{{lab[0].upper() + lab[1:]}}}}}" + r"\\")
+        for m, name in names.items():
+            r = res[t][m]
+            cells = [f"{r['ll'][k]:.3f}" for k in range(len(sites))] + [f"{r['brier'][k]:.3f}" for k in range(len(sites))] \
+                + [f"{r['auc'][k]:.3f}" for k in range(len(sites))]
+            rows.append(name + " & " + " & ".join(cells) + r"\\")
+        if t == "40":
+            rows.append(r"\midrule")
+    write("s_real_heart_sites.tex", rows)
+    rows = []
+    for t in tags:
+        ch = res[t]["chosen"]
+        f = lambda c: c.split("|", 1)[1].replace("eta=", "$\\eta$=").replace("lambda=", "$\\lambda$=").replace("|", ", ")
+        rows.append(f"{'all' if t == 'all' else t} & {f(ch['Local GD, tuned stopping'])} & {f(ch['DP-FedAvg + fine-tuning'])} & {f(ch['Ditto-style (DP)'])}" + r"\\")
+    write("s_real_heart_hyper.tex", rows)
+
+
 def main():
-    for fn in (sim8, sim15, sim16, sim17, sim18, sim1, sim2, sim3, sim4, sim5, sim6, sim7, sim9, sim11, sim12, sim13, sim14):
+    for fn in (sim8, sim15, sim16, sim17, sim18, real_heart, sim1, sim2, sim3, sim4, sim5, sim6, sim7, sim9, sim11, sim12, sim13, sim14):
         fn()
     print("tables:", sorted(p.name for p in OUT.glob("*.tex")))
 
