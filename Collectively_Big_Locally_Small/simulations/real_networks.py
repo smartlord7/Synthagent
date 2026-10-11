@@ -120,7 +120,7 @@ def gossip(K):
 def ghb_fit(rng, train, n, pub, avg, eps):
     mu0 = np.zeros(P)
     g, sd = GL.release(rng, train, n, mu0, eps, DELTA)
-    th, r, drop = GL.invert(pub, g, sd, n, mu0, avg, anchor_sd=GL.PRIOR_SD, check=False)
+    th, r, drop = GL.invert(pub, g, sd, n, mu0, avg, anchor_sd=GL.PRIOR_SD, check=False, pool_prior_sd=GL.PRIOR_SD)
     return GL.estimate(train, th, r, drop, mu0, avg, anchor_sd=None), th
 
 

@@ -72,11 +72,11 @@ class Public:
         d = self.m(th) - self.m(c)
         return E - np.outer(d, d)
 
-    def invert(self, target, start, iters=60):
-        """Solve m(theta) = target by damped Newton steps."""
+    def invert(self, target, start, iters=60, ridge=0.0):
+        """Solve m(theta) + ridge * theta = target by damped Newton steps (ridge > 0: under a Gaussian prior at 0)."""
         th = np.array(start, float)
         for _ in range(iters):
-            step = np.linalg.solve(self.info(th), target - self.m(th))
+            step = np.linalg.solve(self.info(th) + ridge * np.eye(P), target - self.m(th) - ridge * th)
             big = np.abs(step).max()
             if big > 1:
                 step = step / big
@@ -167,10 +167,15 @@ def combine(X, y, means, variances):
     return (w[:, None] * np.array(fits)).sum(axis=0) / w.sum()
 
 
-def invert(pub, g, sd, n, mu0, avg, anchor_sd=0.3, check=True):
-    """Releases on the parameter scale: (theta~, variances, anchor decisions). Post-processing only."""
+def invert(pub, g, sd, n, mu0, avg, anchor_sd=0.3, check=True, pool_prior_sd=None):
+    """Releases on the parameter scale: (theta~, variances, anchor decisions). Post-processing only.
+
+    pool_prior_sd: if given, the pooled starting point is the posterior mode under N(0, pool_prior_sd^2) for the
+    pooled sample, which keeps it finite when noisy releases fall outside the range of the moment map (real data).
+    """
     n = np.asarray(n, float)
-    a0 = pub.invert((n[:, None] * g).sum(0) / n.sum() + pub.m(mu0), np.zeros(P))
+    ridge = 0.0 if pool_prior_sd is None else 1.0 / (n.sum() * pool_prior_sd ** 2)
+    a0 = pub.invert((n[:, None] * g).sum(0) / n.sum() + pub.m(mu0), np.zeros(P), ridge=ridge)
     th0, r0 = linearize(pub, g, sd, n, mu0, np.repeat(a0[None], len(n), 0))
     mu_l, M_l = network(th0, r0, avg, tau2_quantiles(th0, r0)[Q // 2])
     drop = conflicts(mu_l, M_l, mu0, anchor_sd, check)
