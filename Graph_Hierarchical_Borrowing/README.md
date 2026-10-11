@@ -8,7 +8,7 @@ This paper develops GHB as a method, with its theory, privacy analysis and full 
 ## Build
 
 ```sh
-latexmk -pdf ghb.tex                                   # the paper (33 pages, ACM review mode)
+latexmk -pdf ghb.tex                                   # the paper (34 pages, ACM review mode)
 cd supplement && latexmk -pdf ghb_supplement.tex       # its online supplement (18 pages); build ghb.tex first
 ```
 
