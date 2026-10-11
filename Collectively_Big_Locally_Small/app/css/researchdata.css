@@ -181,3 +181,11 @@ figcaption { font-family: var(--rd-font-prose); font-size: var(--rd-t-sm); color
 /* ============ 6. Utilities ============ */
 .rd-hidden-sm { }
 @media (max-width: 760px) { .rd-hidden-sm { display: none; } }
+
+/* The hidden attribute must win over component display rules (tabs, tour). */
+[hidden] { display: none !important; }
+
+/* Wide display equations scroll inside their own box instead of running under the equation number. */
+.rd-eq .row { grid-template-columns: minmax(0, 1fr); }
+.rd-eq .row > .no { order: -1; justify-self: end; }
+.rd-eq .row > math, .rd-eq .live > math { display: block; max-width: 100%; overflow-x: auto; overflow-y: hidden; }

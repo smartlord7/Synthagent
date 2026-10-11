@@ -83,7 +83,7 @@ const mrow2 = (...a) => row(...a.map((x) => (x === '‖' ? mo('‖') : x)));
 
 /** Gaussian mechanism. @see Proposition 8.2 */
 export function mechanism(n, C, delta, eps, s) {
-  return block('Prop. 8.2', row(sub(mi('s'), mi('j')), mo('='), frac(row(sub(mi('Δ'), mi('j')), msqrt(row(mn2(), mi('ln'), paren(row('<mn>1.25</mn>', mo('/'), mi('δ'))))), mi('ε')), mo(','), sub(mi('Δ'), mi('j')), mo('='), frac(row(mn2(), mi('C')), sub(mi('n'), mi('j')))),
+  return block('Prop. 8.2', row(sub(mi('s'), mi('j')), mo('='), frac(row(sub(mi('Δ'), mi('j')), msqrt(row(mn2(), mi('ln'), paren(row('<mn>1.25</mn>', mo('/'), mi('δ')))))), mi('ε')), mo(','), sub(mi('Δ'), mi('j')), mo('='), frac(row(mn2(), mi('C')), sub(mi('n'), mi('j')))),
     row(mi('n'), mo('='), mnum(n, 0), mo('⇒'), mi('s'), mo('='), frac(row(mnum(2 * C / n, 4), msqrt(row(mn2(), mi('ln'), paren(mnum(1.25 / delta, 0))))), isFinite(eps) ? mnum(eps, 3) : mi('∞')), mo('='), mnum(s, 4)));
 }
 const msqrt = (x) => `<msqrt>${x}</msqrt>`;
