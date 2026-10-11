@@ -340,18 +340,35 @@ export function robustScreenGHB(th, x, r, v, z = 3) {
 /* ---------- joint release (Simulation 5) ---------- */
 
 /**
- * Borrowed patients when small hospitals release jointly in groups of g through secure aggregation.
- * @param {{nSmall:number, kSmall:number, nLarge:number, kLarge:number, g:number, tau2:number, sigma2?:number, eps:number, delta:number, C:number}} q design
- * @returns {number} B = sigma^2 / (tau^2 + M), M = 1 / sum over release units of 1/Var(unit)
+ * Release units when hospitals no larger than `cut` release jointly in groups of g (secure aggregation);
+ * the others release alone.
+ * @param {number[]} sizes hospital sizes
+ * @param {number} g group size
+ * @param {number} cut largest size that joins a group
+ * @returns {number[][]} member sizes of each release unit
  * @see Proposition 8.2 (second consequence), Simulation 5
  */
-export function jointReleaseB(q) {
+export function releaseUnits(sizes, g, cut) {
+  const small = sizes.filter((n) => n <= cut).sort((a, b) => a - b), large = sizes.filter((n) => n > cut), units = [];
+  for (let i = 0; i < small.length; i += g) units.push(small.slice(i, i + g));
+  for (const n of large) units.push([n]);
+  return units;
+}
+
+/**
+ * Borrowed patients when the population estimate is the inverse-variance mean of unit releases; a unit's
+ * release is the size-weighted mean of its members with noise calibrated to the unit's total size.
+ * @param {number[][]} units member sizes per release unit
+ * @param {{tau2:number, sigma2?:number, eps:number, delta:number, C:number}} q parameters
+ * @returns {number} B = sigma^2 / (tau^2 + M), M = 1 / sum_units 1/Var(unit)
+ * @see Proposition 8.2 (second consequence), Simulation 5 (exp5_joint_release.theory_M)
+ */
+export function jointReleaseB(units, q) {
   const sg = q.sigma2 ?? 1; let inv = 0;
-  for (let i = 0; i < q.kSmall; i += q.g) {
-    const m = Math.min(q.g, q.kSmall - i), N = m * q.nSmall;
-    inv += 1 / (q.tau2 * m * q.nSmall * q.nSmall / (N * N) + sg / N + dpVar(N, q.eps, q.delta, q.C));
+  for (const u of units) {
+    const N = u.reduce((a, b) => a + b, 0), s2n = u.reduce((a, b) => a + b * b, 0);
+    inv += 1 / (q.tau2 * s2n / (N * N) + sg / N + dpVar(N, q.eps, q.delta, q.C));
   }
-  for (let i = 0; i < q.kLarge; i++) inv += 1 / (q.tau2 + sg / q.nLarge + dpVar(q.nLarge, q.eps, q.delta, q.C));
   return sg / (q.tau2 + 1 / inv);
 }
 

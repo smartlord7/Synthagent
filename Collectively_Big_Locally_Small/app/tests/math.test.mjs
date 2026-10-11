@@ -73,3 +73,14 @@ test('robust t posterior shrinks less for a far-away estimate; weighted median; 
   const e = gmrfJacobi([1, -1], [1, -1], [1, 1], [1, 1], A, 0);
   assert.deepEqual(Array.from(e), [1, -1]);
 });
+
+test('joint release closed form matches exp5 design (16 x 20 + 8 x 200, tau2 = 0.02)', async () => {
+  const { releaseUnits, jointReleaseB } = await import('../js/math/ghb.js');
+  const sizes = [...Array(16).fill(20), ...Array(8).fill(200)], q = { tau2: 0.02, eps: 0.1, delta: 1e-5, C: 1 };
+  const B1 = jointReleaseB(releaseUnits(sizes, 1, 20), q), B8 = jointReleaseB(releaseUnits(sizes, 8, 20), q);
+  // independent re-derivation of exp5_joint_release.theory_M for g = 8
+  const dp = (N) => (2 / N * Math.sqrt(2 * Math.log(1.25e5)) / 0.1) ** 2;
+  let inv = 2 / (0.02 * 8 * 400 / 160 ** 2 + 1 / 160 + dp(160)); inv += 8 / (0.02 + 1 / 200 + dp(200));
+  close(B8, 1 / (0.02 + 1 / inv), 1e-9, 'B, groups of 8');
+  assert.ok(B8 > B1, 'joint release helps small hospitals');
+});
