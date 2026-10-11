@@ -13,7 +13,7 @@ The propositions take $\tau^2$ and $M$ as known, the model as Gaussian and every
 \end{figure}
 
 \begin{table}[t]
-\caption{The seventeen simulations and their main results. Relative risk is $R_k/v_k$ and logistic results are mean excess log-loss (nats); below the local value, hospitals gain. $\epsilon=1$ unless stated.}
+\caption{The eighteen simulations and their main results. Relative risk is $R_k/v_k$ and logistic results are mean excess log-loss (nats); below the local value, hospitals gain. $\epsilon=1$ unless stated.}
 \label{tab:sims}
 \scriptsize
 \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{2.2cm}>{\raggedright\arraybackslash}p{3.3cm}X@{}}
@@ -37,6 +37,7 @@ Simulation & Question & Result\\
 15 Iterative federated learning & Does it beat multi-round training with the same budget and tuned hyperparameters? & At $\tau^2=0.05$: GHB \SimFifteenMidGHB, DP-FedAvg with fine-tuning \SimFifteenMidFT, decentralized DP-SGD \SimFifteenMidDec, clustered \SimFifteenMidClus; at $\epsilon=0.3$ GHB \SimFifteenStrictGHB{} against \SimFifteenStrictFT; worst hospital at most \SimFifteenGHBWorstMax{} for GHB, \SimFifteenFTWorstMin{} to \SimFifteenFTWorstMax{} for fine-tuning\\
 16 Ablation & What does each component contribute? & Error relative to GHB without it: ridge release up to \SimSixteenRidgeMax; $X^\top y$ release \SimSixteenXtyShift{} under case-mix shift; plug-in $\tau^2$ up to \SimSixteenTauMeanMax{} (posterior mean) and \SimSixteenTauDLMax{} (DerSimonian-Laird); no conflict check \SimSixteenNoCheckAnchor{} with a wrong anchor; equal weights up to \SimSixteenEqualMax; gossip and accounting free\\
 17 Sensitivity & How much do settings and conditions matter? & Settings: quantiles, public sample, threshold and rounds ($\ge 20$) flat; prior scale of $\tau$ \SimSeventeenScaleMin{} to \SimSeventeenScaleMax; misstated anchor up to \SimSeventeenAnchorSdMax. Conditions: error \SimSeventeenRelMin{} to \SimSeventeenRelMax{} of local, worst hospital at most \SimSeventeenWorstMax\\
+18 Group fairness & What does borrowing do to a protected group? & Minority excess log-loss ($\times10^{-3}$) with a shared disparity: GHB \SimEighteenSharedGHBMin, local \SimEighteenSharedLocalMin, FAIR-FATE \SimEighteenSharedFFEQOMin; disparities that vary: GHB \SimEighteenVariesGHBMin, global \SimEighteenVariesGlobalMin; equalized odds of GHB within 0.02 of the true models, FAIR-FATE closer to parity\\
 \bottomrule
 \end{tabularx}
 \end{table}
@@ -200,3 +201,29 @@ Condition & Value & GHB / local & \makecell[r]{GHB, $\tau^2$ known\\/ local} & W
 \end{tabular}
 \end{table}
 
+\paragraph{What borrowing does to a protected group} Simulation 18 asks the question of Section~\ref{sec:federated} that the other simulations cannot: how GHB treats a group of patients defined by a protected attribute. One of the four features becomes a binary attribute $S$ (the minority group, $S=1$), whose share varies across hospitals (Beta-distributed with mean 0.3, or 0.1 when the minority is rare), so that the group is scarce at some hospitals, as in the heterogeneous splits of FAIR-FATE's experiments \cite{salazar2023fairfate}. The coefficient of $S$ is each hospital's true disparity in outcome risk, on the log-odds scale. Four scenarios vary how much hospitals agree about it: a shared disparity ($\mu_S=0.5$, $\tau_S^2=0.05$, like every other coefficient), a disparity that varies ten times more than the other coefficients ($\tau_S^2=0.5$), a rare minority, and disparities of either sign ($\mu_S=0$, $\tau_S^2=0.5$). Besides GHB, a hospital can decline to borrow its disparity: \emph{GHB, $S$ local} uses the same release and the same network estimate for every other coefficient, but keeps the local prior for the coefficient of $S$; it costs no privacy. The comparators are FAIR-FATE \cite{salazar2023fairfate}, implemented as its Algorithm~1 with the settings of its paper (Table~\ref{tab:sim18}), with statistical parity (SP) or equalized odds (EQO) as the fairness measure, and federated averaging under the same training protocol. Both train one global model with a server, and FAIR-FATE's server holds a labelled validation set of a fifth of all patients. Neither is private. They are references for what a fairness-aware federated method does, not baselines at GHB's budget.
+
+For the minority group, GHB or its variant is the most accurate private method in every scenario, and the most accurate of all methods whenever hospitals disagree about the disparity (Figure~\ref{fig:sim-fairness}, Table~\ref{tab:sim18}). GHB roughly halves the minority's excess log-loss of local estimation when the disparity is shared (\SimEighteenSharedGHBMin{} against \SimEighteenSharedLocalMin{} $\times10^{-3}$ nats) and when the minority is rare (\SimEighteenRareGHBMin{} against \SimEighteenRareLocalMin), where the non-private global model is slightly better still (\SimEighteenSharedGlobalMin{} and \SimEighteenRareGlobalMin). When disparities vary, a single model fits the minority badly (global \SimEighteenVariesGlobalMin, FAIR-FATE \SimEighteenVariesFFEQOMin{} and \SimEighteenVariesFFSPMin), while GHB reaches \SimEighteenVariesGHBMin{} and its variant \SimEighteenVariesGHBSMin. Whether GHB imports other hospitals' disparity depends on that agreement. Because GHB estimates $\tau$ coordinate by coordinate, a disparity on which hospitals agree is borrowed, and its error falls from \SimEighteenSharedLocalDis{} to \SimEighteenSharedGHBDis{} on the log-odds scale (from \SimEighteenRareLocalDis{} to \SimEighteenRareGHBDis{} with a rare minority). A disparity on which they disagree is barely borrowed, and its error stays at the local level (\SimEighteenVariesGHBDis{} against \SimEighteenVariesLocalDis; \SimEighteenOppositeGHBDis{} against \SimEighteenOppositeLocalDis{} with disparities of either sign, within Monte Carlo error). In those two scenarios, keeping the disparity local is slightly better (\SimEighteenVariesGHBSDis{} and \SimEighteenOppositeGHBSDis), and in the other two it gives up most of the gain. So the option is a safeguard for networks that expect their disparities to differ, not a default. GHB leaves the network's fairness ratios where the true models put them: equalized odds \SimEighteenSharedGHBEQO{} against \SimEighteenSharedTrueEQO{} for the true models when the disparity is shared, and within 0.02 of the truth in every scenario. FAIR-FATE does what it is designed to do and moves them toward parity (\SimEighteenSharedFFEQOEQO{} with $F=$ EQO). Here, however, the disparity is real, so parity is reached by distorting the predicted risks: FAIR-FATE's minority excess log-loss is \SimEighteenSharedFFEQOMin{} against GHB's \SimEighteenSharedGHBMin{} when the disparity is shared. This is the conflict that Section~\ref{sec:federated} anticipated. Calibrated, personalized risk and parity of decisions are different goals, and which one a clinical model should serve is a question for the deployment, not for the estimator.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{supplement/figures/sim18_fairness}
+\caption{Simulation 18: a protected attribute $S$ ($\epsilon=1$, 24 hospitals, \SimEighteenReps{} replicates per scenario). (a) Mean excess log-loss of the minority group. (b) Mean absolute error of the estimated disparity, the coefficient of $S$. (c) Equalized odds of the network's decisions at threshold 0.5 (1 is parity); dashed: the true models. $\ast$: not private, with a server; FAIR-FATE also uses a labelled validation set at the server.}
+\label{fig:sim-fairness}
+\end{figure}
+
+\begin{table}[t]
+\caption{Simulation 18: exact values behind Figure~\ref{fig:sim-fairness} (\SimEighteenReps{} replicates per scenario). Mean excess log-loss over all patients, the minority ($S=1$) and the majority ($10^{-3}$ nats; two standard errors in grey); mean absolute error of the estimated disparity $|\hat\theta_S-\theta_S|$; mean absolute calibration bias in the minority, $|\mathrm{mean}(\hat p-p\mid S=1)|$ (percentage points); the largest ratio of any hospital's excess log-loss to its local one (Worst); and the statistical parity, equal opportunity and equalized odds ratios of the network's decisions at threshold 0.5 (1 is parity). Bold: best of the private methods. $\dagger$: not private, one model trained with a server. FAIR-FATE follows Algorithm~1 of \cite{salazar2023fairfate}: a third of the hospitals per round, 10 local epochs of mini-batch gradient descent (batches of 10, learning rate 0.01), $\lambda_0=0.5$, $\rho=0.05$, $\mathrm{MAX}=0.9$, $\beta_0=0.9$, 100 rounds, and a labelled validation set of a fifth of all patients at the server; federated averaging uses the same protocol without the fairness update. All federated models start from the anchor $\mu_0$.}
+\label{tab:sim18}
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{@{}lllrrrrrrr@{}}
+\toprule
+ & \multicolumn{3}{c}{Excess log-loss} & & & & \multicolumn{3}{c}{Fairness of decisions}\\
+\cmidrule(lr){2-4}\cmidrule(l){8-10}
+Method & All & Minority & Majority & $|\hat\theta_S-\theta_S|$ & \makecell[r]{Calib.\\bias} & Worst & SP & EO & EQO\\
+\midrule
+\csname @@input\endcsname ../Collectively_Big_Locally_Small/supplement/results/tables/t_sim18.tex 
+\bottomrule
+\end{tabular}
+\end{table}
