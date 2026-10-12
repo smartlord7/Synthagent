@@ -39,7 +39,7 @@ def run(item):
     for _ in range(REPS):
         theta, means, mu0, data = L.world(rng, n, kw["tau2"], kw.get("shift", 0.0), 0.3)
         pub = GL.Public(L.features(rng, 20000))
-        rel = V.Releases(rng, data, n, mu0)
+        rel = V.Releases(rng, data, n, z)  # releases at the public point 0, the point GHB-EB is told (no anchor)
         base = {"anchor_sd": None, "check": False, "prior_sd": GL.PRIOR_SDS}
         est = {"Local": np.array([fit(X, y, z, np.full(P, 0.16)) for X, y in data]),
                "GHB-EB": V.estimate(pub, rel, data, n, z, eps, avg, base),
