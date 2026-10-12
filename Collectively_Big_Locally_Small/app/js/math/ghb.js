@@ -1,7 +1,7 @@
 /**
  * math/ghb.js
- * Responsibility: the estimators of Graph Hierarchical Borrowing (Section 8): closed forms of
- * Propositions 8.1 and 8.2, the plug-in estimator of Algorithm 1 (DerSimonian-Laird tau^2,
+ * Responsibility: the estimators of Graph Hierarchical Borrowing (Sections 4 and 5): closed forms of
+ * Propositions 4.1 and 4.2, the plug-in estimator of Algorithm 1 (DerSimonian-Laird tau^2,
  * inverse-variance leave-one-out mean through gossip, shrinkage, anchor), its robust variants
  * (Student-t prior, opt-out, screening of dishonest releases), joint release and the GMRF Jacobi update.
  * All functions are pure; random draws take an explicit generator.
@@ -19,7 +19,7 @@ const map = (K, f) => { const o = new Float64Array(K); for (let i = 0; i < K; i+
  * @param {number} M mean squared error of the population estimate
  * @param {number} [sigma2=1] per-patient variance
  * @returns {number} R* = v (tau^2 + M) / (v + tau^2 + M), v = sigma^2 / n
- * @see Proposition 8.1
+ * @see Proposition 4.1
  */
 export function riskHB(n, tau2, M, sigma2 = 1) { const v = sigma2 / n; return v * (tau2 + M) / (v + tau2 + M); }
 
@@ -29,7 +29,7 @@ export function riskHB(n, tau2, M, sigma2 = 1) { const v = sigma2 / n; return v 
  * @param {number} tau2 heterogeneity
  * @param {number} M population-estimate MSE
  * @returns {number} alpha* = (tau^2 + M) / (tau^2 + M + v)
- * @see Proposition 8.1
+ * @see Proposition 4.1
  */
 export function alphaHB(v, tau2, M) { return (tau2 + M) / (tau2 + M + v); }
 
@@ -39,7 +39,7 @@ export function alphaHB(v, tau2, M) { return (tau2 + M) / (tau2 + M + v); }
  * @param {number} M population-estimate MSE
  * @param {number} [sigma2=1] per-patient variance
  * @returns {number} B = sigma^2 / (tau^2 + M)
- * @see Proposition 8.1, Eq. (5)
+ * @see Proposition 4.1, Eq. (3)
  */
 export function borrowedPatients(tau2, M, sigma2 = 1) { return sigma2 / (tau2 + M); }
 
@@ -49,7 +49,7 @@ export function borrowedPatients(tau2, M, sigma2 = 1) { return sigma2 / (tau2 + 
  * @param {number} k excluded hospital
  * @param {{tau2:number, sigma2?:number, eps:number, delta:number, C:number}} q model and privacy parameters
  * @returns {number} M = (K-1)^{-2} sum_{j != k} (tau^2 + sigma^2/n_j + s_j^2)
- * @see Proposition 8.2, Eq. (6)
+ * @see Proposition 4.2, Eq. (4)
  */
 export function looMSE(sizes, k, q) {
   const K = sizes.length, s2 = q.sigma2 ?? 1; let s = 0;
@@ -62,7 +62,7 @@ export function looMSE(sizes, k, q) {
  * @param {number[]} totals tau^2 + sigma^2/n_j + s_j^2 for every hospital
  * @param {number} k excluded hospital
  * @returns {number} M = 1 / sum_{j != k} 1/total_j
- * @see Proposition 8.2 (third consequence), Algorithm 1
+ * @see Proposition 4.2 (third consequence), Algorithm 1
  */
 export function looMSEiv(totals, k) { let s = 0; for (let j = 0; j < totals.length; j++) if (j !== k) s += 1 / totals[j]; return 1 / s; }
 
@@ -73,7 +73,7 @@ export function looMSEiv(totals, k) { let s = 0; for (let j = 0; j < totals.leng
  * @param {number} tau2 heterogeneity
  * @param {number} [sigma2=1] per-patient variance
  * @returns {number} tau^2 ((1 - w_k)^2 + sum_{j!=k} w_j^2) + sigma^2 / N
- * @see blueprint.risk_full_pooling, Figure 8
+ * @see blueprint.risk_full_pooling, Figure 1
  */
 export function riskFullPooling(sizes, k, tau2, sigma2 = 1) {
   const N = sizes.reduce((a, b) => a + b, 0); let so = 0;
@@ -91,7 +91,7 @@ export function riskFullPooling(sizes, k, tau2, sigma2 = 1) {
  * @param {(k:number)=>number} [uFn] optional site effects u_k (default N(0, tau^2))
  * @returns {{v:Float64Array, s2:Float64Array, theta:Float64Array, th:Float64Array, x:Float64Array, r:Float64Array}}
  *   local variances, noise variances, true parameters, local estimates, releases, public release variances
- * @see Eq. (4), Proposition 8.2
+ * @see Eq. (2), Proposition 4.2
  */
 export function drawReplicate(rng, n, q, uFn) {
   const K = n.length, sg = q.sigma2 ?? 1, mu = q.mu ?? 0;
@@ -109,7 +109,7 @@ export function drawReplicate(rng, n, q, uFn) {
  * @param {Float64Array[]|null} P averaging operator, null for the exact mean
  * @param {number} K hospitals
  * @returns {(y:ArrayLike<number>)=>Float64Array} y -> per-hospital estimate of mean(y)
- * @see Proposition 8.4
+ * @see Proposition 4.3
  */
 export function avgOp(P, K) {
   if (!P) return (y) => { let s = 0; for (let i = 0; i < K; i++) s += y[i]; const o = new Float64Array(K); o.fill(s / K); return o; };
@@ -122,7 +122,7 @@ export function avgOp(P, K) {
  * @param {ArrayLike<number>} r public release variances
  * @param {(y:ArrayLike<number>)=>Float64Array} avg averaging operator
  * @returns {Float64Array} each hospital's estimate of tau^2
- * @see Remark 8.3, Algorithm 1 (first gossip)
+ * @see Remark 4.4, Algorithm 1 (first gossip)
  */
 export function dersimonianLaird(x, r, avg) {
   const K = x.length, w = map(K, (i) => 1 / r[i]);
@@ -142,7 +142,7 @@ const TAU_GRID = (() => { const g = [0]; for (let i = 0; i < 160; i++) g.push(10
  * @param {ArrayLike<number>} r public release variances
  * @param {number} [scale=0.5] half-Cauchy scale
  * @returns {number} E[tau^2 | releases]
- * @see Remark 8.3, Simulation 3
+ * @see Remark 4.4, Simulation 3
  */
 export function tau2Bayes(x, r, scale = 0.5) {
   const K = x.length, G = TAU_GRID.length, lp = new Float64Array(G);
@@ -171,7 +171,7 @@ export function tau2Bayes(x, r, scale = 0.5) {
  * @param {{tau2?:number|null, estimator?:'dl'|'bayes'|'oracle', scale?:number, weights?:'iv'|'equal'}} [opt]
  *   tau^2 estimator (DerSimonian-Laird by default; 'oracle' uses opt.tau2) and leave-one-out weights
  * @returns {{t2:Float64Array, mu:Float64Array, M:Float64Array}}
- * @see Algorithm 1 (second gossip), Remark 8.3, Proposition 8.4 (iii)
+ * @see Algorithm 1 (second gossip), Remark 4.4, Proposition 4.3 (iii)
  */
 export function borrow(x, r, avg, opt = {}) {
   const K = x.length, est = opt.estimator || 'dl';
@@ -213,7 +213,7 @@ export function combineAnchor(b, mu0, s0sq, check = false) {
  * @param {ArrayLike<number>} v local variances
  * @param {{t2:ArrayLike<number>, M:ArrayLike<number>}} b network quantities
  * @returns {Float64Array}
- * @see Proposition 8.1
+ * @see Proposition 4.1
  */
 export function shrinkWeights(v, b) { return map(v.length, (k) => alphaHB(v[k], b.t2[k], b.M[k])); }
 
@@ -223,7 +223,7 @@ export function shrinkWeights(v, b) { return map(v.length, (k) => alphaHB(v[k], 
  * @param {ArrayLike<number>} v local variances
  * @param {{t2:ArrayLike<number>, mu:ArrayLike<number>, M:ArrayLike<number>}} b network quantities
  * @returns {Float64Array} alpha_k th_k + (1 - alpha_k) mu_k
- * @see Proposition 8.1, Algorithm 1
+ * @see Proposition 4.1, Algorithm 1
  */
 export function shrink(th, v, b) {
   const a = shrinkWeights(v, b);
@@ -231,14 +231,14 @@ export function shrink(th, v, b) {
 }
 
 /**
- * Oracle hierarchical borrowing: true tau^2, equal-weight leave-one-out mean of releases, M of Eq. (6).
+ * Oracle hierarchical borrowing: true tau^2, equal-weight leave-one-out mean of releases, M of Eq. (4).
  * @param {ArrayLike<number>} th local estimates
  * @param {ArrayLike<number>} x releases
  * @param {ArrayLike<number>} v local variances
  * @param {ArrayLike<number>} s2 noise variances
  * @param {number} tau2 true heterogeneity
  * @returns {Float64Array}
- * @see Propositions 8.1 and 8.2 (ghb.oracle_hb)
+ * @see Propositions 4.1 and 4.2 (ghb.oracle_hb)
  */
 export function oracleHB(th, x, v, s2, tau2) {
   const K = th.length; let sx = 0, stot = 0;
@@ -252,9 +252,129 @@ export function oracleHB(th, x, v, s2, tau2) {
  * @param {ArrayLike<number>} th local estimates
  * @param {ArrayLike<number>} n sizes
  * @returns {number}
- * @see ghb.full_pooling, Figure 8
+ * @see ghb.full_pooling, Figure 1
  */
 export function pooledMean(th, n) { let a = 0, b = 0; for (let i = 0; i < th.length; i++) { a += n[i] * th[i]; b += n[i]; } return a / b; }
+
+/* ---------- tau integrated out over its half-Cauchy prior (Remark 4.4) ---------- */
+
+/** Grid of tau for its posterior: 0 and 160 log-spaced values from 10^-3.5 to 10. @see ghb_logit.GRID */
+export const GRID = (() => { const g = [0]; for (let i = 0; i < 160; i++) g.push(10 ** (-3.5 + 4.5 * i / 159)); return Float64Array.from(g); })();
+/** Trapezoid-style widths of GRID (numpy.gradient). */
+export const DGRID = (() => { const n = GRID.length, d = new Float64Array(n); d[0] = GRID[1] - GRID[0]; d[n - 1] = GRID[n - 1] - GRID[n - 2]; for (let i = 1; i < n - 1; i++) d[i] = (GRID[i + 1] - GRID[i - 1]) / 2; return d; })();
+
+/**
+ * Equally weighted quantiles of tau^2 from a discrete density on GRID (numpy searchsorted, left side).
+ * @param {ArrayLike<number>} p normalized weights on GRID
+ * @param {number} [q=12] number of quantiles
+ * @returns {Float64Array} tau_q^2
+ * @see Remark 4.4; ghb_v3.quantiles
+ */
+export function gridQuantiles(p, q = 12) {
+  const cdf = new Float64Array(GRID.length); let c = 0;
+  for (let i = 0; i < GRID.length; i++) { c += p[i]; cdf[i] = c; }
+  const out = new Float64Array(q);
+  for (let j = 0; j < q; j++) { const t = (j + 0.5) / q; let i = 0; while (i < GRID.length && cdf[i] < t) i++; out[j] = GRID[Math.min(i, GRID.length - 1)] ** 2; }
+  return out;
+}
+
+/**
+ * Quantiles of the half-Cauchy(0, scale) prior on tau alone, discretized on GRID.
+ * @param {number} [scale=0.5] half-Cauchy scale
+ * @param {number} [q=12] number of quantiles
+ * @returns {Float64Array} tau_q^2
+ * @see Section 5.2 (GHB integrates tau out over its prior: no per-hospital release carries tau)
+ */
+export function priorQuantiles(scale = 0.5, q = 12) {
+  const p = Float64Array.from(GRID, (t, i) => DGRID[i] / (1 + (t / scale) ** 2)), s = p.reduce((a, b) => a + b, 0);
+  return gridQuantiles(p.map((x) => x / s), q);
+}
+
+
+/* ---------- GHB with a joint release (Section 5.2, Gaussian analogue) ---------- */
+
+/**
+ * Error variance of hospital k's exact leave-one-out mean from GHB's noisy network sum
+ * S~ = sum_j n_j thetahat_j + N(0, s^2): mu_-k = (S~ - n_k thetahat_k) / (N - n_k), so that
+ * mu_-k - mu = sum_{j != k} (n_j / N_-k)(u_j + e_j) + xi / N_-k and
+ * M_k = sum_{j != k} n_j^2 (tau^2 + sigma^2 / n_j) / N_-k^2 + s^2 / N_-k^2.
+ * This is Eq. (4) with sample-size weights and the privacy noise calibrated to the sum (sensitivity 2C), so the
+ * noise term is s^2 / N_-k^2, of order 1/N^2, instead of an average of terms of order 1/n_j^2.
+ * @param {ArrayLike<number>} n sizes
+ * @param {number} k hospital
+ * @param {number} tau2 heterogeneity
+ * @param {number} sigma2 per-patient variance
+ * @param {number} s2 variance of the noise of the sum
+ * @returns {number} M_k
+ * @see Eq. (4), Section 5.2
+ */
+export function jointLooM(n, k, tau2, sigma2, s2) {
+  let N = 0, a = 0; for (let j = 0; j < n.length; j++) { if (j === k) continue; N += n[j]; a += n[j] * n[j] * tau2 + n[j] * sigma2; }
+  return (a + s2) / (N * N);
+}
+
+/**
+ * Borrowed patients of hospital k under GHB's joint release with known tau^2.
+ * @param {ArrayLike<number>} n sizes
+ * @param {number} k hospital
+ * @param {number} tau2 heterogeneity
+ * @param {number} sigma2 per-patient variance
+ * @param {number} s2 noise variance of the sum
+ * @returns {number} B = sigma^2 / (tau^2 + M_k)
+ * @see Eq. (3) with M of jointLooM
+ */
+export function jointBorrowed(n, k, tau2, sigma2, s2) { return sigma2 / (tau2 + jointLooM(n, k, tau2, sigma2, s2)); }
+
+const npdf = (x, v) => -0.5 * Math.log(2 * Math.PI * v) - 0.5 * x * x / v;
+
+/**
+ * GHB in the Gaussian model. The network releases only the noisy sum S~ of every hospital's contribution n_k y_k
+ * (y_k = thetahat_k for an honest hospital). Hospital k computes its leave-one-out mean exactly and locally,
+ * mu_-k = (S~ - n_k y_k)/(N - n_k), and, since no per-hospital quantity is released, integrates tau out over Q
+ * quantiles of its half-Cauchy prior: component q is the prior N(mu_-k, tau_q^2 + M_k(tau_q)), weighted by the
+ * hospital's own evidence N(thetahat_k; mu_-k, tau_q^2 + M_k(tau_q) + v_k). No-borrowing components (the local
+ * estimate alone; evidence N(thetahat_k; 0, s^2 + v_k) for default scales s in {0.5, 1, 2.5}) carry a quarter of the
+ * prior weight. An anchor mu_0 with stated variance s0^2 is combined with mu_-k unless they conflict (|z| > 3 against
+ * the tau-free error). With knownTau2 the estimate is Proposition 4.1 with M_k = jointLooM (a reference).
+ * @param {ArrayLike<number>} th local estimates (never released)
+ * @param {ArrayLike<number>} y contributed values (th for honest hospitals)
+ * @param {ArrayLike<number>} n sizes
+ * @param {ArrayLike<number>} v local variances sigma^2 / n_k
+ * @param {number} sigma2 per-patient variance
+ * @param {number} s noise sd of the sum
+ * @param {number} xi the noise draw of the sum, N(0, s^2)
+ * @param {{scale?:number, Q?:number, safety?:boolean, safetyW?:number, anchor?:{mu0:number, s0sq:number, check:boolean}|null, knownTau2?:number|null}} [o]
+ * @returns {{est:Float64Array, mu:Float64Array, M:Float64Array, alpha:Float64Array, wSafe:Float64Array, t2:Float64Array, used:Uint8Array, S:number}}
+ * @see Section 5.2, Remark 4.4, Proposition 4.1, Eq. (4); Algorithm 1
+ */
+export function jointGHB(th, y, n, v, sigma2, s, xi, o = {}) {
+  const K = th.length, c = { scale: 0.5, Q: 12, safety: true, safetyW: 1 / 3, anchor: null, knownTau2: null, ...o };
+  let N = 0, S = xi; for (let k = 0; k < K; k++) { N += n[k]; S += n[k] * y[k]; }
+  let sn2 = 0; for (let k = 0; k < K; k++) sn2 += n[k] * n[k];
+  const tq = c.knownTau2 != null ? [c.knownTau2] : Array.from(priorQuantiles(c.scale, c.Q)), sds = [0.5, 1, 2.5];
+  const out = { est: new Float64Array(K), mu: new Float64Array(K), M: new Float64Array(K), alpha: new Float64Array(K), wSafe: new Float64Array(K), t2: new Float64Array(K), used: new Uint8Array(K), S };
+  for (let k = 0; k < K; k++) {
+    const Nk = N - n[k], m0 = (S - n[k] * y[k]) / Nk, W2 = (sn2 - n[k] * n[k]) / (Nk * Nk), M0 = ((N - n[k]) * sigma2 + s * s) / (Nk * Nk);
+    let mu = m0, lam = 1, aVar = 0;
+    if (c.anchor) {
+      const ok = !c.anchor.check || Math.abs(c.anchor.mu0 - m0) / Math.sqrt(c.anchor.s0sq + M0) <= 3;
+      if (ok) { lam = (1 / M0) / (1 / M0 + 1 / c.anchor.s0sq); mu = lam * m0 + (1 - lam) * c.anchor.mu0; aVar = (1 - lam) ** 2 * c.anchor.s0sq; out.used[k] = 1; }
+    }
+    const Mq = (t2) => lam * lam * (M0 + t2 * W2) + aVar;
+    if (c.knownTau2 != null) {
+      const t2 = c.knownTau2, M = Mq(t2), a = (t2 + M) / (t2 + M + v[k]);
+      out.est[k] = a * th[k] + (1 - a) * mu; out.mu[k] = mu; out.M[k] = M; out.alpha[k] = a; out.t2[k] = t2; continue;
+    }
+    const lw = [], al = [];
+    for (const t2 of tq) { const M = Mq(t2), V = t2 + M; lw.push(-Math.log(tq.length) + npdf(th[k] - mu, V + v[k])); al.push(V / (V + v[k])); }
+    if (c.safety) for (const sd of sds) { lw.push(Math.log(c.safetyW / sds.length) + npdf(th[k], sd * sd + v[k])); al.push(1); }
+    const mx = Math.max(...lw); let sw = 0, aEff = 0, ws = 0, t2m = 0, wb = 0;
+    lw.forEach((l, i) => { const w = Math.exp(l - mx); sw += w; aEff += w * al[i]; if (i >= tq.length) ws += w; else { t2m += w * tq[i]; wb += w; } });
+    aEff /= sw; t2m = wb > 0 ? t2m / wb : tq[0];
+    out.est[k] = aEff * th[k] + (1 - aEff) * mu; out.mu[k] = mu; out.M[k] = Mq(t2m); out.alpha[k] = aEff; out.wSafe[k] = ws / sw; out.t2[k] = t2m;
+  }
+  return out;
+}
 
 /* ---------- atypical hospitals (Simulation 9) ---------- */
 
@@ -268,7 +388,7 @@ const ZG = (() => { const g = []; for (let i = 0; i <= 160; i++) g.push(-8 + i *
  * @param {number} varPrior prior variance tau^2 + M
  * @param {number} [nu=3] degrees of freedom
  * @returns {number} posterior mean by quadrature on 161 points over +-8 sd
- * @see Simulation 9 (robust GHB), Section 8.2 remark on atypical hospitals
+ * @see Simulation 9 (robust GHB), Section 4.1 remark on atypical hospitals
  */
 export function robustPosteriorMean(th, v, mu, varPrior, nu = 3) {
   const sv = Math.sqrt(v), sc = Math.sqrt(Math.max(varPrior, 1e-12) * (nu - 2) / nu), lw = new Float64Array(ZG.length);
@@ -346,7 +466,7 @@ export function robustScreenGHB(th, x, r, v, z = 3) {
  * @param {number} g group size
  * @param {number} cut largest size that joins a group
  * @returns {number[][]} member sizes of each release unit
- * @see Proposition 8.2 (second consequence), Simulation 5
+ * @see Proposition 4.2 (second consequence), Simulation 5
  */
 export function releaseUnits(sizes, g, cut) {
   const small = sizes.filter((n) => n <= cut).sort((a, b) => a - b), large = sizes.filter((n) => n > cut), units = [];
@@ -361,7 +481,7 @@ export function releaseUnits(sizes, g, cut) {
  * @param {number[][]} units member sizes per release unit
  * @param {{tau2:number, sigma2?:number, eps:number, delta:number, C:number}} q parameters
  * @returns {number} B = sigma^2 / (tau^2 + M), M = 1 / sum_units 1/Var(unit)
- * @see Proposition 8.2 (second consequence), Simulation 5 (exp5_joint_release.theory_M)
+ * @see Proposition 4.2 (second consequence), Simulation 5 (exp5_joint_release.theory_M)
  */
 export function jointReleaseB(units, q) {
   const sg = q.sigma2 ?? 1; let inv = 0;
@@ -379,7 +499,7 @@ export function jointReleaseB(units, q) {
  * @param {(n:number)=>number} s2fn release noise variance for a hospital of size n
  * @param {number} [sigma2=1] per-patient variance
  * @returns {number} mean_k sigma^2 / (tau^2 + M_k)
- * @see Eq. (5), Simulation 14
+ * @see Eq. (3), Simulation 14
  */
 export function meanBorrowed(sizes, tau2, s2fn, sigma2 = 1) {
   const tot = sizes.map((n) => tau2 + sigma2 / n + s2fn(n));
@@ -387,7 +507,7 @@ export function meanBorrowed(sizes, tau2, s2fn, sigma2 = 1) {
   return b / sizes.length;
 }
 
-/* ---------- GMRF prior (Eq. 7) ---------- */
+/* ---------- GMRF prior (Eq. 5) ---------- */
 
 /**
  * GMRF estimate by Jacobi iteration on privatized releases, then each hospital's local update with its own estimate.
@@ -401,7 +521,7 @@ export function meanBorrowed(sizes, tau2, s2fn, sigma2 = 1) {
  * @param {number} [mu0=0] anchor
  * @param {number} [sweeps=100] Jacobi sweeps
  * @returns {Float64Array}
- * @see Eq. (7) and the Jacobi update of Section 8.4; Simulation 6
+ * @see Eq. (5) and the Jacobi update of Section 4.3; Simulation 6
  */
 export function gmrfJacobi(th, x, v, r, A, beta, gamma = 0, mu0 = 0, sweeps = 100) {
   const K = x.length, d = A.map((row) => row.reduce((s, a) => s + a, 0)), nb = A.map((row) => { const l = []; row.forEach((a, j) => { if (a) l.push([j, a]); }); return l; });

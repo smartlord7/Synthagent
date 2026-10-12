@@ -1,6 +1,6 @@
 /**
  * ui/panels/regions.js
- * Responsibility: the Regions tab (Eq. 7, Simulation 6). Runs its own Monte Carlo with regional site effects
+ * Responsibility: the Regions tab (Eq. 5, Simulation 6). Runs its own Monte Carlo with regional site effects
  * and the GMRF prior switched on, and compares exchangeable GHB with the GMRF prior per hospital, over the
  * smoothing strength beta and over the between-region heterogeneity tau_r^2.
  */
@@ -22,10 +22,10 @@ export function initRegions() {
   add(rail, '<p class="rd-prose">This tab always simulates regional effects with the GMRF prior on. Switch them on in Setup to use them in the other tabs too.</p>');
   const prog = add(stage, '<p class="rd-progress" id="regions-progress"></p>');
   const chipEl = add(stage, '<div class="rd-chips" id="regions-chips"></div>');
-  const fPer = new Figure(add(stage, '<div></div>'), { id: 'fig-gmrf-per', num: 'G1', caption: 'Relative risk per hospital (sorted by size, labels n<sub>k</sub>) for exchangeable GHB and the GMRF prior over the regional similarity graph. ±2 SE.', xLabel: 'hospital size n_k (patients, sorted)', yLabel: 'relative risk R_k / v_k', height: 250, canLogX: false });
+  const fPer = new Figure(add(stage, '<div></div>'), { id: 'fig-gmrf-per', num: 'G1', caption: 'Relative risk per hospital (sorted by size, labels n<sub>k</sub>) for exchangeable GHB-lite, GHB and the GMRF prior over the regional similarity graph. ±2 SE.', xLabel: 'hospital size n_k (patients, sorted)', yLabel: 'relative risk R_k / v_k', height: 250, canLogX: false });
   const g = add(stage, '<div class="rd-grid2"></div>');
   const bBeta = add(g, '<div></div>');
-  const fBeta = new Figure(bBeta, { id: 'fig-gmrf-beta', num: 'G2', caption: 'Mean relative risk against the smoothing strength β (log scale) at the current τ<sub>r</sub>², with exchangeable GHB for reference. ±2 SE.', xLabel: 'β', yLabel: 'mean R / v', height: 230 });
+  const fBeta = new Figure(bBeta, { id: 'fig-gmrf-beta', num: 'G2', caption: 'Mean relative risk against the smoothing strength β (log scale) at the current τ<sub>r</sub>², with exchangeable GHB-lite for reference. ±2 SE.', xLabel: 'β', yLabel: 'mean R / v', height: 230 });
   const pBeta = add(bBeta, '<p class="rd-progress"></p>');
   const bTr = add(g, '<div></div>');
   const fTr = new Figure(bTr, { id: 'fig-gmrf-taur', num: 'G3', caption: 'Mean relative risk against the between-region heterogeneity τ<sub>r</sub>² at the current β (Simulation 6). The GMRF prior pays off when regions differ. ±2 SE.', xLabel: 'τ_r²', yLabel: 'mean R / v', height: 230 });
@@ -42,15 +42,15 @@ export function initRegions() {
     runJob('regions-mc', runMonteCarlo(c, { onProgress: (s, done, ctx) => {
       prog.innerHTML = progress(s.R, total);
       const A = s.agg, order = ctx.n.map((_, k) => k).sort((a, b) => ctx.n[a] - ctx.n[b]);
-      chips(chipEl, [['Exchangeable GHB', pm(fmt(A.ghb.mean, 3), A.ghb.meanSE, fmt), 'ghb'], ['GMRF', pm(fmt(A.gmrf.mean, 3), A.gmrf.meanSE, fmt), A.gmrf.mean < A.ghb.mean ? 'ghb' : 'risk'],
-        ['GHB worst', fmt(A.ghb.worst, 3)], ['GMRF worst', fmt(A.gmrf.worst, 3)], ['Regions', c.regions], ['τ_r² / τ_w²', `${fmt(c.tauR2, 4)} / ${fmt(c.tauW2, 4)}`]]);
-      fPer.setData({ xCats: order.map((k) => String(ctx.n[k])), xName: 'n_k', yName: 'R/v', series: methodSeries(['local', 'ghb', 'gmrf'], METHOD, (id) => order.map((k, i) => [i, A[id].y[k], A[id].se[k]])), hlines: [{ y: 1, tok: '--rd-local', dash: true }] });
+      chips(chipEl, [['Exchangeable GHB-lite', pm(fmt(A.lite.mean, 3), A.lite.meanSE, fmt), 'ghb'], ['GMRF', pm(fmt(A.gmrf.mean, 3), A.gmrf.meanSE, fmt), A.gmrf.mean < A.lite.mean ? 'ghb' : 'risk'],
+        ['GHB (joint release)', pm(fmt(A.ghb.mean, 3), A.ghb.meanSE, fmt), 'ghb'], ['GHB-lite worst', fmt(A.lite.worst, 3)], ['GMRF worst', fmt(A.gmrf.worst, 3)], ['Regions', c.regions], ['τ_r² / τ_w²', `${fmt(c.tauR2, 4)} / ${fmt(c.tauW2, 4)}`]]);
+      fPer.setData({ xCats: order.map((k) => String(ctx.n[k])), xName: 'n_k', yName: 'R/v', series: methodSeries(['local', 'lite', 'ghb', 'gmrf'], METHOD, (id) => order.map((k, i) => [i, A[id].y[k], A[id].se[k]])), hlines: [{ y: 1, tok: '--rd-local', dash: true }] });
     } }));
     eqEl.innerHTML = EQ.jacobi(c.beta, c.gamma);
   }
   function sweeps() {
     const c = cfg();
-    startSweep('regions-beta', fBeta, { param: 'beta', start: 1, stop: 1e4, steps: 9, log: true, metrics: ['mean'], methods: ['ghb', 'gmrf'], R: 250 }, c, pBeta, { vlines: [{ x: c.beta, tok: '--rd-ink' }] });
+    startSweep('regions-beta', fBeta, { param: 'beta', start: 1, stop: 1e4, steps: 9, log: true, metrics: ['mean'], methods: ['lite', 'gmrf'], R: 250 }, c, pBeta, { vlines: [{ x: c.beta, tok: '--rd-ink' }] });
     startSweep('regions-taur', fTr, { ...PAPER_FIGURES.find((f) => f.id === 'gmrf'), R: 250 }, c, pTr);
   }
   document.getElementById('regions-run').onclick = sweeps;

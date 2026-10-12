@@ -1,7 +1,7 @@
 /**
  * sim/gossip.js
  * Responsibility: a step-by-step gossip process for animation and the consensus-error curve
- * (Proposition 8.4). Each round applies x <- W_t x, where W_t are Metropolis-Hastings weights recomputed
+ * (Proposition 4.3). Each round applies x <- W_t x, where W_t are Metropolis-Hastings weights recomputed
  * on the links that work in that round (Simulation 13).
  */
 import { makeRng } from '../math/random.js';
@@ -14,7 +14,7 @@ import { metropolisHastings, failLinks, matVec } from '../math/graph.js';
  * @param {number} pFail link failure probability per round
  * @param {number} [seed=99] seed of the failure pattern
  * @returns {{x:Float64Array, x0:Float64Array, xbar:number, t:number, errors:number[][], failed:Set<string>, step:()=>{prev:Float64Array, next:Float64Array, failed:Set<string>, W:Float64Array[]}}}
- * @see Proposition 8.4 (ii): ||x^t - xbar 1|| <= lambda^t ||x^0 - xbar 1||
+ * @see Proposition 4.3 (ii): ||x^t - xbar 1|| <= lambda^t ||x^0 - xbar 1||
  */
 export function createGossip(net, x0, pFail, seed = 99) {
   const K = net.K, rng = makeRng(seed);
@@ -39,6 +39,6 @@ export function createGossip(net, x0, pFail, seed = 99) {
  * @param {ArrayLike<number>} x0 initial releases
  * @param {number} k hospital
  * @returns {number} (K x_k^t - x_k^0) / (K - 1)
- * @see Proposition 8.4 (iii)
+ * @see Proposition 4.3 (iii)
  */
 export function looFromGossip(xt, x0, k) { const K = xt.length; return (K * xt[k] - x0[k]) / (K - 1); }

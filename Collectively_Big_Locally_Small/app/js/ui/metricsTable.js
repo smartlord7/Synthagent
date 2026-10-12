@@ -11,16 +11,18 @@ import { METHOD } from '../sim/engine.js';
  * @param {HTMLElement} host container
  * @param {string} id stable id prefix
  * @param {(k:number)=>void} onSelect row selection callback
- * @returns {{update:(summary:Object, methods:string[])=>void, select:(k:number)=>void}}
+ * @returns {{update:(summary:Object, methods:string[], protocol?:string)=>void, select:(k:number)=>void}}
  */
 export function createMetricsTable(host, id, onSelect) {
   host.innerHTML = `<div class="rd-table-wrap"><table class="rd-table" id="${id}"><thead></thead><tbody></tbody></table></div>`;
   const table = host.querySelector('table');
-  let sortKey = 'n', dir = 1, data = null, methods = [], sel = -1;
+  let sortKey = 'n', dir = 1, data = null, methods = [], sel = -1, protocol = 'both';
   const cols = () => [
-    ['k', 'k', (h) => h.k + 1, 0], ['n', 'n_k', (h) => h.n, 0], ['v', 'v_k', (h) => h.v, 5], ['s', 's_k', (h) => h.s, 4], ['nsr', 's²/v', (h) => h.nsr, 3],
-    ['x', 'release', (h) => h.x, 4], ['mu', 'μ̃_k', (h) => h.mu, 4], ['M', 'M_k', (h) => h.M, 5], ['t2', 'τ̂²', (h) => h.t2, 4], ['alpha', 'α_k', (h) => h.alpha, 3],
-    ['B', 'B_k', (h) => h.B, 1], ['neffTheory', 'n_k+B', (h) => h.neffTheory, 0], ['neff', 'n_eff (MC)', (h) => h.neff, 0], ['gain', 'n_eff/n_k', (h) => h.gain, 2],
+    ['k', 'k', (h) => h.k + 1, 0], ['n', 'n_k', (h) => h.n, 0], ['v', 'v_k', (h) => h.v, 5],
+    ...(protocol !== 'lite' ? [['muJ', 'μ_−k GHB', (h) => h.muJ, 4], ['MJ', 'M_k GHB', (h) => h.MJ, 5], ['alphaJ', 'α_k GHB', (h) => h.alphaJ, 3], ['wSafe', 'w no-borrow', (h) => h.wSafe, 3],
+      ['BJ', 'B_k GHB', (h) => h.BJ, 1], ['neffJ', 'n_eff GHB', (h) => h.neffJ, 0]] : []),
+    ...(protocol !== 'ghb' ? [['s', 's_k lite', (h) => h.s, 4], ['nsr', 's²/v lite', (h) => h.nsr, 3], ['x', 'release', (h) => h.x, 4], ['mu', 'μ̃_k lite', (h) => h.mu, 4], ['M', 'M_k lite', (h) => h.M, 5],
+      ['t2', 'τ̂² lite', (h) => h.t2, 4], ['alpha', 'α_k lite', (h) => h.alpha, 3], ['B', 'B_k lite', (h) => h.B, 1], ['neffTheory', 'n_k+B lite', (h) => h.neffTheory, 0], ['neff', 'n_eff lite', (h) => h.neff, 0], ['gain', 'n_eff/n_k lite', (h) => h.gain, 2]] : []),
     ...methods.map((m) => ['rel:' + m, 'R/v ' + METHOD[m].label, (h) => h.rel[m].y, 3, (h) => h.rel[m].se])
   ];
   function render() {
@@ -40,5 +42,5 @@ export function createMetricsTable(host, id, onSelect) {
     const tr = e.target.closest('tr[data-k]');
     if (tr) { sel = +tr.dataset.k; render(); onSelect(sel); }
   });
-  return { update(s, m) { data = s; methods = m; render(); }, select(k) { sel = k; render(); } };
+  return { update(s, m, p = 'both') { data = s; methods = m; protocol = p; if (!cols().some((c) => c[0] === sortKey)) sortKey = 'n'; render(); }, select(k) { sel = k; render(); } };
 }

@@ -109,7 +109,7 @@ export function mmGrid(c, x, y, w, h) {
  * @returns {string}
  */
 export function fmt(x, d = 3) {
-  if (x === null || x === undefined || Number.isNaN(x)) return '–';
+  if (x === null || x === undefined || Number.isNaN(x)) return '-';
   if (!isFinite(x)) return '∞';
   const a = Math.abs(x);
   if (a !== 0 && (a < 1e-3 || a >= 1e5)) return x.toExponential(2);

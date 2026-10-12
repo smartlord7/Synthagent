@@ -88,7 +88,7 @@ export class NetworkView {
    * @param {ArrayLike<number>} to releases
    * @param {ArrayLike<number>} s noise sd per hospital
    * @param {number} ms duration
-   * @see Proposition 8.2
+   * @see Proposition 4.2
    */
   animateNoise(from, to, s, ms) {
     const smax = Math.max(...s) || 1;
@@ -106,7 +106,7 @@ export class NetworkView {
    * @param {ArrayLike<number>} next values after the round
    * @param {Set<string>} failed failed edges ("i-j")
    * @param {number} ms duration
-   * @see Proposition 8.4
+   * @see Proposition 4.3
    */
   animateGossip(prev, next, failed, ms) {
     this.failed = failed;
@@ -124,7 +124,7 @@ export class NetworkView {
    * @param {ArrayLike<number>} to GHB estimates
    * @param {number} ms duration
    * @param {(t:number)=>void} [onFrame] progress callback (drives the shrinkage slider)
-   * @see Proposition 8.1
+   * @see Proposition 4.1
    */
   animateShrink(from, to, ms, onFrame) {
     return this.animate(ms, (t) => { this.values = Float64Array.from(from, (f, k) => f + (to[k] - f) * t); onFrame?.(t); });

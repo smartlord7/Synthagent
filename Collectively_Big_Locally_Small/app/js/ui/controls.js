@@ -54,6 +54,22 @@ export function control(key, prefix) {
   }
   return d;
 }
+/**
+ * A select parameter drawn as a segmented switch (used for the GHB / GHB-lite protocol switch).
+ * @param {string} key configuration key of a select parameter
+ * @param {string} prefix id prefix of this instance
+ * @param {string} [label] visible label (defaults to the schema label)
+ * @returns {HTMLElement}
+ */
+export function segmented(key, prefix, label) {
+  const p = PARAM[key], d = document.createElement('div');
+  d.className = 'rd-ctl'; d.dataset.key = key;
+  d.innerHTML = `<span class="rd-label" id="${prefix}-${key}-lab">${label || p.label}</span><div class="rd-seg" role="group" aria-labelledby="${prefix}-${key}-lab">${p.options.map((o) => `<button type="button" id="${prefix}-${key}-${o[0]}" data-v="${o[0]}" aria-pressed="false">${o[1]}</button>`).join('')}</div>`;
+  d.querySelectorAll('button').forEach((b) => b.addEventListener('click', () => store.set(key, b.dataset.v)));
+  register(key, (v) => d.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.v === v))));
+  return d;
+}
+
 function register(key, fn) {
   if (!bound.has(key)) bound.set(key, new Set());
   bound.get(key).add(fn);
@@ -84,9 +100,10 @@ export function applyRelevance(root, c) {
     median: c.sizeMode !== 'lognormal', spread: c.sizeMode !== 'lognormal', nMin: c.sizeMode !== 'lognormal', nMax: c.sizeMode !== 'lognormal', sizeSeed: c.sizeMode !== 'lognormal',
     K: c.sizeMode === 'paper', hops: c.topo !== 'ring2', clusters: c.topo !== 'regional', pIn: c.topo !== 'regional', pER: c.topo !== 'random',
     graphSeed: !(c.topo === 'regional' || c.topo === 'random'), nu: c.effects !== 't', outK: c.effects !== 'outlier', outAt: c.effects !== 'outlier',
-    regions: !c.regional, tauR2: !c.regional, tauW2: !c.regional, tau2: c.regional, eps: c.noDP, delta: c.noDP, C: c.noDP, cauchy: c.tauEst !== 'bayes',
+    regions: !c.regional, tauR2: !c.regional, tauW2: !c.regional, tau2: c.regional, eps: c.noDP, delta: c.noDP, C: c.noDP, 
     T: c.exact, optZ: !c.optOut, robustNu: !c.robustT, screenZ: !c.screen, anchorErr: !c.anchor, anchorSd: !c.anchor, anchorCheck: !c.anchor,
-    badWhich: c.nBad === 0, lie: c.nBad === 0, beta: !c.gmrf, gamma: !c.gmrf
+    badWhich: c.nBad === 0, lie: c.nBad === 0, beta: !c.gmrf, gamma: !c.gmrf,
+    aEps: c.aNoDP, aDelta: c.aNoDP, aTauR2: !c.aRegions, aAnchorErr: false, aCheck: !(c.aAnchorSd > 0), aTune: c.aTuning !== 'oracle'
   };
   root.querySelectorAll('[data-key]').forEach((el) => el.classList.toggle('is-off', !!off[el.dataset.key]));
 }

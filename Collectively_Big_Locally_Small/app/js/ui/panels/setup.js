@@ -41,7 +41,7 @@ export function initSetup() {
   add(stage, '<h3 class="rd-h">Hospital sizes n<sub>k</sub> (editable table; editing switches sizes to the table)</h3>');
   const sizesBox = add(stage, '<div class="rd-sizes" id="setup-sizes"></div>');
   const sizeBtns = add(stage, '<div class="rd-btns"><button class="rd-btn" type="button" id="setup-add-h">Add hospital</button><button class="rd-btn" type="button" id="setup-del-h">Remove last</button><button class="rd-btn" type="button" id="setup-copy-sizes">Copy current sizes into table</button></div>');
-  for (const [g, label] of GROUPS) if (g !== 'network' && g !== 'calc') groupBox(stage, g, label, ['model', 'privacy', 'estimation'].includes(g));
+  for (const [g, label] of GROUPS) if (g !== 'network' && g !== 'calc' && g !== 'arena') groupBox(stage, g, label, ['model', 'privacy', 'estimation'].includes(g));
   // notebook: explanation and JSON
   explain(nb, 'Nothing is hard-coded', ['Every quantity the simulations use is set here and shared by all tabs. The defaults are the paper\'s: 24 hospitals with sizes from 16 to 479 patients, τ² = 0.02, σ² = 1, ε = 1, δ = 10⁻⁵, C = 1, 60 gossip rounds on the ring with two-hop links.', 'Dimmed controls have no effect under the current choices (for example ν when site effects are Gaussian).']);
   add(nb, '<h3 class="rd-h">Configuration as JSON</h3>');

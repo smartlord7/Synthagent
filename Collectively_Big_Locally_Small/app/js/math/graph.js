@@ -1,6 +1,6 @@
 /**
  * math/graph.js
- * Responsibility: collaboration graphs and gossip linear algebra (Section 8.4, Proposition 8.4):
+ * Responsibility: collaboration graphs and gossip linear algebra (Section 4.3, Proposition 4.3):
  * topologies, Metropolis-Hastings weights, the second largest eigenvalue modulus, matrix powers
  * and per-round link failures (Simulation 13). Matrices are arrays of Float64Array rows.
  */
@@ -8,7 +8,7 @@ import { makeRng } from './random.js';
 
 /**
  * Seeded K = 24 graphs of scripts/fig_gossip.py (numpy seeds 5 and 577), exported as edge lists so that
- * their spectral properties match Figure 9 exactly (lambda = 0.964 and 0.937).
+ * their spectral properties match Figure 2 exactly (lambda = 0.964 and 0.937).
  */
 export const PAPER_EDGES = Object.freeze({
   regional: [[0,3],[0,4],[0,5],[1,2],[1,3],[1,4],[1,5],[2,4],[2,5],[3,4],[3,20],[5,10],[6,8],[6,9],[6,10],[6,11],[7,8],[7,9],[7,11],[8,9],[8,11],[9,14],[10,11],[12,13],[12,14],[12,15],[12,16],[12,17],[13,14],[13,16],[13,17],[14,15],[14,16],[14,17],[15,16],[15,17],[16,17],[17,19],[18,19],[18,20],[18,21],[18,22],[19,20],[19,22],[20,21],[20,23],[21,22],[21,23],[22,23]],
@@ -57,7 +57,7 @@ export function edgeList(A) {
  * @param {number} [clusters=4] regions of the clustered graph
  * @param {number} [pIn=0.8] within-region edge probability
  * @returns {Float64Array[]} adjacency
- * @see Section 8.4, Figure 9
+ * @see Section 4.3, Figure 2
  */
 export function topology(kind, K, p = 0.15, seed = 0, clusters = 4, pIn = 0.8) {
   const E = [];
@@ -89,7 +89,7 @@ export function topology(kind, K, p = 0.15, seed = 0, clusters = 4, pIn = 0.8) {
  * Whether the graph is connected (required for lambda < 1).
  * @param {Float64Array[]} A adjacency
  * @returns {boolean}
- * @see Proposition 8.4 (ii)
+ * @see Proposition 4.3 (ii)
  */
 export function connected(A) {
   const K = A.length, seen = new Uint8Array(K), st = [0];
@@ -102,7 +102,7 @@ export function connected(A) {
  * Metropolis-Hastings gossip matrix W_kl = 1/(1 + max(d_k, d_l)) on edges, diagonal fills the row to 1.
  * @param {Float64Array[]} A adjacency
  * @returns {Float64Array[]} symmetric doubly stochastic W
- * @see Section 8.4
+ * @see Section 4.3
  */
 export function metropolisHastings(A) {
   const K = A.length, deg = A.map((r) => r.reduce((s, x) => s + x, 0)), W = zeros(K);
@@ -140,7 +140,7 @@ export function symEig(M) {
  * Second largest eigenvalue modulus lambda = max(|lambda_2|, |lambda_K|) (blueprint.slem).
  * @param {Float64Array[]} W gossip matrix
  * @returns {number} lambda
- * @see Proposition 8.4 (ii)
+ * @see Proposition 4.3 (ii)
  */
 export function slem(W) { const ev = symEig(W); return Math.max(Math.abs(ev[ev.length - 2]), Math.abs(ev[0])); }
 
@@ -149,7 +149,7 @@ export function slem(W) { const ev = symEig(W); return Math.max(Math.abs(ev[ev.l
  * @param {number} lambda SLEM
  * @param {number} gamma target relative error
  * @returns {number} log(1/gamma) / (1 - lambda)
- * @see Section 8.4, after Proposition 8.4
+ * @see Section 4.3, after Proposition 4.3
  */
 export function predictedRounds(lambda, gamma) { return Math.log(1 / gamma) / (1 - lambda); }
 
@@ -169,7 +169,7 @@ export function matMul(A, B) {
  * @param {Float64Array[]} W gossip matrix
  * @param {number} T rounds (>= 1)
  * @returns {Float64Array[]} W^T
- * @see Proposition 8.4
+ * @see Proposition 4.3
  */
 export function matPow(W, T) {
   let R = null, B = W;

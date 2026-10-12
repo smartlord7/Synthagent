@@ -24,7 +24,7 @@ export function initSweeps() {
   METRICS.forEach((m) => add(mBox, `<div class="rd-check"><input type="checkbox" id="sw-m-${m.key}" ${m.key === 'mean' ? 'checked' : ''}><label for="sw-m-${m.key}">${m.label}${m.kind === 'closed' ? ' (closed form)' : ''}</label></div>`));
   add(rail, '<h3 class="rd-h">Methods (simulated metrics)</h3>');
   const meBox = add(rail, '<div></div>');
-  METHODS.forEach((m) => add(meBox, `<div class="rd-check"><input type="checkbox" id="sw-meth-${m.id}" ${['ghb', 'oracle'].includes(m.id) ? 'checked' : ''}><label for="sw-meth-${m.id}" style="color:var(${m.tok})">${m.label}</label></div>`));
+  METHODS.forEach((m) => add(meBox, `<div class="rd-check"><input type="checkbox" id="sw-meth-${m.id}" ${['ghb', 'lite', 'oracle'].includes(m.id) ? 'checked' : ''}><label for="sw-meth-${m.id}" style="color:var(${m.tok})">${m.label}</label></div>`));
   add(rail, '<div class="rd-ctl"><label for="sw-R">Replicates per value</label><input class="rd-input mono" id="sw-R" type="number" min="50" max="20000" step="50" value="500"></div>');
   add(rail, '<button class="rd-btn primary" type="button" id="sw-run">Run sweep</button>');
 
@@ -54,7 +54,7 @@ export function initSweeps() {
     if (!metrics.length) { prog.textContent = 'Choose at least one metric.'; return; }
     const start = +$('sw-start').value, stop = +$('sw-stop').value, log = $('sw-log').checked;
     if (log && (start <= 0 || stop <= 0)) { prog.textContent = 'Log spacing needs positive start and stop values.'; return; }
-    run({ param: $('sw-param').value, start, stop, steps: Math.max(2, Math.min(30, +$('sw-steps').value || 8)), log, metrics, methods: methods.length ? methods : ['ghb'], R: Math.max(50, +$('sw-R').value || 500) });
+    run({ param: $('sw-param').value, start, stop, steps: Math.max(2, Math.min(30, +$('sw-steps').value || 8)), log, metrics, methods: methods.length ? methods : ['ghb', 'lite'], R: Math.max(50, +$('sw-R').value || 500) });
   };
   function load(id) {
     const f = PAPER_FIGURES.find((x) => x.id === id); if (!f) return;

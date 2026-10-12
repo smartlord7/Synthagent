@@ -1,7 +1,7 @@
 /**
  * main.js
- * Responsibility: wiring only. Builds the panels, connects tabs, presets, header buttons and the guided
- * tour, and starts the shared Monte Carlo run. All logic lives in math/, sim/, viz/ and ui/.
+ * Responsibility: wiring only. Builds the panels, connects tabs, presets, header buttons, the Start here demos
+ * and the guided tour, and starts the shared Monte Carlo run. All logic lives in math/, sim/, viz/ and ui/.
  */
 import * as store from './ui/store.js';
 import * as mainRun from './ui/mainRun.js';
@@ -18,9 +18,12 @@ import { initPrivacy } from './ui/panels/privacy.js';
 import { initRegions } from './ui/panels/regions.js';
 import { initSweeps } from './ui/panels/sweeps.js';
 import { initAbout } from './ui/panels/about.js';
+import { initStart } from './ui/panels/start.js';
+import { initArena } from './ui/panels/arena.js';
+import { initReal } from './ui/panels/real.js';
 
 const panels = {
-  calc: initCalc(), setup: initSetup(), network: initNetwork(), borrow: initBorrow(), stress: initStress(),
+  calc: initCalc(), setup: initSetup(), network: initNetwork(), borrow: initBorrow(), arena: initArena(), real: initReal(), stress: initStress(),
   privacy: initPrivacy(), regions: initRegions(), sweeps: initSweeps(), about: initAbout()
 };
 const tabs = initTabs(document.querySelector('[role="tablist"]'), (name) => {
@@ -43,6 +46,17 @@ let rs = 1;
 document.getElementById('btn-random').onclick = () => { store.replace(randomConfig(store.get(), 1000 + rs++)); note.textContent = 'Random configuration: every tab now uses it. Paper defaults restores the paper\'s design.'; };
 const tour = createTour(tabs, (a) => panels.network.action?.(a));
 document.getElementById('btn-tour').onclick = () => tour.start();
+
+// Start here: one-click demos
+panels.start = initStart({
+  demo(id) {
+    if (id === 'ghb-vs-lite' || id === 'lite-wins') { sel.value = id === 'ghb-vs-lite' ? 'ghbVsLite' : 'liteWins'; applyScenario(sel.value); }
+    else if (id === 'arena-all') { tabs.show('arena'); panels.arena.runPreset('all', true); }
+    else if (id === 'real') tabs.show('real');
+  },
+  tour: () => tour.start(),
+  open: (tab) => tabs.show(tab)
+});
 
 tabs.show(tabs.start);
 mainRun.restart();

@@ -11,7 +11,7 @@
         ResearchData
       </span>
       <h1>GHB Simulation Lab</h1>
-      <p>Companion to <em>Collectively Big, Locally Small</em>: measure smallness, then watch Graph Hierarchical Borrowing move information between hospitals over a sparse graph, with differential privacy and no server.</p>
+      <p>Companion to <em>Borrowing Strength Without Borrowing Data</em>, the Graph Hierarchical Borrowing (GHB) paper, and to the survey <em>Collectively Big, Locally Small</em>: measure smallness, watch GHB and GHB-lite move information between hospitals over a sparse graph with differential privacy and no server, test them against every method in the paper, and read the real-data results.</p>
     </div>
     <div class="rd-actions">
       <div class="rd-ctl"><label for="scenario" class="rd-label">Scenario</label><select id="scenario"></select></div>
@@ -23,10 +23,13 @@
   <p class="rd-msg" id="scenario-note" aria-live="polite"></p>
 
   <nav class="rd-tabs" role="tablist" aria-label="Sections">
+    <button role="tab" data-tab="start" id="tab-start" aria-controls="p-start">Start here</button>
     <button role="tab" data-tab="calc" id="tab-calc" aria-controls="p-calc">Smallness</button>
     <button role="tab" data-tab="setup" id="tab-setup" aria-controls="p-setup">Setup</button>
     <button role="tab" data-tab="network" id="tab-network" aria-controls="p-network">Network &amp; gossip</button>
     <button role="tab" data-tab="borrow" id="tab-borrow" aria-controls="p-borrow">Borrowing &amp; metrics</button>
+    <button role="tab" data-tab="arena" id="tab-arena" aria-controls="p-arena">Literature arena</button>
+    <button role="tab" data-tab="real" id="tab-real" aria-controls="p-real">Real data</button>
     <button role="tab" data-tab="stress" id="tab-stress" aria-controls="p-stress">Stress tests</button>
     <button role="tab" data-tab="privacy" id="tab-privacy" aria-controls="p-privacy">Privacy</button>
     <button role="tab" data-tab="regions" id="tab-regions" aria-controls="p-regions">Regions (GMRF)</button>
@@ -34,10 +37,13 @@
     <button role="tab" data-tab="about" id="tab-about" aria-controls="p-about">About</button>
   </nav>
 
+  <section class="rd-panel wide" id="p-start" role="tabpanel" aria-labelledby="tab-start" hidden><div class="rd-stage" id="stage-start"></div></section>
   <section class="rd-panel" id="p-calc" role="tabpanel" aria-labelledby="tab-calc" hidden><aside class="rd-rail" id="rail-calc"></aside><div class="rd-stage" id="stage-calc"></div><aside class="rd-notebook" id="nb-calc"></aside></section>
   <section class="rd-panel" id="p-setup" role="tabpanel" aria-labelledby="tab-setup" hidden><aside class="rd-rail" id="rail-setup"></aside><div class="rd-stage" id="stage-setup"></div><aside class="rd-notebook" id="nb-setup"></aside></section>
   <section class="rd-panel" id="p-network" role="tabpanel" aria-labelledby="tab-network" hidden><aside class="rd-rail" id="rail-network"></aside><div class="rd-stage" id="stage-network"></div><aside class="rd-notebook" id="nb-network"></aside></section>
   <section class="rd-panel" id="p-borrow" role="tabpanel" aria-labelledby="tab-borrow" hidden><aside class="rd-rail" id="rail-borrow"></aside><div class="rd-stage" id="stage-borrow"></div><aside class="rd-notebook" id="nb-borrow"></aside></section>
+  <section class="rd-panel" id="p-arena" role="tabpanel" aria-labelledby="tab-arena" hidden><aside class="rd-rail" id="rail-arena"></aside><div class="rd-stage" id="stage-arena"></div><aside class="rd-notebook" id="nb-arena"></aside></section>
+  <section class="rd-panel" id="p-real" role="tabpanel" aria-labelledby="tab-real" hidden><aside class="rd-rail" id="rail-real"></aside><div class="rd-stage" id="stage-real"></div><aside class="rd-notebook" id="nb-real"></aside></section>
   <section class="rd-panel" id="p-stress" role="tabpanel" aria-labelledby="tab-stress" hidden><aside class="rd-rail" id="rail-stress"></aside><div class="rd-stage" id="stage-stress"></div><aside class="rd-notebook" id="nb-stress"></aside></section>
   <section class="rd-panel" id="p-privacy" role="tabpanel" aria-labelledby="tab-privacy" hidden><aside class="rd-rail" id="rail-privacy"></aside><div class="rd-stage" id="stage-privacy"></div><aside class="rd-notebook" id="nb-privacy"></aside></section>
   <section class="rd-panel" id="p-regions" role="tabpanel" aria-labelledby="tab-regions" hidden><aside class="rd-rail" id="rail-regions"></aside><div class="rd-stage" id="stage-regions"></div><aside class="rd-notebook" id="nb-regions"></aside></section>

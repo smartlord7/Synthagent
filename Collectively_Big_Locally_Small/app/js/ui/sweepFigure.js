@@ -20,7 +20,7 @@ export function sweepSeries(res) {
     return {
       id: s.metric + '-' + (s.method || i), label: (m ? m.label : met.label) + (multi && m ? ` (${met.label.toLowerCase()})` : ''),
       tok: m ? m.tok : ['--rd-ghb', '--rd-ref', '--rd-noise', '--rd-robust'][i % 4], dash: multi && s.metric !== res.metrics?.[0] && !!m,
-      pts: s.pts, marker: 3, width: s.method === 'ghb' ? 2.2 : 1.5
+      pts: s.pts, marker: 3, width: s.method === 'ghb' || s.method === 'lite' ? 2.2 : 1.5
     };
   });
 }

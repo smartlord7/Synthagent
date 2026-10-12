@@ -1,18 +1,19 @@
 /**
  * sim/engine.js
  * Responsibility: the Monte Carlo engine shared by every tab. A configuration is prepared once into a
- * context (sizes, graph, averaging operators, privacy, adversaries, regions); each replicate draws model (4),
+ * context (sizes, graph, averaging operators, privacy, adversaries, regions); each replicate draws model (2),
  * releases privatized estimates, and computes every enabled method; an accumulator turns replicates into
  * per-hospital and aggregate metrics with Monte Carlo standard errors.
- * Methods: local, pooled (single global model), oracle HB, plug-in GHB (Algorithm 1), robust t prior,
- * opt-out, release screening and GMRF.
+ * Methods: local, pooled (single global model), oracle HB, GHB (one joint release of the network sum, tau
+ * integrated out; Section 5.2), GHB with known tau^2 (reference), plug-in GHB-lite (per-hospital releases through
+ * gossip; Section 5.3), and GHB-lite's options: robust t prior, opt-out, release screening and GMRF.
  */
 import { makeRng } from '../math/random.js';
 import { metropolisHastings, slem, connected, matPow, matMul, edgeList, failLinks, predictedRounds, zeros } from '../math/graph.js';
-import { dpVar } from '../math/dp.js';
+import { dpVar, jointNoiseSd } from '../math/dp.js';
 import {
   drawReplicate, avgOp, borrow, combineAnchor, shrinkWeights, oracleHB, pooledMean, robustPosteriorMean,
-  optOut, robustScreenGHB, gmrfJacobi, looMSEiv, borrowedPatients
+  optOut, robustScreenGHB, gmrfJacobi, looMSEiv, borrowedPatients, jointGHB, jointBorrowed
 } from '../math/ghb.js';
 import { resolveSizes, resolveGraph, resolvePrivacy, resolveAdversaries, resolveRegions } from '../config.js';
 
@@ -21,13 +22,27 @@ export const METHODS = [
   { id: 'local', label: 'Local only', tok: '--rd-local' },
   { id: 'pooled', label: 'Global pooled', tok: '--rd-ref' },
   { id: 'oracle', label: 'Oracle HB', tok: '--rd-oracle' },
-  { id: 'ghb', label: 'Plug-in GHB', tok: '--rd-ghb' },
-  { id: 'robust', label: 'Robust t prior', tok: '--rd-robust' },
-  { id: 'optout', label: 'GHB + opt-out', tok: '--rd-noise' },
-  { id: 'screen', label: 'Screened GHB', tok: '--rd-robust2' },
+  { id: 'ghb', label: 'GHB (joint release)', tok: '--rd-ghb', protocol: 'ghb' },
+  { id: 'ghbTau', label: 'GHB, known τ² (reference)', tok: '--rd-oracle2', protocol: 'ghb' },
+  { id: 'lite', label: 'GHB-lite (per-hospital releases)', tok: '--rd-lite', protocol: 'lite' },
+  { id: 'robust', label: 'GHB-lite + robust t prior', tok: '--rd-robust', protocol: 'lite' },
+  { id: 'optout', label: 'GHB-lite + opt-out', tok: '--rd-noise', protocol: 'lite' },
+  { id: 'screen', label: 'Screened GHB-lite', tok: '--rd-robust2', protocol: 'lite' },
   { id: 'gmrf', label: 'GMRF', tok: '--rd-gmrf' }
 ];
 export const METHOD = Object.fromEntries(METHODS.map((m) => [m.id, m]));
+
+/**
+ * Methods to show under the protocol switch: 'both', 'ghb' (hide GHB-lite and its options) or 'lite' (hide GHB).
+ * @param {string[]} ids method ids
+ * @param {string} protocol 'both' | 'ghb' | 'lite'
+ * @returns {string[]}
+ * @see Section 5.2 and Section 5.3 (the two protocols)
+ */
+export function visibleMethods(ids, protocol) {
+  if (!protocol || protocol === 'both') return ids;
+  return ids.filter((id) => !METHOD[id]?.protocol || METHOD[id].protocol === protocol);
+}
 
 /** Bins of the standardized site effect |u_k|/tau (Simulation 9). */
 export const U_BINS = [0, 0.5, 1, 1.5, 2, 2.5, 3, 4, 5, 7, 12];
@@ -36,7 +51,7 @@ export const U_BINS = [0, 0.5, 1, 1.5, 2, 2.5, 3, 4, 5, 7, 12];
  * Prepare a configuration for simulation.
  * @param {Object} c configuration (config.js)
  * @returns {Object} context: n, K, A, W, edges, lambda, connected, rounds, avgs, priv, q, bad, regions, simA, methods, ...
- * @see Section 8.7 (simulation design), Proposition 8.4, Simulation 13
+ * @see Section 6.1 (simulation design), Proposition 4.3, Simulation 13
  */
 export function prepare(c) {
   const n = resolveSizes(c), K = n.length, A = resolveGraph(c, K), W = metropolisHastings(A), edges = edgeList(A);
@@ -60,7 +75,7 @@ export function prepare(c) {
   else simA = A;
   const bad = resolveAdversaries(c, n), isBad = new Uint8Array(K); bad.forEach((k) => { isBad[k] = 1; });
   const outIdx = c.outAt === 'smallest' ? 0 : c.outAt === 'largest' ? K - 1 : Math.floor(K / 2);
-  const methods = ['local', 'pooled', 'oracle', 'ghb'];
+  const methods = ['local', 'pooled', 'oracle', 'ghb', 'ghbTau', 'lite'];
   if (c.robustT) methods.push('robust');
   if (c.optOut) methods.push('optout');
   if (c.screen) methods.push('screen');
@@ -68,9 +83,10 @@ export function prepare(c) {
   const v = n.map((x) => c.sigma2 / x), s2 = n.map((x) => dpVar(x, priv.eps, priv.delta, priv.C));
   const totals = n.map((_, k) => tau2m + v[k] + s2[k]);
   const Mth = n.map((_, k) => looMSEiv(totals, k)), Bth = Mth.map((M) => borrowedPatients(tau2m, M, c.sigma2));
+  const sJ = c.noDP ? 0 : jointNoiseSd(c.C, c.eps, c.delta, c.refits), BthJ = n.map((_, k) => jointBorrowed(n, k, tau2m, c.sigma2, sJ * sJ));
   return {
     c, n, K, A, W, edges, lambda, connected: conn, rounds: conn ? predictedRounds(lambda, c.gammaTol) : Infinity,
-    avgs, priv, q, tau2m, regions, simA, bad, isBad, outIdx, methods, v, s2, Mth, Bth
+    avgs, priv, q, tau2m, regions, simA, bad, isBad, outIdx, methods, v, s2, Mth, Bth, sJ, BthJ
   };
 }
 
@@ -79,7 +95,7 @@ export function prepare(c) {
  * @param {Object} ctx prepared context
  * @param {{n:()=>number, t:(nu:number)=>number}} rng generator
  * @returns {Float64Array}
- * @see Eq. (4); Simulation 6 (regions); Simulation 9 (heavy tails, outliers)
+ * @see Eq. (2); Simulation 6 (regions); Simulation 9 (heavy tails, outliers)
  */
 export function drawEffects(ctx, rng) {
   const { c, K, regions, outIdx } = ctx, base = c.regional ? c.tauW2 : c.tau2, sd = Math.sqrt(base);
@@ -100,8 +116,8 @@ export function drawEffects(ctx, rng) {
  * @param {Object} ctx prepared context
  * @param {Object} rng generator
  * @param {number} rep replicate index (selects the link-failure realization)
- * @returns {{d:Object, u:Float64Array, b:Object, alpha:Float64Array, est:Object<string,Float64Array>, keep:boolean[]|null, mu0:number|null}}
- * @see Algorithm 1; Propositions 8.1, 8.2, 8.4; Simulations 9, 11, 12
+ * @returns {{d:Object, u:Float64Array, b:Object, alpha:Float64Array, est:Object<string,Float64Array>, keep:boolean[]|null, mu0:number|null, j:Object}}
+ * @see Algorithm 1; Propositions 4.1, 4.2, 4.3; Simulations 9, 11, 12
  */
 export function replicate(ctx, rng, rep) {
   const { c, n, K, q, bad, methods } = ctx;
@@ -114,7 +130,12 @@ export function replicate(ctx, rng, rep) {
   if (c.anchor) { mu0 = c.mu + c.anchorErr * rng.n(); b = combineAnchor(b, mu0, c.anchorSd ** 2, c.anchorCheck); }
   const alpha = shrinkWeights(d.v, b), est = {};
   const ghb = new Float64Array(K); for (let k = 0; k < K; k++) ghb[k] = alpha[k] * d.th[k] + (1 - alpha[k]) * b.mu[k];
-  est.local = d.th; est.ghb = ghb;
+  est.local = d.th; est.lite = ghb;
+  // GHB: one joint release of the network sum (secure summation run to consensus), its own noise draw
+  const y = Float64Array.from(d.th, (t, k) => (ctx.isBad[k] ? d.x[k] : t)), xi = ctx.sJ * rng.n();
+  const jo = { scale: c.cauchy, anchor: c.anchor ? { mu0, s0sq: c.anchorSd ** 2, check: c.anchorCheck } : null };
+  const j = jointGHB(d.th, y, n, d.v, c.sigma2, ctx.sJ, xi, jo);
+  est.ghb = j.est; est.ghbTau = jointGHB(d.th, y, n, d.v, c.sigma2, ctx.sJ, xi, { ...jo, knownTau2: ctx.tau2m }).est;
   const pm = pooledMean(d.th, n); est.pooled = new Float64Array(K).fill(pm);
   est.oracle = oracleHB(d.th, d.x, d.v, d.s2, ctx.tau2m);
   if (methods.includes('robust')) { const e = new Float64Array(K); for (let k = 0; k < K; k++) e[k] = robustPosteriorMean(d.th[k], d.v[k], b.mu[k], b.t2[k] + b.M[k], c.robustNu); est.robust = e; }
@@ -122,7 +143,7 @@ export function replicate(ctx, rng, rep) {
   let keep = null;
   if (methods.includes('screen')) { const s = robustScreenGHB(d.th, d.x, d.r, d.v, c.screenZ); est.screen = s.est; keep = s.keep; }
   if (methods.includes('gmrf')) est.gmrf = gmrfJacobi(d.th, d.x, d.v, d.r, ctx.simA, c.beta, c.gamma, mu0 ?? 0, 100);
-  return { d, u, b, alpha, est, keep, mu0 };
+  return { d, u, b, alpha, est, keep, mu0, j };
 }
 
 /**
@@ -134,7 +155,8 @@ export function makeAccumulator(ctx) {
   const K = ctx.K, nb = U_BINS.length - 1, per = () => ({ s: new Float64Array(K), ss: new Float64Array(K), m: 0, mm: 0, h: 0, hh: 0, bin: new Float64Array(nb) });
   return {
     R: 0, K, m: Object.fromEntries(ctx.methods.map((id) => [id, per()])), binN: new Float64Array(nb),
-    t2: 0, M: new Float64Array(K), alpha: new Float64Array(K), anchorUsed: 0, keptBad: 0, droppedHonest: 0, example: null
+    t2: 0, M: new Float64Array(K), alpha: new Float64Array(K), anchorUsed: 0, keptBad: 0, droppedHonest: 0, example: null,
+    MJ: new Float64Array(K), alphaJ: new Float64Array(K), wSafe: new Float64Array(K), t2J: 0
   };
 }
 
@@ -161,6 +183,7 @@ export function accumulate(ctx, acc, rr) {
   }
   let t = 0; for (let k = 0; k < K; k++) { t += b.t2[k]; acc.M[k] += b.M[k]; acc.alpha[k] += alpha[k]; if (b.used) acc.anchorUsed += b.used[k]; }
   acc.t2 += t / K;
+  let tj = 0; for (let k = 0; k < K; k++) { acc.MJ[k] += rr.j.M[k]; acc.alphaJ[k] += rr.j.alpha[k]; acc.wSafe[k] += rr.j.wSafe[k]; tj += rr.j.t2[k]; } acc.t2J += tj / K;
   if (rr.keep) for (let k = 0; k < K; k++) { if (isBad[k] && rr.keep[k]) acc.keptBad++; if (!isBad[k] && !rr.keep[k]) acc.droppedHonest++; }
   if (!acc.example) acc.example = rr;
   acc.R++;
@@ -173,7 +196,7 @@ const seOf = (s, ss, R) => (R > 1 ? Math.sqrt(Math.max(ss / R - (s / R) ** 2, 0)
  * @param {Object} ctx context
  * @param {Object} acc accumulator
  * @returns {Object} { R, perHospital: [{k, n, v, s, x, mu, M, t2, alpha, B, neff, gain, rel:{id:{y,se}}}], agg:{id:{mean, meanSE, worst, worstSE, worstK, share, honest, honestSE}}, bins, diagnostics }
- * @see Proposition 8.1 (relative risk, n_eff = sigma^2/R_k), Eq. (5)
+ * @see Proposition 4.1 (relative risk, n_eff = sigma^2/R_k), Eq. (3)
  */
 export function summarize(ctx, acc) {
   const { K, n, c } = ctx, R = acc.R, agg = {}, ex = acc.example;
@@ -187,11 +210,13 @@ export function summarize(ctx, acc) {
     };
   }
   const per = n.map((nk, k) => {
-    const g = agg.ghb.y[k];
+    const g = agg.lite.y[k];
     return {
       k, n: nk, v: ctx.v[k], s: Math.sqrt(ctx.s2[k]), x: ex ? ex.d.x[k] : NaN, th: ex ? ex.d.th[k] : NaN, theta: ex ? ex.d.theta[k] : NaN,
-      mu: ex ? ex.b.mu[k] : NaN, est: ex ? ex.est.ghb[k] : NaN, M: acc.M[k] / R, t2: acc.t2 / R, alpha: acc.alpha[k] / R,
+      mu: ex ? ex.b.mu[k] : NaN, est: ex ? ex.est.lite[k] : NaN, M: acc.M[k] / R, t2: acc.t2 / R, alpha: acc.alpha[k] / R,
       B: ctx.Bth[k], neffTheory: nk + ctx.Bth[k], neff: nk / g, gain: 1 / g, nsr: ctx.s2[k] / ctx.v[k], bad: !!ctx.isBad[k],
+      muJ: ex ? ex.j.mu[k] : NaN, estJ: ex ? ex.est.ghb[k] : NaN, MJ: acc.MJ[k] / R, alphaJ: acc.alphaJ[k] / R, wSafe: acc.wSafe[k] / R, t2J: acc.t2J / R,
+      BJ: ctx.BthJ[k], neffJ: nk / agg.ghb.y[k], gainJ: 1 / agg.ghb.y[k], sJ: ctx.sJ,
       rel: Object.fromEntries(ctx.methods.map((id) => [id, { y: agg[id].y[k], se: agg[id].se[k] }]))
     };
   });
@@ -201,7 +226,8 @@ export function summarize(ctx, acc) {
     diagnostics: {
       t2hat: acc.t2 / R, anchorsDropped: c.anchor ? 1 - acc.anchorUsed / (R * K) : null,
       keptBad: c.screen && nb ? acc.keptBad / (R * nb) : null, droppedHonest: c.screen ? acc.droppedHonest / (R * (K - nb)) : null,
-      Bmean: ctx.Bth.reduce((a, b) => a + b, 0) / K, nsrMean: per.reduce((a, p) => a + p.nsr, 0) / K
+      Bmean: ctx.Bth.reduce((a, b) => a + b, 0) / K, nsrMean: per.reduce((a, p) => a + p.nsr, 0) / K,
+      BmeanJ: ctx.BthJ.reduce((a, b) => a + b, 0) / K, t2J: acc.t2J / R, wSafe: acc.wSafe.reduce((a, b) => a + b, 0) / (R * K)
     }
   };
 }
