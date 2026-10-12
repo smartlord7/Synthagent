@@ -34,6 +34,7 @@ from scipy.special import expit
 import ghb
 import ghb_logit as GL
 import literature as LIT
+import ghb_sa as SA
 import style
 from exp7_logistic import P, auc, fit
 from real_heart import folds
@@ -60,6 +61,7 @@ TUNED = {"Local GD, tuned stopping": [f"LGD|E={E}" for E in LGD_STEPS],
          "Local, tuned prior": [f"LOCP|sd={s_}" for s_ in (0.5, 1.0, 2.5)],
          "GHB, tuned prior (no DP)": [f"GHBPinf|sd={s_}" for s_ in (0.5, 1.0, 2.5)]}
 for _e in BASE_EPS:
+    TUNED[f"DP-FedAvg-SA + fine-tuning, eps={_e:g}"] = [f"FTSA{_e:g}|R={R}|eta={eta}|E={E}" for R in (3, 10, 30) for eta in (0.5, 2.0) for E in (0, 5, 30)]
     TUNED[f"GHB, tuned prior (DP), eps={_e:g}"] = [f"GHBP{_e:g}|sd={s_}" for s_ in (0.5, 1.0, 2.5)]
     TUNED[f"DP-FedAvg, eps={_e:g}"] = [f"AVG{_e:g}|R={R}|eta={eta}" for R, eta in AVG_GRID]
     TUNED[f"DP-FedAvg + fine-tuning, eps={_e:g}"] = [f"FT{_e:g}|R={R}|eta={eta}|E={E}" for R, eta, E in FT_GRID]
@@ -70,6 +72,7 @@ GHB_NAMES = [f"GHB (DP, eps={e:g})" for e in EPS_GHB]
 METHODS = (["Local"] + GHB_NAMES + ["GHB (no DP)", "GHB, empirical features (no DP)", "Global (pooled, no DP)", "Local GD, tuned stopping",
                                     "Local, tuned prior", "GHB, tuned prior (no DP)", "Local, evidence prior"]
            + [f"GHB-EB {e:g}" for e in EPS_GHB] + ["GHB-EB inf"]
+           + [f"GHB-SA {e:g}" for e in EPS_GHB] + ["GHB-SA inf"]
            + [f"Meta-analysis (DP), eps={e:g}" for e in BASE_EPS]
            + [k for k in TUNED if k not in ("Local GD, tuned stopping", "Local, tuned prior", "GHB, tuned prior (no DP)")])
 
@@ -161,7 +164,10 @@ def ghb_fit(rng, train, n, pub, avg, eps, tuned=None):
     return out, th, r
 
 
-def estimates(rng, train, pub, avg, W):
+SA_C = 8.0  # GHB-SA version 2, frozen on development data (dev/sa_dev2.py, dev/PREREG_sa.md): C = 8, no round 3
+
+
+def estimates(rng, train, pub, avg, W, rng_sa=None):
     n = np.array([len(y) for _, y in train], float)
     K = len(n)
     est = {"Local": np.array([fit(X, y, np.zeros(P), PRIOR) for X, y in train])}
@@ -178,6 +184,15 @@ def estimates(rng, train, pub, avg, W):
     est["Global (pooled, no DP)"] = np.repeat(fit(Xa, ya, np.zeros(P), PRIOR)[None], K, 0)
     for E, th in LIT.fine_tune(train, np.zeros((K, P)), steps=LGD_STEPS).items():
         est[f"LGD|E={E}"] = th
+    if rng_sa is not None:  # secure aggregation: GHB-SA and DP-FedAvg-SA, on their own random stream
+        for e in EPS_GHB + (np.inf,):
+            est[f"GHB-SA {e:g}"] = SA.estimate_v2(rng_sa, pub, train, n, np.zeros(P), e, DELTA, C=SA_C, iv=False)
+        for e in BASE_EPS:
+            rho_sa = LIT.rho_total(e, DELTA)
+            for R in (3, 10, 30):
+                for eta in (0.5, 2.0):
+                    for E, thf in SA.fedavg_sa_ft(rng_sa, train, n, np.zeros(P), rho_sa, R, eta, steps=(0, 5, 30)).items():
+                        est[f"FTSA{e:g}|R={R}|eta={eta}|E={E}"] = thf
     for e in BASE_EPS:
         rho, t = LIT.rho_total(e, DELTA), f"{e:g}"
         th, r = rel[e] if e in rel else ghb_fit(rng, train, n, pub, avg, e)[1:]
@@ -219,6 +234,7 @@ def run(item):
     data, ids = load(name)
     K = len(data)
     n_all = np.array([len(y) for _, y in data])
+    rng_sa = np.random.default_rng([21, i])
     pub, W = GL.Public(public_features(rng, name)), mixing(K)
     avg = ghb.Averager(W, 60)
     # per method: summed log-loss per hospital and split, and pooled test scores per split
@@ -232,7 +248,7 @@ def run(item):
                 if len(tr) == 0:  # a hospital with fewer patients than folds sits this fold out of training
                     tr = te
                 train.append((X[tr], y[tr])); test.append((X[te], y[te]))
-            est = estimates(rng, train, pub, avg, W)
+            est = estimates(rng, train, pub, avg, W, rng_sa)
             for m, e in est.items():
                 rec = S.setdefault(m, dict(ll=np.zeros((REPEATS * FOLDS, K)), cnt=np.zeros((REPEATS * FOLDS, K)), s=[], y=[]))
                 j = rep * FOLDS + f
@@ -248,26 +264,28 @@ def run(item):
     small = n_all < np.median(n_all)
     big = n_all >= 20
     loc = S["Local"]
-    res = {"chosen": chosen, "info": dict(label=label, K=K, n=n_all.tolist(), ids=ids,
-                                         prevalence=float(np.mean(np.concatenate([y for _, y in data]))))}
+
+    def metrics(r, full=True):
+        hosp, hosp_loc = r["ll"].sum(0) / r["cnt"].sum(0), loc["ll"].sum(0) / loc["cnt"].sum(0)
+        out = dict(rel=float(r["ll"].sum() / loc["ll"].sum()),
+                   rel_small=float(r["ll"][:, small].sum() / loc["ll"][:, small].sum()),
+                   worst=float((hosp[big] / hosp_loc[big]).max()) if big.any() else float("nan"))
+        if full:
+            ratio = (r["ll"].sum(1) / r["cnt"].sum(1)) / (loc["ll"].sum(1) / loc["cnt"].sum(1))
+            sm = (r["ll"][:, small].sum(1) / r["cnt"][:, small].sum(1)) / (loc["ll"][:, small].sum(1) / loc["cnt"][:, small].sum(1))
+            out.update(ll=float(r["ll"].sum() / r["cnt"].sum()), rel_se=float(ratio.std(ddof=1) / np.sqrt(len(ratio))),
+                       rel_small_se=float(sm.std(ddof=1) / np.sqrt(len(sm))), share_gain=float(np.mean(hosp < hosp_loc)),
+                       auc=float(auc(np.concatenate(r["s"]), np.concatenate(r["y"]))))
+        return out
+
+    # every tuning candidate, for the realistic arm (settings chosen on the development network, then frozen)
+    cand = {c: metrics(S[c], full=False) for cs in TUNED.values() for c in cs}
+    res = {"chosen": chosen, "cand": cand, "info": dict(label=label, K=K, n=n_all.tolist(), ids=ids,
+                                                       prevalence=float(np.mean(np.concatenate([y for _, y in data]))))}
     for m in METHODS:
-        r = S[m]
-        per_split = r["ll"].sum(1) / r["cnt"].sum(1)
-        loc_split = loc["ll"].sum(1) / loc["cnt"].sum(1)
-        ratio = per_split / loc_split
-        hosp = r["ll"].sum(0) / r["cnt"].sum(0)
-        hosp_loc = loc["ll"].sum(0) / loc["cnt"].sum(0)
-        sm = r["ll"][:, small].sum(1) / r["cnt"][:, small].sum(1)
-        sm_loc = loc["ll"][:, small].sum(1) / loc["cnt"][:, small].sum(1)
-        res[m] = dict(ll=float(r["ll"].sum() / r["cnt"].sum()), rel=float(r["ll"].sum() / loc["ll"].sum()),
-                      rel_se=float(ratio.std(ddof=1) / np.sqrt(len(ratio))),
-                      rel_small=float(r["ll"][:, small].sum() / loc["ll"][:, small].sum()),
-                      rel_small_se=float((sm / sm_loc).std(ddof=1) / np.sqrt(len(sm))),
-                      worst=float((hosp[big] / hosp_loc[big]).max()) if big.any() else float("nan"),
-                      share_gain=float(np.mean(hosp < hosp_loc)),
-                      auc=float(auc(np.concatenate(r["s"]), np.concatenate(r["y"]))))
+        res[m] = metrics(S[m])
     print(label, K, chosen, {m: (round(o["rel"], 3), round(o["rel_small"], 3), round(o["worst"], 2))
-                             for m, o in res.items() if m not in ("chosen", "info")}, flush=True)
+                             for m, o in res.items() if m not in ("chosen", "cand", "info")}, flush=True)
     return name, res
 
 
