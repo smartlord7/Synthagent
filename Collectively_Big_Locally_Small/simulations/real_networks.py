@@ -329,18 +329,30 @@ def figure(res):
     style.save(fig, ghb.FIGDIR / "real_networks.pdf")
 
 
+CKPT = ghb.RESDIR / "real_networks_ckpt"
+
+
 def main():
+    """Runs the requested networks (all by default) in parallel. Each network's result is checkpointed to
+    real_networks_ckpt/<name>.json the moment it finishes, and finished networks are skipped on a rerun, so an
+    interrupted run resumes where it stopped (delete the checkpoint folder to start over). The final file
+    real_networks.json merges the checkpoints with any earlier stored networks."""
     only = [a for a in sys.argv[1:] if not a.startswith("--")]
-    todo = [(i, nw) for i, nw in enumerate(NETWORKS) if not only or nw[0] in only]
+    CKPT.mkdir(exist_ok=True)
+    todo = [(i, nw) for i, nw in enumerate(NETWORKS) if (not only or nw[0] in only) and not (CKPT / f"{nw[0]}.json").exists()]
+    print("to run:", [nw[0] for _, nw in todo], flush=True)
     with Pool(4) as pool:
-        res = dict(pool.map(run, todo))
+        for name, res in pool.imap_unordered(run, todo):
+            json.dump(res, open(CKPT / f"{name}.json", "w"))
+            print("checkpointed", name, flush=True)
     out = ghb.RESDIR / "real_networks.json"
-    if only and out.exists():  # add to the stored networks
-        old = json.load(open(out))["res"]
-        old.update(res)
-        res = {nw: old[nw] for nw, _ in NETWORKS if nw in old}
+    merged = json.load(open(out))["res"] if out.exists() else {}
+    for nw, _ in NETWORKS:
+        if (CKPT / f"{nw}.json").exists():
+            merged[nw] = json.load(open(CKPT / f"{nw}.json"))
+    res = {nw: merged[nw] for nw, _ in NETWORKS if nw in merged}
     json.dump(dict(repeats=REPEATS, folds=FOLDS, min_site=MIN_SITE, public=dict(medpar=MEDPAR_PUBLIC, tcga=TCGA_PUBLIC), res=res),
-              open(ghb.RESDIR / "real_networks.json", "w"), indent=1)
+              open(out, "w"), indent=1)
     figure(res)
 
 
