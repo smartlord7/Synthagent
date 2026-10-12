@@ -34,4 +34,21 @@ Whatever the outcome, it is reported as is and appended below.
 
 ## Outcome
 
-(to be appended after `python3 real_v3.py fresh`)
+Run once, 10 repeats, 2026-10-12 (`supplement/results/real_v3_fresh.json`). Mean relative log-loss over the 6
+fresh networks (locked GHB = GHB-EB + cross-cancer):
+
+| eps | locked GHB | GHB-EB | local, evidence prior | best literature, realistic | best literature, oracle |
+|---|---|---|---|---|---|
+| 1  | 0.943 | 0.942 | 0.942 | 0.952 (FedAvg + FT) | 0.940 (FedAvg + FT) |
+| 10 | 0.961 | 0.972 | 0.942 | 0.928 (Ditto); pFedMe 0.932, FTSA 0.936, APFL 0.940 | 0.910 (FTSA) |
+
+1. Held: at eps=1 the locked GHB has a lower mean than every literature family in the realistic arm
+   (0.943 vs 0.952-1.225).
+2. Held: at eps=10 it does not beat FTSA or pFedMe (it loses to every realistic family but DP-FedAvg + FT).
+3. Held: it loses to the oracle arm at both budgets (narrowly at eps=1).
+4. Held: cross-cancer improves on GHB-EB at eps=10 (0.961 vs 0.972).
+
+Not predicted, and the main finding: at eps=10 every GHB variant is worse than the local model with an evidence
+prior (0.942), i.e. on the fresh networks GHB's borrowing hurts when the privacy noise is small enough for it to
+act. At eps=1 GHB equals the local evidence-prior model (no borrowing gain). Any fix found from now on is post hoc
+with respect to these networks and needs further unseen data to be confirmed.
