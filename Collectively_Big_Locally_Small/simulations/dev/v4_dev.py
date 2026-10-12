@@ -15,11 +15,16 @@ import real_v3 as RV
 from exp7_logistic import fit
 from real_heart import folds
 
-VARIANTS = {
-    "v4c R1=1 +pan": dict(f=1.0, safety=True, R1=1, pan=True),
-    "v4c R1=1 +pan h=.25": dict(f=1.0, safety=True, R1=1, pan=True, hshare=0.25),
-    "v4c R1=1 +pan h=.75": dict(f=1.0, safety=True, R1=1, pan=True, hshare=0.75),
-    "v4c R1=1 +pan -safety": dict(f=1.0, safety=False, R1=1, pan=True),
+LOCKED = dict(f=1.0, safety=True, R1=1, pan=True)  # GHB v4 as pre-registered (dev/PREREG_v4.md)
+VARIANTS = {  # ablation: one change at a time from the locked configuration
+    "v4 locked": LOCKED,
+    "v4 - pan-network": dict(LOCKED, pan=False),
+    "v4 - no-borrowing components": dict(LOCKED, safety=False),
+    "v4 - privacy covariance": dict(LOCKED, vdp=False),
+    "v4 - leave-one-out": dict(LOCKED, loo=False),
+    "v4 two Newton rounds": dict(LOCKED, R1=2),
+    "v4 tau from releases (f=.5)": dict(LOCKED, f=0.5),
+    "v4 + institution effects (f=.5)": dict(LOCKED, f=0.5, cross=True),
 }
 OUT = ghb.RESDIR / (sys.argv[2] if len(sys.argv) > 2 else "v4_dev_ckpt")
 
@@ -41,7 +46,8 @@ def run(item):
         est = {p: {"Local": np.array([fit(X, y, np.zeros(RV.P), RV.PRIOR) for X, y in train[p]])} for p in data}
         for e in RV.EPS:
             for name, cfg in VARIANTS.items():
-                res = V4.estimate(train, rng, e, RV.DELTA, RV.G, inst=inst, cfg=cfg)
+                seed = [31, rep, 0 if which == "dev" else 1, f, int(e)]  # the same privacy noise for every variant
+                res = V4.estimate(train, np.random.default_rng(seed), e, RV.DELTA, RV.G, inst=inst, cfg=cfg)
                 for p in data:
                     est[p][f"{name}, eps={e:g}"] = res[p]
         for p in data:

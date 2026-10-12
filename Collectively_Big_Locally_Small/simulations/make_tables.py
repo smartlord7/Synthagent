@@ -45,8 +45,8 @@ def tex_tau(lab):
 # ---------------------------------------------------------------- main paper
 def sim8():
     s = load("sim8_baselines.json")
-    methods = ["Local", "GHB (DP)", "Ditto-style (DP)", "Meta-analysis (DP)", "FedAvg (DP)", "Global (pooled, no DP)"]
-    private = methods[:5]
+    methods = ["Local", "GHB v4 (DP)", "GHB (DP)", "Ditto-style (DP)", "Meta-analysis (DP)", "FedAvg (DP)", "Global (pooled, no DP)"]
+    private = methods[:6]
     rows = []
     for key, lab in (("het", "$\\tau^2={}$"), ("shift", "shift ${}$")):
         for x, r in s[key].items():
@@ -59,9 +59,9 @@ def sim8():
     write("t_sim8.tex", rows)
 
 
-S15_COLS = ["Local", "Local GD from anchor", "GHB (DP)", "Ditto-style (DP)", "DP-FedAvg + fine-tuning",
+S15_COLS = ["Local", "Local GD from anchor", "GHB v4 (DP)", "GHB (DP)", "Ditto-style (DP)", "DP-FedAvg + fine-tuning",
             "Decentralized DP-SGD", "Clustered DP-FedAvg", "GHB, oracle tau2 (DP)", "Global (pooled, no DP)"]
-S15_PRIVATE = S15_COLS[:7]
+S15_PRIVATE = S15_COLS[:8]
 S15_LAB = {"tau2=0.01": "$\\tau^2=0.01$", "tau2=0.05": "$\\tau^2=0.05$", "tau2=0.2": "$\\tau^2=0.2$", "tau2=0.5": "$\\tau^2=0.5$",
            "eps=0.3": "$\\epsilon=0.3$", "eps=inf": "no DP", "regional": "regional$^\\ast$", "anchor=1.0": "wrong anchor$^\\ast$",
            "tau2=0.1,eps=0.5": "$\\tau^2=0.1$, $\\epsilon=0.5^\\ast$", "K=48": "$K=48^\\ast$"}
@@ -69,6 +69,8 @@ S15_LAB = {"tau2=0.01": "$\\tau^2=0.01$", "tau2=0.05": "$\\tau^2=0.05$", "tau2=0
 
 def sim15():
     s = load("sim15_literature.json")["res"]
+    if "GHB v4 (DP)" not in s["tau2=0.05"]["kl"]:  # results from before GHB was added: keep the earlier tables
+        return
     rows, wrows = [], []
     for key, lab in S15_LAB.items():
         r = s[key]
@@ -433,12 +435,13 @@ def real_final():
     import final_compare as FC
     s = load("real_networks.json")["res"]
     conf = FC.CONF
-    eb = {e: np.array([s[nm][f"GHB-EB {e}"]["rel"] for nm in conf]) for e in ("1", "10")}
+    eb = {e: np.array([s[nm][f"GHB v4 {e}"]["rel"] for nm in conf]) for e in ("1", "10")}  # wins are GHB's
     rows = []
-    head = [("GHB (as reported), no tuning", lambda e, arm, nm: s[nm][f"GHB (DP, eps={e})"]["rel"]),
-            ("GHB-EB, no tuning", lambda e, arm, nm: s[nm][f"GHB-EB {e}"]["rel"]),
-            ("GHB-SA (secure aggregation), no tuning", lambda e, arm, nm: s[nm][f"GHB-SA {e}"]["rel"]),
-            ("GHB, tuned prior", lambda e, arm, nm: FC.arm_value(s, nm, f"GHB, tuned prior (DP), eps={e}", arm)),
+    head = [(r"\textbf{GHB}, no tuning", lambda e, arm, nm: s[nm][f"GHB v4 {e}"]["rel"]),
+            ("GHB-lite, no tuning", lambda e, arm, nm: s[nm][f"GHB (DP, eps={e})"]["rel"]),
+            ("GHB-lite, evidence prior, no tuning", lambda e, arm, nm: s[nm][f"GHB-EB {e}"]["rel"]),
+            ("GHB-lite with secure aggregation, no tuning", lambda e, arm, nm: s[nm][f"GHB-SA {e}"]["rel"]),
+            ("GHB-lite, tuned prior", lambda e, arm, nm: FC.arm_value(s, nm, f"GHB, tuned prior (DP), eps={e}", arm)),
             ("Local, tuned prior$^\\ddagger$", lambda e, arm, nm: FC.arm_value(s, nm, "Local, tuned prior", arm))]
     lit = [(lab, (lambda f: (lambda e, arm, nm: FC.arm_value(s, nm, f.format(e=e), arm)))(f)) for lab, f in FC.OTHERS.items()]
     def line(lab, fun, group):
@@ -468,8 +471,125 @@ def real_final():
         write(f"s_real_final_lono_eps{e}.tex", rows)
 
 
+def tcga():
+    """TCGA, richer model (real_v3.py, dev/PREREG_v4.md): the pre-registered confirmation on five unseen networks
+    (main paper) and the development summary over twelve networks (supplement)."""
+    import glob
+    from collections import defaultdict
+    from real_v3 import GRIDS, ckey
+    c = load("real_v4_confirm.json")
+    nets, rel = c["nets"], c["rel"]
+    fams = list(GRIDS)
+    short = {"DP-FedAvg + FT": "DP-FedAvg + FT", "DP-FedAvg-SA + FT": "DP-FedAvg + FT, sec.\\ agg.", "APFL": "APFL", "Ditto": "Ditto",
+             "pFedMe": "pFedMe", "Clustered DP-FedAvg": "Clustered DP-FedAvg"}
+    rows = []
+    for e in ("1", "10"):
+        r = rel[e]
+        g = np.array(r["GHB v4"])
+        lines = [(r"\textbf{GHB}, no tuning", g), ("GHB-lite (evidence prior), no tuning", np.array(r["GHB-EB"])),
+                 ("Local, evidence prior$^\\ddagger$", np.array(r["Local, evidence prior"]))]
+        lines += [(short[fm] + ", tuned on development", np.array(r[fm + " (realistic)"])) for fm in fams]
+        orc = np.min([r[fm + " (oracle)"] for fm in fams], 0)
+        lines.append(("Best of the six, oracle per network$^\\star$", orc))
+        best = np.min([v for l, v in lines if not l.startswith("Local") and "oracle" not in l], 0)
+        rows.append(f"\\multicolumn{{8}}{{@{{}}l}}{{\\emph{{$\\epsilon={e}$}}}}\\\\")
+        for l, v in lines:
+            cells = [(f"\\textbf{{{x:.3f}}}" if abs(x - b) < 1e-12 else f"{x:.3f}") for x, b in zip(v, best)]
+            wins = "" if l.startswith("\\textbf") else f"{int((g < v).sum())}/{len(v)}"
+            rows.append(l + " & " + " & ".join(cells) + f" & {v.mean():.3f} & {wins}\\\\")
+        if e == "1":
+            rows.append("\\midrule")
+    write("t_tcga_confirm.tex", rows)
+    # oracle arm per method and network, and the configurations frozen for the realistic arm
+    sel = json.load(open(ghb.ROOT / "simulations" / "dev" / "v4_realistic_configs.json"))
+    rows = []
+    for e in ("1", "10"):
+        rows.append(f"\\multicolumn{{7}}{{@{{}}l}}{{\\emph{{$\\epsilon={e}$}}}}\\\\")
+        for fm in fams:
+            v = np.array(rel[e][fm + " (oracle)"])
+            rows.append(short[fm] + " & " + " & ".join(f"{x:.3f}" for x in v) + f" & {v.mean():.3f}\\\\")
+        if e == "1":
+            rows.append("\\midrule")
+    write("s_tcga_oracle.tex", rows)
+    names = {"FT": ("rounds $R$", "step $\\eta$", "fine-tuning steps"), "FTSA": ("rounds $R$", "step $\\eta$", "fine-tuning steps"),
+             "APFL": ("rounds $R$", "step $\\eta$", "mixing $\\alpha$"), "PDIT": ("rounds $R$", "step $\\eta$", "proximal $\\lambda$"),
+             "PME": ("rounds $R$", "step $\\eta$", "proximal $\\lambda$"), "CLU": ("clusters", "rounds $R$", "step $\\eta$", "fine-tuning steps")}
+    rows = []
+    for fm, grid in GRIDS.items():
+        cells = []
+        for e in ("1", "10"):
+            parts = sel[f"{fm}, eps={e}"].split("|")
+            cells.append(", ".join(f"{a}={b}" for a, b in zip(names[parts[0]], parts[1:])))
+        rows.append(short[fm] + f" & {len(grid)} & " + " & ".join(cells) + "\\\\")
+    write("s_tcga_configs.tex", rows)
+    # development: twelve networks, ten repeats (stored baselines and GHB-lite from real_v3_ckpt, GHB from v4c_ckpt)
+    acc = defaultdict(lambda: [0.0, 0.0])
+    for fn in glob.glob(str(R / "real_v3_ckpt" / "*.json")):
+        if "/confirm_" in fn:
+            continue
+        for k, (ll, cnt) in json.load(open(fn))["out"].items():
+            acc[k][0] += sum(ll); acc[k][1] += sum(cnt)
+    for fn in glob.glob(str(R / "v4c_ckpt" / "*.json")):
+        for k, (ll, cnt) in json.load(open(fn)).items():
+            if "v4c R1=1 +pan," in k:
+                k2 = k.replace("v4c R1=1 +pan", "GHB v4")
+                acc[k2][0] += sum(ll); acc[k2][1] += sum(cnt)
+    dn = sorted({k.split("||")[0] for k in acc})
+    L = lambda p, m: (acc[f"{p}||{m}"][0] / acc[f"{p}||{m}"][1]) / (acc[f"{p}||Local"][0] / acc[f"{p}||Local"][1])
+    rows = []
+    def line(lab, fun):
+        cells = []
+        for e in ("1", "10"):
+            cells += [f"{np.mean([fun(p, e, 'a') for p in dn]):.3f}", f"{np.mean([fun(p, e, 'o') for p in dn]):.3f}"]
+        return lab + " & " + " & ".join(cells) + r"\\"
+    rows.append(line("GHB, no tuning", lambda p, e, a: L(p, f"GHB v4, eps={e}")))
+    rows.append(line("GHB-lite (evidence prior), no tuning", lambda p, e, a: L(p, f"GHB-EB, eps={e}")))
+    for v in ("+ safety", "+ learned scale", "+ correlated", "+ cross-cancer", "GHB v3"):
+        rows.append(line(f"GHB-lite {v.replace('GHB v3', 'with all four additions (v3)').replace('+ ', 'with ')}", (lambda v: lambda p, e, a: L(p, f"{v}, eps={e}"))(v)))
+    rows.append(line("Local, evidence prior", lambda p, e, a: L(p, "Local, evidence prior")))
+    rows.append(r"\midrule")
+    for fm, grid in GRIDS.items():
+        def fun(p, e, a, grid=grid):
+            M = np.array([[L(q, f"{ckey(cf)}, eps={e}") for q in dn] for cf in grid])
+            return M[M.mean(1).argmin(), dn.index(p)] if a == "a" else M[:, dn.index(p)].min()
+        rows.append(line(short[fm], fun))
+    write("s_tcga_dev.tex", rows)
+
+
+def tcga_ablation():
+    """GHB ablation on the twelve development networks (dev/v4_dev.py, v4_ablation_ckpt): one change at a time."""
+    import glob
+    from collections import defaultdict
+    acc = defaultdict(lambda: [0.0, 0.0])
+    files = glob.glob(str(R / "v4_ablation_ckpt" / "*.json"))
+    if not files:
+        return
+    for fn in files:
+        for k, (ll, cnt) in json.load(open(fn)).items():
+            acc[k][0] += sum(ll); acc[k][1] += sum(cnt)
+    dn = sorted({k.split("||")[0] for k in acc})
+    L = lambda p, m: (acc[f"{p}||{m}"][0] / acc[f"{p}||{m}"][1]) / (acc[f"{p}||Local"][0] / acc[f"{p}||Local"][1])
+    labels = {"v4 locked": "GHB (as frozen)", "v4 - pan-network": "without borrowing across networks",
+              "v4 - no-borrowing components": "without the non-borrowing components",
+              "v4 - privacy covariance": "without propagating the privacy covariance",
+              "v4 - leave-one-out": "without removing the hospital's own data",
+              "v4 two Newton rounds": "two rounds of joint releases", "v4 tau from releases (f=.5)": "$\\tau$ from per-hospital releases (half the budget)",
+              "v4 + institution effects (f=.5)": "the same, with institution effects across networks"}
+    rows = []
+    for m, lab in labels.items():
+        v = [np.array([L(p, f"{m}, eps={e}") for p in dn]) for e in ("1", "10")]
+        base = [np.array([L(p, f"v4 locked, eps={e}") for p in dn]) for e in ("1", "10")]
+        cells = []
+        for a, b in zip(v, base):
+            cells += [f"{a.mean():.3f}", "" if m == "v4 locked" else f"{int((b < a).sum())}/{len(a)}"]
+        rows.append(lab + " & " + " & ".join(cells) + r"\\")
+        if m == "v4 locked":
+            rows.append(r"\midrule")
+    write("s_tcga_ablation.tex", rows)
+
+
 def main():
-    for fn in (sim8, sim15, sim16, sim17, sim18, real_heart, real_networks, real_final, sim1, sim2, sim3, sim4, sim5, sim6, sim7, sim9, sim11, sim12, sim13, sim14):
+    for fn in (tcga, tcga_ablation, sim8, sim15, sim16, sim17, sim18, real_heart, real_networks, real_final, sim1, sim2, sim3, sim4, sim5, sim6, sim7, sim9, sim11, sim12, sim13, sim14):
         fn()
     print("tables:", sorted(p.name for p in OUT.glob("*.tex")))
 

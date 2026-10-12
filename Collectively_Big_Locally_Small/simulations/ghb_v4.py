@@ -84,7 +84,8 @@ def network_stats(rng, data, eps, delta, G, f, R1=2, hshare=None):
 
 def estimate(nets, rng, eps, delta, G, inst=None, cfg=None):
     """nets: dict name -> list of (X, y); cfg keys f (stage-1 share), safety, cross. Returns dict name -> (K, P)."""
-    cfg = {"f": 0.5, "safety": True, "cross": False, "pan": False, "R1": 2, "hshare": None, **(cfg or {})}
+    cfg = {"f": 0.5, "safety": True, "cross": False, "pan": False, "R1": 2, "hshare": None, "loo": True, "vdp": True,
+           **(cfg or {})}  # loo, vdp: ablation switches only (leave-one-out mean; propagated privacy covariance)
     stats = {c: network_stats(rng, d, eps, delta, G, cfg["f"], cfg["R1"], cfg["hshare"]) for c, d in nets.items()}
     P = next(iter(nets.values()))[0][0].shape[1]
     names = list(nets)
@@ -104,6 +105,16 @@ def estimate(nets, rng, eps, delta, G, inst=None, cfg=None):
             st = stats[c]
             Vs = np.diag(np.linalg.inv(st["H"] + np.eye(P) / S0 ** 2))
             st["w"], st["Vdp"] = st["wpan"], np.diag(np.maximum(st["vpan"] - Vs, 0.0))
+    if cfg.get("anchor") is not None:  # a published model N(mu0, anchor_sd^2) as further context, dropped on conflict
+        mu0, asd = cfg["anchor"]
+        for c in names:
+            st = stats[c]
+            Vs = np.diag(np.linalg.inv(st["H"] + np.eye(P) / S0 ** 2))
+            Vt = np.diag(st["Vdp"]) + Vs
+            if np.abs((mu0 - st["w"]) / np.sqrt(asd ** 2 + Vt)).max() <= GL.Z_CONFLICT:
+                prec = 1.0 / Vt + 1.0 / asd ** 2
+                st["w"] = (st["w"] / Vt + mu0 / asd ** 2) / prec
+                st["Vdp"] = np.diag(np.maximum(1.0 / prec - Vs, 0.0))
     use_cross = cfg["cross"] and cfg["f"] < 1 and inst is not None and len(names) > 1
     if use_cross:  # institution effects from the same institution's deviations in its other cancers
         dev = {}
@@ -122,8 +133,8 @@ def estimate(nets, rng, eps, delta, G, inst=None, cfg=None):
             sj = X.T @ (y - expit(X @ st["w"]))
             Hm = _psd(st["H"] - X.T @ X / 4, 1e-2 * max(st["n"].sum() - len(y), 1)) + np.eye(P) / S0 ** 2
             V = np.linalg.inv(Hm)
-            mu = st["w"] - V @ sj
-            V = V + st["Vdp"]
+            mu = st["w"] - V @ sj if cfg["loo"] else st["w"]
+            V = V + st["Vdp"] if cfg["vdp"] else V
             shift, extra = np.zeros(P), np.zeros(P)
             if use_cross:
                 others = [o for o in dev.get(inst[c][j], []) if o[0] != c]

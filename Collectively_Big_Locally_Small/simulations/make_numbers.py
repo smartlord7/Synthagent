@@ -15,6 +15,53 @@ def f2(x):
     return f"{x:.2f}"
 
 
+def tcga_numbers():
+    """GHB on TCGA with the richer model: pre-registered confirmation (real_v4_confirm.json) and development."""
+    c = json.load(open(R / "real_v4_confirm.json"))["rel"]
+    fam = {"FT": "DP-FedAvg + FT", "FTSA": "DP-FedAvg-SA + FT", "APFL": "APFL", "Ditto": "Ditto", "PFedMe": "pFedMe",
+           "Clu": "Clustered DP-FedAvg"}
+    out = {}
+    for e, E in (("1", "One"), ("10", "Ten")):
+        r = c[e]
+        g = np.array(r["GHB v4"])
+        out[f"TC{E}GHB"] = f"{g.mean():.3f}"
+        out[f"TC{E}Lite"] = f"{np.mean(r['GHB-EB']):.3f}"
+        out[f"TC{E}Loc"] = f"{np.mean(r['Local, evidence prior']):.3f}"
+        out[f"TC{E}GHBvsLocWins"] = str(int((g < np.array(r["Local, evidence prior"])).sum()))
+        for k, fm in fam.items():
+            v = np.array(r[fm + " (realistic)"])
+            out[f"TC{E}{k}"] = f"{v.mean():.3f}"
+            out[f"TC{E}{k}Wins"] = str(int((g < v).sum()))
+            out[f"TC{E}{k}Orc"] = f"{np.mean(r[fm + ' (oracle)']):.3f}"
+        orc = np.min([r[fm + " (oracle)"] for fm in fam.values()], 0)
+        out[f"TC{E}BestOrc"] = f"{orc.mean():.3f}"
+        out[f"TC{E}BestOrcWins"] = str(int((g < orc).sum()))
+        out[f"TC{E}GHBMin"], out[f"TC{E}GHBMax"] = f"{g.min():.3f}", f"{g.max():.3f}"
+    # development: twelve networks (literature tuned in-sample on the same networks)
+    import glob
+    from collections import defaultdict
+    from real_v3 import GRIDS, ckey
+    acc = defaultdict(lambda: [0.0, 0.0])
+    for fn in glob.glob(str(R / "real_v3_ckpt" / "*.json")):
+        if "/confirm_" not in fn:
+            for k, (ll, cnt) in json.load(open(fn))["out"].items():
+                acc[k][0] += sum(ll); acc[k][1] += sum(cnt)
+    for fn in glob.glob(str(R / "v4c_ckpt" / "*.json")):
+        for k, (ll, cnt) in json.load(open(fn)).items():
+            if "v4c R1=1 +pan," in k:
+                k2 = k.replace("v4c R1=1 +pan", "GHB v4")
+                acc[k2][0] += sum(ll); acc[k2][1] += sum(cnt)
+    dn = sorted({k.split("||")[0] for k in acc})
+    L = lambda p, m: (acc[f"{p}||{m}"][0] / acc[f"{p}||{m}"][1]) / (acc[f"{p}||Local"][0] / acc[f"{p}||Local"][1])
+    for e, E in (("1", "One"), ("10", "Ten")):
+        out[f"TD{E}GHB"] = f"{np.mean([L(p, f'GHB v4, eps={e}') for p in dn]):.3f}"
+        out[f"TD{E}Lite"] = f"{np.mean([L(p, f'GHB-EB, eps={e}') for p in dn]):.3f}"
+        out[f"TD{E}Loc"] = f"{np.mean([L(p, 'Local, evidence prior') for p in dn]):.3f}"
+        best = min(min(np.mean([L(p, f"{ckey(cf)}, eps={e}") for p in dn]) for cf in grid) for grid in GRIDS.values())
+        out[f"TD{E}BestLit"] = f"{best:.3f}"
+    return out
+
+
 def main():
     s1 = json.load(open(R / "s1_validate.json"))["summary"]
     s2 = json.load(open(R / "s2_heterogeneity.json"))["summary"]
@@ -72,6 +119,8 @@ def main():
                          ("FedAvg (DP)", "Fedavg"), ("Global (pooled, no DP)", "Pooled")):
             n[f"Eight{tag}{short}"] = f"{kl[m]:.4f}"
         n[f"Eight{tag}GHBvsDitto"] = f"{100 * (1 - kl['GHB (DP)'] / kl['Ditto-style (DP)']):.0f}\\%"
+        if "GHB v4 (DP)" in kl:  # GHB (joint releases), added on its own random stream
+            n[f"Eight{tag}V"] = f"{kl['GHB v4 (DP)']:.4f}"
     s9 = json.load(open(R / "sim9_atypical.json"))["out"]
     n["NineGaussGHB"], n["NineGaussRobust"] = f2(s9["gauss"]["summary"]["GHB"]), f2(s9["gauss"]["summary"]["Robust GHB"])
     n["NineTGHB"], n["NineTRobust"] = f2(s9["t3"]["summary"]["GHB"]), f2(s9["t3"]["summary"]["Robust GHB"])
@@ -83,6 +132,9 @@ def main():
     n["ElevenOverTwo"] = f"{s11['2.0']['kl']['GHB, anchor overconfident (stated 0.3)']:.4f}"
     n["ElevenCheckTwo"] = f"{s11['2.0']['kl']['GHB, overconfident + conflict check']:.4f}"
     n["ElevenLocalTwo"] = f"{s11['2.0']['kl']['Local']:.4f}"
+    if "GHB v4 (DP)" in s11["2.0"]["kl"]:
+        n["ElevenVTwo"] = f"{s11['2.0']['kl']['GHB v4 (DP)']:.4f}"
+        n["ElevenVMax"] = f"{max(s11[e]['kl']['GHB v4 (DP)'] for e in s11):.4f}"
     n["ElevenNoAnchorMax"] = f"{max(s11[e]['kl']['GHB, no anchor'] for e in s11):.4f}"
     s12 = json.load(open(R / "sim12_byzantine.json"))
     n["TwelveWorstGHB"] = f2(max(max(s12["out"][f]["GHB"]) for f in ("1", "3")))
@@ -97,7 +149,7 @@ def main():
     n["FourteenR"] = str(last["r"]); n["FourteenBasic"] = f"{last['B_basic']:.1f}"; n["FourteenZcdp"] = f"{last['B_zcdp']:.1f}"
     n["FourteenOne"] = f"{s14['rows'][0]['B_basic']:.1f}"
     s15 = json.load(open(R / "sim15_literature.json"))["res"]
-    short15 = {"Local": "Local", "Local GD from anchor": "AnchorGD", "GHB (DP)": "GHB", "GHB, oracle tau2 (DP)": "Oracle",
+    short15 = {"Local": "Local", "Local GD from anchor": "AnchorGD", "GHB (DP)": "GHB", "GHB v4 (DP)": "V", "GHB, oracle tau2 (DP)": "Oracle",
                "GHB, earlier version (DP)": "Old",
                "Ditto-style (DP)": "Ditto", "DP-FedAvg": "Fedavg", "DP-FedAvg + fine-tuning": "FT",
                "Decentralized DP-SGD": "Dec", "Clustered DP-FedAvg": "Clus", "Global (pooled, no DP)": "Pooled"}
@@ -106,11 +158,18 @@ def main():
     for key, tag in tags15.items():
         r15 = s15[key]
         for m, short in short15.items():
+            if m not in r15["kl"]:
+                continue
             n[f"Fifteen{tag}{short}"] = f"{r15['kl'][m]:.4f}"
             n[f"Fifteen{tag}{short}Large"] = f"{r15['kl_large'][m]:.4f}"
             n[f"Fifteen{tag}{short}Worst"] = f2(r15["worst_ratio"][m])
     private = [k for k in tags15 if k not in ("eps=inf", "tau2=0.5")]
     n["FifteenGHBWorstMax"] = f2(max(s15[k]["worst_ratio"]["GHB (DP)"] for k in private))
+    if "GHB v4 (DP)" in s15["tau2=0.05"]["kl"]:
+        n["FifteenVWorstMax"] = f2(max(s15[k]["worst_ratio"]["GHB v4 (DP)"] for k in private))
+        iters = ("DP-FedAvg + fine-tuning", "Decentralized DP-SGD", "Clustered DP-FedAvg")
+        n["FifteenVBeatsIter"] = str(sum(all(s15[k]["kl"]["GHB v4 (DP)"] < s15[k]["kl"][m] for m in iters) for k in tags15))
+        n["FifteenVBeatsLite"] = str(sum(s15[k]["kl"]["GHB v4 (DP)"] < s15[k]["kl"]["GHB (DP)"] for k in tags15))
     n["FifteenFTWorstMin"] = f2(min(s15[k]["worst_ratio"]["DP-FedAvg + fine-tuning"] for k in private))
     n["FifteenFTWorstMax"] = f2(max(s15[k]["worst_ratio"]["DP-FedAvg + fine-tuning"] for k in private))
     n["FifteenReps"], n["FifteenTune"] = str(json.load(open(R / "sim15_literature.json"))["reps"]), str(json.load(open(R / "sim15_literature.json"))["tune"])
@@ -277,6 +336,20 @@ def main():
                 n[f"RF{E}EBMin"], n[f"RF{E}EBMax"] = f"{eb.min():.3f}", f"{eb.max():.3f}"
                 locl = np.array([FC.arm_value(rn, nm, "Local, tuned prior", "lono") for nm in conf])
                 n[f"RF{E}EBvsLocWins"] = str(int((eb < locl).sum()))
+                if all(f"GHB v4 {e}" in rn[nm] for nm in conf):  # GHB (joint releases), on its own random stream
+                    v4 = np.array([rn[nm][f"GHB v4 {e}"]["rel"] for nm in conf])
+                    n[f"RF{E}V"], n[f"RF{E}VMin"], n[f"RF{E}VMax"] = f"{v4.mean():.3f}", f"{v4.min():.3f}", f"{v4.max():.3f}"
+                    n[f"RF{E}VvsEBWins"] = str(int((v4 < eb).sum()))
+                    n[f"RF{E}VvsLocWins"] = str(int((v4 < locl).sum()))
+                    n[f"RF{E}LiverWorstV"] = f2(rn["TCGA-LIHC"][f"GHB v4 {e}"]["worst"])
+                    n[f"RF{E}VWorstMax"] = f2(max(rn[nm][f"GHB v4 {e}"]["worst"] for nm in conf if rn[nm][f"GHB v4 {e}"]["worst"] == rn[nm][f"GHB v4 {e}"]["worst"]))
+                    for arm, A in (("oracle", "Orc"), ("lono", "Lono")):
+                        for lab, t in tagm.items():
+                            v = np.array([FC.arm_value(rn, nm, FC.OTHERS[lab].format(e=e), arm) for nm in conf])
+                            n[f"RF{E}V{t}{A}Wins"] = str(int((v4 < v).sum()))
+                        best = [min(FC.arm_value(rn, nm, f.format(e=e), arm) for f in FC.OTHERS.values()) for nm in conf]
+                        n[f"RF{E}VBest{A}Wins"] = str(int((v4 < np.array(best)).sum()))
+    n.update(tcga_numbers())
     lines = ["% Generated by simulations/make_numbers.py. Do not edit."]
     lines += [f"\\newcommand{{\\Sim{k}}}{{{v}}}" for k, v in n.items()]
     (R / "sim_numbers.tex").write_text("\n".join(lines) + "\n")

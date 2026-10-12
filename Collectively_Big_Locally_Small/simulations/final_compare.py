@@ -38,7 +38,7 @@ def main():
             rows = {}
             for nm in CONF:
                 v = {lab: arm_value(R, nm, f.format(e=e), arm) for lab, f in OTHERS.items()}
-                g = {"GHB-EB (no tuning)": R[nm][f"GHB-EB {e}"]["rel"],
+                g = {"GHB-EB (no tuning)": R[nm][f"GHB-EB {e}"]["rel"], "GHB (no tuning)": R[nm][f"GHB v4 {e}"]["rel"],
                      "GHB, tuned prior": arm_value(R, nm, f"GHB, tuned prior (DP), eps={e}", arm)}
                 loc = {"Local, tuned prior": arm_value(R, nm, "Local, tuned prior", arm)}
                 best_other = min(v, key=v.get)
@@ -69,15 +69,17 @@ def figure():
     y = np.arange(len(CONF))[::-1]
     for ax, e in zip(axs, ("1", "10")):
         eb = [R[nm][f"GHB-EB {e}"]["rel"] for nm in CONF]
+        v4 = [R[nm][f"GHB v4 {e}"]["rel"] for nm in CONF]
         lono = [min(arm_value(R, nm, f.format(e=e), "lono") for f in OTHERS.values()) for nm in CONF]
         orc = [min(arm_value(R, nm, f.format(e=e), "oracle") for f in OTHERS.values()) for nm in CONF]
         loc = [arm_value(R, nm, "Local, tuned prior", "lono") for nm in CONF]
-        for yy, a, b, c, d in zip(y, eb, lono, orc, loc):
-            ax.plot([min(a, b, c, d), max(a, b, c, d)], [yy, yy], color=style.GRAY400, lw=0.6, zorder=1)
+        for yy, a, b, c, d, g in zip(y, eb, lono, orc, loc, v4):
+            ax.plot([min(a, b, c, d, g), max(a, b, c, d, g)], [yy, yy], color=style.GRAY400, lw=0.6, zorder=1)
         ax.scatter(orc, y, marker="D", s=16, color=style.GRAY400, label="Best literature method, tuned on the test folds (oracle)", zorder=2)
         ax.scatter(lono, y, marker="s", s=18, color=style.AMBER600, label="Best literature method, tuned on the other networks", zorder=3)
         ax.scatter(loc, y, marker="o", s=30, facecolors="none", edgecolors=style.SLATE800, label="One hospital alone, tuned prior", zorder=3)
-        ax.scatter(eb, y, marker="o", s=22, color=style.TEAL700, label="GHB-EB, no tuning", zorder=4)
+        ax.scatter(eb, y, marker="o", s=16, color="#99c2bd", label="GHB-lite (evidence prior), no tuning", zorder=4)
+        ax.scatter(v4, y, marker="o", s=24, color=style.TEAL700, label="GHB, no tuning", zorder=5)
         ax.axvline(1, color=style.SLATE800, lw=0.6, ls="--")
         ax.set_title(f"$\\epsilon$ = {e}", fontsize=8)
         ax.set_xlabel("Held-out log-loss relative to local", fontsize=7)
