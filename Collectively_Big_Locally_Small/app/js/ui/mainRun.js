@@ -29,6 +29,6 @@ export function restart() {
 }
 
 store.subscribe((keys) => {
-  if (keys.every((k) => PARAM[k]?.group === 'calc' || k === 'refN')) return;
+  if (keys.every((k) => ['calc', 'arena'].includes(PARAM[k]?.group) || ['refN', 'protocol', 'collude'].includes(k))) return;
   clearTimeout(timer); timer = setTimeout(restart, 280);
 });

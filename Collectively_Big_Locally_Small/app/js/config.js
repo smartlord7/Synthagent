@@ -16,12 +16,13 @@ const C = (key, group, label, def, extra = {}) => ({ key, group, label, type: 'c
 /** Parameter groups in display order. */
 export const GROUPS = [
   ['network', 'Network'], ['model', 'Model'], ['privacy', 'Privacy'], ['estimation', 'Estimation'],
-  ['safeguards', 'Safeguards'], ['adversaries', 'Adversaries'], ['mc', 'Monte Carlo'], ['calc', 'Small-data calculator']
+  ['safeguards', 'Safeguards'], ['adversaries', 'Adversaries'], ['mc', 'Monte Carlo'], ['calc', 'Small-data calculator'],
+  ['arena', 'Literature arena (logistic world)']
 ];
 
 /**
  * Every parameter of the lab. `log: true` means the slider moves in log10 units; `sweep: true` marks
- * parameters offered on the Sweeps tab. Defaults are the paper's (Section 8.7, Example 2.4).
+ * parameters offered on the Sweeps tab. Defaults are the paper's (Section 6.1; survey Example 2.4).
  */
 export const PARAMS = [
   // network
@@ -59,9 +60,11 @@ export const PARAMS = [
   S('accounting', 'privacy', 'Accounting over refits', [['basic', 'Basic composition'], ['zcdp', 'Zero-concentrated DP']], 'basic'),
   R('refits', 'privacy', 'Refits r on the same patients', '', 1, 50, 1, 1, { int: true, sweep: true }),
   R('group', 'privacy', 'Joint-release group size g', '', 1, 8, 1, 1, { int: true, sweep: true }),
+  R('collude', 'privacy', 'Colluding hospitals c (GHB)', '', 0, 20, 1, 0, { int: true }),
   // estimation
+  S('protocol', 'estimation', 'Protocol shown', [['both', 'Both'], ['ghb', 'GHB'], ['lite', 'GHB-lite']], 'both'),
   S('tauEst', 'estimation', 'τ² estimator', [['dl', 'DerSimonian-Laird'], ['bayes', 'Half-Cauchy posterior'], ['oracle', 'Oracle (true τ²)']], 'dl'),
-  R('cauchy', 'estimation', 'Half-Cauchy scale', '', 0.05, 2, 0.05, 0.5),
+  R('cauchy', 'estimation', 'Half-Cauchy scale of τ', '', 0.05, 2, 0.05, 0.5),
   S('weights', 'estimation', 'Leave-one-out weights', [['iv', 'Inverse variance'], ['equal', 'Equal']], 'iv'),
   C('exact', 'estimation', 'Exact averaging (server reference)', false),
   R('T', 'estimation', 'Gossip rounds T', 'rounds', 1, 200, 1, 60, { int: true, sweep: true }),
@@ -99,7 +102,25 @@ export const PARAMS = [
   R('cPrev', 'calc', 'Outcome prevalence π', '', 0.005, 0.5, 0.005, 0.08),
   R('cP', 'calc', 'Candidate parameters p', '', 2, 100, 1, 20, { int: true }),
   R('cR2', 'calc', 'R²_CS as share of max', '%', 0.02, 0.6, 0.01, 0.15),
-  R('cS', 'calc', 'Target shrinkage S', '', 0.8, 0.98, 0.01, 0.9)
+  R('cS', 'calc', 'Target shrinkage S', '', 0.8, 0.98, 0.01, 0.9),
+  // literature arena (Section 6.3, logistic world of Simulations 8, 10 and 15)
+  R('aK', 'arena', 'Hospitals K', '', 6, 96, 1, 24, { int: true }),
+  R('aMedian', 'arena', 'Median hospital size', 'patients', 25, 400, 5, 100, { int: true }),
+  R('aTau2', 'arena', 'Heterogeneity τ² (per coefficient)', '', -2.5, 0, 0.05, 0.05, { log: true }),
+  C('aNoDP', 'arena', 'No differential privacy', false),
+  R('aEps', 'arena', 'Privacy budget ε', '', -1, 1.3, 0.05, 1, { log: true }),
+  R('aDelta', 'arena', 'δ', '', -8, -3, 0.5, 1e-5, { log: true }),
+  R('aShift', 'arena', 'Case-mix shift (sd of feature means)', '', 0, 1, 0.05, 0),
+  R('aRegions', 'arena', 'Regions (0 = none)', '', 0, 8, 1, 0, { int: true }),
+  R('aTauR2', 'arena', 'Between-region τ_r²', '', -3, 0, 0.05, 0.2, { log: true }),
+  R('aAnchorErr', 'arena', 'Anchor error (true sd)', '', 0, 1.5, 0.05, 0.3),
+  R('aAnchorSd', 'arena', 'Anchor stated sd σ₀ (0 = no anchor)', '', 0, 1.5, 0.05, 0.3),
+  C('aCheck', 'arena', 'Anchor conflict check', true),
+  S('aTuning', 'arena', 'Tuning of the literature methods', [['defaults', 'Paper defaults'], ['oracle', 'Oracle'], ['manual', 'Manual']], 'defaults'),
+  R('aReps', 'arena', 'Replicates', '', 2, 100, 1, 10, { int: true }),
+  R('aTune', 'arena', 'Tuning replicates (oracle)', '', 1, 40, 1, 5, { int: true }),
+  R('aSeed', 'arena', 'Seed', '', 1, 999, 1, 15, { int: true }),
+  R('aNTest', 'arena', 'Test patients per hospital', 'patients', 500, 4000, 500, 4000, { int: true })
 ];
 
 /** Lookup of parameters by key. */
@@ -108,7 +129,7 @@ export const PARAM = Object.fromEntries(PARAMS.map((p) => [p.key, p]));
 /**
  * The paper defaults as a fresh configuration object.
  * @returns {Object} configuration with every key of PARAMS plus `sizesTable` and `customEdges`
- * @see Section 8.7 (defaults of the simulation study), Example 2.4
+ * @see Section 6.1 (defaults of the simulation study); survey Example 2.4
  */
 export function defaultConfig() {
   const c = Object.fromEntries(PARAMS.map((p) => [p.key, p.def]));
@@ -159,7 +180,7 @@ export function resolveSizes(c) {
  * @param {Object} c configuration
  * @param {number} K number of hospitals
  * @returns {Float64Array[]}
- * @see Section 8.4, Figure 9
+ * @see Section 4.3, Figure 2
  */
 export function resolveGraph(c, K) {
   if (c.topo === 'custom') return c.customEdges ? edgesToAdj(K, c.customEdges.filter(([i, j]) => i < K && j < K && i !== j)) : topology('ring', K);
@@ -192,7 +213,7 @@ export function resolveRegions(c, K) {
  * @param {Object} c configuration
  * @returns {{eps:number, delta:number, C:number, rho:number|null, perEps:number, perDelta:number, noiseScale:number}}
  *   eps/delta/C to pass to dpVar for one release (noiseScale multiplies the classical sd under zCDP)
- * @see Proposition 8.2, Simulation 14
+ * @see Proposition 4.2, Simulation 14
  */
 export function resolvePrivacy(c) {
   if (c.noDP) return { eps: Infinity, delta: c.delta, C: c.C, rho: null, perEps: Infinity, perDelta: 0, noiseScale: 0 };
@@ -204,6 +225,22 @@ export function resolvePrivacy(c) {
     return { eps: effEps, delta: c.delta, C: c.C, rho, perEps: c.eps / r, perDelta: c.delta, noiseScale: 1 };
   }
   return { eps: c.eps / r, delta: c.delta / r, C: c.C, rho: null, perEps: c.eps / r, perDelta: c.delta / r, noiseScale: 1 };
+}
+
+/**
+ * Arena specification (sim/arena.js) from the configuration.
+ * @param {Object} c configuration
+ * @param {string[]} methods selected method ids
+ * @param {Object} manual manual hyperparameters per method
+ * @returns {Object} arena specification
+ * @see Section 6.3 (Simulations 8, 10 and 15)
+ */
+export function resolveArena(c, methods, manual) {
+  return {
+    K: c.aK, median: c.aMedian, tau2: c.aTau2, eps: c.aNoDP ? Infinity : c.aEps, delta: c.aDelta, shift: c.aShift, regions: c.aRegions, tauR2: c.aTauR2,
+    anchorErr: c.aAnchorErr, anchorSd: c.aAnchorSd, check: c.aCheck, reps: c.aReps, tuneReps: c.aTune, seed: c.aSeed, nTest: c.aNTest,
+    tuning: c.aTuning, methods, manual: manual || {}
+  };
 }
 
 /**

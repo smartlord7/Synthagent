@@ -1,4 +1,4 @@
-// Reference values from the paper (Section 2, Figure 9, Section 8.7) and from the Python implementation
+// Reference values from the GHB paper (Section 2.1, Figure 2, Section 6.1), the survey (Section 2) and from the Python implementation
 // (scripts/blueprint.py, simulations/ghb.py). Run from app/: node --test tests/
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -25,7 +25,7 @@ test('Riley n* = 2707 for p = 20, R2_CS 15% of max at prevalence 8%, S = 0.9 (Eq
   assert.equal(regime(sigma).name, 'strained');
 });
 
-test('SLEM 0.977 (ring) and 0.933 (ring + 2-hop) for K = 24 (Figure 9)', () => {
+test('SLEM 0.977 (ring) and 0.933 (ring + 2-hop) for K = 24 (Figure 2)', () => {
   close(slem(metropolisHastings(topology('ring', 24))), 0.977, 5e-4, 'ring');
   close(slem(metropolisHastings(topology('ring2', 24))), 0.933, 5e-4, 'ring + 2-hop');
   close(slem(metropolisHastings(topology('regional', 24))), 0.964, 5e-4, 'regional (paper seed)');
@@ -49,7 +49,7 @@ test('zCDP accounting round-trips and beats basic composition for many refits (S
   assert.ok(noiseZcdp(0.04, 1, 1e-5, 10) < noiseBasic(0.04, 1, 1e-5, 10));
 });
 
-test('plug-in GHB mean relative risk ~ 0.72 at tau2 = 0.02, eps = 1 on the paper sizes (Section 8.7)', () => {
+test('plug-in GHB mean relative risk ~ 0.72 at tau2 = 0.02, eps = 1 on the paper sizes (Section 6.1)', () => {
   const n = PAPER_SIZES, K = n.length, q = { tau2: 0.02, eps: 1, delta: 1e-5, C: 1 };
   const P = matPow(metropolisHastings(topology('ring2', K)), 60), avg = avgOp(P, K), rng = makeRng(7);
   const R = 6000, acc = new Float64Array(K), accO = new Float64Array(K);

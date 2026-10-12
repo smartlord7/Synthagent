@@ -99,7 +99,11 @@ export class Figure {
 
   drawXY(c, w, h) {
     const d = this.data, ink = tok('--rd-ink'), muted = tok('--rd-muted'), rule = tok('--rd-rule'), mono = tok('--rd-font-mono'), ui = tok('--rd-font-ui');
-    const { L, T, pw, ph } = this.frame(c, w, h);
+    let { L, T, pw, ph } = this.frame(c, w, h);
+    if (d.yCats) { // room for category labels (method or network names)
+      c.font = `11px ${ui}`; const need = Math.max(...d.yCats.map((s) => c.measureText(s).width)) + 14;
+      const L2 = Math.min(Math.max(L, need), Math.round(w * 0.42)); pw -= L2 - L; L = L2;
+    }
     mmGrid(c, L, T, pw, ph);
     const vis = d.series.filter((s) => !this.hidden.has(s.id));
     const xs = [], ys = [];
@@ -205,7 +209,7 @@ export class Figure {
  * @returns {Array} series
  */
 export function methodSeries(ids, METHOD, ptsFn, style = {}) {
-  return ids.map((id) => ({ id, label: METHOD[id].label, tok: METHOD[id].tok, pts: ptsFn(id), marker: 2.6, width: id === 'ghb' ? 2.2 : 1.4, ...style }));
+  return ids.map((id) => ({ id, label: METHOD[id].label, tok: METHOD[id].tok, pts: ptsFn(id), marker: 2.6, width: id === 'ghb' || id === 'lite' ? 2.2 : 1.4, ...style }));
 }
 
 export { alpha };

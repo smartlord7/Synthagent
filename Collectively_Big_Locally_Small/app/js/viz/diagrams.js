@@ -7,13 +7,13 @@
 import { tok, fmt } from './theme.js';
 
 /**
- * Deflation bars: the sample left after each mechanism of Eq. (2), with Riley's n* as a dashed line.
+ * Deflation bars: the sample left after each mechanism of survey Eq. (2), with Riley's n* as a dashed line.
  * @param {CanvasRenderingContext2D} c context
  * @param {number} w width
  * @param {number} h height
  * @param {number[]} steps [n, after clustering, after labels, after noise, after shift]
  * @param {number} nstar Riley n*
- * @see Eq. (1), Eq. (2), Figure 2
+ * @see survey Eq. (1), survey Eq. (2), Figure 2
  */
 export function drawDeflation(c, w, h, steps, nstar) {
   const labels = ['nominal n', '÷ DEFF (clustering)', '× ρ_L (labels)', '× (1−2η)² (noise)', '× ρ_S (shift) = n_eff'];
@@ -40,7 +40,7 @@ export function drawDeflation(c, w, h, steps, nstar) {
  * @param {{n:number[], th:ArrayLike<number>, mu:ArrayLike<number>, est:ArrayLike<number>, theta:ArrayLike<number>, alpha:ArrayLike<number>}} d hospitals
  * @param {number} t shrinkage progress in [0, 1]
  * @param {number} sel selected hospital or -1
- * @see Proposition 8.1: estimate = alpha th + (1 - alpha) mu
+ * @see Proposition 4.1: estimate = alpha th + (1 - alpha) mu
  */
 export function drawShrinkStrip(c, w, h, d, t, sel) {
   const K = d.n.length, L = 46, R = 12, T = 8, B = 26, rowH = (h - T - B) / K, mono = tok('--rd-font-mono');

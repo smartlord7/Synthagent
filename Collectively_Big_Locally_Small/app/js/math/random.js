@@ -7,7 +7,7 @@
 /**
  * The 24 hospital sizes of the paper's simulation study: the output of `site_sizes()` in
  * simulations/ghb.py (log-normal, median 100, spread 1, clipped to [15, 1500], seed 11, sorted).
- * @see Section 8.7, "Unless stated otherwise, the network has 24 hospitals ... (16 to 479 patients)"
+ * @see Section 6.1, "Unless stated otherwise, the network has 24 hospitals ... (16 to 479 patients)"
  */
 export const PAPER_SIZES = Object.freeze([16, 22, 42, 51, 59, 60, 68, 74, 82, 86, 87, 91, 95, 103, 148, 159, 177, 197, 199, 211, 228, 340, 390, 479]);
 

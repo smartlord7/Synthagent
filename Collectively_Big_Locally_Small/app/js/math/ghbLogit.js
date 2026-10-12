@@ -10,7 +10,9 @@
  */
 import { P, Public, scoreSum, infoAtZero, combineDiag, combineFull, rhoTotal } from './logit.js';
 import { inv, mv, mul, add, eye, diag, diagOf, psd } from './linalg.js';
-import { borrow } from './ghb.js';
+import { borrow, GRID, DGRID, gridQuantiles, priorQuantiles } from './ghb.js';
+
+export { GRID, gridQuantiles, priorQuantiles };
 
 /** Bound G on ||x|| (per-patient score norm). @see Section 5.2 */
 export const G = Math.sqrt(5);
@@ -24,37 +26,6 @@ export const S0 = 2.5;
 export const SDS = Object.freeze([0.5, 1.0, 2.5]);
 /** Anchor conflict threshold. @see Section 5.2, |mu_0 - w| > 3 sqrt(sigma_0^2 + V) */
 export const Z_CONFLICT = 3;
-
-/** Grid of tau for its posterior: 0 and 160 log-spaced values from 10^-3.5 to 10. @see ghb_logit.GRID */
-export const GRID = (() => { const g = [0]; for (let i = 0; i < 160; i++) g.push(10 ** (-3.5 + 4.5 * i / 159)); return Float64Array.from(g); })();
-const DGRID = (() => { const n = GRID.length, d = new Float64Array(n); d[0] = GRID[1] - GRID[0]; d[n - 1] = GRID[n - 1] - GRID[n - 2]; for (let i = 1; i < n - 1; i++) d[i] = (GRID[i + 1] - GRID[i - 1]) / 2; return d; })();
-
-/**
- * Equally weighted quantiles of tau^2 from a discrete density on GRID (numpy searchsorted, left side).
- * @param {ArrayLike<number>} p normalized weights on GRID
- * @param {number} [q=Q] number of quantiles
- * @returns {Float64Array} tau_q^2
- * @see Remark 4.4; ghb_v3.quantiles
- */
-export function gridQuantiles(p, q = Q) {
-  const cdf = new Float64Array(GRID.length); let c = 0;
-  for (let i = 0; i < GRID.length; i++) { c += p[i]; cdf[i] = c; }
-  const out = new Float64Array(q);
-  for (let j = 0; j < q; j++) { const t = (j + 0.5) / q; let i = 0; while (i < GRID.length && cdf[i] < t) i++; out[j] = GRID[Math.min(i, GRID.length - 1)] ** 2; }
-  return out;
-}
-
-/**
- * Quantiles of the half-Cauchy(0, scale) prior on tau alone, discretized on GRID.
- * @param {number} [scale=SCALE] half-Cauchy scale
- * @param {number} [q=Q] number of quantiles
- * @returns {Float64Array} tau_q^2
- * @see Section 5.2 (GHB integrates tau out over its prior: no per-hospital release carries tau)
- */
-export function priorQuantiles(scale = SCALE, q = Q) {
-  const p = Float64Array.from(GRID, (t, i) => DGRID[i] / (1 + (t / scale) ** 2)), s = p.reduce((a, b) => a + b, 0);
-  return gridQuantiles(p.map((x) => x / s), q);
-}
 
 /**
  * Posterior quantiles of tau^2 given releases x with variances r, half-Cauchy prior, mu integrated out (flat prior).
