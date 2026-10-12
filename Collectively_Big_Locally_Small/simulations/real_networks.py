@@ -35,6 +35,7 @@ import ghb
 import ghb_logit as GL
 import literature as LIT
 import ghb_sa as SA
+import personalized as PZ
 import style
 from exp7_logistic import P, auc, fit
 from real_heart import folds
@@ -68,6 +69,7 @@ for _e in BASE_EPS:
     TUNED[f"Decentralized DP-SGD, eps={_e:g}"] = [f"DEC{_e:g}|R={R}|eta={eta}|E={E}" for R, eta, E in DEC_GRID]
     TUNED[f"Clustered DP-FedAvg, eps={_e:g}"] = [f"CLU{_e:g}|C={C}|R={R}|eta={eta}|E={E}" for C, R, eta, E in CLU_GRID]
     TUNED[f"Ditto-style (DP), eps={_e:g}"] = [f"DIT{_e:g}|lambda={lam}" for lam in DITTO_GRID]
+TUNED.update(PZ.families(BASE_EPS))  # personalized federated baselines (personalized.py)
 GHB_NAMES = [f"GHB (DP, eps={e:g})" for e in EPS_GHB]
 METHODS = (["Local"] + GHB_NAMES + ["GHB (no DP)", "GHB, empirical features (no DP)", "Global (pooled, no DP)", "Local GD, tuned stopping",
                                     "Local, tuned prior", "GHB, tuned prior (no DP)", "Local, evidence prior"]
@@ -167,7 +169,7 @@ def ghb_fit(rng, train, n, pub, avg, eps, tuned=None):
 SA_C = 8.0  # GHB-SA version 2, frozen on development data (dev/sa_dev2.py, dev/PREREG_sa.md): C = 8, no round 3
 
 
-def estimates(rng, train, pub, avg, W, rng_sa=None):
+def estimates(rng, train, pub, avg, W, rng_sa=None, rng_p=None):
     n = np.array([len(y) for _, y in train], float)
     K = len(n)
     est = {"Local": np.array([fit(X, y, np.zeros(P), PRIOR) for X, y in train])}
@@ -184,6 +186,9 @@ def estimates(rng, train, pub, avg, W, rng_sa=None):
     est["Global (pooled, no DP)"] = np.repeat(fit(Xa, ya, np.zeros(P), PRIOR)[None], K, 0)
     for E, th in LIT.fine_tune(train, np.zeros((K, P)), steps=LGD_STEPS).items():
         est[f"LGD|E={E}"] = th
+    if rng_p is not None:  # personalized baselines, on their own random stream
+        for e in BASE_EPS:
+            est.update(PZ.all_estimates(rng_p, train, np.array([len(y) for _, y in train], float), e, DELTA))
     if rng_sa is not None:  # secure aggregation: GHB-SA and DP-FedAvg-SA, on their own random stream
         for e in EPS_GHB + (np.inf,):
             est[f"GHB-SA {e:g}"] = SA.estimate_v2(rng_sa, pub, train, n, np.zeros(P), e, DELTA, C=SA_C, iv=False)
@@ -235,6 +240,7 @@ def run(item):
     K = len(data)
     n_all = np.array([len(y) for _, y in data])
     rng_sa = np.random.default_rng([21, i])
+    rng_p = np.random.default_rng([22, i])
     pub, W = GL.Public(public_features(rng, name)), mixing(K)
     avg = ghb.Averager(W, 60)
     # per method: summed log-loss per hospital and split, and pooled test scores per split
@@ -248,7 +254,7 @@ def run(item):
                 if len(tr) == 0:  # a hospital with fewer patients than folds sits this fold out of training
                     tr = te
                 train.append((X[tr], y[tr])); test.append((X[te], y[te]))
-            est = estimates(rng, train, pub, avg, W, rng_sa)
+            est = estimates(rng, train, pub, avg, W, rng_sa, rng_p)
             for m, e in est.items():
                 rec = S.setdefault(m, dict(ll=np.zeros((REPEATS * FOLDS, K)), cnt=np.zeros((REPEATS * FOLDS, K)), s=[], y=[]))
                 j = rep * FOLDS + f

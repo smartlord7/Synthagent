@@ -364,48 +364,66 @@ def real_heart():
     write("s_real_heart_hyper.tex", rows)
 
 
+REAL_ORDER = ["medpar", "TCGA-LUSC", "TCGA-HNSC", "TCGA-BLCA", "TCGA-STAD", "TCGA-LIHC", "TCGA-KIRC", "heart"]
+REAL_TUNED = [("GHB, tuned prior", "GHB, tuned prior (DP), eps={e}"), ("Local, tuned prior$^\\ddagger$", "Local, tuned prior"),
+              ("Local GD, tuned stopping$^\\ddagger$", "Local GD, tuned stopping"), ("DP-FedAvg", "DP-FedAvg, eps={e}"),
+              ("DP-FedAvg + FT", "DP-FedAvg + fine-tuning, eps={e}"), ("DP-FedAvg + FT, sec.\\ agg.", "DP-FedAvg-SA + fine-tuning, eps={e}"),
+              ("Decentralized DP-SGD", "Decentralized DP-SGD, eps={e}"), ("Clustered DP-FedAvg", "Clustered DP-FedAvg, eps={e}"),
+              ("Ditto-style", "Ditto-style (DP), eps={e}")]
+
+
+def real_realistic(s, nm, fam):
+    """The arm tuned on the development network (UCI Heart Disease) and frozen: the candidate best there, evaluated here."""
+    import real_networks as RN
+    best = min(RN.TUNED[fam], key=lambda c: s["heart"]["cand"][c]["rel"])
+    return s[nm]["cand"][best]
+
+
 def real_networks():
     s = load("real_networks.json")["res"]
-    order = [k for k in ("medpar", "TCGA-LUSC", "TCGA-HNSC", "TCGA-BLCA", "TCGA-STAD", "TCGA-LIHC", "TCGA-KIRC", "heart") if k in s]
-    fam = [("GHB", "GHB (DP, eps={e})"), ("GHB, tuned prior", "GHB, tuned prior (DP), eps={e}"), ("DP-FedAvg", "DP-FedAvg, eps={e}"), ("DP-FedAvg + FT", "DP-FedAvg + fine-tuning, eps={e}"),
-           ("Decentralized DP-SGD", "Decentralized DP-SGD, eps={e}"), ("Clustered DP-FedAvg", "Clustered DP-FedAvg, eps={e}"),
-           ("Ditto-style", "Ditto-style (DP), eps={e}"), ("Meta-analysis", "Meta-analysis (DP), eps={e}")]
-    nodp = [("GHB", "GHB (no DP)"), ("GHB, tuned prior", "GHB, tuned prior (no DP)"), ("Global (pooled)", "Global (pooled, no DP)"),
-            ("Local, tuned prior$^\\ddagger$", "Local, tuned prior"), ("Local GD, tuned stopping$^\\ddagger$", "Local GD, tuned stopping")]
-    fmt = lambda v: "n/a" if v != v else (f"{v:.2f}" if v < 9.995 else f"{v:.1f}")
-
-    def block(rows, title, items, key, bold=True):
-        rows.append(f"\\multicolumn{{{len(order) + 1}}}{{@{{}}l}}{{\\emph{{{title}}}}}" + r"\\")
-        vals = {m: [s[nm][m][key] for nm in order] for _, m in items}
-        best = [min((vals[m][j] for _, m in items if vals[m][j] == vals[m][j]), default=None) for j in range(len(order))]
-        for lab, m in items:
-            cells = []
-            for j, v in enumerate(vals[m]):
-                c = fmt(v)
-                cells.append(f"\\textbf{{{c}}}" if bold and v == best[j] else c)
-            rows.append(lab + " & " + " & ".join(cells) + r"\\")
-
-    for key, fname in (("rel", "t_real_networks.tex"), ("rel_small", "s_real_networks_small.tex"), ("worst", "s_real_networks_worst.tex")):
-        rows = ["Hospitals $K$ & " + " & ".join(str(s[nm]["info"]["K"]) for nm in order) + r"\\",
-                "Patients & " + " & ".join(f"{sum(s[nm]['info']['n']):,}".replace(",", "{,}") for nm in order) + r"\\",
-                "Died (\\%) & " + " & ".join(f"{100 * s[nm]['info']['prevalence']:.0f}" for nm in order) + r"\\",
-                "Local log-loss & " + " & ".join(f"{s[nm]['Local']['ll']:.3f}" for nm in order) + r"\\", r"\midrule"]
-        block(rows, "$\\epsilon=1$", [(l, m.format(e="1")) for l, m in fam], key, key != "worst")
-        rows.append(r"\midrule")
-        rows.append("GHB, $\\epsilon=3$ & " + " & ".join(fmt(s[nm]["GHB (DP, eps=3)"][key]) for nm in order) + r"\\")
-        rows.append(r"\midrule")
-        block(rows, "$\\epsilon=10$", [(l, m.format(e="10")) for l, m in fam], key, key != "worst")
-        rows.append(r"\midrule")
-        block(rows, "No privacy ($\\ddagger$: no other hospital)", nodp, key, False)
-        write(fname, rows)
+    order = [k for k in REAL_ORDER if k in s]
+    fmt = lambda v: "n/a" if v != v else (f"{v:.3f}" if v < 9.995 else f"{v:.1f}")
+    for e in ("1", "10"):
+        for key, suffix in (("rel", ""), ("rel_small", "_small"), ("worst", "_worst")):
+            untuned = [("GHB", f"GHB (DP, eps={e})"), ("GHB-EB", f"GHB-EB {e}"), ("GHB-SA (sec.\\ agg.)", f"GHB-SA {e}")]
+            vals = {}
+            for lab, m in untuned:
+                vals[("u", lab)] = [s[nm][m][key] for nm in order]
+            for lab, m in REAL_TUNED:
+                f = m.format(e=e)
+                vals[("r", lab)] = [real_realistic(s, nm, f)[key] for nm in order]
+                vals[("o", lab)] = [s[nm][f][key] for nm in order]
+            # bold: best private method a hospital could actually run (no tuning, or tuned on the development network)
+            best = [min(v[j] for (arm, _), v in vals.items() if arm in ("u", "r") and v[j] == v[j]) for j in range(len(order))]
+            rows = ["Hospitals $K$ & " + " & ".join(str(s[nm]["info"]["K"]) for nm in order) + r"\\",
+                    "Local log-loss (nats) & " + " & ".join(f"{s[nm]['Local']['ll']:.3f}" for nm in order) + r"\\", r"\midrule"]
+            for arm, title in (("u", "No tuning"), ("r", "Tuned on UCI Heart Disease, then frozen (realistic)"),
+                               ("o", "Tuned on each network's own held-out folds (oracle; upper bound)")):
+                rows.append(f"\\multicolumn{{{len(order) + 1}}}{{@{{}}l}}{{\\emph{{{title}}}}}" + r"\\")
+                for (a2, lab), v in vals.items():
+                    if a2 != arm:
+                        continue
+                    cells = [(f"\\textbf{{{fmt(x)}}}" if key != "worst" and arm != "o" and x == best[j] else fmt(x)) for j, x in enumerate(v)]
+                    rows.append(lab + " & " + " & ".join(cells) + r"\\")
+                rows.append(r"\midrule")
+            if e == "1":
+                rows.append(f"\\multicolumn{{{len(order) + 1}}}{{@{{}}l}}{{\\emph{{No privacy}}}}" + r"\\")
+                for lab, m in (("GHB", "GHB (no DP)"), ("GHB-EB", "GHB-EB inf"), ("Global (pooled)", "Global (pooled, no DP)")):
+                    rows.append(lab + " & " + " & ".join(fmt(s[nm][m][key]) for nm in order) + r"\\")
+            else:
+                rows = rows[:-1]
+            name = ("t" if (e == "1" and key == "rel") else "s") + f"_real_networks_eps{e}{suffix}.tex"
+            write(name, rows)
+    # chosen configurations: oracle per network, and the frozen realistic one
+    import real_networks as RN
     rows = []
-    for nm in order:
-        ch = s[nm]["chosen"]
-        f = lambda c: c.split("|", 1)[1].replace("eta=", "$\\eta$=").replace("lambda=", "$\\lambda$=").replace("|", ", ")
-        for e in ("1", "10"):
-            rows.append(f"{s[nm]['info']['label'] if e == '1' else ''} & {e} & " + " & ".join(
-                f(ch[k.format(e=e)]) for k in ("DP-FedAvg, eps={e}", "DP-FedAvg + fine-tuning, eps={e}", "Decentralized DP-SGD, eps={e}",
-                                               "Clustered DP-FedAvg, eps={e}", "Ditto-style (DP), eps={e}")) + r"\\")
+    for e in ("1", "10"):
+        for lab, m in REAL_TUNED:
+            f = m.format(e=e)
+            g = lambda c: c.split("|", 1)[1].replace("eta=", "$\\eta$=").replace("lambda=", "$\\lambda$=").replace("sd=", "s.d.=").replace("|", ", ")
+            real = min(RN.TUNED[f], key=lambda c: s["heart"]["cand"][c]["rel"])
+            orc = sorted({s[nm]["chosen"][f] for nm in order if nm != "heart"})
+            rows.append(f"{e} & {lab} & {g(real)} & {'; '.join(g(c) for c in orc)}" + r"\\")
         rows.append(r"\addlinespace")
     write("s_real_networks_hyper.tex", rows[:-1])
 
