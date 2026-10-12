@@ -51,7 +51,7 @@
 \begin{document}
 
 \title{Graph Hierarchical Borrowing: Online Supplement}
-\subtitle{Simulation study, revision of GHB and extensions tried}
+\subtitle{Simulation study, real hospital networks, pre-registrations and the development of GHB}
 
 \author{Sancho Amaral Sim\~{o}es}
 \email{sanchosimoes@student.dei.uc.pt}
@@ -487,6 +487,85 @@ $\tau^2$ & $\epsilon$ & FB & Mean & DL & No ev. & Equal & Exact & $T=10$ & Oracl
 
 \paragraph{Simulation 18: group fairness} The logistic world of Simulation 7 ($\epsilon=1$, $\delta=10^{-5}$, 24 hospitals, ring with two-hop links, $T=60$) with features $x=(1,S,z_1,z_2,z_3)$: $S\in\{0,1\}$ is a protected attribute ($S=1$ the minority group) and $z\sim\mathcal{N}(0,I_3)$ is clipped to $\|z\|\le\sqrt{3}$, so that $\|x\|\le\sqrt{5}$ and the sensitivity of the release is unchanged. Hospital $k$'s minority share is $\pi_k\sim\mathrm{Beta}(6\bar\pi,6(1-\bar\pi))$, clipped to $[0.02,0.98]$, with $\bar\pi=0.3$ (0.1 in the rare-minority scenario); the public feature distribution used for the inversion has share $\bar\pi$, so hospitals whose share differs are under case-mix shift. $\theta_k=\mu+u_k$ with $\mu=(-0.5,\mu_S,0.8,-0.6,0.4)$, $u_k\sim\mathcal{N}(0,\mathrm{diag}(\tau^2,\tau_S^2,\tau^2,\tau^2,\tau^2))$, $\tau^2=0.05$, and $(\mu_S,\tau_S^2)=(0.5,0.05)$ (shared), $(0.5,0.5)$ (varies), $(0.5,0.05)$ with $\bar\pi=0.1$ (rare) or $(0,0.5)$ (opposite); the anchor is $\mu$ plus $\mathcal{N}(0,0.3^2I)$. \emph{GHB, $S$ local} replaces, in every mixture component of each hospital's prior, the network estimate of the coefficient of $S$ and its variance by the local prior $\mathcal{N}(\mu_{0,S},1)$. FAIR-FATE follows Algorithm~1 of \cite{salazar2023fairfate} with the settings in the caption of Table~\ref{M-tab:sim18} of the paper; the fairness of a model on the server's validation set is its SP, EO or EQO ratio at threshold 0.5, in the form $\min(a,b)/\max(a,b)$, and EQO averages the ratios of true and false positive rates. The validation set holds a quarter as many patients as each hospital's training data, drawn from that hospital's distribution, so a fifth of all patients, as in the paper. Each method is evaluated on 4,000 new patients per hospital, drawn from the hospital's own distribution; the fairness ratios are computed on the pooled test patients of all hospitals, each scored by the model its hospital uses. Results over \SimEighteenReps{} replicates per scenario are in Table~\ref{M-tab:sim18} and Figure~\ref{M-fig:sim-fairness} of the paper. The code is \texttt{simulations/exp18\_fairness.py}.
 
+\section{Real Data: TCGA Development, Ablation and Confirmation}\label{sec:tcga}
+
+\paragraph{Data} Open-access clinical data of The Cancer Genome Atlas \cite{weinstein2013cancer,grossman2016toward} from the NCI Genomic Data Commons (\texttt{api.gdc.cancer.gov/cases}, script \texttt{simulations/fetch\_tcga.py}, files in \texttt{data/tcga\_v3/} and \texttt{data/tcga\_v4/}), downloaded with the fields vital status, days to death, age at index, sex at birth, days to last follow-up, AJCC pathologic stage, T and N, FIGO stage, prior malignancy, primary-diagnosis flag and the tissue source site. A hospital is a tissue source site (by name) with at least five eligible patients. A patient is eligible with a known age, sex and pathologic stage (AJCC, or FIGO where AJCC is absent), and a two-year outcome: death within 730 days, or known survival beyond it.
+
+\paragraph{Model} $x=(1,a,\text{male},\text{stage III},\text{stage IV},\text{T3 or T4},\text{N1 to N3},\text{prior malignancy})$ with $a=(\text{age}-62)/25$ clipped to $[-1,1]$, so $\|x\|\le\sqrt{8}$ without fitting anything to the data. Stage letters and digits are dropped (IIIC1 is III).
+
+\paragraph{Sets} Development: LUSC, HNSC, BLCA, STAD, LIHC, KIRC (the first set), and LUAD, COAD, READ, KIRP, PAAD, ESCA (the second set, which became development data once the pre-registered confirmation of the extensions of GHB-lite had run on it). Confirmation: every further TCGA project with at least four hospitals and at least fifteen deaths, fixed from counts alone before any model was fitted: BRCA, MESO, UCEC, OV and UCS. Of the other projects with downloadable data, ACC, PRAD and CESC have no or too few eligible hospitals, and THCA, KICH and TGCT too few deaths.
+
+\paragraph{Protocol} Ten repetitions of five-fold cross-validation, stratified by outcome within each hospital, with the networks of a set fitted jointly so that GHB can borrow across them; every other method is fitted per network. Budgets $\epsilon\in\{1,10\}$, $\delta=10^{-5}$, zero-concentrated accounting. Errors are pooled held-out log-loss over repetitions and hospitals, relative to local estimation under $\mathcal{N}(0,2.5^2)$. The baselines and their grids are in Table~\ref{tab:tcga-configs}. Script \texttt{simulations/real\_v3.py} (sets \texttt{dev}, \texttt{fresh}, \texttt{confirm}), with checkpoints per repetition.
+
+\begin{table}[t]
+\caption{TCGA: the literature methods, the size of each grid, and the configuration with the lowest mean error over the twelve development networks, frozen before the confirmation (\texttt{dev/v4\_realistic\_configs.json}). Every method spends the same budget, with private gradients under zero-concentrated accounting.}
+\label{tab:tcga-configs}
+\scriptsize
+\begin{tabularx}{\linewidth}{@{}lr>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X@{}}
+\toprule
+Method & Grid & $\epsilon=1$ & $\epsilon=10$\\
+\midrule
+\csname @@input\endcsname ../../Collectively_Big_Locally_Small/supplement/results/tables/s_tcga_configs.tex 
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{table}[t]
+\caption{TCGA development: twelve networks, ten repetitions; held-out log-loss relative to local estimation, mean over the networks. GHB as frozen; GHB-lite with the evidence-weighted default prior, alone and with the four extensions of the second pre-registration. Literature methods: tuned on the same twelve networks (development tuning, in sample, which favours them) and on each network's own held-out folds (oracle).}
+\label{tab:tcga-dev}
+\scriptsize
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+ & \multicolumn{2}{c}{$\epsilon=1$} & \multicolumn{2}{c}{$\epsilon=10$}\\
+\cmidrule(lr){2-3}\cmidrule(l){4-5}
+Method & Development & Oracle & Development & Oracle\\
+\midrule
+\csname @@input\endcsname ../../Collectively_Big_Locally_Small/supplement/results/tables/s_tcga_dev.tex 
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[t]
+\caption{TCGA development: ablation of GHB, one change at a time from the frozen configuration, on the twelve development networks (ten repetitions, the same privacy noise for every variant). Mean relative held-out log-loss, and the number of networks in which the frozen GHB is more accurate than the variant.}
+\label{tab:tcga-ablation}
+\scriptsize
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+ & \multicolumn{2}{c}{$\epsilon=1$} & \multicolumn{2}{c}{$\epsilon=10$}\\
+\cmidrule(lr){2-3}\cmidrule(l){4-5}
+Variant & Mean & GHB better & Mean & GHB better\\
+\midrule
+\csname @@input\endcsname ../../Collectively_Big_Locally_Small/supplement/results/tables/s_tcga_ablation.tex 
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[t]
+\caption{TCGA confirmation: every literature method in the oracle arm, tuned on each network's own held-out folds; relative held-out log-loss. Compare with Table~\ref{M-tab:tcga-confirm} of the paper.}
+\label{tab:tcga-oracle}
+\scriptsize
+\begin{tabular}{@{}lrrrrrr@{}}
+\toprule
+Method & BRCA & MESO & OV & UCEC & UCS & Mean\\
+\midrule
+\csname @@input\endcsname ../../Collectively_Big_Locally_Small/supplement/results/tables/s_tcga_oracle.tex 
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Development of GHB} GHB was selected among about fifteen variants on the development networks (\texttt{simulations/dev/v4\_dev.py}, with the same folds as \texttt{real\_v3.py}, so that the stored baselines are compared fold for fold). A first version iterated the joint releases as Newton's method with the information matrix released at every iterate and no propagation of the privacy noise; its network estimate was dominated by noise at $\epsilon=10$ in networks of a few hundred patients, because a Newton step divides the noise by the information of rare features. Releasing the information once, at the origin, propagating the privacy covariance into each hospital's prior, and borrowing across networks fixed this (Table~\ref{tab:tcga-ablation}). One Newton step was better than two, which spend half the budget per step. Learning $\tau$ from per-hospital releases at half the budget, alone or with institution effects across networks, did not help.
+
+\section{Pre-registrations and Their Outcomes}\label{sec:prereg}
+
+Every change to GHB made after seeing real data was tested under a pre-registration committed to the repository before its confirmation run (\texttt{simulations/dev/PREREG\_*.md}). The rule and the criteria were fixed in advance, and each outcome was appended afterwards, as it came.
+
+\begin{enumerate}[leftmargin=*]
+\item \textbf{Evidence-weighted default prior} (\texttt{PREREG\_prior.md}). GHB-lite integrates the scale of the default prior over $\{0.5,1,2.5\}$ by each hospital's evidence. Criteria: improve on GHB-lite in at least five of the seven networks of the eight-network benchmark, and raise no network's worst-hospital ratio by more than 0.1. Outcome: improved in \SimRFOneEBvsGHBWins{} networks, but raised the worst ratio in the liver network from \SimRFOneLiverWorstGHB{} to \SimRFOneLiverWorstEB, through a hospital whose 22 patients all died. Not adopted as the default of GHB-lite; adopted inside GHB, whose non-borrowing components cover that case.
+\item \textbf{GHB-SA} (\texttt{PREREG\_sa.md}). Secure aggregation of per-hospital clipped influences, with the network still recovered under a public feature distribution. Criteria: improve on the evidence-weighted GHB-lite in at least five of the seven networks at $\epsilon=1$, with no worst-hospital ratio higher by more than 0.1. Outcome: improved in \SimRFOneSAvsEBWins{} of seven. Not adopted. It was the first step toward joint releases; its failure pointed to the public feature distribution as the remaining problem.
+\item \textbf{Four extensions of GHB-lite} (\texttt{PREREG\_v3.md}): no-borrowing components, a network-learned prior scale, correlated heterogeneity, and borrowing across cancer types; the configuration with borrowing across cancer types was locked. All four predictions held on six then-unseen networks, but at $\epsilon=10$ every variant was worse than local estimation with the same prior, and at $\epsilon=1$ none was better. The diagnosis, bias and noise of per-hospital releases, led to GHB.
+\item \textbf{GHB} (\texttt{PREREG\_v4.md}). Three predictions on five unseen networks, all held (Section~\ref{M-sec:real-tcga}).
+\end{enumerate}
+
 \section{Real Data: UCI Heart Disease}\label{sec:real}
 
 \paragraph{Data} The processed Cleveland, Hungarian, Switzerland and VA Long Beach files of the UCI Heart Disease data \cite{detrano1989international} (CC BY 4.0), as distributed by the UCI Machine Learning Repository; they are in \texttt{data/heart\_disease/} of the repository. The outcome is angiographic coronary disease ($\text{num}>0$). Sizes and prevalences: Cleveland 303 (46\%), Budapest 294 (36\%), Zurich and Basel 123 (93\%), Long Beach 200 (75\%). Age, sex and chest-pain type are complete at every site; the exercise-test variables are missing for about a quarter of the Long Beach patients, and cholesterol is recorded as zero at the Swiss sites, so they are not used.
@@ -524,7 +603,7 @@ Method & Cle & Bud & Swi & VA & Cle & Bud & Swi & VA & Cle & Bud & Swi & VA\\
 \end{tabular}
 \end{table}
 
-\section{Revision of GHB and Extensions Tried}\label{sec:revision}
+\section{Revision of GHB-lite in Simulation and Extensions Tried}\label{sec:revision}
 
 The first run of Simulation 15 showed that the earlier GHB lost to DP-FedAvg with fine-tuning when hospitals were nearly identical and when the budget was strict. A diagnosis on development seeds (900 to 904, used by no reported simulation) found two causes. First, its plug-in $\tau^2$, the posterior mean under a half-Cauchy prior, is driven by the heavy prior tail when releases are noisy: it averaged 0.8 to 1.1 against a true 0.05 at $\epsilon=0.3$, so GHB barely borrowed. Second, its ridge releases ($\lambda=0.2$) have five times the sensitivity of a score, and undoing the ridge to first order at a fixed reference left a bias in the releases of the largest hospitals without privacy (their squared errors were 2.5 to 9 times their stated variances). The revision makes three changes, each following the design of Section~\ref{M-sec:model}: a score release at the anchor, inverted by public moment matching at anchor-free or check-gated points (scope (d) of Section~\ref{M-sec:privacy}); $\tau$ integrated out over its posterior, weighted by each hospital's own marginal likelihood (Remark~\ref{M-rem:tau}); and the anchor conflict check by default, decided once per hospital on anchor-free information. Table~\ref{tab:dev} gives the development runs that chose between the alternatives; the scripts are in \texttt{simulations/dev/}.
 

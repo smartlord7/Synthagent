@@ -18,12 +18,17 @@ reference, first-order de-shrinking, plug-in tau^2), kept for the development no
 import numpy as np
 from scipy.special import expit
 
+import hashlib
+
 import ghb
 import ghb_logit as GL
+import ghb_v4 as V4
 from blueprint import dp_noise_var
 from exp7_logistic import LAM, MU, N_TEST, P, R_X, auc, fisher_info, fit
 
 DITTO_GRID = (0.3, 1.0, 3.0, 10.0, 30.0, 100.0)
+V4_CFG = dict(f=1.0, safety=True, R1=1, pan=False)  # GHB v4 as locked in dev/PREREG_v4.md; one network, so no pan
+V4_NAME = "GHB v4 (DP)"
 METHODS = ("Local", "Global (pooled, no DP)", "FedAvg (DP)", "Meta-analysis (DP)", "Ditto-style (DP)", "GHB (DP)")
 
 
@@ -116,7 +121,7 @@ def evaluate(rng, theta_k, mean_k, est):
 
 def one_rep(rng, n, tau2, eps, avg, shift=0.0, anchor_err=0.3, anchor_sd=0.3, check=True,
             ditto_lam=None, ghb_variants=None, baselines=True, regions=None, extra=None, oracle_tau2=False,
-            legacy=False):
+            legacy=False, v4=True):
     """Excess log-loss and AUC of every method at every hospital for one replicate.
 
     GHB is ghb_logit (score releases at the anchor, moment inversion, tau integrated out). ghb_variants maps a
@@ -133,6 +138,10 @@ def one_rep(rng, n, tau2, eps, avg, shift=0.0, anchor_err=0.3, anchor_sd=0.3, ch
         ests[name] = GL.estimate(data, th, r, drop, mu0, avg, cfg.get("anchor_sd"))
         drops[name] = drop
         first = first or (th, r, drop, cfg)
+    if v4:  # GHB v4 on its own random stream (seeded by the data), so every other method's numbers are unchanged
+        seed = int.from_bytes(hashlib.sha256(data[0][0].tobytes() + data[-1][1].tobytes()).digest()[:8], "little")
+        cfg4 = dict(V4_CFG, anchor=None if anchor_sd is None else (mu0, anchor_sd))  # the published model, as for GHB
+        ests[V4_NAME] = V4.estimate({"net": data}, np.random.default_rng(seed), eps, 1e-5, R_X, cfg=cfg4)["net"]
     if oracle_tau2:
         th, r, drop, cfg = first
         t2_true = tau2 + (regions[1] if regions is not None else 0.0)
