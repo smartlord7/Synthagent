@@ -119,6 +119,8 @@ def main():
                          ("FedAvg (DP)", "Fedavg"), ("Global (pooled, no DP)", "Pooled")):
             n[f"Eight{tag}{short}"] = f"{kl[m]:.4f}"
         n[f"Eight{tag}GHBvsDitto"] = f"{100 * (1 - kl['GHB (DP)'] / kl['Ditto-style (DP)']):.0f}\\%"
+        if "GHB v4 (DP)" in kl:  # GHB (joint releases), added on its own random stream
+            n[f"Eight{tag}V"] = f"{kl['GHB v4 (DP)']:.4f}"
     s9 = json.load(open(R / "sim9_atypical.json"))["out"]
     n["NineGaussGHB"], n["NineGaussRobust"] = f2(s9["gauss"]["summary"]["GHB"]), f2(s9["gauss"]["summary"]["Robust GHB"])
     n["NineTGHB"], n["NineTRobust"] = f2(s9["t3"]["summary"]["GHB"]), f2(s9["t3"]["summary"]["Robust GHB"])
@@ -130,6 +132,9 @@ def main():
     n["ElevenOverTwo"] = f"{s11['2.0']['kl']['GHB, anchor overconfident (stated 0.3)']:.4f}"
     n["ElevenCheckTwo"] = f"{s11['2.0']['kl']['GHB, overconfident + conflict check']:.4f}"
     n["ElevenLocalTwo"] = f"{s11['2.0']['kl']['Local']:.4f}"
+    if "GHB v4 (DP)" in s11["2.0"]["kl"]:
+        n["ElevenVTwo"] = f"{s11['2.0']['kl']['GHB v4 (DP)']:.4f}"
+        n["ElevenVMax"] = f"{max(s11[e]['kl']['GHB v4 (DP)'] for e in s11):.4f}"
     n["ElevenNoAnchorMax"] = f"{max(s11[e]['kl']['GHB, no anchor'] for e in s11):.4f}"
     s12 = json.load(open(R / "sim12_byzantine.json"))
     n["TwelveWorstGHB"] = f2(max(max(s12["out"][f]["GHB"]) for f in ("1", "3")))
@@ -144,7 +149,7 @@ def main():
     n["FourteenR"] = str(last["r"]); n["FourteenBasic"] = f"{last['B_basic']:.1f}"; n["FourteenZcdp"] = f"{last['B_zcdp']:.1f}"
     n["FourteenOne"] = f"{s14['rows'][0]['B_basic']:.1f}"
     s15 = json.load(open(R / "sim15_literature.json"))["res"]
-    short15 = {"Local": "Local", "Local GD from anchor": "AnchorGD", "GHB (DP)": "GHB", "GHB, oracle tau2 (DP)": "Oracle",
+    short15 = {"Local": "Local", "Local GD from anchor": "AnchorGD", "GHB (DP)": "GHB", "GHB v4 (DP)": "V", "GHB, oracle tau2 (DP)": "Oracle",
                "GHB, earlier version (DP)": "Old",
                "Ditto-style (DP)": "Ditto", "DP-FedAvg": "Fedavg", "DP-FedAvg + fine-tuning": "FT",
                "Decentralized DP-SGD": "Dec", "Clustered DP-FedAvg": "Clus", "Global (pooled, no DP)": "Pooled"}
@@ -153,11 +158,18 @@ def main():
     for key, tag in tags15.items():
         r15 = s15[key]
         for m, short in short15.items():
+            if m not in r15["kl"]:
+                continue
             n[f"Fifteen{tag}{short}"] = f"{r15['kl'][m]:.4f}"
             n[f"Fifteen{tag}{short}Large"] = f"{r15['kl_large'][m]:.4f}"
             n[f"Fifteen{tag}{short}Worst"] = f2(r15["worst_ratio"][m])
     private = [k for k in tags15 if k not in ("eps=inf", "tau2=0.5")]
     n["FifteenGHBWorstMax"] = f2(max(s15[k]["worst_ratio"]["GHB (DP)"] for k in private))
+    if "GHB v4 (DP)" in s15["tau2=0.05"]["kl"]:
+        n["FifteenVWorstMax"] = f2(max(s15[k]["worst_ratio"]["GHB v4 (DP)"] for k in private))
+        iters = ("DP-FedAvg + fine-tuning", "Decentralized DP-SGD", "Clustered DP-FedAvg")
+        n["FifteenVBeatsIter"] = str(sum(all(s15[k]["kl"]["GHB v4 (DP)"] < s15[k]["kl"][m] for m in iters) for k in tags15))
+        n["FifteenVBeatsLite"] = str(sum(s15[k]["kl"]["GHB v4 (DP)"] < s15[k]["kl"]["GHB (DP)"] for k in tags15))
     n["FifteenFTWorstMin"] = f2(min(s15[k]["worst_ratio"]["DP-FedAvg + fine-tuning"] for k in private))
     n["FifteenFTWorstMax"] = f2(max(s15[k]["worst_ratio"]["DP-FedAvg + fine-tuning"] for k in private))
     n["FifteenReps"], n["FifteenTune"] = str(json.load(open(R / "sim15_literature.json"))["reps"]), str(json.load(open(R / "sim15_literature.json"))["tune"])

@@ -45,8 +45,8 @@ def tex_tau(lab):
 # ---------------------------------------------------------------- main paper
 def sim8():
     s = load("sim8_baselines.json")
-    methods = ["Local", "GHB (DP)", "Ditto-style (DP)", "Meta-analysis (DP)", "FedAvg (DP)", "Global (pooled, no DP)"]
-    private = methods[:5]
+    methods = ["Local", "GHB v4 (DP)", "GHB (DP)", "Ditto-style (DP)", "Meta-analysis (DP)", "FedAvg (DP)", "Global (pooled, no DP)"]
+    private = methods[:6]
     rows = []
     for key, lab in (("het", "$\\tau^2={}$"), ("shift", "shift ${}$")):
         for x, r in s[key].items():
@@ -59,9 +59,9 @@ def sim8():
     write("t_sim8.tex", rows)
 
 
-S15_COLS = ["Local", "Local GD from anchor", "GHB (DP)", "Ditto-style (DP)", "DP-FedAvg + fine-tuning",
+S15_COLS = ["Local", "Local GD from anchor", "GHB v4 (DP)", "GHB (DP)", "Ditto-style (DP)", "DP-FedAvg + fine-tuning",
             "Decentralized DP-SGD", "Clustered DP-FedAvg", "GHB, oracle tau2 (DP)", "Global (pooled, no DP)"]
-S15_PRIVATE = S15_COLS[:7]
+S15_PRIVATE = S15_COLS[:8]
 S15_LAB = {"tau2=0.01": "$\\tau^2=0.01$", "tau2=0.05": "$\\tau^2=0.05$", "tau2=0.2": "$\\tau^2=0.2$", "tau2=0.5": "$\\tau^2=0.5$",
            "eps=0.3": "$\\epsilon=0.3$", "eps=inf": "no DP", "regional": "regional$^\\ast$", "anchor=1.0": "wrong anchor$^\\ast$",
            "tau2=0.1,eps=0.5": "$\\tau^2=0.1$, $\\epsilon=0.5^\\ast$", "K=48": "$K=48^\\ast$"}
@@ -69,6 +69,8 @@ S15_LAB = {"tau2=0.01": "$\\tau^2=0.01$", "tau2=0.05": "$\\tau^2=0.05$", "tau2=0
 
 def sim15():
     s = load("sim15_literature.json")["res"]
+    if "GHB v4 (DP)" not in s["tau2=0.05"]["kl"]:  # results from before GHB was added: keep the earlier tables
+        return
     rows, wrows = [], []
     for key, lab in S15_LAB.items():
         r = s[key]
