@@ -440,13 +440,13 @@ GHB-lite is the most accurate private method in six of the ten settings ($\tau^2
 \label{tab:s15}
 \scriptsize
 \setlength{\tabcolsep}{3pt}
-\begin{tabular}{@{}lrrrrrrrrrrr@{}}
+\resizebox{\linewidth}{!}{\begin{tabular}{@{}lrrrrrrrrrrr@{}}
 \toprule
 Setting & Local & \makecell[r]{Anchor\\GD} & GHB-lite & \makecell[r]{Ditto-\\style\\\cite{li2021ditto}} & \makecell[r]{DP-\\FedAvg\\\cite{mcmahan2018learning}} & \makecell[r]{DP-FedAvg\\+ FT\\\cite{mcmahan2018learning}} & \makecell[r]{Decentr.\\DP-SGD\\\cite{lian2017can}} & \makecell[r]{Clustered\\DP-FedAvg\\\cite{ghosh2020efficient}} & \makecell[r]{GHB-lite,\\earlier} & \makecell[r]{GHB-lite,\\true $\tau^2$} & \makecell[r]{Pooled,\\no DP}\\
 \midrule
 \csname @@input\endcsname../../Collectively_Big_Locally_Small/supplement/results/s15_table.tex 
 \bottomrule
-\end{tabular}
+\end{tabular}}
 \end{table}
 
 \begin{table}[t]
@@ -489,7 +489,7 @@ $\tau^2$ & $\epsilon$ & FB & Mean & DL & No ev. & Equal & Exact & $T=10$ & Oracl
 
 \section{Real Data: TCGA Development, Ablation and Confirmation}\label{sec:tcga}
 
-\paragraph{Data} Open-access clinical data of The Cancer Genome Atlas \cite{weinstein2013cancer,grossman2016toward} from the NCI Genomic Data Commons (\texttt{api.gdc.cancer.gov/cases}, script \texttt{simulations/fetch\_tcga.py}, files in \texttt{data/tcga\_v3/} and \texttt{data/tcga\_v4/}), downloaded with the fields vital status, days to death, age at index, sex at birth, days to last follow-up, AJCC pathologic stage, T and N, FIGO stage, prior malignancy, primary-diagnosis flag and the tissue source site. A hospital is a tissue source site (by name) with at least five eligible patients. A patient is eligible with a known age, sex and pathologic stage (AJCC, or FIGO where AJCC is absent), and a two-year outcome: death within 730 days, or known survival beyond it.
+\paragraph{Data} Open-access clinical data of The Cancer Genome Atlas \cite{weinstein2013cancer,grossman2016toward} from the NCI Genomic Data Commons (\url{https://api.gdc.cancer.gov/cases}, script \texttt{simulations/fetch\_tcga.py}, files in \texttt{data/tcga\_v3/} and \texttt{data/tcga\_v4/}), downloaded with the fields vital status, days to death, age at index, sex at birth, days to last follow-up, AJCC pathologic stage, T and N, FIGO stage, prior malignancy, primary-diagnosis flag and the tissue source site. A hospital is a tissue source site (by name) with at least five eligible patients. A patient is eligible with a known age, sex and pathologic stage (AJCC, or FIGO where AJCC is absent), and a two-year outcome: death within 730 days, or known survival beyond it.
 
 \paragraph{Model} $x=(1,a,\text{male},\text{stage III},\text{stage IV},\text{T3 or T4},\text{N1 to N3},\text{prior malignancy})$ with $a=(\text{age}-62)/25$ clipped to $[-1,1]$, so $\|x\|\le\sqrt{8}$ without fitting anything to the data. Stage letters and digits are dropped (IIIC1 is III).
 
@@ -511,7 +511,7 @@ Method & Grid & $\epsilon=1$ & $\epsilon=10$\\
 \end{table}
 
 \begin{table}[t]
-\caption{TCGA development: twelve networks, ten repetitions; held-out log-loss relative to local estimation, mean over the networks. GHB as frozen; GHB-lite with the evidence-weighted default prior, alone and with the four extensions of the second pre-registration. Literature methods: tuned on the same twelve networks (development tuning, in sample, which favours them) and on each network's own held-out folds (oracle).}
+\caption{TCGA development: twelve networks, ten repetitions; held-out log-loss relative to local estimation, mean over the networks. GHB as frozen; GHB-lite with the evidence-weighted default prior, alone and with the four extensions of the third pre-registration. Literature methods: tuned on the same twelve networks (development tuning, in sample, which favours them) and on each network's own held-out folds (oracle).}
 \label{tab:tcga-dev}
 \scriptsize
 \begin{tabular}{@{}lrrrr@{}}
@@ -576,7 +576,7 @@ These tables give every network's result behind Table~\ref{M-tab:real-final} of 
 \caption{Eight-network benchmark, $\epsilon=1$, leave-one-network-out arm: held-out log-loss relative to local estimation, per network.}
 \label{tab:eight-eps1}
 \scriptsize
-\setlength{\tabcolsep}{3pt}
+\setlength{\tabcolsep}{2.4pt}
 \begin{tabular}{@{}lrrrrrrr@{}}
 \toprule
  & Medicare & LUSC & HNSC & BLCA & STAD & LIHC & KIRC\\
@@ -590,7 +590,7 @@ These tables give every network's result behind Table~\ref{M-tab:real-final} of 
 \caption{Eight-network benchmark, $\epsilon=10$, leave-one-network-out arm: held-out log-loss relative to local estimation, per network.}
 \label{tab:eight-eps10}
 \scriptsize
-\setlength{\tabcolsep}{3pt}
+\setlength{\tabcolsep}{2.4pt}
 \begin{tabular}{@{}lrrrrrrr@{}}
 \toprule
  & Medicare & LUSC & HNSC & BLCA & STAD & LIHC & KIRC\\
