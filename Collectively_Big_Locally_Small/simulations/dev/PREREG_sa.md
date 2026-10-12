@@ -46,3 +46,20 @@ GHB-SA is better in at least five of seven networks against the realistic arm.
 
 Caveat: these seven networks were seen before (with GHB, GHB-EB and the baselines); the rule above was fixed without
 evaluating GHB-SA on them.
+
+## Outcome (added after the confirmation run, supplement/results/real_networks.json)
+Held-out log-loss relative to local, epsilon = 1 (GHB as reported / GHB-EB / GHB-SA | DP-FedAvg-SA + FT realistic /
+oracle | worst hospital GHB-SA / GHB-EB / DP-FedAvg-SA realistic):
+Arizona Medicare 0.998 / 0.966 / 0.965 | 0.967 / 0.950 | 1.06 / 1.05 / 1.03
+Lung squamous 1.000 / 0.959 / 1.007 | 0.993 / 0.961 | 1.20 / 1.12 / 1.04
+Head and neck 1.000 / 0.941 / 0.970 | 1.012 / 0.931 | 1.02 / 1.00 / 1.01
+Bladder 1.002 / 0.933 / 0.955 | 1.040 / 0.922 | 1.18 / 1.10 / 1.09
+Stomach 1.006 / 0.966 / 0.984 | 1.037 / 0.963 | 1.03 / 1.02 / 1.07
+Liver 1.000 / 0.922 / 0.962 | 1.093 / 0.921 | 2.87 / 1.86 / 1.25
+Kidney 0.996 / 1.005 / 1.033 | 1.015 / 0.993 | 1.07 / 1.02 / 1.09
+Decision criterion (GHB-SA improves on GHB-EB in at least five of seven, worst hospital within +0.1): not met (one of
+seven; liver +1.01). GHB-SA is therefore not recommended as GHB's mode; it is reported as a negative result.
+Against DP-FedAvg-SA + FT: GHB-SA better in five of seven against the realistic arm, none against the oracle arm. GHB-EB,
+with no tuning, is better than the realistic DP-FedAvg-SA + FT in seven of seven networks and than the realistic
+DP-FedAvg + FT in seven of seven; the oracle arms of both are better than GHB-EB in six or seven of seven.
+At epsilon = 10 GHB-SA is within 0.01 of GHB-EB in every network.
