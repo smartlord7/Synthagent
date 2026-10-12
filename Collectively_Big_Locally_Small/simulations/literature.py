@@ -158,3 +158,10 @@ def estimates(rng, data, n, mu0, eps, delta, W, keep=None):
                     if want(pre + f"E={E}"):
                         out[pre + f"E={E}"] = th
     return out
+
+
+def configure(p, g):
+    """Number of coefficients and norm bound of x, for models other than the 5-coefficient heads used everywhere else
+    (real_v3.py); the defaults reproduce every reported result."""
+    global P, G, R_X
+    P, G, R_X = p, g, g

@@ -1,0 +1,14 @@
+{
+ "DP-FedAvg + FT, eps=1": "FT|1|0.2|5",
+ "DP-FedAvg-SA + FT, eps=1": "FTSA|3|0.5|5",
+ "APFL, eps=1": "APFL|3|0.5|0.75",
+ "Ditto, eps=1": "PDIT|3|0.5|1.0",
+ "pFedMe, eps=1": "PME|3|2.0|10.0",
+ "Clustered DP-FedAvg, eps=1": "CLU|2|1|0.2|5",
+ "DP-FedAvg + FT, eps=10": "FT|10|0.2|5",
+ "DP-FedAvg-SA + FT, eps=10": "FTSA|10|2.0|5",
+ "APFL, eps=10": "APFL|10|0.5|0.5",
+ "Ditto, eps=10": "PDIT|3|0.5|1.0",
+ "pFedMe, eps=10": "PME|3|2.0|10.0",
+ "Clustered DP-FedAvg, eps=10": "CLU|2|1|0.5|5"
+}

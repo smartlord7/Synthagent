@@ -158,11 +158,12 @@ def conflicts(mu, M, mu0, cfg):
 
 
 def combine(X, y, means, variances, cfg):
+    sds = cfg["prior_sd"] if isinstance(cfg["prior_sd"], tuple) else (cfg["prior_sd"],)
     fits, logev = [], []
-    for m, v in zip(means, variances):
+    for m, v, sd_ in [(m, v, q) for m, v in zip(means, variances) for q in sds]:
         pr = 1.0 / np.maximum(v, 1e-8)
-        if cfg["prior_sd"] is not None:
-            pr = pr + 1.0 / cfg["prior_sd"] ** 2
+        if sd_ is not None:
+            pr = pr + 1.0 / sd_ ** 2
             m = (m / np.maximum(v, 1e-8)) / pr
         t = fit(X, y, m, pr)
         s = X @ t

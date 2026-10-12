@@ -42,6 +42,7 @@ GRID = np.r_[0.0, np.logspace(-3.5, 1, 160)]  # grid of tau for its posterior
 Q = 12                # posterior quantiles of tau used as mixture components
 SCALE = 0.5           # half-Cauchy scale of the prior on tau (Remark 8.3)
 PRIOR_SD = 2.5        # weakly informative default prior on each coefficient
+PRIOR_SDS = (0.5, 1.0, 2.5)  # scales integrated out by the evidence-weighted default prior (revision after real data)
 Z_CONFLICT = 3.0      # anchor conflict threshold
 
 
@@ -72,11 +73,11 @@ class Public:
         d = self.m(th) - self.m(c)
         return E - np.outer(d, d)
 
-    def invert(self, target, start, iters=60):
-        """Solve m(theta) = target by damped Newton steps."""
+    def invert(self, target, start, iters=60, ridge=0.0):
+        """Solve m(theta) + ridge * theta = target by damped Newton steps (ridge > 0: under a Gaussian prior at 0)."""
         th = np.array(start, float)
         for _ in range(iters):
-            step = np.linalg.solve(self.info(th), target - self.m(th))
+            step = np.linalg.solve(self.info(th) + ridge * np.eye(P), target - self.m(th) - ridge * th)
             big = np.abs(step).max()
             if big > 1:
                 step = step / big
@@ -94,12 +95,16 @@ def release(rng, data, n, mu0, eps, delta=1e-5):
     return g + sd[:, None] * rng.standard_normal(g.shape), sd
 
 
-def linearize(pub, g, sd, n, mu0, points):
-    """theta~_j = a_j + I(a_j)^{-1}(g_j + m(mu_0) - m(a_j)) and its delta-method variances."""
+def linearize(pub, g, sd, n, mu0, points, prior_sd=None):
+    """theta~_j = a_j + I(a_j)^{-1}(g_j + m(mu_0) - m(a_j)) and its delta-method variances.
+
+    prior_sd: if given, I(a_j) is replaced by I(a_j) + I / (n_j prior_sd^2), the information under the default prior,
+    which keeps the inverse finite at extreme points (real data)."""
     th, r, m0 = np.empty_like(g), np.empty_like(g), pub.m(mu0)
     for j in range(len(n)):
         a = points[j]
-        Ii = np.linalg.inv(pub.info(a))
+        extra = 0.0 if prior_sd is None else 1.0 / (n[j] * prior_sd ** 2)
+        Ii = np.linalg.inv(pub.info(a) + extra * np.eye(P))
         th[j] = a + Ii @ (g[j] + m0 - pub.m(a))
         r[j] = np.diag(Ii @ (pub.score_cov(a, mu0) / n[j] + sd[j] ** 2 * np.eye(P)) @ Ii.T)
     return th, r
@@ -150,11 +155,15 @@ def tau2_quantiles(th, r, q=Q):
     return out
 
 
-def combine(X, y, means, variances):
-    """Posterior mean of theta_k under a mixture of Gaussian priors, by Laplace approximation per component."""
+def combine(X, y, means, variances, prior_sd=PRIOR_SD):
+    """Posterior mean of theta_k under a mixture of Gaussian priors, by Laplace approximation per component.
+
+    prior_sd: scale of the default prior, or a tuple of scales, which are then integrated out like tau: every
+    (component, scale) pair is a mixture component with equal prior weight, weighted by the hospital's own evidence."""
+    sds = prior_sd if isinstance(prior_sd, tuple) else (prior_sd,)
     fits, logev = [], []
-    for m, v in zip(means, variances):
-        pr = 1.0 / np.maximum(v, 1e-8) + 1.0 / PRIOR_SD ** 2
+    for m, v, sd_ in [(m, v, q) for m, v in zip(means, variances) for q in sds]:
+        pr = 1.0 / np.maximum(v, 1e-8) + 1.0 / sd_ ** 2
         m = (m / np.maximum(v, 1e-8)) / pr
         t = fit(X, y, m, pr)
         s = X @ t
@@ -167,20 +176,27 @@ def combine(X, y, means, variances):
     return (w[:, None] * np.array(fits)).sum(axis=0) / w.sum()
 
 
-def invert(pub, g, sd, n, mu0, avg, anchor_sd=0.3, check=True):
-    """Releases on the parameter scale: (theta~, variances, anchor decisions). Post-processing only."""
+def invert(pub, g, sd, n, mu0, avg, anchor_sd=0.3, check=True, pool_prior_sd=None):
+    """Releases on the parameter scale: (theta~, variances, anchor decisions). Post-processing only.
+
+    pool_prior_sd: if given, the pooled starting point is the posterior mode under N(0, pool_prior_sd^2) for the
+    pooled sample, and both linearizations use the information under that prior, which keeps them finite when noisy
+    releases fall outside the range of the moment map (real data). None (the default) is the reported simulations.
+    """
     n = np.asarray(n, float)
-    a0 = pub.invert((n[:, None] * g).sum(0) / n.sum() + pub.m(mu0), np.zeros(P))
-    th0, r0 = linearize(pub, g, sd, n, mu0, np.repeat(a0[None], len(n), 0))
+    ridge = 0.0 if pool_prior_sd is None else 1.0 / (n.sum() * pool_prior_sd ** 2)
+    a0 = pub.invert((n[:, None] * g).sum(0) / n.sum() + pub.m(mu0), np.zeros(P), ridge=ridge)
+    th0, r0 = linearize(pub, g, sd, n, mu0, np.repeat(a0[None], len(n), 0), pool_prior_sd)
     mu_l, M_l = network(th0, r0, avg, tau2_quantiles(th0, r0)[Q // 2])
     drop = conflicts(mu_l, M_l, mu0, anchor_sd, check)
-    th, r = linearize(pub, g, sd, n, mu0, anchor(mu_l, M_l, mu0, anchor_sd, drop)[0])
+    th, r = linearize(pub, g, sd, n, mu0, anchor(mu_l, M_l, mu0, anchor_sd, drop)[0], pool_prior_sd)
     return th, r, drop
 
 
-def estimate(data, th, r, drop, mu0, avg, anchor_sd=0.3, oracle_tau2=None):
-    """GHB estimates (K, P) from inverted releases. With oracle_tau2, tau^2 is known (a single component)."""
+def estimate(data, th, r, drop, mu0, avg, anchor_sd=0.3, oracle_tau2=None, prior_sd=PRIOR_SD):
+    """GHB estimates (K, P) from inverted releases. With oracle_tau2, tau^2 is known (a single component).
+    prior_sd: scale of the default prior in each hospital's final fit (PRIOR_SD as reported)."""
     t2 = tau2_quantiles(th, r) if oracle_tau2 is None else np.full((1, P), oracle_tau2)
     comps = [anchor(*network(th, r, avg, t2[q]), mu0, anchor_sd, drop) + (t2[q],) for q in range(len(t2))]
-    return np.array([combine(X, y, [c[0][k] for c in comps], [c[1][k] + c[2] for c in comps])
+    return np.array([combine(X, y, [c[0][k] for c in comps], [c[1][k] + c[2] for c in comps], prior_sd)
                      for k, (X, y) in enumerate(data)])
