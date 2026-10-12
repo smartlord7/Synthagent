@@ -36,3 +36,15 @@ The evidence prior is reported as an extension of GHB in the paper ("GHB-EB") wh
 as the default for networks of small hospitals if, at epsilon = 1, it improves on GHB as reported in at least five of
 the seven networks and does not raise the worst-hospital ratio by more than 0.1 in any. The simulations keep GHB as
 reported; Simulation 16 gains one row for the evidence prior on the development seeds' settings.
+
+## Outcome (added after the confirmation run, `supplement/results/real_networks.json`)
+Held-out log-loss relative to local estimation at epsilon = 1, GHB as reported -> GHB-EB (best model tuned on the
+held-out folds; Local with the evidence prior, no other hospital):
+Arizona Medicare 0.998 -> 0.966 (0.955; 0.966); lung squamous 1.000 -> 0.959 (0.955; 0.958); head and neck
+1.000 -> 0.941 (0.928; 0.939); bladder 1.002 -> 0.933 (0.921; 0.931); stomach 1.006 -> 0.966 (0.957; 0.962);
+liver 1.000 -> 0.922 (0.914; 0.921); kidney 0.996 -> 1.005 (0.996; 1.013).
+Criterion 1 (improves in at least five of seven networks): met, six of seven.
+Criterion 2 (worst-hospital ratio raised by at most 0.1 everywhere): not met. Liver 1.56 -> 1.86 (+0.30), driven by
+the hospital whose 22 patients all died; lung squamous +0.09, bladder +0.08, others at most +0.03.
+Decision, as pre-registered: GHB-EB is reported as an extension and is not recommended as the default. At epsilon = 1
+its gain matches that of a local model with the same evidence prior, so it comes from regularization, not borrowing.
