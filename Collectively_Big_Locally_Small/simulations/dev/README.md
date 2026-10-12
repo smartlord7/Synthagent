@@ -16,3 +16,16 @@ choice can be traced. The reported simulations use `../ghb_logit.py` and `../ghb
 
 Run from this folder, e.g. `python3 dev2.py`. Outputs are printed, not saved; the numbers quoted in the
 supplement's development note come from these runs.
+
+## Real data: development and pre-registrations of GHB
+
+| Script / file | Purpose |
+|---|---|
+| `prior_eb.py`, `prior_eb_heart.py`, `PREREG_prior.md` | Evidence-weighted default prior for GHB-lite (pre-registered; criterion not met) |
+| `sa_dev.py`, `sa_dev2.py`, `PREREG_sa.md` | GHB-SA: secure aggregation of per-hospital quantities (pre-registered; criterion not met) |
+| `PREREG_v3.md` | Four extensions of GHB-lite on TCGA (`../real_v3.py dev`, then `fresh` once) |
+| `v4_dev.py`, `v4_agg.py` | Development of GHB (joint releases, `../ghb_v4.py`) on the 12 TCGA development networks, with the folds of `real_v3.py`; `python3 v4_dev.py 10 <checkpoint folder>` |
+| `v4_realistic_configs.json` | Each literature method's configuration chosen on the development networks, frozen before the confirmation |
+| `PREREG_v4.md`, `v4_confirm_agg.py` | Pre-registration of GHB and its confirmation (`../real_v3.py confirm`, run once) |
+
+The ablation of GHB in the supplement is `python3 v4_dev.py 10 v4_ablation_ckpt` (variants in `v4_dev.py`).

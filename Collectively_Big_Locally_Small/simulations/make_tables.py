@@ -435,12 +435,13 @@ def real_final():
     import final_compare as FC
     s = load("real_networks.json")["res"]
     conf = FC.CONF
-    eb = {e: np.array([s[nm][f"GHB-EB {e}"]["rel"] for nm in conf]) for e in ("1", "10")}
+    eb = {e: np.array([s[nm][f"GHB v4 {e}"]["rel"] for nm in conf]) for e in ("1", "10")}  # wins are GHB's
     rows = []
-    head = [("GHB (as reported), no tuning", lambda e, arm, nm: s[nm][f"GHB (DP, eps={e})"]["rel"]),
-            ("GHB-EB, no tuning", lambda e, arm, nm: s[nm][f"GHB-EB {e}"]["rel"]),
-            ("GHB-SA (secure aggregation), no tuning", lambda e, arm, nm: s[nm][f"GHB-SA {e}"]["rel"]),
-            ("GHB, tuned prior", lambda e, arm, nm: FC.arm_value(s, nm, f"GHB, tuned prior (DP), eps={e}", arm)),
+    head = [(r"\textbf{GHB}, no tuning", lambda e, arm, nm: s[nm][f"GHB v4 {e}"]["rel"]),
+            ("GHB-lite, no tuning", lambda e, arm, nm: s[nm][f"GHB (DP, eps={e})"]["rel"]),
+            ("GHB-lite, evidence prior, no tuning", lambda e, arm, nm: s[nm][f"GHB-EB {e}"]["rel"]),
+            ("GHB-lite with secure aggregation, no tuning", lambda e, arm, nm: s[nm][f"GHB-SA {e}"]["rel"]),
+            ("GHB-lite, tuned prior", lambda e, arm, nm: FC.arm_value(s, nm, f"GHB, tuned prior (DP), eps={e}", arm)),
             ("Local, tuned prior$^\\ddagger$", lambda e, arm, nm: FC.arm_value(s, nm, "Local, tuned prior", arm))]
     lit = [(lab, (lambda f: (lambda e, arm, nm: FC.arm_value(s, nm, f.format(e=e), arm)))(f)) for lab, f in FC.OTHERS.items()]
     def line(lab, fun, group):
