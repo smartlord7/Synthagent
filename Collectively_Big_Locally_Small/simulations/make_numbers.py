@@ -37,6 +37,18 @@ def tcga_numbers():
         out[f"TC{E}BestOrc"] = f"{orc.mean():.3f}"
         out[f"TC{E}BestOrcWins"] = str(int((g < orc).sum()))
         out[f"TC{E}GHBMin"], out[f"TC{E}GHBMax"] = f"{g.min():.3f}", f"{g.max():.3f}"
+    tp = R / "real_v4_tuned.json"
+    if tp.exists():  # tuned GHB (dev/v4_tune.py, exploratory)
+        t = json.load(open(tp))
+        out["TTConfigs"] = str(t["configs"])
+        for e, E in (("1", "One"), ("10", "Ten")):
+            out[f"TT{E}Frozen"] = f"{np.mean(t[e]['GHB, frozen']):.3f}"
+            out[f"TT{E}Dev"] = f"{np.mean(t[e]['GHB, tuned on development']):.3f}"
+            out[f"TT{E}Orc"] = f"{np.mean(t[e]['GHB, oracle']):.3f}"
+            go = np.array(t[e]["GHB, oracle"])
+            out[f"TT{E}OrcVsPFedMeWins"] = str(int((go < np.array(t[e]["pFedMe (oracle)"])).sum()))
+            best = np.min([t[e][k] for k in t[e] if k.endswith("(oracle)") and not k.startswith("GHB")], 0)
+            out[f"TT{E}BestLitOrc"] = f"{best.mean():.3f}"
     # development: twelve networks (literature tuned in-sample on the same networks)
     import glob
     from collections import defaultdict
