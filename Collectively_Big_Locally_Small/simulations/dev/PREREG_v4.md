@@ -49,4 +49,20 @@ The outcome is reported as is and appended below, whatever it is.
 
 ## Outcome
 
-(to be appended after `python3 real_v3.py confirm`)
+Run once, 10 repeats, 2026-10-12 (`supplement/results/real_v4_confirm.json`, `dev/v4_confirm_agg.py`). Mean
+relative log-loss over BRCA, MESO, OV, UCEC, UCS:
+
+| eps | GHB v4 | GHB-EB | local, evidence prior | best literature, realistic | best literature, oracle |
+|---|---|---|---|---|---|
+| 1  | **0.928** | 0.932 | 0.933 | 0.976 (DP-FedAvg + FT) | 0.939 (DP-FedAvg + FT) |
+| 10 | **0.915** | 0.965 | 0.933 | 0.919 (Ditto), 0.927 (pFedMe) | 0.898 (pFedMe), 0.911 (Ditto), 0.912 (FTSA) |
+
+1. Held: at both eps GHB v4 has a lower mean than every literature family's realistic arm (eps = 10: 0.915 vs Ditto
+   0.919, narrow; every other family 0.927-0.990).
+2. Held: at eps = 10 GHB v4 improves on GHB-EB (0.915 vs 0.965).
+3. Held: at eps = 10 GHB v4 beats realistic Ditto in 3 of 5 networks (it beats every other realistic family in 4 or
+   5 of 5).
+4. (No prediction.) Oracle arm: at eps = 1 GHB v4 beats every family even with per-network hindsight tuning; at
+   eps = 10 it ties oracle DP-FedAvg + FT (0.915), is close behind oracle Ditto and FTSA (0.911, 0.912), and is behind
+   oracle pFedMe (0.898).
+GHB v4 also beats the local model with an evidence prior at both budgets (0.928 vs 0.933; 0.915 vs 0.933).
