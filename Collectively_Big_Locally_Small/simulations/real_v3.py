@@ -27,6 +27,7 @@ import ghb
 import ghb_logit as GL
 import ghb_sa as SA
 import ghb_v3 as V3
+import ghb_v4 as V4
 import literature as LIT
 import personalized as PZ
 from exp7_logistic import fit
@@ -34,7 +35,11 @@ from real_heart import folds
 
 DATA = Path(__file__).resolve().parents[1] / "data" / "tcga_v3"
 SETS = {"dev": ["TCGA-LUSC", "TCGA-HNSC", "TCGA-BLCA", "TCGA-STAD", "TCGA-LIHC", "TCGA-KIRC"],
-        "fresh": ["TCGA-LUAD", "TCGA-COAD", "TCGA-READ", "TCGA-KIRP", "TCGA-PAAD", "TCGA-ESCA"]}
+        "fresh": ["TCGA-LUAD", "TCGA-COAD", "TCGA-READ", "TCGA-KIRP", "TCGA-PAAD", "TCGA-ESCA"],
+        # third set (data/tcga_v4): every further TCGA project with >= 4 institutions and >= 15 deaths under the rules
+        # above (AJCC or, for gynecologic cancers, FIGO stage), fixed from counts alone before any model was fitted
+        "confirm": ["TCGA-BRCA", "TCGA-MESO", "TCGA-UCEC", "TCGA-OV", "TCGA-UCS"]}
+GHB_V4 = dict(f=1.0, safety=True, R1=1, pan=True)  # locked in dev/PREREG_v4.md
 P, G = 8, np.sqrt(8.0)
 REPEATS, FOLDS, DELTA, MIN_UNIT = 10, 5, 1e-5, 5
 EPS = (1.0, 10.0)
@@ -61,10 +66,10 @@ def ckey(c):
 
 def encode(d, dg):
     age, sex = d.get("age_at_index"), d.get("sex_at_birth") or d.get("gender")
-    stage = dg.get("ajcc_pathologic_stage") or ""
+    stage = dg.get("ajcc_pathologic_stage") or dg.get("figo_stage") or ""  # FIGO only where AJCC is absent (gynecologic)
     if age is None or sex not in ("male", "female") or not stage.startswith("Stage"):
         return None
-    s = stage.replace("Stage ", "").rstrip("ABCabc")
+    s = stage.replace("Stage ", "").rstrip("ABCabc12")
     t, nn = (dg.get("ajcc_pathologic_t") or ""), (dg.get("ajcc_pathologic_n") or "")
     return [1.0, float(np.clip((age - 62) / 25, -1, 1)), float(sex == "male"), float(s == "III"), float(s == "IV"),
             float(t.startswith("T3") or t.startswith("T4")), float(nn[:2] in ("N1", "N2", "N3")),
@@ -73,7 +78,10 @@ def encode(d, dg):
 
 def load(project):
     units = {}
-    for c in json.load(open(DATA / f"{project}.json")):
+    path = DATA / f"{project}.json"
+    if not path.exists():
+        path = DATA.parent / "tcga_v4" / f"{project}.json"
+    for c in json.load(open(path)):
         d = c.get("demographic") or {}
         dgs = [x for x in (c.get("diagnoses") or []) if x.get("diagnosis_is_primary_disease") is not False] or (c.get("diagnoses") or [{}])
         fu = max([x.get("days_to_last_follow_up") or -1 for x in dgs] + [-1])
@@ -145,7 +153,7 @@ def run_set(which, rep):
     PZ.configure(P, G)
     SA.G = G
     SA.P = P
-    rng = np.random.default_rng([30, rep, 0 if which == "dev" else 1])
+    rng = np.random.default_rng([30, rep, {"dev": 0, "fresh": 1, "confirm": 2}[which]])
     nets = {p: load(p) for p in SETS[which]}
     data = {p: v[0] for p, v in nets.items()}
     inst = {p: v[1] for p, v in nets.items()}
@@ -160,9 +168,15 @@ def run_set(which, rep):
                for p in data}
         for e in EPS:
             for name, cfg in VARIANTS.items():
+                if which == "confirm" and name not in ("GHB-EB", "+ cross-cancer"):
+                    continue
                 res = V3.estimate(train, pubs, rng, e, DELTA, G, inst=inst, cfg=cfg)
                 for p in data:
                     est[p][f"{name}, eps={e:g}"] = res[p]
+            if which == "confirm":
+                res = V4.estimate(train, rng, e, DELTA, G, inst=inst, cfg=GHB_V4)
+                for p in data:
+                    est[p][f"GHB v4, eps={e:g}"] = res[p]
             for p in data:
                 for k, v in baselines(rng, train[p], e).items():
                     est[p][f"{k}, eps={e:g}"] = v
