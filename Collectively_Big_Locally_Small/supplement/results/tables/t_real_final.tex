@@ -4,19 +4,19 @@
 GHB-lite, no tuning & 1.000 & 1.000 &  & 0.964 & 0.964 & \\
 GHB-lite, evidence prior, no tuning & 0.956 & 0.956 &  & 0.949 & 0.949 & \\
 GHB-lite with secure aggregation, no tuning & 0.982 & 0.982 &  & 0.950 & 0.950 & \\
-GHB-lite, tuned prior & 0.951 & 0.953 &  & 0.948 & 0.950 & \\
+GHB-lite, tuned prior & 0.951 & \textbf{0.953} &  & 0.948 & 0.950 & \\
 Local, tuned prior$^\ddagger$ & 0.951 & 0.953 &  & 0.951 & 0.953 & \\
 \midrule
 \multicolumn{7}{@{}l}{\emph{Federated and personalized methods (same budget)}}\\
-Ditto & 0.962 & 0.962 & 4 & 0.944 & 0.949 & 5\\
-pFedMe & 0.970 & 0.971 & 3 & 0.939 & 0.942 & 3\\
-DP-FedAvg + FT, sec. agg. & 0.949 & 0.985 & 3 & 0.928 & 0.946 & 3\\
-APFL & 0.958 & 0.988 & 6 & 0.944 & 0.963 & 6\\
-DP-FedAvg + FT & 0.951 & 0.994 & 4 & 0.940 & 0.952 & 4\\
-Clustered DP-FedAvg & 0.954 & 0.997 & 5 & 0.948 & 0.967 & 6\\
-Decentralized DP-SGD & 0.972 & 1.009 & 7 & 0.947 & 0.964 & 6\\
-FedProx & 1.006 & 1.013 & 6 & 0.942 & 0.958 & 5\\
-FedRep & 1.045 & 1.046 & 7 & 1.013 & 1.023 & 6\\
-DP-FedAvg & 1.085 & 1.112 & 7 & 1.029 & 1.044 & 7\\
-Per-FedAvg & 1.161 & 1.165 & 7 & 1.009 & 1.025 & 7\\
-Ditto-style (one-shot) & 1.321 & 1.333 & 7 & 0.984 & 1.015 & 7\\
+Ditto \cite{li2021ditto} & 0.962 & 0.962 & 4 & 0.944 & 0.949 & 5\\
+pFedMe \cite{tdinh2020personalized} & 0.970 & 0.971 & 3 & 0.939 & \textbf{0.942} & 3\\
+DP-FedAvg + FT, sec. agg. \cite{mcmahan2018learning} & \textbf{0.949} & 0.985 & 3 & \textbf{0.928} & 0.946 & 3\\
+APFL \cite{deng2020adaptive} & 0.958 & 0.988 & 6 & 0.944 & 0.963 & 6\\
+DP-FedAvg + FT \cite{mcmahan2018learning} & 0.951 & 0.994 & 4 & 0.940 & 0.952 & 4\\
+Clustered DP-FedAvg \cite{ghosh2020efficient,mcmahan2018learning} & 0.954 & 0.997 & 5 & 0.948 & 0.967 & 6\\
+Decentralized DP-SGD \cite{lian2017can} & 0.972 & 1.009 & 7 & 0.947 & 0.964 & 6\\
+FedProx \cite{li2020federated} & 1.006 & 1.013 & 6 & 0.942 & 0.958 & 5\\
+FedRep \cite{collins2021exploiting} & 1.045 & 1.046 & 7 & 1.013 & 1.023 & 6\\
+DP-FedAvg \cite{mcmahan2018learning} & 1.085 & 1.112 & 7 & 1.029 & 1.044 & 7\\
+Per-FedAvg \cite{fallah2020personalized} & 1.161 & 1.165 & 7 & 1.009 & 1.025 & 7\\
+Ditto-style (one-shot) \cite{li2021ditto} & 1.321 & 1.333 & 7 & 0.984 & 1.015 & 7\\

@@ -62,6 +62,22 @@ def setup():
     })
 
 
+_KEEP_NAMES = {"real_final.pdf", "real_networks.pdf"}  # figures whose labels already use the paper's names
+
+
+def _rename(t):
+    """Paper names: the per-hospital protocol of the simulations is GHB-lite; GHB (joint releases) is "GHB v4" in code."""
+    import re
+    t = t.replace("GHB v4", "\0")
+    t = re.sub(r"(?<![A-Za-z])GHB(?![A-Za-z-])", "GHB-lite", t)
+    return t.replace("\0", "GHB")
+
+
 def save(fig, path):
+    from matplotlib.text import Text
+    if getattr(path, "name", str(path).split("/")[-1]) not in _KEEP_NAMES:
+        for txt in fig.findobj(Text):
+            if "GHB" in txt.get_text():
+                txt.set_text(_rename(txt.get_text()))
     fig.savefig(path, metadata={"CreationDate": None})
     plt.close(fig)
