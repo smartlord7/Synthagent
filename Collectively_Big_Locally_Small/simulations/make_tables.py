@@ -20,7 +20,121 @@ def load(name):
     return json.load(open(R / name))
 
 
+# Every literature method is cited wherever a table names it (first cell of a row).
+CITES = [("FAIR-FATE", "salazar2023fairfate"), ("Per-FedAvg", "fallah2020personalized"), ("pFedMe", "tdinh2020personalized"),
+         ("APFL", "deng2020adaptive"), ("FedRep", "collins2021exploiting"), ("FedProx", "li2020federated"),
+         ("Ditto", "li2021ditto"), ("Clustered DP-FedAvg", "ghosh2020efficient,mcmahan2018learning"),
+         ("Decentralized DP-SGD", "lian2017can"), ("sec.\\ agg.", "mcmahan2018learning,bonawitz2017practical"),
+         ("DP-FedAvg", "mcmahan2018learning"), ("FedAvg", "mcmahan2017communication"), ("Meta-analysis", "dersimonian1986meta")]
+
+
+def cite_row(row):
+    if " & " not in row or "\\cite" in row.split(" & ")[0]:
+        return row
+    head, rest = row.split(" & ", 1)
+    plain = head.lstrip()
+    if plain.startswith(("GHB", "\\textbf{GHB", "Local", "Global", "Best", "\\multicolumn", "Pooled")):
+        return row
+    for name, key in CITES:
+        if name in head:
+            return f"{head} \\cite{{{key}}} & {rest}"
+    return row
+
+
+# Best values in bold: per table, groups of cell indices (0 = row label) compared along a row ("row") or down a column
+# within each block of rows ("col"), lower or higher is better; rows whose label starts with a skip prefix are not
+# candidates (references such as local estimation, non-private or oracle rows).
+BOLD = {
+    "t_real_final.tex": [("colall", [1, 2, 4, 5], "min", ("Local",))],
+    "t_tcga_tuned.tex": [("colall", [1, 2, 3, 4], "min", ("GHB, frozen",))],
+    "s_tcga_dev.tex": [("colall", [1, 2, 3, 4], "min", ("Local",))],
+    "s_tcga_oracle.tex": [("col", [1, 2, 3, 4, 5, 6], "min", ())],
+    "s_tcga_ablation.tex": [("col", [1, 3], "min", ())],
+    "t_real_heart.tex": [("colall", [1, 3, 5, 7], "min", ("Local", "Global", "dagger")),
+                         ("colall", [2, 4, 6, 8], "min", ("Local", "Global", "dagger"))],
+    "s_real_heart_sites.tex": [("col", list(range(1, 9)), "min", ("Global", "dagger")),
+                               ("col", [9, 10, 11, 12], "max", ("Global", "dagger"))],
+    "s_sim11.tex": [("row", [1, 2, 3, 4, 5], "min", ())],
+    "s_sim12.tex": [("row", [1, 2], "min", ()), ("row", [4, 5], "min", ())],
+    "s_sim1_risk.tex": [("row", [1, 2, 3, 4, 5], "min", ())],
+    "s_sim2_eps1.tex": [("row", [1, 3, 5, 7, 9], "min", ()), ("row", [2, 4, 6, 8, 10], "min", ())],
+    "s_sim2_nodp.tex": [("row", [1, 3, 5, 7, 9], "min", ()), ("row", [2, 4, 6, 8, 10], "min", ())],
+    "s_sim3.tex": [("row", [1, 2, 3], "min", ())],
+    "s_sim4.tex": [("row", [1, 2, 3, 4], "min", ())],
+    "s_sim6.tex": [("row", [1, 2], "min", ()), ("row", [3, 4], "min", ())],
+    "s_sim7.tex": [("row", [2, 3, 4], "min", ()), ("row", [5, 6, 7], "max", ()), ("row", [9, 10], "min", ())],
+    "s_sim9.tex": [("row", [1, 2, 3], "min", ()), ("row", [4, 5, 6], "min", ())],
+    "s_sim9_bins.tex": [("row", [1, 2, 3], "min", ())],
+    "s_sim14.tex": [("row", [1, 2], "max", ())],
+}
+
+
+def _num(cell):
+    import re
+    m = re.match(r"\s*(?:\\textbf\{)?\s*(-?\d+(?:\.\d+)?)", cell)
+    return float(m.group(1)) if m else None
+
+
+def _embolden(cell):
+    import re
+    if "\\textbf" in cell:
+        return cell
+    return re.sub(r"^(\s*)(-?\d+(?:\.\d+)?)", r"\1\\textbf{\2}", cell, count=1)
+
+
+def bold_rows(name, rows):
+    specs = BOLD.get(name)
+    if not specs:
+        return rows
+    split = [r[:-2].split(" & ") if r.endswith("\\\\") and " & " in r else None for r in rows]
+    for mode, cols, sense, skip in specs:
+        pick = min if sense == "min" else max
+        if mode == "row":
+            for c in split:
+                if c is None or any(k in c[0] for k in skip):
+                    continue
+                vals = {i: _num(c[i]) for i in cols if i < len(c) and _num(c[i]) is not None}
+                if vals:
+                    b = pick(vals.values())
+                    for i, v in vals.items():
+                        if v == b:
+                            c[i] = _embolden(c[i])
+        else:
+            blocks, cur = [], []
+            for c in split:
+                if c is None and mode == "col":
+                    if cur:
+                        blocks.append(cur); cur = []
+                elif c is not None:
+                    cur.append(c)
+            if cur:
+                blocks.append(cur)
+            for blk in blocks:
+                cand = [c for c in blk if not any(k in c[0] for k in skip)]
+                for i in cols:
+                    vals = [(c, _num(c[i])) for c in cand if i < len(c) and _num(c[i]) is not None]
+                    if vals:
+                        b = pick(v for _, v in vals)
+                        for c, v in vals:
+                            if v == b:
+                                c[i] = _embolden(c[i])
+    return [(" & ".join(c) + "\\\\") if c is not None else r for r, c in zip(rows, split)]
+
+
+V4_TABLES = ("t_real_final", "t_tcga_", "s_tcga_", "s_real_final_lono")  # tables that already use the paper's names
+
+
 def write(name, rows):
+    if not name.startswith(V4_TABLES):  # these tables report the per-hospital protocol: GHB-lite in the paper
+        import re
+        def ren(r):
+            if " & " not in r:
+                return r
+            h, rest = r.split(" & ", 1)
+            return re.sub(r"(?<![A-Za-z\\])GHB(?![A-Za-z-])", "GHB-lite", h) + " & " + rest
+        rows = [ren(r) for r in rows]
+    rows = bold_rows(name, rows)
+    rows = [cite_row(r) for r in rows]
     (OUT / name).write_text("% Generated by simulations/make_tables.py. Do not edit.\n" + "\n".join(rows) + "\n")
 
 
@@ -256,11 +370,11 @@ def sim9():
     binned = s["out"]["t3"]["binned"]
     for i in range(len(binned["GHB"]["y"])):
         lo, hi = b[i], (b[i + 1] if i + 1 < len(b) else None)
-        rng = f"{lo:g}--{hi:g}" if hi is not None else f"$\\ge{lo:g}$"
+        rng = f"{lo:g}-{hi:g}" if hi is not None else f"$\\ge{lo:g}$"
         cells = []
         for m in ("GHB", "Robust GHB", "GHB + opt-out"):
             y, e = binned[m]["y"][i], binned[m]["e"][i]
-            cells.append("--" if y is None or np.isnan(y) else f"{y:.2f} \\textcolor{{gray}}{{\\tiny({e:.2f})}}")
+            cells.append("n/a" if y is None or np.isnan(y) else f"{y:.2f} \\textcolor{{gray}}{{\\tiny({e:.2f})}}")
         rows.append(rng + " & " + " & ".join(cells) + f" & {binned['GHB']['n'][i]:,}".replace(",", "{,}") + r"\\")
     write("s_sim9_bins.tex", rows)
 
