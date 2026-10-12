@@ -179,3 +179,10 @@ def families(eps_list):
         fam[f"FedRep (DP), eps={t}"] = [f"REP{t}|R={R}|eta={eta}|E={E}" for R, eta in GRID["FedRep"] for E in (0, 5)]
         fam[f"FedProx (DP), eps={t}"] = [f"PROX{t}|R={R}|eta={eta}|mu={mu}|E={E}" for R, eta, mu in GRID["FedProx"] for E in (0, 5, 30)]
     return fam
+
+
+def configure(p, g):
+    """Number of coefficients and norm bound of x, for models other than the 5-coefficient heads used everywhere else
+    (real_v3.py); the defaults reproduce every reported result."""
+    global P, G
+    P, G = p, g
