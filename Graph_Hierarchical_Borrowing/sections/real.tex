@@ -34,7 +34,24 @@ Method & BRCA & MESO & OV & UCEC & UCS & Mean & Wins\\
 
 \paragraph{Against the oracle} GHB was also more accurate than local estimation at both budgets, which GHB-lite was not. Against the oracle arm, which the pre-registration made no prediction about, the picture depends on the budget. At $\epsilon=1$, GHB has a lower mean error than every one of the six methods even when each is tuned on the test folds (\SimTCOneFTOrc{} for the best of them). Only the best method chosen afresh for each network comes close (\SimTCOneBestOrc). At $\epsilon=10$, GHB ties DP-FedAvg with fine-tuning tuned on the test folds (\SimTCTenFTOrc), and is slightly behind Ditto (\SimTCTenDittoOrc) and DP-FedAvg with secure aggregation (\SimTCTenFTSAOrc). It is clearly behind pFedMe (\SimTCTenPFedMeOrc), and behind the best method chosen afresh for every network (\SimTCTenBestOrc). These are the margins that tuning on a hospital's own test patients buys. A deployment cannot buy them.
 
-\paragraph{What the confirmation supports} Five networks are a small sample. At $\epsilon=10$ the margin over Ditto is small enough, \SimTCTenDitto{} against \SimTCTenGHB{} with three wins in five, that a different set of networks could reverse it. The claim the confirmation supports is therefore specific. Without any tuning, on networks it had not seen, GHB was more accurate than every federated and personalized method tuned in the way a consortium could tune it, at both budgets. Under strong privacy, it was more accurate than every one of them even with tuning that no consortium has. It does not support the claim that GHB dominates the literature in every network or under every way of tuning.
+\paragraph{Tuned against tuned} GHB has nothing to tune, which leaves a question: is its lead only the price the literature methods pay for being tuned on other networks? To answer it, after the confirmation and outside the pre-registration, GHB was given a grid of \SimTTConfigs{} configurations around its frozen one. The grid varies the scale of the half-Cauchy prior on $\tau$ ($0.1$ to $1$), the weight of the non-borrowing components (none to equal), and the split of the budget between the two releases ($\frac14$ to $\frac34$). GHB was then tuned exactly as the baselines were: on the twelve development networks, and on each confirmation network's own held-out folds (Table~\ref{tab:tcga-tuned}). This run draws new privacy noise, so the frozen configuration reaches \SimTTOneFrozen{} and \SimTTTenFrozen{} rather than \SimTCOneGHB{} and \SimTCTenGHB, a reminder that differences of a few thousandths are within the noise of a single run. Tuning changes GHB little. Tuned on development it reaches \SimTTOneDev{} and \SimTTTenDev, and tuned on the test folds \SimTTOneOrc{} and \SimTTTenOrc. With the same tuning on both sides, GHB is more accurate than every literature method at $\epsilon=1$, under development tuning and under hindsight tuning alike. At $\epsilon=10$ it is more accurate than every method under development tuning, and under hindsight tuning it is more accurate than five of the six. The sixth, pFedMe, reaches \SimTCTenPFedMeOrc{} and beats it in three of the five networks. GHB's frozen configuration is already close to the best it can reach, which is what a method without tuning parameters needs.
+
+\begin{table}[t]
+\caption{Tuned against tuned, on the five confirmation networks (exploratory, after the pre-registered run): mean held-out log-loss relative to local estimation. GHB tuned over \SimTTConfigs{} configurations, every literature method over its grid of 12 to 54. Development: the configuration with the lowest mean error over the twelve development networks, applied unchanged. Oracle: the best configuration on each network's own held-out folds. GHB's rows come from a rerun with new privacy noise.}
+\label{tab:tcga-tuned}
+\scriptsize
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+ & \multicolumn{2}{c}{$\epsilon=1$} & \multicolumn{2}{c}{$\epsilon=10$}\\
+\cmidrule(lr){2-3}\cmidrule(l){4-5}
+Method & Development & Oracle & Development & Oracle\\
+\midrule
+\csname @@input\endcsname ../Collectively_Big_Locally_Small/supplement/results/tables/t_tcga_tuned.tex 
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{What the confirmation supports} Five networks are a small sample. At $\epsilon=10$ the margin over Ditto is small enough, \SimTCTenDitto{} against \SimTCTenGHB{} with three wins in five, that a different set of networks could reverse it. The claim the confirmation supports is therefore specific. Without any tuning, on networks it had not seen, GHB was more accurate than every federated and personalized method tuned in the way a consortium could tune it, at both budgets. Under strong privacy, it was more accurate than every one of them even with tuning that no consortium has. Given the same tuning as the others, it keeps that lead, except against pFedMe tuned with hindsight under weak privacy. It does not support the claim that GHB dominates the literature in every network or under every way of tuning.
 
 \subsection{Eight smaller networks}\label{sec:real-eight}
 

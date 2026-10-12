@@ -588,8 +588,25 @@ def tcga_ablation():
     write("s_tcga_ablation.tex", rows)
 
 
+def tcga_tuned():
+    """Tuned GHB against tuned literature on the confirmation networks (dev/v4_tune.py, exploratory)."""
+    path = R / "real_v4_tuned.json"
+    if not path.exists():
+        return
+    t = json.load(open(path))
+    short = {"DP-FedAvg + FT": "DP-FedAvg + FT", "DP-FedAvg-SA + FT": "DP-FedAvg + FT, sec.\\ agg.", "APFL": "APFL",
+             "Ditto": "Ditto", "pFedMe": "pFedMe", "Clustered DP-FedAvg": "Clustered DP-FedAvg"}
+    mean = lambda v: f"{np.mean(v):.3f}"
+    rows = [r"GHB, frozen configuration & " + " & ".join(f"{mean(t[e]['GHB, frozen'])} & {mean(t[e]['GHB, frozen'])}" for e in ("1", "10")) + r"\\",
+            r"\textbf{GHB}, tuned like the others & " + " & ".join(f"{mean(t[e]['GHB, tuned on development'])} & {mean(t[e]['GHB, oracle'])}" for e in ("1", "10")) + r"\\",
+            r"\midrule"]
+    for fm, lab in short.items():
+        rows.append(lab + " & " + " & ".join(f"{mean(t[e][fm + ' (realistic)'])} & {mean(t[e][fm + ' (oracle)'])}" for e in ("1", "10")) + r"\\")
+    write("t_tcga_tuned.tex", rows)
+
+
 def main():
-    for fn in (tcga, tcga_ablation, sim8, sim15, sim16, sim17, sim18, real_heart, real_networks, real_final, sim1, sim2, sim3, sim4, sim5, sim6, sim7, sim9, sim11, sim12, sim13, sim14):
+    for fn in (tcga, tcga_ablation, tcga_tuned, sim8, sim15, sim16, sim17, sim18, real_heart, real_networks, real_final, sim1, sim2, sim3, sim4, sim5, sim6, sim7, sim9, sim11, sim12, sim13, sim14):
         fn()
     print("tables:", sorted(p.name for p in OUT.glob("*.tex")))
 
