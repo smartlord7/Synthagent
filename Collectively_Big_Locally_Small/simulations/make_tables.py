@@ -428,8 +428,48 @@ def real_networks():
     write("s_real_networks_hyper.tex", rows[:-1])
 
 
+def real_final():
+    """The final real-data comparison (final_compare.py arms): a compact main table and per-network tables."""
+    import final_compare as FC
+    s = load("real_networks.json")["res"]
+    conf = FC.CONF
+    eb = {e: np.array([s[nm][f"GHB-EB {e}"]["rel"] for nm in conf]) for e in ("1", "10")}
+    rows = []
+    head = [("GHB (as reported), no tuning", lambda e, arm, nm: s[nm][f"GHB (DP, eps={e})"]["rel"]),
+            ("GHB-EB, no tuning", lambda e, arm, nm: s[nm][f"GHB-EB {e}"]["rel"]),
+            ("GHB-SA (secure aggregation), no tuning", lambda e, arm, nm: s[nm][f"GHB-SA {e}"]["rel"]),
+            ("GHB, tuned prior", lambda e, arm, nm: FC.arm_value(s, nm, f"GHB, tuned prior (DP), eps={e}", arm)),
+            ("Local, tuned prior$^\\ddagger$", lambda e, arm, nm: FC.arm_value(s, nm, "Local, tuned prior", arm))]
+    lit = [(lab, (lambda f: (lambda e, arm, nm: FC.arm_value(s, nm, f.format(e=e), arm)))(f)) for lab, f in FC.OTHERS.items()]
+    def line(lab, fun, group):
+        cells = []
+        for e in ("1", "10"):
+            o = np.array([fun(e, "oracle", nm) for nm in conf])
+            r = np.array([fun(e, "lono", nm) for nm in conf])
+            w = "" if group == "ghb" else f"{int((eb[e] < r).sum())}"
+            fmt = lambda x: f"{x:.3f}" if x < 9.995 else f"{x:.1f}"
+            cells += [fmt(o.mean()), fmt(r.mean()), w]
+        return lab + " & " + " & ".join(cells) + r"\\"
+    rows.append(r"\multicolumn{7}{@{}l}{\emph{GHB and the local reference}}\\")
+    rows += [line(l, f, "ghb") for l, f in head]
+    rows.append(r"\midrule")
+    rows.append(r"\multicolumn{7}{@{}l}{\emph{Federated and personalized methods (same budget)}}\\")
+    order = sorted(lit, key=lambda t: np.mean([t[1]("1", "lono", nm) for nm in conf]))
+    rows += [line(l, f, "lit") for l, f in order]
+    write("t_real_final.tex", rows)
+    # per network, leave-one-network-out arm, both budgets
+    for e in ("1", "10"):
+        rows = ["Hospitals $K$ & " + " & ".join(str(s[nm]["info"]["K"]) for nm in conf) + r"\\", r"\midrule"]
+        allm = head + lit
+        vals = {l: [f(e, "lono", nm) for nm in conf] for l, f in allm}
+        best = [min(v[j] for l, v in vals.items() if not l.startswith("Local")) for j in range(len(conf))]
+        for l, v in vals.items():
+            rows.append(l + " & " + " & ".join((f"\\textbf{{{x:.3f}}}" if x == best[j] else (f"{x:.3f}" if x < 9.995 else f"{x:.1f}")) for j, x in enumerate(v)) + r"\\")
+        write(f"s_real_final_lono_eps{e}.tex", rows)
+
+
 def main():
-    for fn in (sim8, sim15, sim16, sim17, sim18, real_heart, real_networks, sim1, sim2, sim3, sim4, sim5, sim6, sim7, sim9, sim11, sim12, sim13, sim14):
+    for fn in (sim8, sim15, sim16, sim17, sim18, real_heart, real_networks, real_final, sim1, sim2, sim3, sim4, sim5, sim6, sim7, sim9, sim11, sim12, sim13, sim14):
         fn()
     print("tables:", sorted(p.name for p in OUT.glob("*.tex")))
 

@@ -56,3 +56,38 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+def figure():
+    import matplotlib.pyplot as plt
+    import style
+    style.setup()
+    R = json.load(open(ghb.RESDIR / "real_networks.json"))["res"]
+    labels = [R[nm]["info"]["label"] + f" ({R[nm]['info']['K']})" for nm in CONF]
+    fig, axs = plt.subplots(1, 2, figsize=(6.8, 3.0), sharey=True, gridspec_kw=dict(wspace=0.08))
+    fig.subplots_adjust(left=0.2, bottom=0.27)
+    y = np.arange(len(CONF))[::-1]
+    for ax, e in zip(axs, ("1", "10")):
+        eb = [R[nm][f"GHB-EB {e}"]["rel"] for nm in CONF]
+        lono = [min(arm_value(R, nm, f.format(e=e), "lono") for f in OTHERS.values()) for nm in CONF]
+        orc = [min(arm_value(R, nm, f.format(e=e), "oracle") for f in OTHERS.values()) for nm in CONF]
+        loc = [arm_value(R, nm, "Local, tuned prior", "lono") for nm in CONF]
+        for yy, a, b, c, d in zip(y, eb, lono, orc, loc):
+            ax.plot([min(a, b, c, d), max(a, b, c, d)], [yy, yy], color=style.GRAY400, lw=0.6, zorder=1)
+        ax.scatter(orc, y, marker="D", s=16, color=style.GRAY400, label="Best literature method, tuned on the test folds (oracle)", zorder=2)
+        ax.scatter(lono, y, marker="s", s=18, color=style.AMBER600, label="Best literature method, tuned on the other networks", zorder=3)
+        ax.scatter(loc, y, marker="o", s=30, facecolors="none", edgecolors=style.SLATE800, label="One hospital alone, tuned prior", zorder=3)
+        ax.scatter(eb, y, marker="o", s=22, color=style.TEAL700, label="GHB-EB, no tuning", zorder=4)
+        ax.axvline(1, color=style.SLATE800, lw=0.6, ls="--")
+        ax.set_title(f"$\\epsilon$ = {e}", fontsize=8)
+        ax.set_xlabel("Held-out log-loss relative to local", fontsize=7)
+        ax.tick_params(labelsize=6.5)
+    axs[0].set_yticks(y, labels, fontsize=6.5)
+    h, l = axs[0].get_legend_handles_labels()
+    fig.legend(h, l, loc="lower center", ncol=2, frameon=False, fontsize=6.3)
+    ghb.tidy(*axs)
+    style.save(fig, ghb.FIGDIR / "real_final.pdf")
+
+
+if __name__ == "__main__" and False:
+    pass
