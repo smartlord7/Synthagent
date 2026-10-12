@@ -31,14 +31,15 @@ OUT = ghb.RESDIR / (sys.argv[2] if len(sys.argv) > 2 else "v4_dev_ckpt")
 
 def run(item):
     which, rep = item
-    rng = np.random.default_rng([30, rep, 0 if which == "dev" else 1])
+    sid = {"dev": 0, "fresh": 1, "confirm": 2}[which]
+    rng = np.random.default_rng([30, rep, sid])
     nets = {p: RV.load(p) for p in RV.SETS[which]}
     data = {p: v[0] for p, v in nets.items()}
     inst = {p: v[1] for p, v in nets.items()}
     for p in data:
         RV.public(rng)
     fs = {p: [folds(rng, y, RV.FOLDS) for _, y in data[p]] for p in data}
-    rng = np.random.default_rng([31, rep, 0 if which == "dev" else 1])
+    rng = np.random.default_rng([31, rep, sid])
     acc = {}
     for f in range(RV.FOLDS):
         train = {p: [(X[fs[p][k] != f], y[fs[p][k] != f]) for k, (X, y) in enumerate(data[p])] for p in data}
@@ -46,7 +47,7 @@ def run(item):
         est = {p: {"Local": np.array([fit(X, y, np.zeros(RV.P), RV.PRIOR) for X, y in train[p]])} for p in data}
         for e in RV.EPS:
             for name, cfg in VARIANTS.items():
-                seed = [31, rep, 0 if which == "dev" else 1, f, int(e)]  # the same privacy noise for every variant
+                seed = [31, rep, sid, f, int(e)]  # the same privacy noise for every variant
                 res = V4.estimate(train, np.random.default_rng(seed), e, RV.DELTA, RV.G, inst=inst, cfg=cfg)
                 for p in data:
                     est[p][f"{name}, eps={e:g}"] = res[p]

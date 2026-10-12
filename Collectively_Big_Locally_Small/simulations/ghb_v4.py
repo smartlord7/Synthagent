@@ -57,7 +57,7 @@ def stage1(rng, data, rho1, G, R1=2, hshare=None):
     return w, H0, sg ** 2 * A @ A * R1
 
 
-def network_stats(rng, data, eps, delta, G, f, R1=2, hshare=None):
+def network_stats(rng, data, eps, delta, G, f, R1=2, hshare=None, scale=GL.SCALE):
     P = data[0][0].shape[1]
     n = np.array([len(y) for _, y in data], float)
     N = n.sum()
@@ -77,16 +77,17 @@ def network_stats(rng, data, eps, delta, G, f, R1=2, hshare=None):
         r = np.array([np.diag(Rj) for Rj in R])
         st.update(th=th, R=R, r=r, tq=np.array([V3.quantiles(V3.tau2_post(th[:, d], r[:, d])) for d in range(P)]).T)
     else:  # no stage 2: tau from its half-Cauchy prior alone
-        p = 1.0 / (1 + (GL.GRID / GL.SCALE) ** 2) * np.gradient(GL.GRID)
+        p = 1.0 / (1 + (GL.GRID / scale) ** 2) * np.gradient(GL.GRID)
         st["tq"] = np.repeat(V3.quantiles(p / p.sum())[:, None], P, 1)
     return st
 
 
 def estimate(nets, rng, eps, delta, G, inst=None, cfg=None):
     """nets: dict name -> list of (X, y); cfg keys f (stage-1 share), safety, cross. Returns dict name -> (K, P)."""
-    cfg = {"f": 0.5, "safety": True, "cross": False, "pan": False, "R1": 2, "hshare": None, "loo": True, "vdp": True,
+    cfg = {"f": 0.5, "safety": True, "cross": False, "pan": False, "R1": 2, "hshare": None, "loo": True, "vdp": True, "scale": GL.SCALE, "safety_w": 1.0 / 3,
            **(cfg or {})}  # loo, vdp: ablation switches only (leave-one-out mean; propagated privacy covariance)
-    stats = {c: network_stats(rng, d, eps, delta, G, cfg["f"], cfg["R1"], cfg["hshare"]) for c, d in nets.items()}
+    stats = {c: network_stats(rng, d, eps, delta, G, cfg["f"], cfg["R1"], cfg["hshare"], cfg["scale"])
+             for c, d in nets.items()}
     P = next(iter(nets.values()))[0][0].shape[1]
     names = list(nets)
     if cfg["pan"] and len(names) > 2:  # empirical Bayes across networks: w_c ~ N(omega, diag(psi2)), per coefficient
@@ -156,7 +157,7 @@ def estimate(nets, rng, eps, delta, G, inst=None, cfg=None):
                     comps.append((np.log(1.0 / (Q * len(SDS))), C @ Cni @ (mu + shift), C))
             if cfg["safety"]:
                 for s in SDS:
-                    comps.append((np.log(1.0 / (3 * len(SDS))), np.zeros(P), np.eye(P) * s ** 2))
+                    comps.append((np.log(cfg["safety_w"] / len(SDS)), np.zeros(P), np.eye(P) * s ** 2))
             est[j] = V3.combine(X, y, comps)
         out[c] = est
     return out
