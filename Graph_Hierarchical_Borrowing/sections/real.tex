@@ -1,7 +1,7 @@
 %% ===================================================================
 \section{Real Hospital Networks}\label{sec:real}
 
-The simulations control everything; real data control nothing. This section asks whether GHB's advantages survive real hospitals, real heterogeneity and real sample sizes, against the federated and personalized methods that apply, at the same privacy budget. It reports two studies. The first is a confirmation on networks that no part of GHB's development had seen. Its rule, its predictions and the frozen configuration of every method were committed to the repository before it ran (Section~\ref{sec:real-tcga}). The second is the earlier benchmark of eight smaller networks, on which GHB-lite was developed and its limits were found (Section~\ref{sec:real-eight}). The design of GHB in Section~\ref{sec:logit} came out of those limits, and every step of that development is reported, including the three pre-registered attempts that did not deliver: two failed their own criteria, and the third held its predictions but showed that its extensions did not help.
+The simulations control everything; real data control nothing. This section asks whether GHB's advantages survive real hospitals, real heterogeneity and real sample sizes, against the federated and personalized methods that apply, at the same privacy budget. It reports three studies. The first is a confirmation on networks that no part of GHB's development had seen. Its rule, its predictions and the frozen configuration of every method were committed to the repository before it ran (Section~\ref{sec:real-tcga}). The second is the earlier benchmark of eight smaller networks, on which GHB-lite was developed and its limits were found (Section~\ref{sec:real-eight}). The third is a second pre-registered test, on the public FLamby benchmark, whose predictions failed (Section~\ref{sec:real-flamby}). The design of GHB in Section~\ref{sec:logit} came out of the limits found on the eight networks, and every step of that development is reported, including the three pre-registered attempts that did not deliver: two failed their own criteria, and the third held its predictions but showed that its extensions did not help.
 
 \subsection{A pre-registered test on unseen networks}\label{sec:real-tcga}
 
@@ -121,6 +121,49 @@ Method & Relative & Worst & Relative & Worst & Relative & Worst & Relative & Wor
 \end{tabular}
 \end{table}
 
+\subsection{A public benchmark: FLamby}\label{sec:real-flamby}
+
+The confirmation of Section~\ref{sec:real-tcga} used networks built from one data source by us. A method meant for other people's networks should also face a benchmark built by others. FLamby \cite{ogierduterrail2022flamby} is the standard cross-silo benchmark of federated learning in healthcare, with natural hospital splits and fixed train and test sets. We ran GHB on two of its tabular datasets under a second pre-registration, again committed before any model was fitted, with every configuration frozen as in Section~\ref{sec:real-tcga}. A third dataset, ISIC2019, could not be run, because the pretrained image encoder it needs was not reachable from our computing environment, and no substitute was used.
+
+\paragraph{Datasets and protocol} \emph{Fed-Heart-Disease} has the four hospitals of UCI Heart Disease with FLamby's preprocessing (13 features) and split; the head is a logistic regression, and FLamby's metric is accuracy, to which we add held-out log-loss. \emph{Fed-TCGA-BRCA} has six regions of breast-cancer patients with 39 features and a survival outcome, evaluated by the concordance index. GHB extends to it unchanged in structure: an exponential survival model is a Poisson regression whose likelihood is a sum over patients, so the two joint releases keep the guarantee of Proposition~\ref{prop:ghbprivacy} with the per-patient score $x(d-t)$ and information $t\,xx^\top$ at the origin; the literature methods clip each patient's gradient to the same bound. These patients overlap with the breast-cancer network of Section~\ref{sec:real-tcga}, grouped there by institution and here by region, so this dataset is not unseen in the same sense. Each method was run 20 times at $\epsilon\in\{1,10\}$ and without privacy; literature methods use the configurations frozen on the twelve development networks (realistic arm) or the best on the test sets (oracle). GHB-lite was not run on TCGA-BRCA, because its inversion needs a public model of follow-up and censoring that does not exist.
+
+\begin{table}[t]
+\caption{FLamby, Fed-Heart-Disease (four hospitals): accuracy (FLamby's metric, higher is better) and held-out log-loss (lower is better), mean over hospitals and 20 runs. Literature methods use the configurations frozen on the development networks of Section~\ref{sec:real-tcga}. Bold: the best per column among methods that use other hospitals, oracle excluded. $\dagger$: not private. $\star$: the best of the six methods on each hospital's test set, which no hospital can do.}
+\label{tab:flamby-heart}
+\resizebox{\linewidth}{!}{\begin{tabular}{@{}lrrrrrr@{}}
+\toprule
+ & \multicolumn{2}{c}{$\epsilon=1$} & \multicolumn{2}{c}{$\epsilon=10$} & \multicolumn{2}{c}{no privacy}\\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(l){6-7}
+Method & Accuracy & Log-loss & Accuracy & Log-loss & Accuracy & Log-loss\\
+\midrule
+\csname @@input\endcsname ../Collectively_Big_Locally_Small/supplement/results/tables/t_flamby_heart.tex 
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\begin{table}[t]
+\caption{FLamby, Fed-TCGA-BRCA (six regions): concordance index (FLamby's metric, higher is better) and held-out Poisson deviance (lower is better) of an exponential survival model, mean over regions and 20 runs. Conventions as in Table~\ref{tab:flamby-heart}.}
+\label{tab:flamby-brca}
+\resizebox{\linewidth}{!}{\begin{tabular}{@{}lrrrrrr@{}}
+\toprule
+ & \multicolumn{2}{c}{$\epsilon=1$} & \multicolumn{2}{c}{$\epsilon=10$} & \multicolumn{2}{c}{no privacy}\\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(l){6-7}
+Method & C-index & Deviance & C-index & Deviance & C-index & Deviance\\
+\midrule
+\csname @@input\endcsname ../Collectively_Big_Locally_Small/supplement/results/tables/t_flamby_brca.tex 
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\paragraph{Predictions and outcome} The pre-registration made three testable predictions, and none held (Tables~\ref{tab:flamby-heart} and~\ref{tab:flamby-brca}).
+\begin{itemize}[leftmargin=*]
+\item \emph{On Fed-Heart-Disease at $\epsilon=1$, no private method improves on local log-loss by more than 3\%.} It failed in GHB's favour: GHB improved on local estimation by \SimFHeartOneGHBGain{} and Ditto \cite{li2021ditto} by \SimFHeartOneDittoGain. GHB's gain equals that of a local model with the evidence-weighted prior (\SimFHeartLocalEB), so it comes from regularization, as on the small networks of Section~\ref{sec:real-eight}.
+\item \emph{On Fed-Heart-Disease at $\epsilon=10$ and without privacy, GHB has a lower log-loss than every literature method.} It failed: DP-FedAvg \cite{mcmahan2018learning} with fine-tuning and secure aggregation (\SimFHeartTenFTSA{} and \SimFHeartInfFTSA) and Ditto (\SimFHeartTenDitto{} and \SimFHeartInfDitto) were more accurate than GHB (\SimFHeartTenGHB{} and \SimFHeartInfGHB), which beat the other four. GHB-lite was more accurate than GHB on this dataset (\SimFHeartTenLite{} and \SimFHeartInfLite).
+\item \emph{On Fed-TCGA-BRCA at $\epsilon=10$ and without privacy, GHB's concordance is at least that of every literature method.} It failed: GHB improved strongly on local estimation (\SimFBrcaTenGHB{} and \SimFBrcaInfGHB, against \SimFBrcaLocal), but pFedMe \cite{tdinh2020personalized} was better at both budgets (\SimFBrcaTenPFedMe{} and \SimFBrcaInfPFedMe), and DP-FedAvg with fine-tuning and secure aggregation at $\epsilon=10$ (\SimFBrcaTenFTSA).
+\end{itemize}
+
+\paragraph{What the benchmark shows} Three features of FLamby plausibly explain the outcome, although none was tested in advance. Its networks are small, four to six hospitals of a few hundred patients, so the two joint releases carry less than on the cancer networks of Section~\ref{sec:real-tcga}, which GHB fitted jointly and could borrow across. FLamby standardizes the features within each hospital, which makes the public feature distribution of GHB-lite nearly exact; that is the regime in which GHB-lite was more accurate in the simulations, and it is more accurate here. And the survival head has 40 coefficients, five times the head of Section~\ref{sec:real-tcga}, so each of GHB's releases is spread over many more directions. On a public benchmark, then, GHB is competitive and always better than a hospital alone with the default prior, but it is not the most accurate method, and the claims of this paper are limited accordingly.
+
 \subsection{What the real data say}\label{sec:real-summary}
 
-Four findings hold across the real networks we report. First, under strong privacy, per-hospital releases carry too little to borrow: GHB-lite, however regularized, does no better than a hospital alone, and a method that releases per-hospital quantities cannot beat that floor by much. Second, releasing only network sums, calibrated to the whole network and read through the hospitals' real information rather than a public feature distribution, is what lets collaboration pay. On the five unseen cancer networks, GHB was more accurate than every literature method tuned as a consortium could tune it, at both budgets, and under strong privacy more accurate than each even when tuned on the test data. Third, the gain grows with what the network can share: it is largest with the richer head and several networks fitted together, and small on networks of a few hundred patients with a four-coefficient head, where GHB is level with the best tuned methods rather than ahead. Fourth, tuning is most of what separates the literature methods from GHB: tuned on the test data, which no hospital can do, the best of them lead by one to two percent under weak privacy. The real data do not show GHB dominating the literature everywhere, and the paper does not claim it.
+Four findings hold across the real networks we report. First, under strong privacy, per-hospital releases carry too little to borrow: GHB-lite, however regularized, does no better than a hospital alone, and a method that releases per-hospital quantities cannot beat that floor by much. Second, releasing only network sums, calibrated to the whole network and read through the hospitals' real information rather than a public feature distribution, is what lets collaboration pay. On the five unseen cancer networks, GHB was more accurate than every literature method tuned as a consortium could tune it, at both budgets, and under strong privacy more accurate than each even when tuned on the test data. Third, the gain grows with what the network can share: it is largest with the richer head and several networks fitted together, small on networks of a few hundred patients with a four-coefficient head, where GHB is level with the best tuned methods, and not enough to lead on the FLamby benchmark, where Ditto, pFedMe and DP-FedAvg with fine-tuning and secure aggregation were more accurate on one dataset or the other. Fourth, GHB is safe on average: in every study and at every budget its mean error was at most that of the hospital alone with the default prior, which several tuned literature methods could not say; single networks can still lose a little, such as the kidney network at $\epsilon=1$ (\SimRFOneVMax). The real data show GHB as the most accurate method on the networks it was confirmed on, and as competitive elsewhere, but not as dominating the literature, and the paper does not claim it.

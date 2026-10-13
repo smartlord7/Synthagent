@@ -45,6 +45,8 @@ def cite_row(row):
 # within each block of rows ("col"), lower or higher is better; rows whose label starts with a skip prefix are not
 # candidates (references such as local estimation, non-private or oracle rows).
 BOLD = {
+    "t_flamby_heart.tex": [("colall", [1, 3, 5], "max", ("Local", "Pooled", "Best")), ("colall", [2, 4, 6], "min", ("Local", "Pooled", "Best"))],
+    "t_flamby_brca.tex": [("colall", [1, 3, 5], "max", ("Local", "Pooled", "Best")), ("colall", [2, 4, 6], "min", ("Local", "Pooled", "Best"))],
     "t_real_final.tex": [("colall", [1, 2, 4, 5], "min", ("Local",))],
     "t_tcga_tuned.tex": [("colall", [1, 2, 3, 4], "min", ("GHB, frozen",))],
     "s_tcga_dev.tex": [("colall", [1, 2, 3, 4], "min", ("Local",))],
@@ -121,7 +123,7 @@ def bold_rows(name, rows):
     return [(" & ".join(c) + "\\\\") if c is not None else r for r, c in zip(rows, split)]
 
 
-V4_TABLES = ("t_real_final", "t_tcga_", "s_tcga_", "s_real_final_lono")  # tables that already use the paper's names
+V4_TABLES = ("t_real_final", "t_tcga_", "s_tcga_", "s_real_final_lono", "t_flamby_")  # tables that already use the paper's names
 
 
 def write(name, rows):
@@ -719,8 +721,47 @@ def tcga_tuned():
     write("t_tcga_tuned.tex", rows)
 
 
+def flamby():
+    """FLamby benchmark (flamby_bench.py, dev/PREREG_flamby.md): Heart-Disease and TCGA-BRCA, realistic arm."""
+    path = R / "flamby_results.json"
+    if not path.exists():
+        return
+    r = json.load(open(path))
+    fams = ["DP-FedAvg + FT", "DP-FedAvg-SA + FT", "APFL", "Ditto", "pFedMe", "Clustered DP-FedAvg"]
+    short = {"DP-FedAvg + FT": "DP-FedAvg + FT", "DP-FedAvg-SA + FT": "DP-FedAvg + FT, sec.\\ agg.", "APFL": "APFL",
+             "Ditto": "Ditto", "pFedMe": "pFedMe", "Clustered DP-FedAvg": "Clustered DP-FedAvg"}
+    for ds, (m1, m2), name in (("heart", ("acc", "logloss"), "t_flamby_heart.tex"), ("brca", ("cindex", "deviance"), "t_flamby_brca.tex")):
+        rows_ = r[ds]["rows"]
+        val = lambda key, m: rows_[key][m]["mean"] if key in rows_ else None
+        cell = lambda v: "n/a" if v is None else f"{v:.3f}"
+        lines = []
+        def add(label, keyf):
+            cells = []
+            for e in ("1", "10", "inf"):
+                k = keyf(e)
+                cells += [cell(val(k, m1)), cell(val(k, m2))]
+            lines.append(label + " & " + " & ".join(cells) + r"\\")
+        add("Local", lambda e: "Local")
+        add("Local, evidence prior", lambda e: "Local, evidence prior")
+        add("Pooled, no DP$^\\dagger$", lambda e: "Pooled")
+        lines.append(r"\midrule")
+        add(r"\textbf{GHB}, no tuning", lambda e: f"GHB, eps={e}")
+        if any(k.startswith("GHB-lite") for k in rows_):
+            add("GHB-lite (evidence prior), no tuning", lambda e: f"GHB-lite, eps={e}")
+        for fm in fams:
+            add(short[fm] + ", tuned on development", (lambda fm: lambda e: f"{fm} (realistic), eps={e}")(fm))
+        lines.append(r"\midrule")
+        best = []
+        for e in ("1", "10", "inf"):
+            o1 = [val(f"{fm} (oracle), eps={e}", m1) for fm in fams]
+            o2 = [val(f"{fm} (oracle), eps={e}", m2) for fm in fams]
+            best += [cell(max(o1)), cell(min(o2))]
+        lines.append("Best of the six, oracle$^\\star$ & " + " & ".join(best) + r"\\")
+        write(name, lines)
+
+
 def main():
-    for fn in (tcga, tcga_ablation, tcga_tuned, sim8, sim15, sim16, sim17, sim18, real_heart, real_networks, real_final, sim1, sim2, sim3, sim4, sim5, sim6, sim7, sim9, sim11, sim12, sim13, sim14):
+    for fn in (flamby, tcga, tcga_ablation, tcga_tuned, sim8, sim15, sim16, sim17, sim18, real_heart, real_networks, real_final, sim1, sim2, sim3, sim4, sim5, sim6, sim7, sim9, sim11, sim12, sim13, sim14):
         fn()
     print("tables:", sorted(p.name for p in OUT.glob("*.tex")))
 
