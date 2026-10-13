@@ -53,8 +53,7 @@ Outcomes are appended below as they come, whatever they are.
 ## Outcome
 
 Run 2026-10-13, 20 repetitions each (`flamby_bench.py`, `supplement/results/flamby_results.json`). ISIC2019 was
-not run: the ImageNet weights of the encoder could not be downloaded in the execution environment (network policy),
-and no substitute was used. Mean over hospitals; Heart: accuracy / log-loss; BRCA: C-index / Poisson deviance;
+run later the same day (prediction 4 below). Mean over hospitals; Heart: accuracy / log-loss; BRCA: C-index / Poisson deviance;
 literature methods in the realistic arm.
 
 | | GHB | best realistic literature | Local (default) | Local (evidence prior) |
@@ -71,7 +70,14 @@ literature methods in the realistic arm.
    the other four families. GHB-lite was more accurate than GHB on this dataset (.416 and .403).
 3. Not held. On BRCA, GHB beat local estimation but not pFedMe (realistic) at either budget, nor DP-FedAvg-SA + FT
    at eps = 10.
-4. Not tested (ISIC2019 not run).
+4. Held (ISIC2019, run 2026-10-13 after the first report, with FLamby's own encoder, efficientnet_pytorch
+   EfficientNet-B0 with its ImageNet weights downloaded from the package's GitHub release, checksum-verified; 23,247
+   images; 20 repetitions). Balanced accuracy, mean over hospitals: GHB .301 / .300 / .301 at eps = 1 / 10 / infinity,
+   against Ditto (realistic) .296, pFedMe .286 and the four federated-averaging families .20-.21; local .300, local with
+   the evidence-weighted prior .303, pooled without privacy .250; best oracle .305. GHB's run-to-run SD is about .001.
+   The prediction held, but every method that uses the hospital's own data sits at the local level: the frozen
+   encoder with a 16-dimensional random projection leaves little to borrow, so this result shows that GHB loses
+   nothing on images, not that it gains.
 
 Deviations from the protocol: GHB-lite was not run on BRCA (its public-moment inversion needs a public model of
 follow-up and censoring); the BRCA feature bound is G = 4 (one-hot coding of 14 variables, a public schema) rather
