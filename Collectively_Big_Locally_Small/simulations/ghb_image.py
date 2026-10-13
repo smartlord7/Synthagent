@@ -127,32 +127,45 @@ def _psd(H, floor):
     return (U * np.maximum(ev, floor)) @ U.T
 
 
-def stage1(rng, data, Xpub, rho1, GS, R1, damp=1.0):
+def stage1(rng, data, Xpub, rho1, GS, R1, damp=1.0, init_share=0.0, stepvar=False):
     """data: list of (X, Y one-hot). Damped Newton w <- w + damp A (g - w / S0^2), A from the public information at w
-    (undamped Newton overshoots on the softmax and diverges: development finding). Returns w, the public information
-    sum at w, and Vdp, the stationary covariance of the noise in the damped iteration, damp / (2 - damp) sg^2 A A^T."""
+    (undamped Newton from 0 overshoots on the softmax and diverges: development finding). With init_share > 0, a share
+    of rho1 first releases the class counts (sensitivity sqrt(2) under replacement) and the intercepts start at the
+    centered log frequencies. Returns w, the public information sum at w, and Vdp: the stationary covariance of the
+    noise in the damped iteration, damp / (2 - damp) sg^2 A A^T, plus (stepvar) diag(last step^2) for the distance
+    still to go, which the noise term does not cover."""
     P, K = data[0][0].shape[1], data[0][1].shape[1]
     D = P * K
     N = sum(len(Y) for _, Y in data)
-    sg = 0.0 if np.isinf(rho1) else GS / np.sqrt(2 * rho1 / R1)
     w = np.zeros(D)
+    if init_share > 0:
+        sc = 0.0 if np.isinf(rho1) else np.sqrt(2) / np.sqrt(2 * init_share * rho1)
+        cnt = np.maximum(sum(Y.sum(0) for _, Y in data) + sc * rng.standard_normal(K), 1.0)
+        w[:K] = np.log(cnt) - np.log(cnt).mean()  # row 0 of theta (the intercepts) is the first K entries
+        rho1 = rho1 * (1 - init_share)
+    sg = 0.0 if np.isinf(rho1) else GS / np.sqrt(2 * rho1 / R1)
     for _ in range(R1):
         A = np.linalg.inv(N / len(Xpub) * hess(Xpub, w) + np.eye(D) / S0 ** 2)
         g = sum(score(X, Y, w) for X, Y in data) + sg * rng.standard_normal(D)
-        w = np.clip(w + damp * A @ (g - w / S0 ** 2), -8, 8)
-    return w, N / len(Xpub) * hess(Xpub, w), damp / (2 - damp) * sg ** 2 * A @ A.T
+        step = damp * A @ (g - w / S0 ** 2)
+        w = np.clip(w + step, -8, 8)
+    Vdp = damp / (2 - damp) * sg ** 2 * A @ A.T
+    if stepvar:
+        Vdp = Vdp + np.diag(step ** 2)
+    return w, N / len(Xpub) * hess(Xpub, w), Vdp
 
 
 def estimate(data, Xpub, rng, eps, delta, G, cfg=None):
     """data: list of (X, y int); Xpub: public feature rows (with intercept). Returns (K_hosp, P * K)."""
-    cfg = {"R1": 3, "damp": 1.0, "safety": True, "safety_w": 1.0 / 3, "free_int": False, "scale": GL.SCALE, **(cfg or {})}
+    cfg = {"R1": 3, "damp": 1.0, "init_share": 0.0, "stepvar": False, "safety": True, "safety_w": 1.0 / 3, "free_int": False, "scale": GL.SCALE, **(cfg or {})}
     K = int(max(y.max() for _, y in data)) + 1 if "K" not in cfg else cfg["K"]
     P = data[0][0].shape[1]
     D = P * K
     dY = [(X, onehot(y, K)) for X, y in data]
     N = sum(len(y) for _, y in data)
     rho = GL.rho_total(eps, delta)
-    w, H, Vdp = stage1(rng, dY, Xpub, rho, 2 * np.sqrt(2) * G, cfg["R1"], cfg["damp"])
+    w, H, Vdp = stage1(rng, dY, Xpub, rho, 2 * np.sqrt(2) * G, cfg["R1"], cfg["damp"], cfg["init_share"],
+                       cfg["stepvar"])
     p = 1.0 / (1 + (GL.GRID / cfg["scale"]) ** 2) * np.gradient(GL.GRID)
     tq = V3.quantiles(p / p.sum())
     extra = np.zeros(D)
