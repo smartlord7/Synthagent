@@ -61,12 +61,11 @@ def hess(X, th, Pm=None):
     if Pm is None:
         Pm = softmax(X @ th.reshape(P, -1), 1)
     K = Pm.shape[1]
-    D = np.einsum("ip,ik,iq->pkq", X, Pm, X)
-    H = np.zeros((P, K, P, K))
-    idx = np.arange(K)
-    H[:, idx, :, idx] = D.transpose(1, 0, 2)
     B = (X[:, :, None] * Pm[:, None, :]).reshape(len(X), P * K)
-    return H.reshape(P * K, P * K) - B.T @ B
+    H = -(B.T @ B).reshape(P, K, P, K)
+    for k in range(K):
+        H[:, k, :, k] += (X * Pm[:, k:k + 1]).T @ X
+    return H.reshape(P * K, P * K)
 
 
 def fit_mat(X, Y, m, Prec, start=None, iters=50):
