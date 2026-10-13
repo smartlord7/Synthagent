@@ -410,12 +410,16 @@ def _preprocess(raw):
 
 
 def isic_embed(batch=64):
+    """Embeds every ISIC 2019 image with FLamby's baseline encoder: efficientnet_pytorch's EfficientNet-B0 with its
+    ImageNet weights (efficientnet-b0-355c32eb.pth, the file EfficientNet.from_pretrained downloads), frozen;
+    the 1280-dimensional output of global average pooling."""
     import torch
-    import torchvision
-    try:
-        m = torchvision.models.efficientnet_b0(weights=torchvision.models.EfficientNet_B0_Weights.IMAGENET1K_V1)
-    except Exception as ex:  # no substitute: random or untrained weights are not the pre-registered encoder
-        raise SystemExit(f"ImageNet weights unavailable ({ex!r}); ISIC2019 not run")
+    from efficientnet_pytorch import EfficientNet
+    wpath = ISIC_DIR / "efficientnet-b0-355c32eb.pth"
+    if not wpath.exists():  # no substitute: random or untrained weights are not the pre-registered encoder
+        raise SystemExit(f"ImageNet weights not found at {wpath}; ISIC2019 not run")
+    m = EfficientNet.from_name("efficientnet-b0")
+    m.load_state_dict(torch.load(wpath, map_location="cpu"))
     m.eval()
     split = pd.read_csv(DATA / "fed_isic2019" / "train_test_split.csv")
     zf = zipfile.ZipFile(ISIC_DIR / "ISIC_2019_Training_Input.zip")
@@ -424,7 +428,7 @@ def isic_embed(batch=64):
     with torch.no_grad():
         for i in range(0, len(images), batch):
             x = torch.from_numpy(np.stack([_preprocess(zf.read(names[im])) for im in images[i:i + batch]]))
-            embs.append(torch.flatten(m.avgpool(m.features(x)), 1).numpy())
+            embs.append(torch.flatten(torch.nn.functional.adaptive_avg_pool2d(m.extract_features(x), 1), 1).numpy())
             print(i, flush=True)
     np.savez(ISIC_DIR / "embeddings.npz", images=np.array(images), emb=np.vstack(embs))
 
