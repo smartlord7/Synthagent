@@ -52,4 +52,29 @@ Outcomes are appended below as they come, whatever they are.
 
 ## Outcome
 
-(to be appended)
+Run 2026-10-13, 20 repetitions each (`flamby_bench.py`, `supplement/results/flamby_results.json`). ISIC2019 was
+not run: the ImageNet weights of the encoder could not be downloaded in the execution environment (network policy),
+and no substitute was used. Mean over hospitals; Heart: accuracy / log-loss; BRCA: C-index / Poisson deviance;
+literature methods in the realistic arm.
+
+| | GHB | best realistic literature | Local (default) | Local (evidence prior) |
+|---|---|---|---|---|
+| Heart, eps = 1 | .793 / .444 | Ditto .790 / .430 | .788 / .471 | .788 / .447 |
+| Heart, eps = 10 | .793 / .440 | DP-FedAvg-SA + FT .828 / .419 | | |
+| Heart, eps = inf | .807 / .432 | DP-FedAvg-SA + FT .823 / .418 | | |
+| BRCA, eps = 10 | .799 / .456 | pFedMe .831 / .420 | .738 / .648 | .733 / .479 |
+| BRCA, eps = inf | .814 / .439 | pFedMe .829 / .420 | | |
+
+1. Not held. At eps = 1 private methods did improve on local log-loss by more than 3% (Ditto 8.7%, GHB 5.5%);
+   GHB was within 0.5% of the local model with the evidence-weighted prior.
+2. Not held. At eps = 10 and infinity, DP-FedAvg-SA + FT and Ditto (realistic) had lower log-loss than GHB; GHB beat
+   the other four families. GHB-lite was more accurate than GHB on this dataset (.416 and .403).
+3. Not held. On BRCA, GHB beat local estimation but not pFedMe (realistic) at either budget, nor DP-FedAvg-SA + FT
+   at eps = 10.
+4. Not tested (ISIC2019 not run).
+
+Deviations from the protocol: GHB-lite was not run on BRCA (its public-moment inversion needs a public model of
+follow-up and censoring); the BRCA feature bound is G = 4 (one-hot coding of 14 variables, a public schema) rather
+than sqrt(40); the Poisson GHB starts each MAP fit from the better of the prior mean and the origin and gives zero
+weight to components with non-finite Laplace evidence; literature methods on BRCA use per-patient gradient clipping
+at G throughout; oracle chosen per metric.
