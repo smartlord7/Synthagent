@@ -35,11 +35,17 @@ VARIANTS = {"GHB": dict(R1=3), "GHB R1=1": dict(R1=1), "GHB free intercepts": di
 ADJ = ("none", "model", "own")
 
 
-def _prep(Z, mu, sd):
-    return np.hstack([np.ones((len(Z), 1)), np.clip((Z - mu) / sd / 3, -1, 1)])
+def _prep(Z, mu, sd, C=None):
+    """Intercept and standardized features /3, clipped to [-1, 1] (G = sqrt(P)) or, with C, rescaled into the ball
+    ||x|| <= C (intercept included; G = C): a public radius near the 90th percentile of ||x|| cuts the noise of every
+    private method by sqrt(P) / C."""
+    A = np.clip((Z - mu) / sd / 3, -1, 1)
+    if C is not None:
+        A = A * np.minimum(1.0, np.sqrt(C ** 2 - 1) / np.maximum(np.linalg.norm(A, axis=1, keepdims=True), 1e-12))
+    return np.hstack([np.ones((len(Z), 1)), A])
 
 
-def load(d):
+def load(d, C=None):
     from sklearn.decomposition import PCA
     z = np.load(FB.ISIC_DIR / "embeddings.npz", allow_pickle=True)
     pub = np.load(PUB, allow_pickle=True)["emb"]
@@ -50,9 +56,9 @@ def load(d):
     for k in range(6):
         tr, te = (split["fold2"] == f"train_{k}").values, (split["fold2"] == f"test_{k}").values
         mu, sd = Z[tr].mean(0), Z[tr].std(0, ddof=1) + 1e-9
-        train.append((_prep(Z[tr], mu, sd), split["target"].values[tr].astype(int)))
-        test.append((_prep(Z[te], mu, sd), split["target"].values[te].astype(int)))
-    return train, test, _prep(Zp, Zp.mean(0), Zp.std(0, ddof=1) + 1e-9)
+        train.append((_prep(Z[tr], mu, sd, C), split["target"].values[tr].astype(int)))
+        test.append((_prep(Z[te], mu, sd, C), split["target"].values[te].astype(int)))
+    return train, test, _prep(Zp, Zp.mean(0), Zp.std(0, ddof=1) + 1e-9, C)
 
 
 def realistic_keys():
