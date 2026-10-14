@@ -66,3 +66,18 @@ relative log-loss over BRCA, MESO, OV, UCEC, UCS:
    eps = 10 it ties oracle DP-FedAvg + FT (0.915), is close behind oracle Ditto and FTSA (0.911, 0.912), and is behind
    oracle pFedMe (0.898).
 GHB v4 also beats the local model with an evidence prior at both budgets (0.928 vs 0.933; 0.915 vs 0.933).
+
+
+## Correction, 2026-10-14: pFedMe privacy calibration
+
+The pFedMe baseline (`personalized.pfedme`, `ghb_glm.pfedme`) calibrated its noise to a sensitivity of S beta 2G / (n lam),
+but its proximal fit minimizes the sum (not the mean) of a hospital's losses, so the correct sensitivity is S beta 2G / lam:
+the noise was n times too small and pFedMe was less private than its stated budget (commit 15e769a; an empirical check
+moved the update by 1.19 against the old bound 0.56). The pFedMe rows of every checkpoint were recomputed with the correct
+noise (`dev/pfedme_fix.py`; the eps = inf rows reproduce exactly and every other method is unchanged). The pFedMe numbers
+above are kept as recorded; the corrected ones are in the paper. With the correction pFedMe is far less accurate at both
+budgets, and the development rule still selects PME|3|2.0|10.0.
+
+Effect on the outcomes recorded above: v4 predictions 1-3 are unchanged (pFedMe was never the deciding method in the
+realistic arm); the oracle remark (pFedMe 0.898 ahead at eps = 10) no longer holds: corrected pFedMe reaches 1.257, and
+Ditto (0.911) and DP-FedAvg-SA + FT (0.912) are the methods slightly ahead of GHB (0.915) under hindsight tuning.

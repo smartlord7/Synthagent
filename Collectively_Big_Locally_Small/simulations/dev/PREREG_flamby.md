@@ -84,3 +84,18 @@ follow-up and censoring); the BRCA feature bound is G = 4 (one-hot coding of 14 
 than sqrt(40); the Poisson GHB starts each MAP fit from the better of the prior mean and the origin and gives zero
 weight to components with non-finite Laplace evidence; literature methods on BRCA use per-patient gradient clipping
 at G throughout; oracle chosen per metric.
+
+
+## Correction, 2026-10-14: pFedMe privacy calibration
+
+The pFedMe baseline (`personalized.pfedme`, `ghb_glm.pfedme`) calibrated its noise to a sensitivity of S beta 2G / (n lam),
+but its proximal fit minimizes the sum (not the mean) of a hospital's losses, so the correct sensitivity is S beta 2G / lam:
+the noise was n times too small and pFedMe was less private than its stated budget (commit 15e769a; an empirical check
+moved the update by 1.19 against the old bound 0.56). The pFedMe rows of every checkpoint were recomputed with the correct
+noise (`dev/pfedme_fix.py`; the eps = inf rows reproduce exactly and every other method is unchanged). The pFedMe numbers
+above are kept as recorded; the corrected ones are in the paper. With the correction pFedMe is far less accurate at both
+budgets, and the development rule still selects PME|3|2.0|10.0.
+
+Effect on the outcomes recorded above: predictions 1-3 still do not hold, and prediction 4 still holds. On BRCA,
+corrected pFedMe reaches C-index .610 at eps = 10 (it is unaffected without privacy, .829), so the methods ahead of GHB
+are DP-FedAvg-SA + FT at eps = 10 (.813) and pFedMe without privacy.
