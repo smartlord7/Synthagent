@@ -42,3 +42,22 @@ local estimation, mean over the five networks.
 5. At eps = 10, GHB v5 has a lower mean than every literature method in the oracle arm (the hardest; v4 failed it).
 
 Each prediction is reported as held or not held, whatever the result.
+
+## Outcome (run 2026-10-14, 10 repetitions, `results/v5_confirm.json`)
+
+Mean held-out log-loss relative to local estimation over the five networks:
+
+| | eps = 1 | eps = 10 |
+|---|---|---|
+| GHB v5 | **0.925** | **0.909** |
+| GHB v4 (paired rerun) | 0.933 | 0.911 |
+| Best literature method, realistic arm | 0.976 (DP-FedAvg + FT) | 0.919 (Ditto) |
+| Best literature method, oracle arm | 0.939 (DP-FedAvg + FT) | 0.911 (Ditto) |
+
+1. Held: v5 is below every realistic literature method at both budgets.
+2. Held: v5 is below v4 at both budgets (0.925 vs 0.933; 0.909 vs 0.911).
+3. **Not held**: at eps = 10 v5 beats Ditto (realistic) in 3 of the 5 networks (BRCA, OV, UCEC), not 4; it loses
+   on MESO (0.897 vs 0.893) and UCS (0.887 vs 0.866).
+4. Held: at eps = 1 v5 is below every oracle-tuned literature method (0.925 vs 0.939).
+5. Held: at eps = 10 v5 is below every oracle-tuned literature method (0.909 vs 0.911 for Ditto and 0.912 for
+   DP-FedAvg-SA + FT), which v4 did not achieve. The margin is small.
