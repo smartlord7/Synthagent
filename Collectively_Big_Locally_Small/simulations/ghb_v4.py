@@ -69,7 +69,41 @@ def combine_loo(X, y, comps, mode="stack", iters=300):
     return (w[:, None] * fits).sum(0) / w.sum()
 
 
-def stage1(rng, data, rho1, G, R1=2, hshare=None):
+
+def shrink_offdiag(Hr, sh, N):
+    """v5: the released information matrix with its off-diagonal entries shrunk by lam = s2 / (s2 + sh^2), where s2,
+    the mean square of the true off-diagonal entries, is estimated from the release itself (mean square of the released
+    off-diagonals minus the known noise variance). Post-processing of the release: no privacy cost, no tuning."""
+    P = len(Hr)
+    off = Hr[~np.eye(P, dtype=bool)]
+    s2 = max(np.mean(off ** 2) - sh ** 2, 0.0) if sh > 0 else 1.0
+    lam = s2 / (s2 + sh ** 2) if sh > 0 else 1.0
+    return _psd(np.diag(np.diag(Hr)) + lam * (Hr - np.diag(np.diag(Hr))), 1e-2 * N)
+
+
+
+def noise_aware_mean(M, g, sg):
+    """v5: posterior mean and covariance of the network coefficients w given the released score sum g = M w + e,
+    e ~ N(0, sg^2 I) (M = H + I / S0^2 the released information with the default prior), under w ~ N(0, s^2 I) with s
+    chosen by the marginal likelihood of g (empirical Bayes over a grid). With sg = 0 this is M^-1 g, as in v4.
+    Post-processing of the releases: no privacy cost, no tuning."""
+    P = len(g)
+    if sg == 0:
+        Mi = np.linalg.inv(M)
+        return Mi @ g, np.zeros((P, P))
+    best = None
+    for s in np.logspace(-2, 1, 31):
+        C = s ** 2 * M @ M.T + sg ** 2 * np.eye(P)
+        sign, ld = np.linalg.slogdet(C)
+        ll = -0.5 * ld - 0.5 * g @ np.linalg.solve(C, g)
+        if best is None or ll > best[0]:
+            best = (ll, s)
+    s = best[1]
+    S = np.linalg.inv(M.T @ M / sg ** 2 + np.eye(P) / s ** 2)
+    return S @ M.T @ g / sg ** 2, S
+
+
+def stage1(rng, data, rho1, G, R1=2, hshare=None, hshrink=False, tight=False, hdiag=False):
     """DP quasi-Newton with secure sums: the pooled information at 0 (sensitivity G^2 / 2, Frobenius) is released
     once, then R1 gradient sums (sensitivity 2G), each release with an equal share of rho1. Returns w, the noisy
     information sum H0, and the covariance of w due to the privacy noise."""
@@ -78,10 +112,16 @@ def stage1(rng, data, rho1, G, R1=2, hshare=None):
     hs = 1.0 / (R1 + 1) if hshare is None else hshare
     rg, rh = rho1 * (1 - hs) / R1, rho1 * hs
     sg = 0.0 if np.isinf(rg) else 2 * G / np.sqrt(2 * rg)
-    sh = 0.0 if np.isinf(rh) else (G ** 2 / 2) / np.sqrt(2 * rh)
+    sh = 0.0 if np.isinf(rh) else (G ** 2 / (2 * np.sqrt(2)) if tight else G ** 2 / 2) / np.sqrt(2 * rh)  # tight: see ghb_glm.stage1
     H = sum(X.T @ X / 4 for X, _ in data)
-    E = np.triu(rng.standard_normal((P, P))) * sh
-    H0 = _psd(H + E + np.triu(E, 1).T, 1e-2 * N)
+    if hdiag == "auto":  # as ghb_glm.stage1: decided from public quantities before the release (m = G^2 / 4)
+        hdiag = bool(sh * np.sqrt(P) > N * G ** 2 / 4 / P)
+    if hdiag:
+        H0 = np.diag(np.maximum(np.diag(H) + sh * rng.standard_normal(P), 1e-2 * N))
+        E = None
+    else:
+        E = np.triu(rng.standard_normal((P, P))) * sh
+    H0 = H0 if hdiag else shrink_offdiag(H + E + np.triu(E, 1).T, sh, N) if hshrink else _psd(H + E + np.triu(E, 1).T, 1e-2 * N)
     A = np.linalg.inv(H0 + np.eye(P) / S0 ** 2)
     w = np.zeros(P)
     for _ in range(R1):
@@ -90,12 +130,13 @@ def stage1(rng, data, rho1, G, R1=2, hshare=None):
     return w, H0, sg ** 2 * A @ A * R1
 
 
-def network_stats(rng, data, eps, delta, G, f, R1=2, hshare=None, scale=GL.SCALE):
+def network_stats(rng, data, eps, delta, G, f, R1=2, hshare=None, scale=GL.SCALE, hshrink=False, tight=False,
+                  hdiag=False):
     P = data[0][0].shape[1]
     n = np.array([len(y) for _, y in data], float)
     N = n.sum()
     rho = GL.rho_total(eps, delta)
-    w, H, Vdp = stage1(rng, data, f * rho, G, R1, hshare)
+    w, H, Vdp = stage1(rng, data, f * rho, G, R1, hshare, hshrink, tight, hdiag)
     F = H / N
     st = dict(w=w, H=H, n=n, Vdp=Vdp)
     if f < 1:
@@ -119,7 +160,8 @@ def estimate(nets, rng, eps, delta, G, inst=None, cfg=None):
     """nets: dict name -> list of (X, y); cfg keys f (stage-1 share), safety, cross. Returns dict name -> (K, P)."""
     cfg = {"f": 0.5, "safety": True, "cross": False, "pan": False, "R1": 2, "hshare": None, "loo": True, "vdp": True, "scale": GL.SCALE, "safety_w": 1.0 / 3,
            **(cfg or {})}  # loo, vdp: ablation switches only (leave-one-out mean; propagated privacy covariance)
-    stats = {c: network_stats(rng, d, eps, delta, G, cfg["f"], cfg["R1"], cfg["hshare"], cfg["scale"])
+    stats = {c: network_stats(rng, d, eps, delta, G, cfg["f"], cfg["R1"], cfg["hshare"], cfg["scale"],
+                               cfg.get("hshrink", False), cfg.get("tight", False), cfg.get("hdiag", False))
              for c, d in nets.items()}
     P = next(iter(nets.values()))[0][0].shape[1]
     names = list(nets)

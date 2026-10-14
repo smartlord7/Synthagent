@@ -225,22 +225,72 @@ def _score_sum(fam, X, y, w, G):
     return X.T @ r
 
 
-def stage1(fam, rng, data, rho1, G, R1=2, hshare=None):
+
+def shrink_offdiag(Hr, sh, N):
+    """v5: the released information matrix with its off-diagonal entries shrunk by lam = s2 / (s2 + sh^2), where s2,
+    the mean square of the true off-diagonal entries, is estimated from the release itself (mean square of the released
+    off-diagonals minus the known noise variance). Post-processing of the release: no privacy cost, no tuning."""
+    P = len(Hr)
+    off = Hr[~np.eye(P, dtype=bool)]
+    s2 = max(np.mean(off ** 2) - sh ** 2, 0.0) if sh > 0 else 1.0
+    lam = s2 / (s2 + sh ** 2) if sh > 0 else 1.0
+    return _psd(np.diag(np.diag(Hr)) + lam * (Hr - np.diag(np.diag(Hr))), 1e-2 * N)
+
+
+
+def noise_aware_mean(M, g, sg):
+    """v5: posterior mean and covariance of the network coefficients w given the released score sum g = M w + e,
+    e ~ N(0, sg^2 I) (M = H + I / S0^2 the released information with the default prior), under w ~ N(0, s^2 I) with s
+    chosen by the marginal likelihood of g (empirical Bayes over a grid). With sg = 0 this is M^-1 g, as in v4.
+    Post-processing of the releases: no privacy cost, no tuning."""
+    P = len(g)
+    if sg == 0:
+        Mi = np.linalg.inv(M)
+        return Mi @ g, np.zeros((P, P))
+    best = None
+    for s in np.logspace(-2, 1, 31):
+        C = s ** 2 * M @ M.T + sg ** 2 * np.eye(P)
+        sign, ld = np.linalg.slogdet(C)
+        ll = -0.5 * ld - 0.5 * g @ np.linalg.solve(C, g)
+        if best is None or ll > best[0]:
+            best = (ll, s)
+    s = best[1]
+    S = np.linalg.inv(M.T @ M / sg ** 2 + np.eye(P) / s ** 2)
+    return S @ M.T @ g / sg ** 2, S
+
+
+def stage1(fam, rng, data, rho1, G, R1=2, hshare=None, hdiag=False, damp=1.0, hshrink=False, noise_aware=False,
+           tight=False):
     """ghb_v4.stage1 with the family's information at the origin and its sensitivity."""
     P = data[0][0].shape[1]
     N = sum(len(y) for _, y in data)
     hs = 1.0 / (R1 + 1) if hshare is None else hshare
     rg, rh = rho1 * (1 - hs) / R1, rho1 * hs
     sg = 0.0 if np.isinf(rg) else 2 * G / np.sqrt(2 * rg)
-    sh = 0.0 if np.isinf(rh) else fam.info_sens(G) / np.sqrt(2 * rh)
+    # tight (v5): per-patient information matrices are PSD with Frobenius norm <= m (m = G^2 for the Poisson family,
+    # G^2 / 4 for the logistic); for PSD A, B, ||A - B||_F^2 = ||A||^2 + ||B||^2 - 2 tr(AB) <= 2 m^2, so a replacement
+    # moves the sum by at most sqrt(2) m (the default bound, 2 m, uses the triangle inequality)
+    sens = np.sqrt(2) * fam.info_sens(G) / 2 if tight else fam.info_sens(G)
+    sh = 0.0 if np.isinf(rh) else sens / np.sqrt(2 * rh)
     H = sum((X * fam.w(np.zeros(len(X)), y)[:, None]).T @ X for X, y in data)
-    E = np.triu(rng.standard_normal((P, P))) * sh
-    H0 = _psd(H + E + np.triu(E, 1).T, 1e-2 * N)
+    if hdiag == "auto":  # v5: decided before the release from public quantities only: the full matrix when its
+        # expected spectral noise sh sqrt(P) is below N m / P, the average per-coefficient bound on the information
+        # (m = fam.info_sens(G) / 2, the per-patient Frobenius bound); otherwise the diagonal alone
+        hdiag = bool(sh * np.sqrt(P) > N * fam.info_sens(G) / 2 / P)
+    if hdiag:  # v5 development: release the diagonal only (L2 sensitivity of the vector <= that of the matrix)
+        H0 = np.diag(np.maximum(np.diag(H) + sh * rng.standard_normal(P), 1e-2 * N))
+    else:
+        E = np.triu(rng.standard_normal((P, P))) * sh
+        H0 = shrink_offdiag(H + E + np.triu(E, 1).T, sh, N) if hshrink else _psd(H + E + np.triu(E, 1).T, 1e-2 * N)
     A = np.linalg.inv(H0 + np.eye(P) / S0 ** 2)
     w = np.zeros(P)
+    if noise_aware and R1 == 1:
+        g = sum(_score_sum(fam, X, y, w, G) for X, y in data) + sg * rng.standard_normal(P)
+        w, Sw = noise_aware_mean(H0 + np.eye(P) / S0 ** 2, g, sg)
+        return np.clip(w, -8, 8), H0, Sw
     for _ in range(R1):
         g = sum(_score_sum(fam, X, y, w, G) for X, y in data) + sg * rng.standard_normal(P)
-        w = np.clip(w + A @ (g - w / S0 ** 2), -8, 8)
+        w = np.clip(w + damp * A @ (g - w / S0 ** 2), -8, 8)
     return w, H0, sg ** 2 * A @ A * R1
 
 
@@ -256,7 +306,9 @@ def estimate(fam, data, rng, eps, delta, G, cfg=None):
         sg = 0.0 if np.isinf(rho) else 2 * G / np.sqrt(2 * rho)  # budget, read by each hospital through its own
         g0 = sum(_score_sum(fam, X, y, np.zeros(P), G) for X, y in data) + sg * rng.standard_normal(P)  # information
     else:
-        w, H, Vdp = stage1(fam, rng, data, cfg["f"] * rho, G, cfg["R1"], cfg["hshare"])
+        w, H, Vdp = stage1(fam, rng, data, cfg["f"] * rho, G, cfg["R1"], cfg["hshare"], cfg.get("hdiag", False),
+                           cfg.get("damp", 1.0), cfg.get("hshrink", False),
+                           cfg.get("noise_aware", False), cfg.get("tight", False))
     p = 1.0 / (1 + (GL.GRID / cfg["scale"]) ** 2) * np.gradient(GL.GRID)
     tq = np.repeat(V3.quantiles(p / p.sum())[:, None], P, 1)
     est = np.empty((len(data), P))

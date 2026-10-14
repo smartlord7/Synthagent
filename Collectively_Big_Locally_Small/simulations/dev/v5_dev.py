@@ -14,8 +14,8 @@ INT = dict(int_sd=2.5, free_int=2.5)  # the intercept keeps its own wide prior a
 D.VARIANTS = {
     "v4 locked": LOCKED,
     "v5 intercept": dict(LOCKED, **INT),
-    "v5 intercept + loo": dict(LOCKED, **INT, weights="pbma"),
-    "v5 loo": dict(LOCKED, weights="pbma"),
+    "v5 intercept + tight": dict(LOCKED, **INT, tight=True),
+    "v5 intercept + tight + loo": dict(LOCKED, **INT, tight=True, weights="pbma"),
 }
 
 if __name__ == "__main__":
