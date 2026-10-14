@@ -1,11 +1,12 @@
 /**
  * ui/simple.js
- * Responsibility: the Simple mode page. A short story, a guided setup of five plain controls, a Run button, results
+ * Responsibility: the Simple mode page. A short story, the animated network (ui/simpleNetwork.js), a guided setup of five plain controls, a Run button, results
  * per hospital in plain terms (a bar chart against "working alone" and sentences computed from the run), a
  * "What just happened?" section and a way to the expert view. The scenario mapping and the sentences live in
  * sim/simple.js (DOM-free and tested); this module only builds the page and runs the jobs.
  */
 import { add } from './dom.js';
+import { initSimpleNetwork } from './simpleNetwork.js';
 import { runJob, cancelJob } from '../sim/scheduler.js';
 import { runArena } from '../sim/arena.js';
 import { CHOICES, HOSPITALS, STORY, STEPS, defaultChoices, simpleJob, simpleArenaSpec, simpleSizes, digestArena, describe } from '../sim/simple.js';
@@ -17,7 +18,7 @@ const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
  * Build the Simple mode page.
  * @param {HTMLElement} root container
  * @param {{expert:()=>void}} act actions provided by main.js (switch to the expert view)
- * @returns {{stop:()=>void}} stop cancels any running test
+ * @returns {{stop:()=>void, onShow:()=>void}} stop cancels any running test; onShow starts the story (autoplay on a first visit)
  */
 export function initSimple(root, act) {
   const ch = defaultChoices();
@@ -31,8 +32,11 @@ export function initSimple(root, act) {
       <h2 id="sm-title">Can small hospitals learn from each other without sharing patient records?</h2>
       <p>${STORY.join(' ')}</p>
     </section>
-    <section class="sm-card" aria-labelledby="sm-setup-h">
-      <h2 id="sm-setup-h"><span class="sm-num" aria-hidden="true">1</span>Set up your scenario</h2>
+    <div class="sm-stage">
+    <section class="sm-card sm-netcard" id="sm-netcard" aria-labelledby="sm-net-h"></section>
+    <section class="sm-card sm-setup" aria-labelledby="sm-setup-h">
+      <h2 id="sm-setup-h"><span class="sm-num" aria-hidden="true">2</span>Set up your scenario</h2>
+      <p class="sm-help">The network above follows these settings as you change them.</p>
       <form id="sm-form" novalidate>
         <div class="sm-field">
           <label class="sm-k" for="sm-K"><span>${HOSPITALS.label}</span><output id="sm-K-out" for="sm-K">${ch.K}</output></label>
@@ -50,8 +54,9 @@ export function initSimple(root, act) {
         <div class="sm-runrow"><button class="rd-btn primary sm-run" type="submit" id="sm-run">Run</button><span class="rd-progress" id="sm-progress" aria-live="polite"></span></div>
       </form>
     </section>
+    </div>
     <section class="sm-card" aria-labelledby="sm-res-h">
-      <h2 id="sm-res-h"><span class="sm-num" aria-hidden="true">2</span>Results</h2>
+      <h2 id="sm-res-h"><span class="sm-num" aria-hidden="true">3</span>Results</h2>
       <div id="sm-results"><p class="sm-help">Press <strong>Run</strong> to see how each hospital does on its own and with GHB. It takes a second or two.</p></div>
     </section>
     <details class="sm-how">
@@ -80,12 +85,13 @@ export function initSimple(root, act) {
     read(); kOut.textContent = String(ch.K); showSizes();
     if (result && !stale) { stale = true; resEl.querySelector('.sm-stale')?.removeAttribute('hidden'); }
   });
-  form.addEventListener('submit', (e) => { e.preventDefault(); run(); });
+  form.addEventListener('input', () => net.update());
+  form.addEventListener('submit', (e) => { e.preventDefault(); run(true); });
   wrap.querySelector('#sm-expert').onclick = () => act.expert();
   showSizes();
 
   function stopFed() { if (worker) { worker.terminate(); worker = null; } cancelJob('simple-fed'); }
-  function run() {
+  function run(scroll = false) {
     read(); stopFed(); stale = false; fed = null; fedState = ch.federated ? 'waiting' : 'off';
     const snap = { ...ch };
     runBtn.disabled = true; runBtn.textContent = 'Running...'; resEl.setAttribute('aria-busy', 'true');
@@ -94,9 +100,9 @@ export function initSimple(root, act) {
       onDone: (r) => {
         result = r; runBtn.disabled = false; runBtn.textContent = 'Run again'; resEl.removeAttribute('aria-busy');
         progEl.textContent = 'Done.';
-        render();
+        render(); net.setResult();
         if (snap.federated) startFed(snap);
-        resEl.closest('section').scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+        if (scroll) resEl.closest('section').scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
       },
       onError: (e) => { runBtn.disabled = false; runBtn.textContent = 'Run'; resEl.removeAttribute('aria-busy'); progEl.innerHTML = `<span class="lv-bad">The run failed: ${esc(e.message)}</span>`; }
     });
@@ -189,5 +195,6 @@ export function initSimple(root, act) {
       </tbody></table>`;
   }
 
-  return { stop: () => { cancelJob('simple'); stopFed(); } };
+  const net = initSimpleNetwork(wrap.querySelector('#sm-netcard'), { choices: () => ({ ...ch }), result: () => (stale ? null : result), requestRun: () => { if (!runBtn.disabled) run(false); } });
+  return { stop: () => { cancelJob('simple'); stopFed(); }, onShow: () => net.onShow() };
 }
