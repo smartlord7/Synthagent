@@ -742,7 +742,9 @@ def flamby():
     for ds, (m1, m2), name in (("heart", ("acc", "logloss"), "t_flamby_heart.tex"), ("brca", ("cindex", "deviance"), "t_flamby_brca.tex")):
         rows_ = r[ds]["rows"]
         val = lambda key, m: rows_[key][m]["mean"] if key in rows_ else None
-        cell = lambda v: "n/a" if v is None else f"{v:.3f}"
+        # a method whose fitted model diverges (pFedMe at eps = 1 with its correctly calibrated noise: Poisson rates up
+        # to e^50) has a meaningless magnitude; it is printed as > 10^3 with a footnote
+        cell = lambda v: "n/a" if v is None else (r"$>10^3$\textsuperscript{d}" if v > 1e3 else f"{v:.3f}")
         lines = []
         def add(label, keyf):
             cells = []
