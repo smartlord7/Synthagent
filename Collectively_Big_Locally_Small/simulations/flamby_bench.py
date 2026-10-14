@@ -340,12 +340,14 @@ def score():
         cks = [json.load(open(f)) for f in files]
         info = cks[0]["info"]
         K = len(info["names"])
-        # per method, metric: (reps, K) with nan where undefined
+        # per method, metric: (reps, K) with nan where undefined (None: e.g. no comparable pair for the C-index); a
+        # stored NaN loss (every head's probability underflowed, 0 / 0) is a zero probability for the true class: +inf
         arr = {}
         for m in cks[0]["res"]:
             for met, _ in METRICS[ds]:
-                arr[(m, met)] = np.array([[np.nan if c["res"][m][k][met] is None else c["res"][m][k][met] for k in range(K)]
-                                          for c in cks], float)
+                arr[(m, met)] = np.array([[np.nan if c["res"][m][k][met] is None else
+                                           (np.inf if c["res"][m][k][met] != c["res"][m][k][met] else c["res"][m][k][met])
+                                           for k in range(K)] for c in cks], float)
         hosp = {k: np.nanmean(v, 0) for k, v in arr.items()}  # per-hospital mean over reps
         undefined = {met: [info["names"][k] for k in range(K) if np.isnan(hosp[("Local", met)][k])] for met, _ in METRICS[ds]}
         summ = lambda key: float(np.nanmean(hosp[key]))
