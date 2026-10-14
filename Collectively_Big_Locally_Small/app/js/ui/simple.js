@@ -137,43 +137,50 @@ export function initSimple(root, act) {
   function render() {
     const r = result, H = r.hospitals, K = H.length, c = r.choices, d = describe(r, fed);
     const showPool = c.pooled;
-    const vals = H.flatMap((h) => (showPool ? [h.ghb, h.pooled] : [h.ghb]));
-    const max = Math.max(1.2, Math.min(2, Math.max(...vals) * 1.05)), x = (v) => Math.min(100, (100 * v) / max);
-    const better = H.filter((h) => h.ghb <= 1).length, avg = H.reduce((a, h) => a + h.ghb, 0) / K;
-    const ticks = [0, 0.5, 1, 1.5, 2].filter((t) => t <= max + 1e-9);
-    const rows = H.map((h) => {
-      const off = h.pooled > max;
+    // the chart shows patients gained: each hospital is as accurate as if it had "like" patients (its patients divided by
+    // its error compared with working alone), so it gains like - has. Diverging bars around 0, scaled to GHB's gains;
+    // everyone pooled is a diamond (a triangle when it falls off the scale).
+    const like = (h, rel) => h.n / rel, gainG = H.map((h) => like(h, h.ghb) - h.n), gainP = H.map((h) => like(h, h.pooled) - h.n);
+    const span = Math.max(10, ...gainG.map(Math.abs)) * 1.15, lo = gainG.some((g) => g < 0) || showPool ? -span : 0, hi = span;
+    const x = (g) => (100 * (Math.min(hi, Math.max(lo, g)) - lo)) / (hi - lo);
+    const step = [1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000, 5000].find((t) => span / t <= 3) || 10000;
+    const ticks = []; for (let t = Math.ceil(lo / step) * step; t <= hi; t += step) ticks.push(t);
+    const better = H.filter((h) => h.ghb <= 1).length, s0 = H[0], total = gainG.reduce((q, g) => q + g, 0);
+    const sg = (g) => { const r = Math.round(g); return r > 0 ? `+${r}` : `${r}`; };
+    const rows = H.map((h, i) => {
+      const g = gainG[i], gp = gainP[i], worse = g < 0, off = gp > hi || gp < lo;
       return `<tr>
-        <th scope="row">Hospital ${h.k + 1}: <span class="sm-n">${h.n} patients</span></th>
+        <th scope="row">Hospital ${h.k + 1}</th>
+        <td class="num has">${h.n}</td>
         <td class="sm-track-cell" aria-hidden="true"><div class="sm-track">
-          ${ticks.map((t) => `<span class="sm-grid${t === 1 ? ' one' : ''}" style="left:${x(t)}%"></span>`).join('')}
-          <span class="sm-bar${h.ghb > 1 ? ' worse' : ''}" style="width:${x(h.ghb)}%"></span>
-          ${showPool ? `<span class="sm-pool${off ? ' off' : ''}" style="left:${x(h.pooled)}%" title="Everyone pooled: ${pct(h.pooled)}"></span>` : ''}
+          ${ticks.map((t) => `<span class="sm-grid${t === 0 ? ' one' : ''}" style="left:${x(t)}%"></span>`).join('')}
+          <span class="sm-bar${worse ? ' worse' : ''}" style="left:${Math.min(x(0), x(g))}%;width:${Math.max(Math.abs(x(g) - x(0)), 0.6)}%"></span>
+          ${showPool ? `<span class="sm-pool${off ? ' off' : ''}${gp < lo ? ' left' : ''}" style="left:${x(gp)}%" title="Everyone pooled: ${sg(gp)} patients"></span>` : ''}
         </div></td>
-        <td class="num${h.ghb > 1 ? ' worse' : ''}">${pct(h.ghb)}<small>like ${Math.round(h.likePatients)} patients</small></td>
-        ${showPool ? `<td class="num pool">${pct(h.pooled)}</td>` : ''}
+        <td class="num${worse ? ' worse' : ''}">${sg(g)}<small>like ${Math.round(h.n + g)}</small></td>
+        ${showPool ? `<td class="num pool">${sg(gp)}<small>like ${Math.round(h.n + gp)}</small></td>` : ''}
       </tr>`;
     }).join('');
     resEl.innerHTML = `
       <p class="sm-stale rd-callout warn" ${stale ? '' : 'hidden'}>You changed the settings. Press <strong>Run again</strong> to update these results.</p>
       <div class="rd-chips sm-chips">
         <div class="rd-chip ghb"><div class="k">Hospitals better off with GHB</div><div class="v">${better} of ${K}</div></div>
-        <div class="rd-chip ghb"><div class="k">Average error with GHB</div><div class="v">${pct(avg)} <small>alone = 100</small></div></div>
-        <div class="rd-chip ghb"><div class="k">Smallest hospital acts like</div><div class="v">${Math.round(H[0].likePatients)} <small>patients, has ${H[0].n}</small></div></div>
+        <div class="rd-chip ghb"><div class="k">Smallest hospital</div><div class="v">${s0.n} &rarr; ${Math.round(s0.likePatients)} <small>patients (${sg(s0.likePatients - s0.n)})</small></div></div>
+        <div class="rd-chip ghb"><div class="k">Patients gained, all hospitals</div><div class="v">${sg(total)} <small>patients' worth</small></div></div>
       </div>
       <h3 class="sm-h3">What we found</h3>
       <ul class="sm-findings">${d.main.map((s) => `<li class="${s.kind}">${esc(s.text)}</li>`).join('')}</ul>
-      <h3 class="sm-h3">Each hospital, alone and with GHB</h3>
-      <p class="sm-help"><strong>Error</strong> means how far a hospital's predictions are from the truth, on average. It is shown compared with the same hospital working alone: <strong>alone = 100</strong>, lower is better, 50 means half the error. "Like 30 patients" means GHB makes the hospital as accurate as if it had 30 patients of its own.</p>
+      <h3 class="sm-h3">How many patients each hospital gains</h3>
+      <p class="sm-help">GHB never moves patient records, but it makes each hospital as accurate as if it had more patients. <strong>Has</strong> is the hospital's own patients; the bar and the number are the <strong>patients gained</strong>. For example, Hospital ${s0.k + 1} has ${s0.n} patients and gains ${sg(s0.likePatients - s0.n)}: it predicts as well as a hospital with ${Math.round(s0.likePatients)} patients working alone. A red bar to the left means it ends up slightly worse than working alone.</p>
       <div class="sm-legend" aria-hidden="true">
-        <span><i class="sw alone"></i>Working alone (100)</span><span><i class="sw ghb"></i>With GHB</span><span><i class="sw worse"></i>With GHB, worse than alone</span>${showPool ? '<span><i class="sw pool"></i>Everyone pooled (not allowed)</span>' : ''}
+        <span><i class="sw alone"></i>Working alone (no gain)</span><span><i class="sw ghb"></i>Patients gained with GHB</span><span><i class="sw worse"></i>Patients lost with GHB</span>${showPool ? '<span><i class="sw pool"></i>Everyone pooled (not allowed)</span>' : ''}
       </div>
       <div class="sm-chart-wrap"><table class="sm-chart">
-        <caption class="sm-vh">Error of each hospital compared with working alone (alone = 100, lower is better)</caption>
-        <thead><tr><th scope="col">Hospital</th><th scope="col" class="sm-axis-h"><span class="sm-vh">Chart</span><div class="sm-axis" aria-hidden="true">${ticks.map((t) => `<span class="${t === 1 ? 'one' : ''}" style="left:${x(t)}%">${pct(t)}</span>`).join('')}</div></th><th scope="col" class="num">With GHB</th>${showPool ? '<th scope="col" class="num">Pooled</th>' : ''}</tr></thead>
+        <caption class="sm-vh">Patients each hospital gains with GHB, compared with working alone</caption>
+        <thead><tr><th scope="col">Hospital</th><th scope="col" class="num">Has</th><th scope="col" class="sm-axis-h"><span class="sm-vh">Chart</span><div class="sm-axis" aria-hidden="true">${ticks.map((t) => `<span class="${t === 0 ? 'one' : ''}" style="left:${x(t)}%">${t > 0 ? '+' : ''}${t}</span>`).join('')}</div></th><th scope="col" class="num">Gained with GHB</th>${showPool ? '<th scope="col" class="num">Pooled</th>' : ''}</tr></thead>
         <tbody>${rows}</tbody>
       </table></div>
-      ${max < Math.max(...vals) ? `<p class="sm-help">Values above ${pct(max)} run off the right edge of the chart (marked with a triangle); the numbers on the right are exact.</p>` : ''}
+      ${showPool && gainP.some((g) => g > hi || g < lo) ? `<p class="sm-help">Where pooling everyone gains or loses more than the scale shows, it is marked with a triangle; the numbers on the right are exact. Pooling helps the small hospitals a lot but costs the large ones many patients' worth, because one shared model ignores how the hospitals differ.</p>` : ''}
       ${d.compare.length ? `<h3 class="sm-h3">Compared with other options</h3><ul class="sm-findings">${d.compare.map((s) => `<li class="${s.kind}">${esc(s.text)}</li>`).join('')}</ul>` : ''}
       <div id="sm-fed"></div>`;
     renderFed();
