@@ -361,7 +361,7 @@ def score():
             add(m, {met: (m, met) for met, _ in METRICS[ds]})
         for e in EPS:
             t = etag(e)
-            for m in ("GHB", "GHB-lite"):
+            for m in ("GHB v5", "GHB", "GHB-lite"):
                 if (f"{m}, eps={t}", METRICS[ds][0][0]) in arr:
                     add(f"{m}, eps={t}", {met: (f"{m}, eps={t}", met) for met, _ in METRICS[ds]})
             for fam, code in FAMILIES.items():

@@ -23,6 +23,9 @@ V5 = {"v4": RN.V4_CFG,
       "v5": dict(RN.V4_CFG, **INT, tight=True, hdiag="auto", noise_aware=True),
       "v5 + loo": dict(RN.V4_CFG, **INT, tight=True, hdiag="auto", noise_aware=True, weights="pbma")}
 OUT = ghb.RESDIR / "v5_networks_ckpt"
+if "--frozen" in sys.argv:  # the frozen GHB v5 (real_v3.GHB_V5 without the pan-network step: one network per run)
+    V5 = {"GHB v5": dict(RN.V4_CFG, **INT, tight=True, hdiag="auto")}
+    OUT = ghb.RESDIR / "v5_networks_frozen_ckpt"
 _orig = RN.estimates
 
 
