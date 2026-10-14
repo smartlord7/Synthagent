@@ -4,7 +4,7 @@ An interactive companion to the paper *Borrowing Strength Without Borrowing Data
 
 The lab has two protocols side by side:
 
-- **GHB** (paper Section 5.2): the network makes joint releases, sums over every patient privatized once for the whole network by secure summation over the graph. Each hospital removes its own data exactly and integrates the unknown heterogeneity out against its own evidence.
+- **GHB** (paper Section 5.2): the network makes joint releases, sums over every patient privatized once for the whole network by secure summation over the graph. Each hospital removes its own data exactly and integrates the unknown heterogeneity out against its own evidence. The lab runs GHB as released (v5). Compared with the first version (v4, still selectable in the arena as "GHB v4 (earlier version)") it does not borrow the intercept, because base rates differ across hospitals; it releases the information sum with the tighter sensitivity √2 G²/4 (one patient changes it by the difference of two positive semidefinite rank-one terms); and it releases only the diagonal of that sum when a rule on public quantities, fixed before the release, says the full matrix would be mostly noise.
 - **GHB-lite** (Section 5.3): every hospital releases its own privatized estimate or score, private on its own.
 
 It measures how small a dataset is, animates both protocols, runs GHB and GHB-lite against every literature method of the paper with one click, and shows the paper's real-data results.
@@ -82,7 +82,7 @@ index.html ── css/researchdata.css
   - `ghb.js`: Gaussian GHB-lite (DerSimonian-Laird, half-Cauchy τ², inverse-variance leave-one-out mean, shrinkage, robust Student-t prior, opt-out, screening, anchor check, GMRF Jacobi) and Gaussian GHB with a joint release (closed-form M_k, τ integrated out over its prior).
   - `linalg.js`: small dense linear algebra for model heads.
   - `logit.js`: the logistic world (features, MAP fits, Laplace-evidence mixtures, excess log-loss, AUC, public moments).
-  - `ghbLogit.js`: GHB (two joint releases, `ghb_v4.py`) and GHB-lite (`ghb_logit.py`) for logistic heads.
+  - `ghbLogit.js`: GHB (two joint releases, `ghb_v4.py` with the frozen v5 configuration `real_v3.GHB_V5`; `GHB_V4` selects the earlier version) and GHB-lite (`ghb_logit.py`) for logistic heads.
   - `literature.js`: every literature method (`literature.py`, `personalized.py`, `ghb_sa.py`, the one-shot baselines of `logit_world.py`).
   - `random.js`: seeded generator, the exact numpy site-size profile, log-normal sizes.
 - **`sim/`** runs Monte Carlo jobs.
@@ -156,19 +156,20 @@ Run all of them with `node --test tests/`. Tests import `js/math/` and the DOM-f
 `tests/logit.test.mjs` checks every logistic method against the paper's Python code on a fixed small network, given the same data and the same noise draws (`tests/fixtures/logit_reference.json`; the generating script is in the test's header). It covers:
 
 - The zCDP budget and the MAP fit, including a closed-form case.
-- GHB-lite and GHB.
+- GHB-lite, GHB (v5, including the diagonal release at ε = 0.3) and GHB v4.
 - One-shot FedAvg and meta-analysis.
 - DP-FedAvg, with and without secure aggregation, decentralized DP-SGD and fine-tuning.
 - Ditto, pFedMe, APFL, Per-FedAvg, FedRep and FedProx.
 
 All agree to 10⁻⁸ or better.
 
-`tests/arena.test.mjs` runs the arena headless on Simulation 15 (τ² = 0.05, ε = 1, K = 24, oracle tuning on 10 replicates, 20 replicates). It checks every mean against the paper's values within max(20%, 2.5 combined SE). Excess log-loss in 10⁻³ nats, JS against the paper:
+`tests/arena.test.mjs` runs the arena headless on Simulation 15 (τ² = 0.05, ε = 1, K = 24, oracle tuning on 10 replicates, 20 replicates). It checks every mean against the paper's values within max(20%, 2.5 combined SE); GHB v4 against the Simulation 15 run made with v4 before the v5 rerun. Excess log-loss in 10⁻³ nats, JS against the paper:
 
 | Method | JS | Paper |
 |---|---|---|
 | Local | 26.7 | 27.1 |
-| GHB | 15.9 | 15.9 |
+| GHB | 18.5 | 19.2 |
+| GHB v4 (earlier version) | 15.6 | 15.9 |
 | GHB-lite | 13.0 | 13.8 |
 | Ditto-style | 14.4 | 15.4 |
 | DP-FedAvg + FT | 15.5 | 15.3 |

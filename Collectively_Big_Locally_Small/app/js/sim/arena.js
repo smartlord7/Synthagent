@@ -13,7 +13,7 @@ import { makeRng, siteSizes, lognormalSizes } from '../math/random.js';
 import { topology, metropolisHastings, matPow } from '../math/graph.js';
 import { avgOp } from '../math/ghb.js';
 import { P, MU, N_TEST, features, scores, sigmoid, fit, testSet, excess, rhoTotal, Public } from '../math/logit.js';
-import { ghbLite, ghbJoint } from '../math/ghbLogit.js';
+import { ghbLite, ghbJoint, GHB_V4, GHB_V5 } from '../math/ghbLogit.js';
 import * as LIT from '../math/literature.js';
 
 const ROUNDS = [1, 2, 3, 5, 10, 30, 100], DROUNDS = [3, 10, 30, 100], ETAS = [0.2, 0.5, 2.0], FT_STEPS = [0, 1, 2, 3, 5, 10, 30, 100];
@@ -31,8 +31,10 @@ const keyOf = (id, c) => id + (c ? '|' + Object.entries(c).map(([k, v]) => `${k}
 export const ARENA_METHODS = [
   { id: 'local', label: 'Local', short: 'Local', family: 'reference', tok: '--rd-local', note: 'MAP with the published anchor as prior N(μ₀, I); no other hospital.' },
   { id: 'pooled', label: 'Pooled, no DP (reference)', short: 'Pooled', family: 'reference', tok: '--rd-risk', private: false, note: 'One model on all patients without privacy: a reference no private method can reach.' },
-  { id: 'ghb', label: 'GHB', short: 'GHB', family: 'ghb', tok: '--rd-ghb', cite: 'this paper, Section 5.2', note: 'Two joint releases (score and information sums), leave-one-out prior with privacy covariance, τ integrated out against own evidence, no-borrowing components.',
-    settings: { 'quantiles Q': 12, 'half-Cauchy scale': 0.5, 'default scales s': '0.5, 1, 2.5', 'no-borrowing weight': '1/4', 'Newton rounds': 1, 'budget split': '1/2, 1/2' } },
+  { id: 'ghb', label: 'GHB', short: 'GHB', family: 'ghb', tok: '--rd-ghb', cite: 'this paper, Section 5.2', note: 'GHB as released (v5): two joint releases (score and information sums), leave-one-out prior with privacy covariance, τ integrated out against own evidence, no-borrowing components. The intercept is not borrowed (base rates differ across hospitals); the information release has the tight sensitivity √2 G²/4 and is diagonal only when a public rule says so.',
+    settings: { 'quantiles Q': 12, 'half-Cauchy scale': 0.5, 'default scales s': '0.5, 1, 2.5', 'no-borrowing weight': '1/4', 'Newton rounds': 1, 'budget split': '1/2, 1/2', 'intercept': 'not borrowed, prior sd 2.5', 'information sensitivity': '√2 G²/4', 'diagonal release': 'when s_J √P > N G²/(4P)' } },
+  { id: 'ghbV4', label: 'GHB v4 (earlier version)', short: 'GHB v4', family: 'ghb', tok: '--rd-gmrf', cite: 'this paper, Section 5.2', note: 'The first released configuration, kept for comparison: the intercept is borrowed like the slopes and the information release has sensitivity G²/2, always as a full matrix.',
+    settings: { 'quantiles Q': 12, 'half-Cauchy scale': 0.5, 'default scales s': '0.5, 1, 2.5', 'no-borrowing weight': '1/4', 'Newton rounds': 1, 'budget split': '1/2, 1/2', 'intercept': 'borrowed', 'information sensitivity': 'G²/2', 'diagonal release': 'never' } },
   { id: 'lite', label: 'GHB-lite', short: 'GHB-lite', family: 'ghb', tok: '--rd-lite', cite: 'this paper, Section 5.3', note: 'Each hospital releases its mean score at the anchor; moment inversion, gossip (T = 60), τ from the releases, integrated out.',
     settings: { 'quantiles Q': 12, 'half-Cauchy scale': 0.5, 'default scale': 2.5, 'gossip rounds T': 60, 'public draws': 20000, 'conflict threshold': 3 } },
   { id: 'liteOracle', label: 'GHB-lite, true τ² (reference)', short: 'GHB-lite, τ² known', family: 'reference', tok: '--rd-oracle', note: 'GHB-lite told the true heterogeneity: a reference, not a method.' },
@@ -163,7 +165,8 @@ export function estimatesFor(ctx, w, want, R) {
         for (const d of data) { X.set(d.X, o * P); y.set(d.y, o); o += d.n; }
         const t = fit({ X, y, n: N }, new Float64Array(P), new Float64Array(P).fill(1e-3)); out.set('pooled', data.map(() => t)); break;
       }
-      case 'ghb': out.set('ghb', ghbJoint(R('ghb'), data, spec.eps, spec.delta, { anchor: asd ? { mu0, sd: asd } : null }).est); break;
+      case 'ghb': out.set('ghb', ghbJoint(R('ghb'), data, spec.eps, spec.delta, { ...GHB_V5, anchor: asd ? { mu0, sd: asd } : null }).est); break;
+      case 'ghbV4': out.set('ghbV4', ghbJoint(R('ghbV4'), data, spec.eps, spec.delta, { ...GHB_V4, anchor: asd ? { mu0, sd: asd } : null }).est); break;
       case 'lite': out.set('lite', lite().est); break;
       case 'liteOracle': out.set('liteOracle', lite().oracle); break;
       case 'fedavg1': out.set('fedavg1', LIT.repeat(LIT.oneShotFedavg(lite().inv.th, n), K)); break;

@@ -50,6 +50,14 @@
 // out['v4_eps1'] = dict(z=z.tolist(), est=V4.estimate({'x': data}, np.random.default_rng(77), 1.0, 1e-5, np.sqrt(5.0), cfg=cfg)['x'].tolist())
 // cfg2 = dict(cfg, anchor=None)
 // out['v4_eps1_noanchor'] = V4.estimate({'x': data}, np.random.default_rng(77), 1.0, 1e-5, np.sqrt(5.0), cfg=cfg2)['x'].tolist()
+// # 4b GHB v5 (real_v3.GHB_V5 for one network): intercept not borrowed, tight sensitivity, public diagonal rule
+// cfg5 = dict(f=1.0, safety=True, R1=1, pan=False, int_sd=2.5, free_int=2.5, tight=True, hdiag="auto", anchor=(mu0, 0.3))
+// out['v5_inf'] = V4.estimate({'x': data}, np.random.default_rng(1), np.inf, 1e-5, np.sqrt(5.0), cfg=cfg5)['x'].tolist()
+// z = np.random.default_rng(77).standard_normal(P * P + P)
+// out['v5_eps1'] = dict(z=z.tolist(), est=V4.estimate({'x': data}, np.random.default_rng(77), 1.0, 1e-5, np.sqrt(5.0), cfg=cfg5)['x'].tolist())
+// out['v5_eps1_noanchor'] = V4.estimate({'x': data}, np.random.default_rng(77), 1.0, 1e-5, np.sqrt(5.0), cfg=dict(cfg5, anchor=None))['x'].tolist()
+// z = np.random.default_rng(79).standard_normal(P * P + P)  # eps = 0.3: the public rule releases only the diagonal
+// out['v5_eps03'] = dict(z=z.tolist(), est=V4.estimate({'x': data}, np.random.default_rng(79), 0.3, 1e-5, np.sqrt(5.0), cfg=cfg5)['x'].tolist())
 // # 5 literature with replayed normals
 // rho = LIT.rho_total(1.0, 1e-5)
 // z = np.random.default_rng(78).standard_normal(500)
@@ -124,10 +132,25 @@ test('GHB-lite (Section 5.3) reproduces ghb_logit.invert and estimate, with and 
   close(GL.priorQuantiles(), F.prior_q, 1e-12, 'half-Cauchy prior quantiles');
 });
 
-test('GHB (Section 5.2, two joint releases) reproduces ghb_v4.estimate with the frozen configuration', () => {
-  close(GL.ghbJoint(replay(new Array(40).fill(0)), data, Infinity, 1e-5, { anchor: { mu0, sd: 0.3 } }).est, F.v4_inf, 1e-8, 'no privacy, anchor');
-  close(GL.ghbJoint(replay(F.v4_eps1.z), data, 1, 1e-5, { anchor: { mu0, sd: 0.3 } }).est, F.v4_eps1.est, 1e-8, 'eps = 1, anchor');
-  close(GL.ghbJoint(replay(F.v4_eps1.z), data, 1, 1e-5, {}).est, F.v4_eps1_noanchor, 1e-8, 'eps = 1, no anchor');
+test('GHB v4 (earlier version) reproduces ghb_v4.estimate with real_v3.GHB_V4', () => {
+  const v4 = (o) => ({ ...GL.GHB_V4, ...o });
+  close(GL.ghbJoint(replay(new Array(40).fill(0)), data, Infinity, 1e-5, v4({ anchor: { mu0, sd: 0.3 } })).est, F.v4_inf, 1e-8, 'no privacy, anchor');
+  close(GL.ghbJoint(replay(F.v4_eps1.z), data, 1, 1e-5, v4({ anchor: { mu0, sd: 0.3 } })).est, F.v4_eps1.est, 1e-8, 'eps = 1, anchor');
+  close(GL.ghbJoint(replay(F.v4_eps1.z), data, 1, 1e-5, v4({})).est, F.v4_eps1_noanchor, 1e-8, 'eps = 1, no anchor');
+});
+
+test('GHB (v5, the released version, the default) reproduces ghb_v4.estimate with real_v3.GHB_V5', () => {
+  const a = { anchor: { mu0, sd: 0.3 } }, rep = {};
+  const run = (z, eps, cfg, ref, msg) => { const r = GL.ghbJoint(replay(z), data, eps, 1e-5, cfg); const d = maxDiff(r.est, ref); rep[msg] = d; assert.ok(d <= 1e-8, `${msg}: max difference ${d}`); return r; };
+  run(new Array(40).fill(0), Infinity, a, F.v5_inf, 'no privacy, anchor');
+  run(F.v5_eps1.z, 1, a, F.v5_eps1.est, 'eps = 1, anchor');
+  run(F.v5_eps1.z, 1, {}, F.v5_eps1_noanchor, 'eps = 1, no anchor');
+  run(F.v5_eps1.z, 1, { ...GL.GHB_V5, ...a }, F.v5_eps1.est, 'eps = 1, explicit GHB_V5');
+  const z = F.v5_eps03.z.slice(0, 2 * L.P); // diagonal release: P normals for J~, then P for S~ (all the replay holds)
+  run(z, 0.3, a, F.v5_eps03.est, 'eps = 0.3, diagonal release, anchor');
+  assert.equal(GL.jointStage1(replay(z), data, L.rhoTotal(0.3, 1e-5), 1, GL.GHB_V5).diag, true, 'public rule picks the diagonal at eps = 0.3');
+  assert.equal(GL.jointStage1(replay(F.v5_eps1.z), data, rho1, 1, GL.GHB_V5).diag, false, 'and the full matrix at eps = 1');
+  if (process.env.SHOW_DIFFS) console.log('GHB v5 max differences', rep);
 });
 
 test('literature methods reproduce literature.py, personalized.py and ghb_sa.py with the same noise draws', () => {
