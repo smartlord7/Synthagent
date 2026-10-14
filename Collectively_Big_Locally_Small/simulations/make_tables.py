@@ -599,10 +599,13 @@ def tcga():
     short = {"DP-FedAvg + FT": "DP-FedAvg + FT", "DP-FedAvg-SA + FT": "DP-FedAvg + FT, sec.\\ agg.", "APFL": "APFL", "Ditto": "Ditto",
              "pFedMe": "pFedMe", "Clustered DP-FedAvg": "Clustered DP-FedAvg"}
     rows = []
+    v5c = load("v5_confirm.json")  # GHB as released (v5, dev/PREREG_v5.md); v4 is the earlier pre-registered version
+    order = [v5c["nets"].index(p) for p in nets]  # v5_confirm.json lists the networks in real_v3.SETS order
     for e in ("1", "10"):
         r = rel[e]
-        g = np.array(r["GHB v4"])
-        lines = [(r"\textbf{GHB}, no tuning", g), ("GHB-lite (evidence prior), no tuning", np.array(r["GHB-EB"])),
+        g = np.array(v5c["rel"][e]["GHB v5"])[order]
+        lines = [(r"\textbf{GHB}, no tuning", g), ("GHB v4 (earlier version), no tuning", np.array(r["GHB v4"])),
+                 ("GHB-lite (evidence prior), no tuning", np.array(r["GHB-EB"])),
                  ("Local, evidence prior$^\\ddagger$", np.array(r["Local, evidence prior"]))]
         lines += [(short[fm] + ", tuned on development", np.array(r[fm + " (realistic)"])) for fm in fams]
         orc = np.min([r[fm + " (oracle)"] for fm in fams], 0)
@@ -658,7 +661,13 @@ def tcga():
         for e in ("1", "10"):
             cells += [f"{np.mean([fun(p, e, 'a') for p in dn]):.3f}", f"{np.mean([fun(p, e, 'o') for p in dn]):.3f}"]
         return lab + " & " + " & ".join(cells) + r"\\"
-    rows.append(line("GHB, no tuning", lambda p, e, a: L(p, f"GHB v4, eps={e}")))
+    for fn in glob.glob(str(R / "v5f_dev_ckpt" / "*.json")):  # GHB v5 (frozen) on all ten repetitions, dev/v5_dev.py
+        for k, (ll, cnt) in json.load(open(fn)).items():
+            if "v5 it + auto," in k:
+                k2 = k.replace("v5 it + auto", "GHB v5")
+                acc[k2][0] += sum(ll); acc[k2][1] += sum(cnt)
+    rows.append(line("GHB, no tuning", lambda p, e, a: L(p, f"GHB v5, eps={e}")))
+    rows.append(line("GHB v4 (earlier version), no tuning", lambda p, e, a: L(p, f"GHB v4, eps={e}")))
     rows.append(line("GHB-lite (evidence prior), no tuning", lambda p, e, a: L(p, f"GHB-EB, eps={e}")))
     for v in ("+ safety", "+ learned scale", "+ correlated", "+ cross-cancer", "GHB v3"):
         rows.append(line(f"GHB-lite {v.replace('GHB v3', 'with all four additions (v3)').replace('+ ', 'with ')}", (lambda v: lambda p, e, a: L(p, f"{v}, eps={e}"))(v)))
