@@ -164,7 +164,7 @@ export function initSimple(root, act) {
       </div>
       <div class="sm-chart-wrap"><table class="sm-chart">
         <caption class="sm-vh">Error of each hospital compared with working alone (alone = 100, lower is better)</caption>
-        <thead><tr><th scope="col">Hospital</th><th scope="col" class="sm-axis-h"><span class="sm-vh">Chart</span><div class="sm-axis" aria-hidden="true">${ticks.map((t) => `<span style="left:${x(t)}%">${pct(t)}</span>`).join('')}</div></th><th scope="col" class="num">With GHB</th>${showPool ? '<th scope="col" class="num">Pooled</th>' : ''}</tr></thead>
+        <thead><tr><th scope="col">Hospital</th><th scope="col" class="sm-axis-h"><span class="sm-vh">Chart</span><div class="sm-axis" aria-hidden="true">${ticks.map((t) => `<span class="${t === 1 ? 'one' : ''}" style="left:${x(t)}%">${pct(t)}</span>`).join('')}</div></th><th scope="col" class="num">With GHB</th>${showPool ? '<th scope="col" class="num">Pooled</th>' : ''}</tr></thead>
         <tbody>${rows}</tbody>
       </table></div>
       ${max < Math.max(...vals) ? `<p class="sm-help">Values above ${pct(max)} run off the right edge of the chart (marked with a triangle); the numbers on the right are exact.</p>` : ''}

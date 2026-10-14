@@ -320,5 +320,11 @@ table.sm-chart { width: 100%; border-collapse: collapse; font-size: var(--rd-t-s
   .sm-chart .sm-n { display: block; }
   .sm-chart td, .sm-chart th { padding-inline: 3px; }
   .sm-track-cell, .sm-axis-h { min-width: 70px; }
+  .sm-axis span:not(.one) { display: none; }
+  .sm-chart .num small { display: none; }
+  .sm-chart-wrap { max-height: none; }
+  .sm-chart thead th { white-space: normal; letter-spacing: 0; }
+  .sm-chart thead th.num { width: 1%; white-space: normal; }
+  .sm-chart th[scope="row"] { font-size: var(--rd-t-xs); }
   .rd-btn.sm-run { width: 100%; }
 }
