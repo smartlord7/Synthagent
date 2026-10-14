@@ -12,10 +12,9 @@ import v4_dev as D  # noqa: E402
 LOCKED = D.LOCKED
 INT = dict(int_sd=2.5, free_int=2.5)  # the intercept keeps its own wide prior and is not borrowed
 D.VARIANTS = {
-    "v4 locked": LOCKED,
-    "v5 intercept": dict(LOCKED, **INT),
     "v5 intercept + tight": dict(LOCKED, **INT, tight=True),
-    "v5 intercept + tight + loo": dict(LOCKED, **INT, tight=True, weights="pbma"),
+    "v5 + auto + na": dict(LOCKED, **INT, tight=True, hdiag="auto", noise_aware=True),
+    "v5 + auto + na + loo": dict(LOCKED, **INT, tight=True, hdiag="auto", noise_aware=True, weights="pbma"),
 }
 
 if __name__ == "__main__":

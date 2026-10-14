@@ -103,7 +103,7 @@ def noise_aware_mean(M, g, sg):
     return S @ M.T @ g / sg ** 2, S
 
 
-def stage1(rng, data, rho1, G, R1=2, hshare=None, hshrink=False, tight=False, hdiag=False):
+def stage1(rng, data, rho1, G, R1=2, hshare=None, hshrink=False, tight=False, hdiag=False, noise_aware=False):
     """DP quasi-Newton with secure sums: the pooled information at 0 (sensitivity G^2 / 2, Frobenius) is released
     once, then R1 gradient sums (sensitivity 2G), each release with an equal share of rho1. Returns w, the noisy
     information sum H0, and the covariance of w due to the privacy noise."""
@@ -124,6 +124,10 @@ def stage1(rng, data, rho1, G, R1=2, hshare=None, hshrink=False, tight=False, hd
     H0 = H0 if hdiag else shrink_offdiag(H + E + np.triu(E, 1).T, sh, N) if hshrink else _psd(H + E + np.triu(E, 1).T, 1e-2 * N)
     A = np.linalg.inv(H0 + np.eye(P) / S0 ** 2)
     w = np.zeros(P)
+    if noise_aware and R1 == 1:  # v5: posterior mean given the noisy release (see noise_aware_mean)
+        g = sum(X.T @ (y - expit(X @ w)) for X, y in data) + sg * rng.standard_normal(P)
+        w, Sw = noise_aware_mean(H0 + np.eye(P) / S0 ** 2, g, sg)
+        return np.clip(w, -8, 8), H0, Sw
     for _ in range(R1):
         g = sum(X.T @ (y - expit(X @ w)) for X, y in data) + sg * rng.standard_normal(P)
         w = np.clip(w + A @ (g - w / S0 ** 2), -8, 8)
@@ -131,12 +135,12 @@ def stage1(rng, data, rho1, G, R1=2, hshare=None, hshrink=False, tight=False, hd
 
 
 def network_stats(rng, data, eps, delta, G, f, R1=2, hshare=None, scale=GL.SCALE, hshrink=False, tight=False,
-                  hdiag=False):
+                  hdiag=False, noise_aware=False):
     P = data[0][0].shape[1]
     n = np.array([len(y) for _, y in data], float)
     N = n.sum()
     rho = GL.rho_total(eps, delta)
-    w, H, Vdp = stage1(rng, data, f * rho, G, R1, hshare, hshrink, tight, hdiag)
+    w, H, Vdp = stage1(rng, data, f * rho, G, R1, hshare, hshrink, tight, hdiag, noise_aware)
     F = H / N
     st = dict(w=w, H=H, n=n, Vdp=Vdp)
     if f < 1:
@@ -161,7 +165,8 @@ def estimate(nets, rng, eps, delta, G, inst=None, cfg=None):
     cfg = {"f": 0.5, "safety": True, "cross": False, "pan": False, "R1": 2, "hshare": None, "loo": True, "vdp": True, "scale": GL.SCALE, "safety_w": 1.0 / 3,
            **(cfg or {})}  # loo, vdp: ablation switches only (leave-one-out mean; propagated privacy covariance)
     stats = {c: network_stats(rng, d, eps, delta, G, cfg["f"], cfg["R1"], cfg["hshare"], cfg["scale"],
-                               cfg.get("hshrink", False), cfg.get("tight", False), cfg.get("hdiag", False))
+                               cfg.get("hshrink", False), cfg.get("tight", False), cfg.get("hdiag", False),
+                               cfg.get("noise_aware", False))
              for c, d in nets.items()}
     P = next(iter(nets.values()))[0][0].shape[1]
     names = list(nets)
