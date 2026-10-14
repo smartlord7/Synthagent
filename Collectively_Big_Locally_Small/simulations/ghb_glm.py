@@ -252,13 +252,21 @@ def estimate(fam, data, rng, eps, delta, G, cfg=None):
     P = data[0][0].shape[1]
     n = np.array([len(y) for _, y in data], float)
     rho = GL.rho_total(eps, delta)
-    w, H, Vdp = stage1(fam, rng, data, cfg["f"] * rho, G, cfg["R1"], cfg["hshare"])
+    if cfg.get("hloc"):  # v5 development: no curvature release; one secure sum of the scores at 0 with the whole
+        sg = 0.0 if np.isinf(rho) else 2 * G / np.sqrt(2 * rho)  # budget, read by each hospital through its own
+        g0 = sum(_score_sum(fam, X, y, np.zeros(P), G) for X, y in data) + sg * rng.standard_normal(P)  # information
+    else:
+        w, H, Vdp = stage1(fam, rng, data, cfg["f"] * rho, G, cfg["R1"], cfg["hshare"])
     p = 1.0 / (1 + (GL.GRID / cfg["scale"]) ** 2) * np.gradient(GL.GRID)
     tq = np.repeat(V3.quantiles(p / p.sum())[:, None], P, 1)
     est = np.empty((len(data), P))
     for j, (X, y) in enumerate(data):
-        sj = -X.T @ fam.dloss(X @ w, y)  # hospital j's exact score at w (local, no privacy cost)
         Hj0 = (X * fam.w(np.zeros(len(X)), y)[:, None]).T @ X
+        if cfg.get("hloc"):  # the network's information at 0 approximated by the hospital's own, scaled to N
+            Hn = n.sum() / len(y) * Hj0
+            Aj = np.linalg.inv(Hn + np.eye(P) / S0 ** 2)
+            w, H, Vdp = np.clip(Aj @ g0, -8, 8), Hn, sg ** 2 * Aj @ Aj.T
+        sj = -X.T @ fam.dloss(X @ w, y)  # hospital j's exact score at w (local, no privacy cost)
         Hm = _psd(H - Hj0, 1e-2 * max(n.sum() - len(y), 1)) + np.eye(P) / S0 ** 2
         V = np.linalg.inv(Hm)
         mu = w - V @ sj if cfg["loo"] else w
