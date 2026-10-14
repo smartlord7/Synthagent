@@ -66,11 +66,11 @@ tabs.show(tabs.start);
 
 // Simple mode / Expert mode. The expert Monte Carlo starts the first time the expert view is shown.
 let expertStarted = false;
-initSimple(document.getElementById('simple-view'), { expert: () => { mode.set('expert'); window.scrollTo(0, 0); document.querySelector('#mode-switch [data-mode="expert"]').focus(); } });
+const simple = initSimple(document.getElementById('simple-view'), { expert: () => { mode.set('expert'); window.scrollTo(0, 0); document.querySelector('#mode-switch [data-mode="expert"]').focus(); } });
 const expertTabs = [...document.querySelectorAll('[role="tab"]')].map((b) => b.dataset.tab);
 const mode = initMode(document.getElementById('mode-switch'), initialMode(expertTabs), (m) => {
   if (m === 'expert') {
     if (!expertStarted) { expertStarted = true; mainRun.restart(); }
     tabs.show(tabs.current());
-  } else tour.stop();
+  } else { tour.stop(); requestAnimationFrame(() => simple.onShow()); }
 });
