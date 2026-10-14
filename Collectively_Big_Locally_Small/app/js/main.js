@@ -1,7 +1,8 @@
 /**
  * main.js
- * Responsibility: wiring only. Builds the panels, connects tabs, presets, header buttons, the Start here demos
- * and the guided tour, and starts the shared Monte Carlo run. All logic lives in math/, sim/, viz/ and ui/.
+ * Responsibility: wiring only. Builds the panels, connects tabs, presets, header buttons, the Start here demos,
+ * the guided tour and the Simple mode / Expert mode switch, and starts the shared Monte Carlo run the first time the
+ * expert view is shown. All logic lives in math/, sim/, viz/ and ui/.
  */
 import * as store from './ui/store.js';
 import * as mainRun from './ui/mainRun.js';
@@ -21,6 +22,8 @@ import { initAbout } from './ui/panels/about.js';
 import { initStart } from './ui/panels/start.js';
 import { initArena } from './ui/panels/arena.js';
 import { initReal } from './ui/panels/real.js';
+import { initSimple } from './ui/simple.js';
+import { initMode, initialMode } from './ui/mode.js';
 
 const panels = {
   calc: initCalc(), setup: initSetup(), network: initNetwork(), borrow: initBorrow(), arena: initArena(), real: initReal(), stress: initStress(),
@@ -55,8 +58,19 @@ panels.start = initStart({
     else if (id === 'real') tabs.show('real');
   },
   tour: () => tour.start(),
-  open: (tab) => tabs.show(tab)
+  open: (tab) => tabs.show(tab),
+  simple: () => mode.set('simple')
 });
 
 tabs.show(tabs.start);
-mainRun.restart();
+
+// Simple mode / Expert mode. The expert Monte Carlo starts the first time the expert view is shown.
+let expertStarted = false;
+initSimple(document.getElementById('simple-view'), { expert: () => { mode.set('expert'); window.scrollTo(0, 0); document.querySelector('#mode-switch [data-mode="expert"]').focus(); } });
+const expertTabs = [...document.querySelectorAll('[role="tab"]')].map((b) => b.dataset.tab);
+const mode = initMode(document.getElementById('mode-switch'), initialMode(expertTabs), (m) => {
+  if (m === 'expert') {
+    if (!expertStarted) { expertStarted = true; mainRun.restart(); }
+    tabs.show(tabs.current());
+  } else tour.stop();
+});
