@@ -50,5 +50,5 @@ def patch(rep):
 
 if __name__ == "__main__":
     reps = int(sys.argv[sys.argv.index("--reps") + 1]) if "--reps" in sys.argv else 10
-    with Pool(2) as pool:
+    with Pool(4) as pool:
         list(pool.imap_unordered(patch, [r for r in range(reps) if not (II.CKPT / f"d{D32}_{r}.json").exists()]))
