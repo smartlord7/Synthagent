@@ -93,8 +93,8 @@ export function initSimpleNetwork(root, host) {
     const wrap = svg.parentElement; W = Math.max(280, Math.round(wrap.clientWidth || 600));
     H = Math.round(Math.max(300, Math.min(560, W * (W < 560 ? 1.02 : 0.72))));
     svg.setAttribute('viewBox', `0 0 ${W} ${H}`); svg.setAttribute('width', W); svg.setAttribute('height', H);
-    const K = D.K, margin = longLabels() ? 62 : 40, rad = Math.min(W, H) / 2 - margin, cx = W / 2, cy = H / 2 + 6;
-    const room = Math.min(W < 560 ? 22 : 32, (rad * Math.PI / K) * 0.85);
+    const K = D.K, margin = longLabels() ? 70 : 70, rad = Math.min(W, H) / 2 - margin, cx = W / 2, cy = H / 2 + 6;
+    const room = Math.min(W < 560 ? 19 : 32, (rad * Math.PI / K) * 0.85);
     pos = D.n.map((_, k) => {
       if (dragged.has(k)) { const [fx, fy] = dragged.get(k); return { x: fx * W, y: fy * H }; }
       const a = (2 * Math.PI * k) / K - Math.PI / 2; return { x: cx + rad * Math.cos(a), y: cy + rad * Math.sin(a) };
@@ -252,10 +252,10 @@ export function initSimpleNetwork(root, host) {
     let round = '';
     if (si === 3) {
       const rf = t * ROUNDS_SHOWN, r = Math.min(ROUNDS_SHOWN - 1, Math.floor(rf)), f = reducedMotion ? 0.5 : ease(rf - r);
-      round = `Round ${r + 1} of ${D.rounds}`;
+      round = `Round ${r + 1} of ${D.rounds}`; const es = W < 560 ? 0.75 : 1;
       for (const [i, j] of D.edges) for (const [a, b] of [[i, j], [j, i]]) {
         const A = pos[a], B = pos[b], x = A.x + (B.x - A.x) * f, y = A.y + (B.y - A.y) * f;
-        pk += `<g transform="translate(${x - 6} ${y - 4})"><rect width="12" height="8" rx="1" fill="${T.surface}" stroke="${T.noise}" stroke-width="1.2"/><path d="M0 0 6 5 12 0" fill="none" stroke="${T.noise}" stroke-width="1"/></g>`;
+        pk += `<g transform="translate(${x - 6 * es} ${y - 4 * es}) scale(${es})"><rect width="12" height="8" rx="1" fill="${T.surface}" stroke="${T.noise}" stroke-width="1.2"/><path d="M0 0 6 5 12 0" fill="none" stroke="${T.noise}" stroke-width="1"/></g>`;
       }
     } else if (si === 4) round = `After ${D.rounds} rounds`;
     gPackets.innerHTML = pk; roundTxt.textContent = round;
@@ -320,7 +320,7 @@ export function initSimpleNetwork(root, host) {
       if (si >= 5) { const cur = D.own[k] + (D.ghb[k] - D.own[k]) * (si === 5 ? e : 1); s += `<circle cx="${X(cur)}" cy="${y}" r="${Math.min(5, rowH * 0.32)}" fill="${T.ghb}"/>`; }
       if (si === 6) s += `<path d="M${X(D.theta[k])} ${y - rowH * 0.45}v${rowH * 0.9}" stroke="${T.ink}" stroke-width="1.5"/>`;
     }
-    s += `<text x="${L}" y="${h - 6}" class="axis">lower</text><text x="${W - R}" y="${h - 6}" text-anchor="end" class="axis">higher</text><text x="${(L + W - R) / 2}" y="${h - 6}" text-anchor="middle" class="axis">each hospital's estimate of the same quantity</text>`;
+    s += `<text x="${L}" y="${h - 6}" class="axis">lower</text><text x="${W - R}" y="${h - 6}" text-anchor="end" class="axis">higher</text>${W >= 560 ? `<text x="${(L + W - R) / 2}" y="${h - 6}" text-anchor="middle" class="axis">each hospital's estimate of the same quantity</text>` : ''}`;
     strip.innerHTML = s;
   }
 

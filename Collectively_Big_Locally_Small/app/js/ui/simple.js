@@ -36,7 +36,7 @@ export function initSimple(root, act) {
     <section class="sm-card sm-netcard" id="sm-netcard" aria-labelledby="sm-net-h"></section>
     <section class="sm-card sm-setup" aria-labelledby="sm-setup-h">
       <h2 id="sm-setup-h"><span class="sm-num" aria-hidden="true">2</span>Set up your scenario</h2>
-      <p class="sm-help">The network above follows these settings as you change them.</p>
+      <p class="sm-help">The network follows these settings as you change them.</p>
       <form id="sm-form" novalidate>
         <div class="sm-field">
           <label class="sm-k" for="sm-K"><span>${HOSPITALS.label}</span><output id="sm-K-out" for="sm-K">${ch.K}</output></label>

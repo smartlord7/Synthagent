@@ -355,7 +355,7 @@ svg.sm-net { display: block; width: 100%; height: auto; }
 .sm-node .ring { fill: transparent; stroke-width: 2; }
 .sm-node:focus-visible .ring { stroke: var(--rd-focus) !important; stroke-dasharray: 3 2; }
 .sm-node .val { font-family: var(--rd-font-mono); font-size: 11px; font-weight: 600; text-anchor: middle; dominant-baseline: central; pointer-events: none; }
-.sm-node .lab { font-family: var(--rd-font-ui); font-size: 12px; fill: var(--rd-ink); text-anchor: middle; dominant-baseline: middle; pointer-events: none; }
+.sm-node .lab { font-family: var(--rd-font-ui); font-size: 12px; fill: var(--rd-ink); dominant-baseline: middle; pointer-events: none; }
 .sm-node .lab .n { fill: var(--rd-muted); font-family: var(--rd-font-mono); font-size: 11px; }
 .sm-round { font-family: var(--rd-font-mono); font-size: 12px; fill: var(--rd-noise); }
 .sm-legend-line { font-family: var(--rd-font-ui); font-size: var(--rd-t-sm); color: var(--rd-ink); margin: 6px 0 0; }
@@ -376,5 +376,7 @@ svg.sm-strip { display: block; width: 100%; height: auto; }
   .sm-caption h3 { font-size: var(--rd-t-lg); }
   .sm-caption { min-height: 11em; }
   .sm-player { justify-content: center; }
+  .sm-node .lab { font-size: 10.5px; }
+  .sm-node .lab .n { font-size: 10px; }
 }
 .sm-net .under, .sm-net .packets, .sm-net .over, .sm-round { pointer-events: none; }

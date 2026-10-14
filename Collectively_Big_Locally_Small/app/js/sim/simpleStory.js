@@ -17,7 +17,9 @@
  *   - Scrambling: pairwise masks, one random number per agreement, added by one end and subtracted by the other, so
  *     they cancel in the total (secure summation, Section 5.2).
  *   - Gossip: sim/gossip.js createGossip on the masked contributions with the setting's W; the first rounds are kept
- *     for the animation and the process runs the setting's T rounds; K times the consensus value is the noisy total.
+ *     for the animation and the process runs until every hospital agrees on the total to CONSENSUS (GHB's joint
+ *     release is a secure sum run to consensus, which is what the engine assumes); the rounds needed are reported.
+ *     K times the consensus value is the noisy total.
  *   - Combined picture, trust and result: math/ghb.js jointGHB (as engine.replicate calls it): mu_k is the network's
  *     estimate without hospital k, alpha_k the weight on its own estimate, so trust in the network is 1 - alpha_k and
  *     the GHB estimate is alpha_k * own + (1 - alpha_k) * mu_k.
@@ -32,8 +34,11 @@ import { simpleConfig } from './simple.js';
 
 /** Distance of an atypical hospital from the others, in standard deviations of the between-hospital spread. */
 export const ATYPICAL_SHIFT = 8;
-/** Gossip rounds shown one by one in the animation (the computation runs all T rounds of the setting). */
+/** Gossip rounds shown one by one in the animation. */
 export const ROUNDS_SHOWN = 6;
+/** Gossip runs until every hospital holds the total to this relative precision (secure summation run to consensus). */
+export const CONSENSUS = 1e-4;
+const MAX_ROUNDS = 20000;
 
 /** The animated story: one id and title per step (captions with numbers come from stepCaption). */
 export const STORY_STEPS = [
@@ -66,15 +71,17 @@ export function storyData(ch, o = {}) {
   for (const [i, j] of edges) { const r = 3 * big * rng.n(); masks[i] += r; masks[j] -= r; }
   const contrib = Float64Array.from(n, (nk, k) => nk * d.th[k] + shares[k] + masks[k]);
   const g = createGossip({ K, edges, W }, contrib, 0), frames = [Float64Array.from(contrib)];
-  for (let t = 0; t < c.T; t++) { g.step(); if (t < ROUNDS_SHOWN) frames.push(Float64Array.from(g.x)); }
   const total = contrib.reduce((a, b) => a + b, 0), xbar = total / K;
-  let spread = 0; for (let k = 0; k < K; k++) spread = Math.max(spread, Math.abs(g.x[k] - xbar));
+  const gap = () => { let m = 0; for (let k = 0; k < K; k++) m = Math.max(m, Math.abs(g.x[k] - xbar)); return Math.abs(xbar) > 0 ? m / Math.abs(xbar) : m; };
+  let rounds = 0;
+  while (rounds < ROUNDS_SHOWN || (gap() > CONSENSUS && rounds < MAX_ROUNDS)) { g.step(); rounds++; if (rounds <= ROUNDS_SHOWN) frames.push(Float64Array.from(g.x)); }
+  const spread = gap();
   const j = jointGHB(d.th, d.th, n, d.v, c.sigma2, ctx.sJ, xi, { scale: c.cauchy });
   const extent = 2.5 * Math.sqrt(ctx.tau2m + c.sigma2 / n[Math.floor(K / 2)]);
   return {
     K, n: n.slice(), edges: edges.map((e) => e.slice()), theta: Array.from(d.theta), own: Array.from(d.th), sd: Array.from(d.v, Math.sqrt),
     noiseSd, sJ: ctx.sJ, shares: Array.from(shares), masks: Array.from(masks), contrib: Array.from(contrib), frames: frames.map((f) => Array.from(f)),
-    final: Array.from(g.x), rounds: c.T, spread: Math.abs(xbar) > 0 ? spread / Math.abs(xbar) : spread, total, xi, N: n.reduce((a, b) => a + b, 0),
+    final: Array.from(g.x), rounds, spread, total, xi, N: n.reduce((a, b) => a + b, 0),
     network: Array.from(j.mu), alpha: Array.from(j.alpha), trust: Array.from(j.alpha, (a) => 1 - a), ghb: Array.from(j.est),
     centre: c.mu, extent, atypical, eps: c.eps
   };
@@ -113,7 +120,7 @@ export function stepCaption(id, D, res = null, typical = null) {
   switch (id) {
     case 'meet': return [
       `Each circle is a hospital: ${K} of them, from ${D.n[s]} to ${D.n[L]} patients, and a bigger circle means more patients.`,
-      `Each line is an agreement between two hospitals to exchange summaries. There are ${D.edges.length} agreements, nobody talks to everyone, and there is no central server.`
+      `Each line is an agreement between two hospitals to exchange summaries. There are ${D.edges.length} agreements${D.edges.length < (K * (K - 1)) / 2 ? ', so each hospital talks only to its neighbours' : ''}, and there is no central server.`
     ];
     case 'own': return [
       'Each hospital looks only at its own patients and makes its own estimate. The patient records never leave the hospital.',
@@ -130,7 +137,7 @@ export function stepCaption(id, D, res = null, typical = null) {
     }
     case 'travel': return [
       'The summaries travel along the agreements, scrambled so nobody can read any one hospital\'s.',
-      `Each hospital adds a secret random number shared with each neighbour, one adding it and the other subtracting it, and passes mixed totals to its neighbours, round after round (${D.rounds} rounds here).`
+      `Each hospital adds a secret random number shared with each neighbour, one adding it and the other subtracting it, and passes mixed totals to its neighbours, round after round, until they all agree (${D.rounds} rounds here).`
     ];
     case 'combine': return [
       'Added up, the scrambles cancel and every hospital learns the network\'s combined picture.',
@@ -148,7 +155,7 @@ export function stepCaption(id, D, res = null, typical = null) {
     }
     case 'result': {
       if (!res) return ['Running the full simulation...'];
-      const H = res.hospitals, better = H.filter((h) => h.ghb <= 1).length;
+      const H = res.hospitals, better = H.filter((h) => h.ghb < 1).length;
       return [
         `Over 2,000 repetitions, ${better} of ${H.length} hospitals end up with a smaller error than working alone (teal circles; red means worse off).`,
         `${hosp(D, s)} gets an error of ${pc(H[s].ghb)} instead of 100 alone, like having ${Math.round(H[s].likePatients)} patients.`
