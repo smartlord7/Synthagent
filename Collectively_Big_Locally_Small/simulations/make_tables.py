@@ -606,7 +606,7 @@ def tcga():
     for e in ("1", "10"):
         r = rel[e]
         g = np.array(v5c["rel"][e]["GHB v5"])[order]
-        lines = [(r"\textbf{GHB}, no tuning", g), ("GHB v4 (earlier version), no tuning", np.array(r["GHB v4"])),
+        lines = [(r"\textbf{GHB}, no tuning", g),
                  ("GHB-lite (evidence prior), no tuning", np.array(r["GHB-EB"])),
                  ("Local, evidence prior$^\\ddagger$", np.array(r["Local, evidence prior"]))]
         lines += [(short[fm] + ", tuned on development", np.array(r[fm + " (realistic)"])) for fm in fams]
@@ -670,10 +670,7 @@ def tcga():
                 k2 = k.replace("v5 it + auto", "GHB v5")
                 acc[k2][0] += sum(ll); acc[k2][1] += sum(cnt)
     rows.append(line("GHB, no tuning", lambda p, e, a: L(p, f"GHB v5, eps={e}")))
-    rows.append(line("GHB v4 (earlier version), no tuning", lambda p, e, a: L(p, f"GHB v4, eps={e}")))
     rows.append(line("GHB-lite (evidence prior), no tuning", lambda p, e, a: L(p, f"GHB-EB, eps={e}")))
-    for v in ("+ safety", "+ learned scale", "+ correlated", "+ cross-cancer", "GHB v3"):
-        rows.append(line(f"GHB-lite {v.replace('GHB v3', 'with all four additions (v3)').replace('+ ', 'with ')}", (lambda v: lambda p, e, a: L(p, f"{v}, eps={e}"))(v)))
     rows.append(line("Local, evidence prior", lambda p, e, a: L(p, "Local, evidence prior")))
     rows.append(r"\midrule")
     for fm, grid in GRIDS.items():
@@ -697,7 +694,7 @@ def tcga_ablation():
             acc[k][0] += sum(ll); acc[k][1] += sum(cnt)
     dn = sorted({k.split("||")[0] for k in acc})
     L = lambda p, m: (acc[f"{p}||{m}"][0] / acc[f"{p}||{m}"][1]) / (acc[f"{p}||Local"][0] / acc[f"{p}||Local"][1])
-    labels = {"v4 locked": "GHB v4 (as frozen)", "v4 - pan-network": "without borrowing across networks",
+    labels = {"v4 locked": "GHB, intercept borrowed (reference)", "v4 - pan-network": "without borrowing across networks",
               "v4 - no-borrowing components": "without the non-borrowing components",
               "v4 - privacy covariance": "without propagating the privacy covariance",
               "v4 - leave-one-out": "without removing the hospital's own data",
@@ -725,8 +722,8 @@ def tcga_tuned():
     short = {"DP-FedAvg + FT": "DP-FedAvg + FT", "DP-FedAvg-SA + FT": "DP-FedAvg + FT, sec.\\ agg.", "APFL": "APFL",
              "Ditto": "Ditto", "pFedMe": "pFedMe", "Clustered DP-FedAvg": "Clustered DP-FedAvg"}
     mean = lambda v: f"{np.mean(v):.3f}"
-    rows = [r"GHB v4, frozen configuration & " + " & ".join(f"{mean(t[e]['GHB, frozen'])} & {mean(t[e]['GHB, frozen'])}" for e in ("1", "10")) + r"\\",
-            r"\textbf{GHB v4}, tuned like the others & " + " & ".join(f"{mean(t[e]['GHB, tuned on development'])} & {mean(t[e]['GHB, oracle'])}" for e in ("1", "10")) + r"\\",
+    rows = [r"GHB (intercept borrowed), fixed configuration & " + " & ".join(f"{mean(t[e]['GHB, frozen'])} & {mean(t[e]['GHB, frozen'])}" for e in ("1", "10")) + r"\\",
+            r"\textbf{GHB (intercept borrowed)}, tuned like the others & " + " & ".join(f"{mean(t[e]['GHB, tuned on development'])} & {mean(t[e]['GHB, oracle'])}" for e in ("1", "10")) + r"\\",
             r"\midrule"]
     for fm, lab in short.items():
         rows.append(lab + " & " + " & ".join(f"{mean(t[e][fm + ' (realistic)'])} & {mean(t[e][fm + ' (oracle)'])}" for e in ("1", "10")) + r"\\")
@@ -760,7 +757,6 @@ def flamby():
         add("Pooled, no DP$^\\dagger$", lambda e: "Pooled")
         lines.append(r"\midrule")
         add(r"\textbf{GHB}, no tuning", lambda e: f"GHB v5, eps={e}")  # the released version (development data for it)
-        add("GHB v4 (pre-registered), no tuning", lambda e: f"GHB, eps={e}")  # the version of PREREG_flamby.md
         if any(k.startswith("GHB-lite") for k in rows_):
             add("GHB-lite (evidence prior), no tuning", lambda e: f"GHB-lite, eps={e}")
         for fm in fams:
