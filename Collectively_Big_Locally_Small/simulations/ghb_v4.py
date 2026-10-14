@@ -148,6 +148,8 @@ def estimate(nets, rng, eps, delta, G, inst=None, cfg=None):
                 else:
                     extra = np.zeros(P)
             comps = []
+            if cfg.get("free_int"):  # base rates differ across hospitals (case mix, referral): the intercept is not
+                extra = extra + np.r_[cfg["free_int"] ** 2, np.zeros(P - 1)]  # borrowed, only the slopes are
             for q in range(Q):
                 t2 = np.maximum(st["tq"][q] + extra, 0.0)
                 Cn = np.diag(t2) + V
@@ -157,7 +159,10 @@ def estimate(nets, rng, eps, delta, G, inst=None, cfg=None):
                     comps.append((np.log(1.0 / (Q * len(SDS))), C @ Cni @ (mu + shift), C))
             if cfg["safety"]:
                 for s in SDS:
-                    comps.append((np.log(cfg["safety_w"] / len(SDS)), np.zeros(P), np.eye(P) * s ** 2))
+                    Cs = np.eye(P) * s ** 2
+                    if cfg.get("free_int"):
+                        Cs[0, 0] = max(s, cfg["free_int"]) ** 2
+                    comps.append((np.log(cfg["safety_w"] / len(SDS)), np.zeros(P), Cs))
             est[j] = V3.combine(X, y, comps)
         out[c] = est
     return out
