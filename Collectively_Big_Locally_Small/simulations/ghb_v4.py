@@ -36,6 +36,39 @@ def _psd(H, floor):
     return (U * np.maximum(ev, floor)) @ U.T
 
 
+def combine_loo(X, y, comps, mode="stack", iters=300):
+    """Weights the MAP fits under each Gaussian component by their leave-one-out predictive accuracy on the
+    hospital's own patients instead of the Laplace evidence (development, v5). The leave-one-out linear predictor of
+    patient i is the one-Newton-step approximation eta_i + h_i (p_i - y_i) / (1 - w_i h_i), h_i = x_i' H^-1 x_i,
+    w_i = p_i (1 - p_i), H the posterior information (local data only: no privacy cost).
+    mode "pbma": weights proportional to prior weight x exp(sum of leave-one-out log predictive densities);
+    mode "stack": stacking (Yao et al. 2018), mixture weights maximizing the leave-one-out log score (EM)."""
+    fits, lpd, lw0 = [], [], []
+    for logw, m, C in comps:
+        Prec = np.linalg.inv(C)
+        t = V3.fit_mat(X, y, m, Prec)
+        eta = X @ t
+        p = expit(eta)
+        wv = p * (1 - p)
+        Hi = np.linalg.inv((X * wv[:, None]).T @ X + Prec)
+        h = np.einsum("ij,jk,ik->i", X, Hi, X)
+        el = eta + h * (p - y) / np.maximum(1 - wv * h, 1e-6)
+        lpd.append(y * el - np.logaddexp(0, el))
+        fits.append(t)
+        lw0.append(logw)
+    lpd, lw0, fits = np.array(lpd), np.array(lw0), np.array(fits)
+    if mode == "pbma":
+        lw = lw0 + lpd.sum(1)
+        w = np.exp(lw - lw.max())
+    else:
+        w = np.exp(lw0 - lw0.max()); w /= w.sum()
+        L = np.exp(lpd - lpd.max(0, keepdims=True))
+        for _ in range(iters):
+            r = w[:, None] * L
+            w = (r / r.sum(0, keepdims=True)).mean(1)
+    return (w[:, None] * fits).sum(0) / w.sum()
+
+
 def stage1(rng, data, rho1, G, R1=2, hshare=None):
     """DP quasi-Newton with secure sums: the pooled information at 0 (sensitivity G^2 / 2, Frobenius) is released
     once, then R1 gradient sums (sensitivity 2G), each release with an equal share of rho1. Returns w, the noisy
@@ -155,14 +188,20 @@ def estimate(nets, rng, eps, delta, G, inst=None, cfg=None):
                 Cn = np.diag(t2) + V
                 Cni = np.linalg.inv(Cn)
                 for s in SDS:
-                    C = np.linalg.inv(Cni + np.eye(P) / s ** 2)
+                    D0 = np.full(P, 1.0 / s ** 2)
+                    if cfg.get("int_sd"):  # the default prior's scale s applies to the slopes; the intercept keeps int_sd
+                        D0[0] = 1.0 / cfg["int_sd"] ** 2
+                    C = np.linalg.inv(Cni + np.diag(D0))
                     comps.append((np.log(1.0 / (Q * len(SDS))), C @ Cni @ (mu + shift), C))
             if cfg["safety"]:
                 for s in SDS:
                     Cs = np.eye(P) * s ** 2
                     if cfg.get("free_int"):
                         Cs[0, 0] = max(s, cfg["free_int"]) ** 2
+                    if cfg.get("int_sd"):
+                        Cs[0, 0] = cfg["int_sd"] ** 2
                     comps.append((np.log(cfg["safety_w"] / len(SDS)), np.zeros(P), Cs))
-            est[j] = V3.combine(X, y, comps)
+            est[j] = V3.combine(X, y, comps) if cfg.get("weights", "evidence") == "evidence" else \
+                combine_loo(X, y, comps, cfg["weights"])
         out[c] = est
     return out
