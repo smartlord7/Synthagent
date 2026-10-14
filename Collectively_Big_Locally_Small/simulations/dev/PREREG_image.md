@@ -128,3 +128,38 @@ GHB's first Newton step is computed at a start where every public patch gets the
 
 Each prediction will be reported as held or not held. If a slide cannot be read or a center yields fewer than 600
 patches of a class, that is reported and the pool uses what exists; no other change.
+
+## Outcome on Camelyon17 (run 2026-10-14, 10 repetitions, `results/camelyon_image.json`)
+
+Data as pre-registered. The WILDS recipe gave 29,717 / 17,452 / 42,527 / 64,919 / 72,726 tumor patches (and as many
+normal) in centers 0 to 4, against 29,718 / 17,452 / 42,527 / 64,919 / 73,361 in the released Camelyon17-WILDS
+metadata: identical in centers 1 to 3, one patch fewer in center 0, and 635 fewer (0.9%) in center 4, all from slide
+patient_096_node_0, the slide with more tumor than normal cells, whose normal count depends on the tissue threshold at
+the margin. Every center had at least 600 patches of each class; all 50 annotation files matched their MD5 checksums;
+all 50 hospital slides and 10 public slides were read. No other deviation.
+
+Mean balanced accuracy (log-loss) over the five hospitals and 10 repetitions:
+
+| | eps = 1 | eps = 10 | no privacy |
+|---|---|---|---|
+| GHB | 0.893 (0.280) | **0.896** (0.269) | 0.896 (0.269) |
+| Local | 0.885 (0.319) | | |
+| Local, evidence prior | 0.893 (0.281) | | |
+| Pooled, not private | 0.887 (0.294) | | |
+| Best realistic literature method | 0.893 (Ditto) | 0.895 (APFL) | 0.896 (APFL) |
+| Best oracle literature method | 0.898 (DP-FedAvg + FT) | 0.899 (Ditto, DP-FedAvg-SA + FT) | 0.900 (APFL) |
+
+1. Held: at eps = 10 GHB 0.8963 against Local 0.8853 (higher in every repetition).
+2. Held, narrowly: at eps = 10 GHB 0.8963 against 0.8948 (APFL), 0.8946 (Clustered DP-FedAvg), 0.8945
+   (DP-FedAvg + FT), 0.8942 (Ditto), 0.8898 (DP-FedAvg-SA + FT) and 0.7724 (pFedMe) in the realistic arm. The margins
+   (0.0015 to 0.0021 over the four closest) are about one to two paired standard errors; GHB was higher than APFL in 7
+   of the 10 repetitions and than Ditto in 9.
+3. Held: at eps = 1 GHB 0.8933, above Local (0.8853), not below it.
+4. Held: without privacy GHB 0.8962 against Local 0.8853 and Pooled 0.8868.
+5. Held: at eps = 10 GHB's log-loss 0.269 against Local's 0.319.
+
+What it shows. The task is easy for a frozen encoder (every reasonable method is near 0.89), and most of GHB's gain
+over local estimation is regularization: the local model with the evidence-weighted prior reaches 0.893 (0.281). GHB
+adds 0.0036 of balanced accuracy over it at eps = 10 (higher in all 10 repetitions) and lowers the log-loss from 0.281
+to 0.269, which Ditto (realistic) matches (0.269). Every literature family tuned on the test patches (oracle arm)
+reaches 0.898 to 0.900, above GHB. pFedMe with its correctly calibrated noise diverges at eps = 1 and 10.
