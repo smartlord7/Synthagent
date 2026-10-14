@@ -1,0 +1,520 @@
+% Graph Hierarchical Borrowing: companion methods paper to the survey "Collectively Big, Locally Small".
+% Submission format: ACM Transactions on Computing for Healthcare (review mode). For a preprint without ACM
+% metadata, swap the two \documentclass lines. Figures, generated numbers, the bibliography and the simulation
+% code are shared with the survey in../Collectively_Big_Locally_Small.
+\documentclass[acmsmall,screen,review]{acmart}
+% \documentclass[acmsmall,screen,nonacm]{acmart}
+\acmJournal{HEALTH}
+\setcopyright{none}
+
+\citestyle{acmauthoryear}
+\input{../Collectively_Big_Locally_Small/supplement/results/sim_numbers}
+
+\usepackage{tabularx}
+\usepackage{enumitem}
+\usepackage{makecell}
+\setlist[enumerate]{itemsep=2pt}
+\usepackage{pifont}
+\usepackage[ruled,vlined,linesnumbered]{algorithm2e}
+\SetAlFnt{\small}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning}
+\graphicspath{{../Collectively_Big_Locally_Small/}}
+
+% Colours of the TikZ figures (shared with the survey)
+\definecolor{edgec}{rgb}{0.3851,0.41255,0.44}
+\definecolor{slate100}{rgb}{0.9451,0.96078,0.97647}
+\definecolor{red100}{rgb}{0.99608,0.88628,0.88628}
+\definecolor{teal100}{rgb}{0.8,0.98431,0.9451}
+\definecolor{blue100}{rgb}{0.85883,0.91765,0.99608}
+\definecolor{amber100}{rgb}{0.99608,0.95294,0.7804}
+\definecolor{violet100}{rgb}{0.92941,0.91374,0.99608}
+\definecolor{famO}{rgb}{0.7255,0.1098,0.1098}
+\definecolor{famE}{rgb}{0.14511,0.38824,0.92157}
+\definecolor{famT}{rgb}{0.85098,0.46667,0.02353}
+\definecolor{famC}{rgb}{0.05882,0.46275,0.43137}
+\definecolor{violetc}{rgb}{0.48627,0.22745,0.92941}
+\definecolor{grayc}{rgb}{0.60393,0.64706,0.69412}
+
+\newcommand{\eff}{\mathrm{eff}}
+\newcommand{\yes}{\textcolor{famC}{\ding{51}}}
+\newcommand{\no}{\textcolor{famO}{\ding{55}}}
+\newcommand{\partly}{\textcolor{famT}{$\boldsymbol{\circ}$}}
+
+\AtEndPreamble{%
+ \theoremstyle{acmdefinition}
+ \newtheorem{remark}[theorem]{Remark}}
+
+\begin{document}
+
+\title{Borrowing Strength Without Borrowing Data}
+\subtitle{Private, Serverless and Tuning-Free Collaboration with Graph Hierarchical Borrowing}
+
+\author{Sancho Amaral Sim\~{o}es}
+\authornote{Corresponding author.}
+\email{sanchosimoes@student.dei.uc.pt}
+\affiliation{%
+ \institution{CISUC, DEI, FCTUC, University of Coimbra}
+ \city{Coimbra}
+ \country{Portugal}}
+
+\author{Jo\~{a}o P. Vilela}
+\email{jvilela@fc.up.pt}
+\affiliation{%
+ \institution{CISUC, DEI, FCTUC, University of Coimbra}
+ \city{Coimbra}
+ \country{Portugal}}
+\affiliation{%
+ \institution{CRACS/INESC TEC, DCS, FCUP, University of Porto}
+ \city{Porto}
+ \country{Portugal}}
+
+\author{Pedro Henriques Abreu}
+\email{pha@dei.uc.pt}
+\affiliation{%
+ \institution{CISUC, DEI, FCTUC, University of Coimbra}
+ \city{Coimbra}
+ \country{Portugal}}
+
+\begin{abstract}
+Most clinical prediction tasks are small at the hospital that needs the model, while the data that would make them large sit in other hospitals that cannot share patient records and are linked, if at all, by a sparse set of bilateral agreements. Federated learning needs a server that every site trusts and fits one model; its private and personalized variants spend the privacy budget over many rounds and must be tuned on data that small hospitals do not have. We propose Graph Hierarchical Borrowing (GHB): each hospital shrinks its own model head toward a leave-one-out estimate of the network, by an amount that its own data decide. In a Gaussian random-effects model we show that every hospital gains almost the same number of ``virtual patients'', $\sigma^2/(\tau^2+M)$, so that the smallest hospitals gain the most in relative terms; that differential privacy enters only through the error $M$ of the network estimate; and that computing that estimate by gossip over the agreement graph costs no privacy. For realistic heads, the network makes two joint releases, the sums of every patient's score and information, privatized once for the whole network by secure summation without a server. From them each hospital computes, locally, its leave-one-out prior with the privacy noise propagated, and integrates the unknown heterogeneity out against its own evidence. Nothing is tuned. A lighter variant, GHB-lite, in which each hospital releases on its own, is studied in eighteen simulations; it is more accurate than every baseline tuned with access to the true loss in six of the ten settings of the main comparison, and keeps every hospital close to its own local error. On real data the lighter design failed, and GHB was built from the reasons why. In a pre-registered confirmation on five cancer networks from The Cancer Genome Atlas that the development of its final version did not use, GHB, untuned, was more accurate than every federated and personalized method at both privacy budgets, whether those methods were tuned on twelve development networks or on the test patients themselves: \SimTCOneGHB{} of the local error at $\epsilon=1$, against \SimTCOneFT{} and \SimTCOneFTOrc{} for the best of them, and \SimTCTenGHB{} at $\epsilon=10$, against \SimTCTenDitto{} and \SimTCTenDittoOrc. One of its five predictions failed: at $\epsilon=10$ it beat Ditto in three of the five networks, not four. On the public FLamby benchmark, where three of the four pre-registered predictions for an earlier version failed, the final version is the most accurate method in some settings and not in others; and in simulated worlds whose hospitals share their base rates, GHB-lite and tuned federated baselines are more accurate than GHB. Extended to images with a frozen public encoder, GHB held all five predictions of a further pre-registered confirmation on Camelyon17 histopathology, but by small margins (balanced accuracy \SimCamTenGHB{} at $\epsilon=10$, against \SimCamLocal{} for a hospital alone and \SimCamTenBestReal{} for the best tuned literature method), and below each literature method tuned on the test patches. We report every pre-registered attempt that preceded it, including those that failed.
+\end{abstract}
+
+\begin{CCSXML}
+<ccs2012>
+  <concept>
+    <concept_id>10010147.10010257</concept_id>
+    <concept_desc>Computing methodologies~Machine learning</concept_desc>
+    <concept_significance>500</concept_significance>
+    </concept>
+  <concept>
+    <concept_id>10010405.10010444.10010449</concept_id>
+    <concept_desc>Applied computing~Health informatics</concept_desc>
+    <concept_significance>500</concept_significance>
+    </concept>
+  <concept>
+    <concept_id>10002978.10003029.10011150</concept_id>
+    <concept_desc>Security and privacy~Privacy protections</concept_desc>
+    <concept_significance>500</concept_significance>
+    </concept>
+ </ccs2012>
+\end{CCSXML}
+
+\ccsdesc[500]{Computing methodologies~Machine learning}
+\ccsdesc[500]{Applied computing~Health informatics}
+\ccsdesc[500]{Security and privacy~Privacy protections}
+
+\keywords{small data, multi-site learning, decentralized learning, gossip, differential privacy, empirical Bayes, hierarchical models, personalization, data silos, healthcare}
+
+\maketitle
+\renewcommand{\shortauthors}{Sim\~{o}es et al.}
+
+%% ===================================================================
+\section{Introduction}\label{sec:intro}
+
+Health systems produce data at an enormous rate, yet most clinical learning problems are small. Rare diseases are individually rare but collectively common: more than six thousand are known, affecting an estimated 3.5\% to 5.9\% of the population, and most have cohorts of tens or hundreds of patients worldwide \cite{nguengangwakap2020estimating,schaefer2020use}. Prediction models in common conditions are routinely built on a few dozen outcome events \cite{peduzzi1996simulation,riley2019minimumsample}. During the first months of COVID-19, hundreds of models were developed from small, local samples, and systematic reviews found almost none fit for clinical use \cite{roberts2021common,wynants2020prediction}. Even widely deployed systems turn small at the point of use: a proprietary sepsis model reached an area under the curve of 0.63 on external validation \cite{wong2021external}, and pneumonia classifiers learned to recognize the hospital that produced an image rather than the disease \cite{zech2018variable}. Health data are abundant in aggregate and scarce where they are needed, at a specific site, for a specific outcome. Healthcare is \emph{collectively big and locally small} \cite{simoes2026collectively}.
+
+The data that would close the gap usually exist, but in other hospitals. Each holds a slice of the population under its own legal, ethical and technical constraints \cite{cohen2018hipaa,gdpr2016,price2019privacy}. Training a model on records from several hospitals is secondary use, which needs its own legal basis and frequently excludes the export of patient-level records; agreements that allow it are typically bilateral, slow to negotiate, and limited to some hospitals and some data \cite{ehds2025}. The resulting network is sparse, and in many regions no institution is trusted, mandated or funded to act as its centre. The hospitals with the smallest samples, which need collaboration most, are also those whose data are most exposed by any release, because their few patients are easiest to single out \cite{rocher2019estimating}.
+
+Four families of methods address parts of this problem, and each gives up something the setting cannot spare. Federated learning keeps data local but needs a server that every site trusts, and its standard form fits one model, which serves the typical site and can be worse than local estimation for atypical or large ones \cite{hsieh2020non,mcmahan2017communication}. Personalized federated learning fits a model per site but still needs the server \cite{collins2021exploiting,li2021ditto}. Decentralized learning removes the server, but its healthcare forms either lack formal privacy or share full models \cite{kalra2023decentralized,warnatherresthal2021swarm}. Differentially private versions of all of them spend the privacy budget over many rounds of training, and the noise, calibrated to each site's sensitivity, is largest at the smallest sites, where it erases the benefit of collaboration for exactly the hospitals that need it \cite{bagdasaryan2019differential,mcmahan2018learning}. Distributed meta-analysis, the classical answer, is exact and auditable, but it estimates a single population model and does not use learned representations or the structure of the network \cite{dersimonian1986meta,duan2020learning}. No existing method meets the five requirements that the setting imposes at once: data stay local, every release is formally private, no server is needed, the smallest hospitals gain at least as much as the largest, and heterogeneity is modeled rather than assumed away (Section~\ref{sec:problem}).
+
+This paper proposes \emph{Graph Hierarchical Borrowing} (GHB). Its central idea is old: when several units estimate related quantities, each should shrink its own estimate toward what the others suggest, by an amount set by how much the units differ \cite{efron1973steins,stein1956inadmissibility}. What is new is doing this when the network estimate must be private and computed without a server, and characterizing exactly what each constraint costs. The network releases two privatized sums over all of its patients, computed by secure summation and gossip over the agreement graph. Each hospital turns them, locally and at no further privacy cost, into a leave-one-out prior for its own head with the privacy noise propagated, and combines it with its own noise-free data, with a weight that its own evidence decides. Privacy noise therefore never touches a hospital's own data, only what it borrows, and it is calibrated to the whole network rather than to the smallest hospital.
+
+\paragraph{Contributions}
+\begin{enumerate}[leftmargin=*]
+\item \textbf{A formal setting.} We state the problem of a sparse, serverless network of small hospitals as five requirements and show why existing data-exchange agreements and methods do not meet them together (Sections~\ref{sec:related} and~\ref{sec:problem}).
+\item \textbf{Theory in closed form.} In a Gaussian random-effects model we derive the optimal combination of a local and an imperfect population estimate and show that every hospital gains almost the same number $B=\sigma^2/(\tau^2+M)$ of virtual patients; that privacy enters only through the error $M$ of the population estimate, with noise divided by the size of the network; and that gossip is free post-processing whose error decays at a rate set by the spectral gap (Section~\ref{sec:model}).
+\item \textbf{A method for realistic model heads.} For likelihood-based heads on top of a public representation, the network releases the privatized sums of its patients' scores and information; each hospital computes its leave-one-out prior from them with the privacy noise propagated, uses the estimates of other networks and a published model when they exist, and integrates the unknown heterogeneity out against its own evidence, so that it borrows strongly when its data agree with the network and falls back to its own data when they conflict. A privacy guarantee covers the whole protocol, and a lighter variant, GHB-lite, needs no secure summation (Section~\ref{sec:heads}).
+\item \textbf{An evaluation designed to be hard to pass.} Eighteen simulations test the theory when its assumptions fail, compare GHB-lite and GHB with one-shot and iterative baselines tuned with access to the true loss, attack them with atypical and dishonest hospitals, wrong prior knowledge, failing links and repeated releases, ablate each component, vary each setting, and measure what borrowing does to a protected group of patients (Section~\ref{sec:experiments}). On real data, GHB was developed on twelve cancer networks and confirmed under pre-registration on five networks its development did not use, first in an earlier version and then in its final one, against six federated and personalized methods tuned as a consortium could and as no consortium can, tested under a further pre-registration on the public FLamby benchmark \cite{ogierduterrail2022flamby}, and, extended to images, confirmed under a last pre-registration on Camelyon17 histopathology (Section~\ref{sec:real}).
+\item \textbf{Transparent development.} We report every version of GHB, why each was revised, the pre-registered attempts that did not deliver on real data, the extensions that did not earn a place, and the settings in which the lighter variant is better, with all code, data and every number regenerable (Sections~\ref{sec:experiments} and~\ref{sec:real} and the online supplement).
+\end{enumerate}
+
+\paragraph{Main findings} The theory predicts, and the simulations confirm, that every hospital gains about the same number of virtual patients, $B\approx\SimThreeB$ in the main simulated network. That multiplies the effective sample size of hospitals with 60 patients or fewer by \SimThreeSmall{} and of those with 300 or more by \SimThreeLarge. In simulation, GHB-lite is more accurate than every tuned baseline in six of the ten settings of the main comparison, and its worst hospital stays within a factor \SimFifteenGHBWorstMax{} of its own local error in every private setting except the most heterogeneous. DP-FedAvg \cite{mcmahan2018learning} with fine-tuning, in contrast, leaves some hospital \SimFifteenFTWorstMin{} to \SimFifteenFTWorstMax{} times worse off than alone, and the other iterative methods also leave some hospital worse off than alone, by up to a factor of 8.2. In those simulated worlds GHB-lite is also more accurate than GHB (\SimFifteenMidGHB{} against \SimFifteenMidV{} at $\tau^2=0.05$): its inversion is exact there, its releases carry the heterogeneity, and the simulated hospitals share their base rates, which GHB deliberately does not borrow. On real hospitals the order reverses. GHB-lite was no better than a local model with the same prior on twelve cancer networks. GHB, frozen and confirmed on five networks that the development of its final version did not use, reduced held-out log-loss to \SimTCOneGHB{} of local estimation at $\epsilon=1$ and \SimTCTenGHB{} at $\epsilon=10$. That was lower than every federated and personalized method tuned on the development networks, the best of which reached \SimTCOneFT{} and \SimTCTenDitto, and lower than each of them tuned on the test folds, which no hospital can do (\SimTCOneFTOrc{} and \SimTCTenDittoOrc); only the best method chosen afresh for each network with hindsight came ahead, at $\epsilon=10$. On seven smaller networks it was the most accurate method a consortium could tune at $\epsilon=10$ (\SimRFTenV) and level with a well-regularized hospital at $\epsilon=1$. The lead is not universal. On the public FLamby benchmark \cite{ogierduterrail2022flamby}, three of an earlier version's four pre-registered predictions failed; the final version, developed with that benchmark in view, is the most accurate method on its survival dataset at $\epsilon=1$ (concordance \SimFBrcaOneVFive) but not at $\epsilon=10$, and on its heart-disease dataset it has the lowest log-loss of the federated and personalized methods only without privacy. On images, the pre-registered predictions on Camelyon17 held, with a balanced accuracy of \SimCamTenGHB{} at $\epsilon=10$ against \SimCamLocal{} for a hospital alone and \SimCamTenBestReal{} for the best literature method a consortium could tune, but a well-regularized hospital comes close (\SimCamLocalEB) and each literature method tuned on the test patches is ahead.
+
+\paragraph{Structure of the paper} The paper follows the path from the problem to the evidence. Section~\ref{sec:related} reviews the four families of methods that address parts of the problem, and ends with what none of them delivers. Section~\ref{sec:problem} turns that gap into a precise setting, five requirements and a threat model, and measures the existing approaches against them. Section~\ref{sec:model} then solves the core of the problem exactly, in a Gaussian random-effects model. It shows what each hospital gains from borrowing, what privacy costs and what the absence of a server costs, and how to handle a heterogeneity that is not known. Section~\ref{sec:heads} carries this theory to the model heads used in practice. It places borrowing inside an architecture, specifies what the network releases and how each hospital turns it into a prior, describes the lighter variant GHB-lite, and proves the privacy of the whole protocol. The evidence comes in two steps. Section~\ref{sec:experiments} tests the theory and GHB-lite in eighteen simulations in which the truth is known, against tuned baselines, under attack and component by component. Section~\ref{sec:real} moves to real hospital networks, where GHB-lite failed and GHB was built, frozen and confirmed under pre-registration, and then tested on a public benchmark, where three of an earlier version's four pre-registered predictions failed and the final version is the most accurate only in some settings. Section~\ref{sec:discussion} draws the consequences: when to use each protocol, what the method and the evidence do not cover, and what remains open. Section~\ref{sec:conclusion} concludes. A companion survey \cite{simoes2026collectively} develops the notion of small data used here and reviews the wider literature on small data in healthcare.
+
+%% ===================================================================
+\section{Background and Related Work}\label{sec:related}
+
+GHB sits at the intersection of four lines of work: distributed statistics, federated learning, decentralized learning and differential privacy. We review each with the question that matters here: what it delivers to a network of small, siloed hospitals without a trusted centre, and what it leaves open. We start with what ``small'' means, because it fixes what a method must deliver.
+
+\subsection{Small data and siloed smallness}\label{sec:smallness}
+
+A dataset is small for a task when the information it carries falls short of what the task needs. The companion survey \cite{simoes2026collectively} makes this precise. The \emph{effective sample size} $n^{\eff}$ of a dataset is the number of independent, correctly labeled records from the target population that would carry the same information; to first order,
+\begin{equation}\label{eq:neff}
+n^{\eff}=n\cdot\frac{1}{\mathrm{DEFF}}\cdot\rho_L\cdot(1-2\eta)^2\cdot\rho_S,
+\end{equation}
+where the design effect DEFF accounts for repeated records per patient \cite{kish1965survey}, $\rho_L$ for missing labels, $\eta$ for label noise \cite{angluin1988learning} and $\rho_S$ for the shift between the data and the population of use. The \emph{smallness index} $\sigma_{\mathcal{T}}=n^{\star}_{\mathcal{T}}/n^{\eff}$ compares it with the sample complexity $n^{\star}_{\mathcal{T}}$ of the task, for which the criteria of \citet{riley2019minimumsample} give closed forms for clinical prediction models; a dataset is small when $\sigma>1$. A task is \emph{siloed-small} when every one of $K$ custodians holds a dataset that is small for it while their union is not, after accounting for the heterogeneity between custodians. A siloed-small task can be solved without collecting a single new patient; the obstacle is access. Two features of that definition shape what follows. Heterogeneity can make the union much less informative than the sum of its parts, so a method must estimate how much the custodians differ rather than assume they are exchangeable. And the gain from collaboration is naturally measured in effective patients: Section~\ref{sec:model} shows that hierarchical borrowing adds a computable number of them to every hospital.
+
+\subsection{Pooling without moving data: distributed statistics}\label{sec:distributed}
+
+If small data are the problem, pooling across sites is the obvious remedy. Long before federated learning, biostatistics developed ways to fit models across sites without moving records. Meta-analysis combines site-level estimates, and random-effects meta-analysis explicitly models between-site heterogeneity through a variance $\tau^2$ that can be estimated from the site estimates alone \cite{dersimonian1986meta}. Individual participant data meta-analysis is more powerful but needs record-level access \cite{riley2010meta}. Distributed regression exchanges sufficient statistics or gradients: GLORE fits logistic regression across sites by exchanging Newton-Raphson summaries \cite{wu2012grid}, DataSHIELD wraps such procedures in disclosure controls \cite{gaye2014datashield}, and one-shot surrogate-likelihood methods such as ODAL obtain near-pooled estimates with one round of communication \cite{duan2020learning,jordan2019communication}. Infrastructures that send analyses to the data rather than data to a centre, such as the OHDSI network on the OMOP common data model \cite{hripcsak2015observational} and the Personal Health Train \cite{beyan2020distributed,deist2020distributed}, have trained models on tens of thousands of patients without moving their records. These methods are exact, auditable and well understood. What they leave open is threefold: they estimate one model for the population, not one per hospital; their disclosure controls are not formal privacy guarantees; and most assume a coordinator that collects the summaries.
+
+Empirical Bayes adds what meta-analysis lacks. Separate estimation of three or more related means is inadmissible under squared error, and shrinkage toward a common mean dominates it \cite{efron1973steins,stein1956inadmissibility}; the hierarchical model behind random-effects meta-analysis yields, for each site, a posterior that combines its own estimate with the population \cite{gelman2013bayesian}. This is the statistical core of GHB. What has not been worked out is how much it costs to obtain the population estimate privately and without a coordinator, and how to make the combination robust when the heterogeneity itself must be estimated from noisy releases.
+
+\subsection{Federated and personalized learning}\label{sec:federated}
+
+Machine learning took up the same problem a generation later, with models that are trained rather than estimated. Federated averaging \cite{mcmahan2017communication} trains a shared model by alternating local gradient steps with averaging at a server, and healthcare adopted it quickly \cite{nguyen2022federated,rieke2020future,xu2021federated}. Federated models have approached the quality of centrally pooled data in brain tumor segmentation \cite{sheller2020federated}, improved the prediction of oxygen needs in COVID-19 across 20 institutions \cite{dayan2021federated} and improved tumor delineation across 71 sites \cite{pati2022federated}; FLamby \cite{ogierduterrail2022flamby} provides cross-silo healthcare benchmarks with natural splits \cite{ogierduterrail2022flamby}. Its central difficulty is heterogeneity: when site distributions differ, local updates drift apart and the averaged model can be worse than local ones \cite{hsieh2020non,zhao2018federated}. Proximal terms \cite{li2020federated}, control variates \cite{karimireddy2020scaffold}, site-specific normalization \cite{li2021fedbn} and minimax objectives \cite{mohri2019agnostic} reduce the drift but still produce one model.
+
+Personalized federated learning stops looking for one model. Multi-task learning \cite{smith2017federated}, meta-learning \cite{fallah2020personalized}, Moreau-envelope regularization \cite{tdinh2020personalized}, Ditto \cite{li2021ditto}, shared representations with local heads \cite{collins2021exploiting} and clustered federated learning \cite{ghosh2020efficient} all learn a model per site while sharing statistical strength, and the theory of shared representations explains why: a common low-dimensional representation reduces each site's problem to that of a small head \cite{du2021few,maurer2016benefit,tripuraneni2020theory}. GHB adopts this split. What personalized federated learning leaves open is the server, which every site must trust, and the price of personalization: how strongly each site should rely on the others is a tuning parameter, usually set on validation data that small sites do not have.
+
+Fairness in federated learning has two meanings that are easily confused. Fairness across sites asks that no site be badly served by what the network learns; agnostic federated learning \cite{mohri2019agnostic} and Ditto \cite{li2021ditto} pursue it, and Section~\ref{sec:experiments} measures it for every method as the error of the worst hospital relative to its own local estimate. Fairness across groups of patients asks that a model's errors or decisions not depend on a protected attribute such as sex or ethnicity. FAIR-FATE \cite{salazar2023fairfate}, for example, has the server weigh every client's update by its group fairness and adds a fairness-aware momentum term to the global model. The two can conflict, and they need different machinery: the second requires the protected attribute and a fairness metric, which a method built only for accuracy does not use. GHB is built for accuracy at each hospital. The first kind of fairness is a property it is evaluated on throughout. The second it does not target, and Simulation 18 measures what borrowing does to it, against FAIR-FATE \cite{salazar2023fairfate} (Section~\ref{sec:experiments}); controlling it is open (Section~\ref{sec:open}).
+
+\subsection{Decentralized learning}\label{sec:decentralized}
+
+Federated and personalized learning both keep a server at the centre of the network. Decentralized SGD replaces the server with neighbour averaging over a communication graph and can match centralized rates when the graph mixes well \cite{koloskova2020unified,lian2017can,nedic2009distributed}; gossip algorithms make averaging robust to asynchrony and give rates in terms of the spectral gap of the graph \cite{boyd2006randomized,xiao2004fast}. Personalized decentralized learning over a similarity graph was introduced by \citet{vanhaesebrouck2017decentralized} and extended with differential privacy by \citet{bellet2018personalized}, and decentralization itself amplifies privacy, because each party sees only what reaches it through the graph \cite{cyffers2022privacy}. In healthcare, Swarm Learning \cite{warnatherresthal2021swarm} coordinates peer-to-peer training through a blockchain across clinical use cases, ProxyFL shares differentially private proxy models among peers \cite{kalra2023decentralized}, and peer-to-peer training has been shown for brain and tumor segmentation \cite{roy2019braintorrent,tedeschini2022decentralized}. These demonstrations are few and mostly simulated. Their methods either do not provide formal privacy by default or share full models, and none models the heterogeneity between hospitals explicitly.
+
+\subsection{Privacy in multi-site learning}\label{sec:dp}
+
+Removing the server, or keeping the data local, does not by itself protect patients. Sharing parameters or gradients is not private by default: gradients can be inverted to reconstruct training images, including in medical federated training \cite{geiping2020inverting,hatamizadeh2023do,zhu2019deep}, and trained models leak membership \cite{shokri2017membership}. Differential privacy bounds what any output reveals about an individual \cite{dwork2006calibrating,dwork2014algorithmic} and has been adapted to deep learning \cite{abadi2016deep,mironov2017renyi} and to federated training \cite{mcmahan2018learning}; zero-concentrated accounting makes the composition of many releases tight \cite{bun2016concentrated}. Its cost is well documented and falls unevenly: noise is calibrated to sensitivity, which scales inversely with sample size, so private training is least accurate for small datasets, high-dimensional models and under-represented groups \cite{bagdasaryan2019differential,tramer2021differentially}. Secure aggregation reveals only sums \cite{bonawitz2017practical}, and cryptographic computation protects the process but not what its output reveals. For a network of small hospitals, the consequence is direct: a private method that releases often, or releases high-dimensional objects, or calibrates noise to each site separately without regard to its size, cancels the benefit of collaboration for the hospitals that need it most.
+
+\subsection{What the literature leaves open}\label{sec:gap}
+
+Each line of work supplies a piece. Distributed statistics supplies exact, auditable estimation of a population model; empirical Bayes supplies the optimal way to combine it with each site's own estimate; personalized federated learning supplies the split between a shared representation and local heads; decentralized learning supplies serverless computation with rates set by the graph; and differential privacy supplies a formal guarantee and its accounting. What is missing is their combination for a network of small hospitals: a method that releases little, so that privacy is spent once and at the population level; that personalizes without tuning on data the smallest sites do not have; that runs over whatever agreements exist; and whose benefit to each hospital, and cost to each patient, can be stated in advance. The next section turns these needs into requirements, and Section~\ref{sec:model} derives a method that meets them.
+
+%% ===================================================================
+\section{Problem Setting}\label{sec:problem}
+
+The gaps of Section~\ref{sec:gap} become concrete once the setting is stated precisely. This section states it, turns the needs of a network of small hospitals into five requirements, fixes the threat model, and measures the approaches of Section~\ref{sec:related} against those requirements.
+
+There are $K$ hospitals, the vertices of an undirected connected graph $\mathcal{G}=(V,E)$. An edge means that two hospitals have an agreement allowing them to exchange privatized model summaries; $\mathcal{G}$ is sparse, with $|E|=O(K)$, and there is no vertex that every hospital trusts. Hospital $k$ holds $n_k$ labeled records from its own population $P_k$ and wants a model that performs well on that population. In the terms of Section~\ref{sec:smallness}, the task is siloed-small, and the obstacle is custodial. We require:
+\begin{enumerate}[label=(R\arabic*),leftmargin=*,itemsep=1pt]
+\item no patient-level record leaves its hospital;
+\item every released quantity satisfies $(\epsilon,\delta)$-differential privacy with respect to the patients of the releasing hospital;
+\item no central server: computation uses only messages along edges of $\mathcal{G}$;
+\item the smallest hospitals benefit at least as much as the largest, in relative terms;
+\item heterogeneity across hospitals is modeled rather than assumed away.
+\end{enumerate}
+Requirements (R4) and (R5) exclude a single global model: a global model serves the typical site, not the smallest or most atypical, and the private cost of fitting it falls on the smallest participants (Section~\ref{sec:dp}).
+
+\paragraph{Why existing data-exchange agreements are not enough} Hospitals already exchange data under protocols, but those protocols do not remove the problem. Most of them serve primary use: a patient's record follows the patient to the next point of care. Training a model on the records of many hospitals is secondary use, which needs its own legal basis, ethics approval and data-access permit, and frequently excludes the export of patient-level records altogether \cite{gdpr2016,ehds2025}. Where agreements for secondary use exist, they are typically bilateral, slow to negotiate and limited to a subset of hospitals and data, so the network they form is the sparse graph $\mathcal{G}$ assumed here: GHB is designed to run over existing agreements, not to replace them. Even where pooling is lawful, a central copy of identifiable records is not the least invasive option, given how easily such records are re-identified \cite{rocher2019estimating}, and data minimization favours releasing a few privatized, low-dimensional sums over the network. Existing infrastructures that move analyses to the data rather than data to a centre, such as the OHDSI network \cite{hripcsak2015observational}, DataSHIELD \cite{gaye2014datashield} and the Personal Health Train \cite{beyan2020distributed,deist2020distributed}, are complementary: they provide the channels, and GHB specifies what to compute through them, how to combine the results and what it costs in privacy. Finally, even unrestricted pooling yields one model for all hospitals, which Section~\ref{sec:experiments} shows to be worse than local estimation for atypical and large hospitals; the personalization of GHB is useful whether or not privacy binds. The converse also holds. When a network already has a trusted environment in which pooling is lawful, such as a national registry or a secure processing environment under the European Health Data Space, requirement (R3) is moot, and the hierarchical borrowing of Section~\ref{sec:borrowing} can run inside that environment without gossip or privatized releases.
+
+\paragraph{Threat model} GHB protects patients against honest-but-curious hospitals and against any observer of the messages exchanged along $\mathcal{G}$, under a differential-privacy guarantee on everything that leaves a hospital. Its joint releases are computed by secure summation, which assumes that the hospitals do not collude to remove their noise shares (Proposition~\ref{prop:ghbprivacy} states what collusion costs); its lighter variant, GHB-lite, needs no such assumption, because each hospital's release is private on its own. Hospitals are assumed to follow the protocol. A hospital that lies about its contribution is not excluded by the protocol itself, and Section~\ref{sec:sim-attacks} tests what such lies do and how screening contains them. Site sizes $n_k$ are treated as public; Sections~\ref{sec:privacy} and~\ref{sec:algorithm} list every assumption under which the privacy guarantees hold.
+
+\paragraph{How existing approaches fare} Table~\ref{tab:approaches} compares the approaches of Section~\ref{sec:related} with the requirements. Centralized pooling violates (R1). Federated averaging \cite{mcmahan2017communication} violates (R3) and, under heterogeneity, (R4) and (R5). Personalized federated learning satisfies (R4) and (R5) but still needs a server. Existing decentralized approaches satisfy (R3); Swarm Learning \cite{warnatherresthal2021swarm} does not provide formal differential privacy by default, while ProxyFL \cite{kalra2023decentralized} does but shares full proxy models. Synthetic data sharing satisfies (R1) and (R3) only at the cost of utility or privacy \cite{jordon2019pate,stadler2022synthetic}. Distributed meta-analysis is the closest classical relative and satisfies most requirements, but does not exploit learned representations or graph structure. The comparison is one of design properties, not of measured performance: the GHB row records what holds by construction under the assumptions of Propositions~\ref{prop:borrowing}, \ref{prop:gossip} and~\ref{prop:ghbprivacy} below, while the other rows describe each method in its standard form, and most of them can be extended to satisfy more requirements. Measured performance is the subject of Section~\ref{sec:experiments}.
+
+\begin{table}[t]
+\caption{Approaches for sparse, siloed hospital networks against requirements (R1) to (R5), as design properties of each method in its standard form. \yes{} satisfied; \partly{} partially or optionally; \no{} not satisfied. Entries for GHB hold by construction under the assumptions of Sections~\ref{sec:model} and~\ref{sec:algorithm}; (R2) and (R3) assume secure summation by hospitals that do not collude (Proposition~\ref{prop:ghbprivacy}).}
+\label{tab:approaches}
+\small
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}Xccccc@{}}
+\toprule
+Approach & \shortstack{(R1)\\local data} & \shortstack{(R2)\\formal DP} & \shortstack{(R3)\\no server} & \shortstack{(R4)\\small sites gain} & \shortstack{(R5)\\heterogeneity}\\
+\midrule
+Centralized pooling & \no & \no & \no & \partly & \partly\\
+Federated averaging \cite{mcmahan2017communication} & \yes & \partly & \no & \no & \no\\
+Personalized FL \cite{collins2021exploiting,li2021ditto} & \yes & \partly & \no & \yes & \yes\\
+Swarm Learning \cite{warnatherresthal2021swarm} & \yes & \no & \yes & \partly & \no\\
+ProxyFL \cite{kalra2023decentralized} & \yes & \yes & \yes & \partly & \partly\\
+Synthetic data sharing \cite{jordon2019pate} & \yes & \partly & \yes & \partly & \no\\
+Distributed meta-analysis \cite{dersimonian1986meta,duan2020learning} & \yes & \partly & \partly & \yes & \yes\\
+\textbf{GHB (this paper)} & \yes & \yes & \yes & \yes & \yes\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+%% ===================================================================
+\section{Hierarchical Borrowing in a Model That Can Be Solved Exactly}\label{sec:model}
+
+We first analyze the core of the problem in the simplest model that keeps its structure: one parameter per hospital, a Gaussian random-effects model, and a population estimate that must be obtained privately and without a server. This yields closed forms for what each hospital gains (Section~\ref{sec:borrowing}), what privacy costs (Section~\ref{sec:privacy}) and what the absence of a server costs (Section~\ref{sec:gossip}). Sections~\ref{sec:tau} and~\ref{sec:structured} then remove two simplifications, known heterogeneity and exchangeable hospitals, and Section~\ref{sec:heads} carries the results to the model heads used in practice.
+
+\subsection{Borrowing with an imperfect population estimate}\label{sec:borrowing}
+
+The first question is the one every hospital asks before joining a network: how much should it trust what the others suggest, given that their suggestion is itself imperfect? Each hospital has a parameter $\theta_k\in\mathbb{R}$ (one coordinate of a model head; the vector case is coordinatewise) and an asymptotically normal local estimate:
+\begin{equation}\label{eq:model}
+\theta_k=\mu+u_k,\quad u_k\sim\mathcal{N}(0,\tau^2);\qquad \hat{\theta}_k=\theta_k+e_k,\quad e_k\sim\mathcal{N}(0,v_k),\quad v_k=\sigma^2/n_k,
+\end{equation}
+with all $u_k,e_k$ independent. Here $\tau^2$ is the between-hospital heterogeneity, the quantity that random-effects meta-analysis estimates \cite{dersimonian1986meta}, and $\sigma^2$ absorbs the inverse Fisher information per patient. This is the classical setting of empirical Bayes \cite{efron1973steins,gelman2013bayesian}. What is new here is that the population mean $\mu$ must be estimated privately and without a server, so hospital $k$ only has access to some estimate $\tilde{\mu}$ with error.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.49\linewidth]{figures/fig_risk}\hfill
+\includegraphics[width=0.49\linewidth]{figures/fig_ess_gain}
+\caption{Left: risk of hospital $k$ as a function of its size $n_k$, with $K=12$, other hospitals of 200 patients, $\sigma^2=1$, $\tau^2=0.02$ and $\delta=10^{-5}$. Full pooling is excellent for small sites until it hits the heterogeneity floor $\tau^2$, and then harms large ones; hierarchical borrowing (Proposition~\ref{prop:borrowing}), with $\tau^2$ and $M$ known, is never worse than either in expected risk. Privacy at $\epsilon=1$ is almost free; at $\epsilon=0.1$ it reduces but does not remove the gain. Right: relative gain in effective sample size $n^{\eff}_k/n_k$ for a hospital with $n_k=50$, as a function of heterogeneity and privacy budget, from Equations~\eqref{eq:borrowed} and~\eqref{eq:M}.}
+\label{fig:risk}
+\end{figure}
+
+\begin{proposition}[Borrowing with an imperfect prior]\label{prop:borrowing}
+Let $\tilde{\mu}$ be any estimate of $\mu$ that is independent of $(u_k,e_k)$ and has mean squared error $M=\mathbb{E}(\tilde{\mu}-\mu)^2$. Among estimators $\tilde{\theta}_k=\alpha\hat{\theta}_k+(1-\alpha)\tilde{\mu}$, the risk $R_k(\alpha)=\mathbb{E}(\tilde{\theta}_k-\theta_k)^2$ is minimized at
+\[
+\alpha_k^{\star}=\frac{\tau^2+M}{\tau^2+M+v_k},\qquad R_k^{\star}=\frac{v_k\,(\tau^2+M)}{v_k+\tau^2+M}\;\le\;\min\{v_k,\;\tau^2+M\}.
+\]
+Equivalently, the effective sample size of hospital $k$ becomes
+\begin{equation}\label{eq:borrowed}
+n_k^{\eff}=\frac{\sigma^2}{R_k^{\star}}=n_k+\underbrace{\frac{\sigma^2}{\tau^2+M}}_{\text{borrowed patients }B}.
+\end{equation}
+\end{proposition}
+\begin{proof}
+$\tilde{\theta}_k-\theta_k=\alpha e_k+(1-\alpha)(\tilde{\mu}-\mu)-(1-\alpha)u_k$. The three terms are mutually independent, and the first and last have zero mean, so the cross terms vanish; the middle term has second moment $M$. Hence $R_k(\alpha)=\alpha^2 v_k+(1-\alpha)^2(\tau^2+M)$. This is a convex quadratic in $\alpha$, minimized at $\alpha_k^{\star}$; substituting gives $R_k^{\star}$. The bound follows because $R_k^{\star}$ is half the harmonic mean of $v_k$ and $\tau^2+M$. Finally $\sigma^2/R_k^{\star}=\sigma^2/v_k+\sigma^2/(\tau^2+M)=n_k+B$.
+\end{proof}
+
+Two remarks fix the scope of Proposition~\ref{prop:borrowing}. First, the proof uses only first and second moments and independence, so it does not need the normality of Equation~\eqref{eq:model}; normality matters only for reading $R_k^{\star}$ as a posterior variance. Second, $R_k$ is an expectation over the site effect $u_k$ as well as over the data: it is the risk of a hospital drawn from the population of hospitals, not of a particular one. For an unbiased $\tilde{\mu}$ and a given $u_k$, the risk is $\alpha^2 v_k+(1-\alpha)^2(M+u_k^2)$, which exceeds $v_k$ when $|u_k|$ is large compared with $\tau$. A genuinely atypical hospital can therefore lose by borrowing. This is why $\tau^2$ is estimated from the data rather than assumed small, why Section~\ref{sec:tau} lets each hospital's own data temper how much it borrows, and why the structured prior of Section~\ref{sec:structured} lets similarity decide which hospitals borrow from which.
+
+Equation~\eqref{eq:borrowed} is the central quantity of the method. Collaboration gives every hospital almost the same number $B$ of \emph{virtual patients}, regardless of its size; $B$ depends on $k$ only through the leave-one-out error $M$, which varies little across hospitals when there are many of them. A hospital with 30 patients and one with 3,000 both gain $B$; the first may double or triple its effective sample, the second barely notices. Requirement (R4) is therefore satisfied by construction. $B$ is limited by heterogeneity: as $\tau^2\to\infty$, $B\to 0$ and each hospital should act alone; as $\tau^2\to 0$ with $M\to 0$, $B\to\infty$ and full pooling is optimal. Hierarchical borrowing interpolates between the two, using the data to decide where. With $\tau^2$ and $M$ known it never does worse than local estimation, which is not true of a global model (Figure~\ref{fig:risk}); when both are estimated from the privatized releases the loss is small in simulation, but no longer zero (Section~\ref{sec:experiments}).
+
+\subsection{The cost of privacy}\label{sec:privacy}
+
+Proposition~\ref{prop:borrowing} holds for any estimate $\tilde{\mu}$. Requirements (R2) and (R3) constrain how that estimate can be obtained, and the next two results quantify what each constraint costs. Hospital $k$ needs $\tilde{\mu}$ from the others, and each release must be private (R2). Note what does not need privatizing: hospital $k$ uses its own estimate $\hat{\theta}_k$ without noise, since that never leaves the hospital. Privacy affects only $M$.
+
+\begin{proposition}[Privatized population estimate]\label{prop:privatized}
+Suppose $\hat{\theta}_j$ is the mean of per-patient contributions clipped to $[-C,C]$, so that replacing one patient changes $\hat{\theta}_j$ by at most $\Delta_j=2C/n_j$, and that clipping introduces no bias. Each hospital $j$ releases $\hat{\theta}_j+\xi_j$ with $\xi_j\sim\mathcal{N}(0,s_j^2)$ and $s_j=\Delta_j\sqrt{2\ln(1.25/\delta)}/\epsilon$, which is $(\epsilon,\delta)$-differentially private for $\epsilon\in(0,1)$ by the Gaussian mechanism \cite{dwork2014algorithmic}. For the leave-one-out average $\tilde{\mu}=\frac{1}{K-1}\sum_{j\neq k}(\hat{\theta}_j+\xi_j)$,
+\begin{equation}\label{eq:M}
+M=\frac{1}{(K-1)^2}\sum_{j\neq k}\Bigl(\tau^2+\frac{\sigma^2}{n_j}+\frac{8C^2\ln(1.25/\delta)}{n_j^2\,\epsilon^2}\Bigr).
+\end{equation}
+\end{proposition}
+
+\begin{proof}
+The terms $u_j+e_j+\xi_j$ are independent with zero mean and variances $\tau^2+\sigma^2/n_j+s_j^2$, and $s_j^2=4C^2\cdot 2\ln(1.25/\delta)/(n_j^2\epsilon^2)$. Independence from $(u_k,e_k)$ holds because $k$ is excluded.
+\end{proof}
+
+Three consequences follow. First, privacy noise is divided by $(K-1)$, so it vanishes as the network grows, while the local estimate remains noise-free. Second, the privacy term scales as $n_j^{-2}$ while the sampling term scales as $n_j^{-1}$: privacy is cheap for large contributors and expensive for tiny ones, which is the formal version of the uneven cost of private learning documented in Section~\ref{sec:dp}. The remedy is to let small hospitals release jointly: with secure aggregation \cite{bonawitz2017practical} among neighbours, noise can be calibrated to the sensitivity of the sum, which is set by the total size of the group rather than by each member. Third, inverse-variance weighting of the releases, rather than equal weights, reduces $M$ further and is what a practical implementation should use; Equation~\eqref{eq:M} is the simplest case.
+
+\paragraph{Scope of the privacy guarantee} Five conditions delimit what Proposition~\ref{prop:privatized} guarantees. (a) Neighbouring datasets differ in one patient's record at one hospital. A patient whose records are held by $m$ hospitals appears in $m$ releases, and by composition is protected at level $(m\epsilon,m\delta)$. (b) The site sizes $n_j$ and the per-patient variance $\sigma^2$ are treated as public; if they are not, they must be released privately as well. (c) A head $\theta_k\in\mathbb{R}^p$ must be released as one vector, with per-patient contributions clipped in $\ell_2$ norm to $C$ and isotropic noise calibrated to the $\ell_2$ sensitivity $2C/n_j$, which gives $(\epsilon,\delta)$ for the whole vector; calibrating each coordinate separately would compose to $(p\epsilon,p\delta)$. (d) For estimators that are not means of clipped contributions, $\Delta_j$ is replaced by the sensitivity of the released statistic. For a head fitted by maximum likelihood, the simplest choice is the mean score at a public point $c$, $\frac{1}{n_j}\sum_i \nabla\ell_i(c)$, whose sensitivity is $2L/n_j$ for an $L$-Lipschitz loss ($L=\max\|x\|$ for logistic regression). The parameter is then recovered by public post-processing, by matching the score's expectation under the public feature distribution (Section~\ref{sec:lite}); this is exact when a hospital's features follow that distribution and approximate under case-mix shift. Evaluated at the anchor, $c=\mu_0$, the score acts as a control variate: a wrong anchor makes the release noisier, not biased. A regularized minimizer can be released instead, with sensitivity $2L/(n_j\lambda)$ for a $\lambda$-strongly convex objective \cite{chaudhuri2011differentially}, but it is noisier, and undoing the regularization to first order introduces a bias that grows with the distance between the parameter and the centre of the regularizer (Section~\ref{sec:experiments}). (e) Each refit on the same patients is a new release, and the guarantees compose; zero-concentrated accounting \cite{bun2016concentrated}, under which the Gaussian mechanism with noise $s$ costs $\rho=\Delta^2/(2s^2)$ and costs add, is far tighter than basic composition over many refits (Section~\ref{sec:experiments}).
+
+\subsection{Computation on a sparse graph without a server}\label{sec:gossip}
+
+The leave-one-out average needs every hospital's release. Without a server, the hospitals compute it by gossip over $\mathcal{G}$ \cite{boyd2006randomized,xiao2004fast}. Let $W$ be a symmetric, doubly stochastic matrix supported on the edges of $\mathcal{G}$, for instance Metropolis-Hastings weights $W_{kl}=1/(1+\max(d_k,d_l))$ for $(k,l)\in E$, where $d_k$ is the degree of $k$. Starting from the privatized releases $x_j^0=\hat{\theta}_j+\xi_j$, each round sets $x^{t+1}=Wx^t$.
+
+\begin{proposition}[Free post-processing and convergence]\label{prop:gossip}
+(i) Every message exchanged during gossip is a function of the privatized releases only, so the whole gossip phase satisfies the same $(\epsilon,\delta)$ guarantee as the initial release, with no additional privacy cost. (ii) Let $\lambda=\max\{|\lambda_2(W)|,|\lambda_K(W)|\}$. If $\mathcal{G}$ is connected and $W$ has a positive diagonal, then $\lambda<1$ and
+\[
+\bigl\|x^t-\bar{x}\mathbf{1}\bigr\|_2\;\le\;\lambda^t\,\bigl\|x^0-\bar{x}\mathbf{1}\bigr\|_2,
+\]
+so that the estimate held by any hospital after $t$ rounds has root mean squared error at most $\sqrt{M_{\mathrm{all}}}+\lambda^t\sqrt{\mathbb{E}\|x^0-\bar{x}\mathbf{1}\|_2^2}$ as an estimate of $\mu$, where $M_{\mathrm{all}}=K^{-2}\sum_{j}(\tau^2+\sigma^2/n_j+s_j^2)$ is the mean squared error of the full average. (iii) Hospital $k$ obtains its leave-one-out estimate as $\tilde{\mu}_k^t=(Kx_k^t-x_k^0)/(K-1)$. It converges to the leave-one-out average of Proposition~\ref{prop:privatized}, and differs from it by $K(x_k^t-\bar{x})/(K-1)$, whose root mean square is at most $\frac{K}{K-1}\lambda^t\sqrt{\mathbb{E}\|x^0-\bar{x}\mathbf{1}\|_2^2}$.
+\end{proposition}
+
+\begin{proof}
+(i) is the post-processing property of differential privacy \cite{dwork2014algorithmic}: the gossip iterates are a deterministic function of the released values, and each hospital's subsequent computations on its own data are never released. (ii) Since $W$ is symmetric and doubly stochastic, $\mathbf{1}$ is an eigenvector with eigenvalue 1 and $x^t-\bar{x}\mathbf{1}=W^t(x^0-\bar{x}\mathbf{1})$ lies in the orthogonal complement of $\mathbf{1}$, on which $\|W\|_2=\lambda$. Connectivity and a positive diagonal make $W$ irreducible and aperiodic, so $\lambda<1$ \cite{xiao2004fast}. The error bound follows from the triangle inequality in $L^2$, since each coordinate deviation is bounded by the norm of the whole vector. (iii) Since $\sum_{j\neq k}x_j^0=K\bar{x}-x_k^0$, the leave-one-out average is $(K\bar{x}-x_k^0)/(K-1)$, and subtracting it from $\tilde{\mu}_k^t$ leaves $K(x_k^t-\bar{x})/(K-1)$, which is bounded as in (ii).
+\end{proof}
+
+Part (iii) also bounds the one departure from Proposition~\ref{prop:borrowing} that gossip introduces: after finitely many rounds, $\tilde{\mu}_k^t$ still contains a fraction of hospital $k$'s own release, so it is not exactly independent of $(u_k,e_k)$. The residual dependence decays as $\lambda^t$, and a hospital should use $\tilde{\mu}_k^t$ only once $\lambda^t$ is small; Section~\ref{sec:experiments} shows what happens otherwise.
+
+The number of rounds needed for accuracy $\gamma$ is about $\log(1/\gamma)/(1-\lambda)$, so the spectral gap $1-\lambda$ of the collaboration graph determines the communication cost. The spectral gap is related to how well the graph is connected through Cheeger-type inequalities \cite{chung1997spectral}. Figure~\ref{fig:gossip} shows this for 24 hospitals under four realistic topologies. A chain of bilateral agreements arranged in a ring mixes slowly; dense regional clusters joined by single bridges are not much better, because the bridges are bottlenecks; a few additional random or two-hop links triple the spectral gap, which after a hundred rounds lowers the consensus error by orders of magnitude. The practical lesson is that \emph{which} agreements a network signs matters more than \emph{how many}: adding a handful of long-range edges is worth more than densifying regions. Privacy amplification by decentralization \cite{cyffers2022privacy} gives a further benefit on sparse graphs, because each hospital observes only what reaches it through its neighbours.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.6\linewidth]{figures/fig_gossip}
+\caption{Gossip consensus error for 24 hospitals on four sparse topologies with Metropolis-Hastings weights. Rates follow the second largest eigenvalue modulus $\lambda$ of the gossip matrix (Proposition~\ref{prop:gossip}).}
+\label{fig:gossip}
+\end{figure}
+
+\subsection{Unknown heterogeneity}\label{sec:tau}
+
+The three propositions take $\tau^2$ as known. It is not, and how a hospital handles that uncertainty decides whether borrowing helps it or harms it.
+
+\begin{remark}[Estimating $\tau^2$, or integrating it out]\label{rem:tau}
+$\alpha_k^{\star}$ depends on $\tau^2$, which is itself unknown. Method-of-moments estimators from random-effects meta-analysis \cite{dersimonian1986meta} need only the released $\hat{\theta}_j+\xi_j$ and their variances $\sigma^2/n_j+s_j^2$, which are public, so they inherit the privacy guarantee by post-processing. With few hospitals, $\tau^2$ is poorly estimated and a weakly informative prior on it is advisable \cite{gelman2013bayesian}. A plug-in estimate can be avoided altogether. Hospital $k$ can integrate $\tau$ out: summarize the posterior of $\tau$ given the releases (under a half-Cauchy prior; the releases are obtained by flooding, which is post-processing) by $Q$ equally weighted quantiles $\tau_q$, and average its estimates under the priors $\mathcal{N}(\tilde{\mu}_k(\tau_q),\tau_q^2+M_k(\tau_q))$, weighting each by the marginal likelihood of its own data. This is the posterior mean of $\theta_k$ when $\tau$ is unknown. In the Gaussian model each weight is the density $\mathcal{N}(\hat{\theta}_k;\tilde{\mu}_k(\tau_q),\tau_q^2+M_k(\tau_q)+v_k)$, so it is closed form; for other heads a Laplace approximation suffices. A hospital whose data agree with the network borrows strongly; one whose data conflict with it puts its weight on wide components and borrows little, a smooth version of a rule that keeps the local estimate when it conflicts with the network, which GHB-lite offers as an option (Section~\ref{sec:sim-attacks}). It costs no privacy, because it uses the hospital's own data only inside the hospital.
+\end{remark}
+
+Integrating $\tau$ out matters most where a plug-in estimate is least reliable. When releases are noisy, the posterior of $\tau$ is wide, and its mean is driven by the tail of the prior rather than by the data; a plug-in posterior mean then overstates the heterogeneity and switches borrowing off, while a plug-in median or a moment estimate can understate it and make hospitals borrow too much. Averaging over the posterior, weighted by each hospital's own evidence, avoids committing to either. Simulation 16 (Section~\ref{sec:sim-components}) quantifies the difference: with noisy releases, it is one of the largest improvements in GHB-lite.
+
+\subsection{Structured heterogeneity}\label{sec:structured}
+
+The exchangeable model \eqref{eq:model} treats all other hospitals as equally relevant. When similarity is structured, for instance by region or case mix, the prior can follow a similarity graph with weights $a_{kl}\ge 0$, which may differ from the communication graph. A Gaussian Markov random field prior \cite{rue2005gaussian} with graph Laplacian $L$ gives the maximum a posteriori problem
+\begin{equation}\label{eq:gmrf}
+\min_{\boldsymbol{\theta}}\;\sum_k\frac{(\theta_k-\hat{\theta}_k)^2}{2v_k}+\frac{\beta}{2}\sum_{k<l}a_{kl}(\theta_k-\theta_l)^2+\frac{\gamma}{2}\sum_k(\theta_k-\mu_0)^2,
+\end{equation}
+whose solution satisfies the linear system $(V^{-1}+\beta L+\gamma I)\boldsymbol{\theta}=V^{-1}\hat{\boldsymbol{\theta}}+\gamma\mu_0\mathbf{1}$ with $V=\mathrm{diag}(v_k)$. The Jacobi iteration
+\[
+\theta_k\leftarrow\frac{\hat{\theta}_k/v_k+\beta\sum_l a_{kl}\theta_l+\gamma\mu_0}{1/v_k+\beta d_k+\gamma},\qquad d_k=\textstyle\sum_l a_{kl},
+\]
+uses only neighbour values and converges for any starting point, because the system matrix is strictly diagonally dominant. This generalizes the personalized peer-to-peer objective of \citet{vanhaesebrouck2017decentralized} with an explicit anchor $\mu_0$, which can come from published knowledge. To respect (R2), neighbours exchange smoothed values computed from privatized releases, and each hospital applies the final update with its own noise-free $\hat{\theta}_k$ locally without releasing it, so Proposition~\ref{prop:gossip}(i) applies.
+
+%% ===================================================================
+\section{GHB for Model Heads}\label{sec:heads}
+
+The analysis of Section~\ref{sec:model} applies directly to parametric models, and in particular to the last layer of a network on top of a fixed representation. This section builds on that observation. It places hierarchical borrowing inside an architecture in which each source of information is used where it is strongest (Section~\ref{sec:architecture}), specifies what the network releases and how each hospital turns it into a prior for its own head (Section~\ref{sec:logit}), describes the lighter variant GHB-lite, in which each hospital releases on its own (Section~\ref{sec:lite}), and assembles the protocol and its privacy guarantee (Section~\ref{sec:algorithm}).
+
+\subsection{Architecture}\label{sec:architecture}
+
+GHB keeps the privatized, shared part of the model small and surrounds it with components that cost no privacy (Figure~\ref{fig:ghb}). In the terms of the companion survey, each layer draws on a different source, or \emph{provenance channel}, of the information that a small hospital lacks \cite{simoes2026collectively}.
+\begin{enumerate}[label=\textbf{L\arabic*},start=0,leftmargin=*]
+\item \textbf{Public representation (proxy).} A foundation encoder $f_{\phi_0}$ pretrained on public or licensed data for the modality \cite{moor2023foundation,rasmy2021med,zhou2023foundation}. It is available to all hospitals without any privacy cost.
+\item \textbf{Local self-supervised adaptation (unlabeled data).} Each hospital adapts the encoder to its own unlabeled data with low-rank adapters \cite{hu2022lora} and a self-supervised objective \cite{chen2020simple,he2022masked}. Adapters may be averaged by privatized gossip, but need not be.
+\item \textbf{Hierarchical heads (pooling).} Each hospital fits a low-dimensional head $\theta_k\in\mathbb{R}^p$ on the adapted features and borrows strength by Propositions~\ref{prop:borrowing}, \ref{prop:privatized} and~\ref{prop:gossip}, with $\tau$ integrated out (Remark~\ref{rem:tau}), or by Equation~\eqref{eq:gmrf}.
+\item \textbf{Knowledge anchor (prior knowledge).} The hyperprior mean $\mu_0$ comes from published models or clinical knowledge, so that even a hospital with no neighbours starts from a sensible place.
+\item \textbf{Site calibration.} Each hospital calibrates its predictions by conformal prediction on local held-out data \cite{angelopoulos2023conformal,shafer2008tutorial}, or by federated conformal prediction when the local calibration set is too small \cite{lu2023federated}.
+\item \textbf{Targeted procurement.} Posterior variances from L2 identify which patients or subgroups would be most informative to label next \cite{settles2009active}.
+\end{enumerate}
+
+Synthetic data is deliberately absent from the training path. It is useful for testing pipelines and for teaching, but a generator fitted to a hospital's data cannot add information about the target that was not already in those data \cite{simoes2026collectively}, and its privacy case is weak \cite{stadler2022synthetic}.
+
+Two features of the architecture deserve emphasis. Keeping the privatized component low-dimensional is not a convenience but a necessity: the norm of Gaussian-mechanism noise grows with $\sqrt{p}$, and private learning is far more accurate on good fixed features than end to end \cite{tramer2021differentially}. And the split between a public representation and a private head mirrors the theory of shared representations, in which a common representation reduces the per-task sample complexity to that of the head \cite{collins2021exploiting,du2021few,maurer2016benefit,tripuraneni2020theory}.
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[x=1bp,y=1bp,
+ hosp/.style={fill=teal100,draw=famC,line width=0.8pt},
+ link/.style={draw=famC!70,line width=0.8pt},
+ layer/.style={fill=#1!12,draw=#1,line width=0.4pt,rounded corners=2pt},
+ ltxt/.style={anchor=west,font=\scriptsize\sffamily,inner sep=0pt,text width=142.26pt}]
+% inside-hospital panel
+\path[fill=white,draw=famT,line width=0.8pt,dashed,rounded corners=6pt] (-16.674,-62.733) rectangle (141.400,69.244);
+\draw[famT!60,line width=0.8pt,dashed] (-125.46,4.93) -- (-17.07,69.64);
+\draw[famT!60,line width=0.8pt,dashed] (-125.46,-4.93) -- (-17.07,-63.13);
+% hospitals (circle area proportional to n_k)
+\path[hosp] (-130.395,45.355) circle (7.795);
+\path[hosp] (-170.080,25.510) circle (4.960);
+\path[hosp] (-93.540,22.680) circle (10.630);
+\path[hosp] (-175.750,-17.010) circle (4.250);
+\path[fill=amber100,draw=famT,line width=1.2pt] (-130.395,0) circle (6.375);
+\path[hosp] (-87.875,-22.680) circle (5.665);
+\path[hosp] (-141.735,-48.190) circle (4.250);
+\path[hosp] (-104.885,-53.860) circle (7.085);
+\node[inner sep=0pt,font=\scriptsize] at (-130.395,0) {$k$};
+% agreements
+\draw[link] (-137.72,41.69) -- (-165.29,27.91);
+\draw[link] (-123.42,41.06) -- (-102.94,28.46);
+\draw[link] (-170.79,20.20) -- (-175.14,-12.40);
+\draw[link] (-165.57,22.61) -- (-136.26,3.77);
+\draw[link] (-124.45,3.66) -- (-102.94,16.90);
+\draw[link] (-124.24,-3.28) -- (-93.23,-19.82);
+\draw[link] (-172.32,-20.15) -- (-145.16,-45.05);
+\draw[link] (-137.14,-48.90) -- (-112.28,-52.72);
+\draw[link] (-101.30,-47.29) -- (-90.78,-28.00);
+\draw[link] (-131.99,-6.79) -- (-140.67,-43.66);
+\draw[link,dashed] (-122.60,42.82).. controls (-96.997,33.945) and (-82.733,10.089).. (-87.031,-16.669);
+\node[align=center,font=\scriptsize\itshape,text width=95pt,anchor=north] at (-130.395,-60.34) {sparse collaboration graph $\mathcal{G}$; circle area $\propto n_k$; dashed: an added long-range agreement};
+% layers
+\path[layer=grayc] (-11.493,46.489) rectangle (136.219,64.064);
+\path[layer=famE] (-11.493,25.680) rectangle (136.219,43.255);
+\path[layer=famC] (-11.493,4.870) rectangle (136.219,22.450);
+\path[layer=famO] (-11.493,-15.940) rectangle (136.219,1.640);
+\path[layer=violetc] (-11.493,-36.740) rectangle (136.219,-19.170);
+\path[layer=famT] (-11.493,-57.550) rectangle (136.219,-39.980);
+\node[ltxt] at (-8.50,55.276) {\textbf{L0} public foundation encoder $f_{\phi_0}$\hfill proxy};
+\node[ltxt] at (-8.50,34.467) {\textbf{L1} local SSL adapters on unlabeled data\hfill unlabeled};
+\node[ltxt] at (-8.50,13.660) {\textbf{L2} head $\theta_k$: local $\hat{\theta}_k$ + borrowed $\tilde{\mu}$\hfill pooling};
+\node[ltxt] at (-8.50,-7.150) {\textbf{L3} knowledge anchor $\mu_0$\hfill prior};
+\node[ltxt] at (-8.50,-27.955) {\textbf{L4} site conformal calibration};
+\node[ltxt] at (-8.50,-48.765) {\textbf{L5} targeted labeling from posterior variance\hfill procurement};
+\node[anchor=base,font=\scriptsize\itshape,inner sep=0pt] at (62.08,74.82) {inside hospital $k$};
+% note
+\path[fill=white,draw=famC,line width=0.4pt,rounded corners=2pt] (-193.24,67.20) rectangle (-67.55,88.71);
+\node[align=center,font=\tiny,inner sep=0pt,text width=4.3cm] at (-130.395,77.955) {only privatized releases travel\\ on edges; gossip is free post-processing};
+\end{tikzpicture}
+\caption{Graph Hierarchical Borrowing (GHB). Left: hospitals of very different sizes connected by a sparse set of agreements, without a central server. Right: the model held by each hospital, with the source of information used at each layer. Only the low-dimensional head participates in privatized exchange.}
+\label{fig:ghb}
+\end{figure}
+
+\subsection{What the network releases}\label{sec:logit}
+
+Proposition~\ref{prop:privatized} assumes that each hospital releases its own clipped mean, so that every hospital's release carries noise calibrated to its own size. Its second consequence points to the remedy: noise calibrated to a \emph{sum} is set by one patient, not by the smallest hospital. GHB takes that remedy to the whole network. The network makes two joint releases, both sums over every patient of every hospital, revealed only as totals. Everything a hospital borrows is computed from these two totals and from public information. A hospital uses its own data only inside its walls.
+
+\paragraph{Two joint releases} Let $G=\max\|x\|$ bound the features of a likelihood-based head; for logistic regression the per-patient score at the origin is $\psi_i=x_i(y_i-\tfrac12)$, and the per-patient information there is $\phi_i=x_ix_i^{\top}/4$. The network releases
+\[
+\tilde{S}=\sum_{k}\sum_{i\in k}\psi_i+\xi,\quad \xi\sim\mathcal{N}(0,s_S^2I_p),\qquad
+\tilde{J}=\sum_{k}\sum_{i\in k}\phi_i+E,\quad E_{ab}=E_{ba}\sim\mathcal{N}(0,s_J^2)\ (a\le b).
+\]
+Replacing one patient moves $\sum\psi_i$ by at most $2G$ in $\ell_2$ norm (the bound of scope (d) of Section~\ref{sec:privacy}, which holds at any evaluation point and is conservative by a factor of two at the origin), and moves $\sum\phi_i$ by $\phi_i-\phi_i'$. Both are positive semidefinite with Frobenius norm at most $G^2/4$, and for positive semidefinite $A$ and $B$, $\|A-B\|_F^2=\|A\|_F^2+\|B\|_F^2-2\,\mathrm{tr}(AB)\le\|A\|_F^2+\|B\|_F^2$, since $\mathrm{tr}(AB)\ge0$; so a replacement moves the upper triangle of $\sum\phi_i$ by at most $\sqrt2\,G^2/4$, not the $G^2/2$ of the triangle inequality. Each release receives half of a zero-concentrated budget $\rho$, so that $s_S=2G/\sqrt{\rho}$ and $s_J=\sqrt2\,G^2/(4\sqrt{\rho})$, with $\rho+2\sqrt{\rho\ln(1/\delta)}=\epsilon$ \cite{bun2016concentrated}. When the matrix would be mostly noise, the network releases only its diagonal, with the same sensitivity and noise per entry but $p$ entries instead of $p(p+1)/2$. The choice is made before the release from public quantities alone: the diagonal when the expected spectral noise $s_J\sqrt{p}$ exceeds $NG^2/(4p)$, the average bound on the information per coefficient, and the full matrix otherwise. The sums are computed by secure summation \cite{bonawitz2017practical}: neighbours agree on pairwise random masks that cancel in the total, every hospital adds its masked contribution and a share $\mathcal{N}(0,s^2/K)$ of the noise, and gossip over $\mathcal{G}$ averages the masked values (Proposition~\ref{prop:gossip}), so no server is needed and no hospital's own contribution is ever revealed.
+
+\paragraph{From the releases to the network} With $A=(\tilde{J}^{+}+I/s_0^2)^{-1}$, where $\tilde{J}^{+}$ is $\tilde{J}$ projected onto the positive semidefinite cone and $s_0=2.5$ is the scale of the weakly informative default prior for logistic coefficients \cite{gelman2008weakly}, the network estimate is one Newton step of the pooled model from the origin,
+\[
+\hat{w}=A\tilde{S},\qquad V_{\mathrm{dp}}=s_S^2AA^{\top},
+\]
+and $V_{\mathrm{dp}}$, the covariance that the privacy noise adds to $\hat{w}$, is public. In the terms of Proposition~\ref{prop:privatized}, the privacy part of $M$ is now of order $s_S^2/N^2$ per unit of information, with $N=\sum_k n_k$, rather than an average of terms of order $1/n_j^2$: the smallest hospital no longer sets the noise. Two further sources of context are used when they exist, both by post-processing. When several networks fit the same head, for instance one network per cancer type, each network's $\hat{w}$ is shrunk, coefficient by coefficient, toward the precision-weighted mean of the other networks' estimates, with a between-network variance taken at the median of its posterior under a half-Cauchy prior; the networks exchange only their $\hat{w}$ and its covariance. When a published model $\mu_0$ with stated uncertainty $\sigma_0^2$ exists, it is combined with $\hat{w}$ by precision weighting unless it conflicts with it ($|\mu_0-\hat{w}|>3\sqrt{\sigma_0^2+V}$ in some coordinate).
+
+\paragraph{From the network to each hospital} What hospitals share is how their outcomes depend on the features; their base rates differ with case mix and referral patterns, and borrowing them biases exactly the small, atypical hospitals that need borrowing most. GHB therefore does not borrow the intercept: in every borrowing component below, the intercept receives an additional prior variance $s_0^2$ around the network value, and the default prior keeps the scale $s_0$ for the intercept whatever its scale $s$ for the slopes. Hospital $k$ computes its exact score at the network estimate, $s_k=\sum_{i\in k}x_i(y_i-\sigma(x_i^{\top}\hat{w}))$, and its information $J_k=\sum_{i\in k}x_ix_i^{\top}/4$, and removes its own data from the network estimate by one Newton step,
+\[
+\mu_{-k}=\hat{w}-H_{-k}^{-1}s_k,\qquad V_{-k}=H_{-k}^{-1}+V_{\mathrm{dp}},\qquad H_{-k}=(\tilde{J}-J_k)^{+}+I/s_0^2,
+\]
+the leave-one-out estimate that Proposition~\ref{prop:borrowing} requires, now with its full covariance: sampling error and privacy noise. None of this is released. Hospital $k$ then integrates the unknown heterogeneity out as in Remark~\ref{rem:tau}: for each of $Q=12$ quantiles $\tau_q$ of a half-Cauchy prior with scale 0.5 and each scale $s\in\{0.5,1,2.5\}$ of the default prior, it forms the Gaussian prior $\mathcal{N}(\mu_{-k},\mathrm{diag}(\tau_q^2)+s_0^2e_1e_1^{\top}+V_{-k})$ multiplied by $\mathcal{N}(0,D_s)$, with $e_1$ the intercept's coordinate and $D_s=\mathrm{diag}(s_0^2,s^2,\dots,s^2)$, adds three components without borrowing, $\mathcal{N}(0,D_s)$, with a quarter of the prior weight between them, fits its head under every component by maximum a posteriori, and averages the fits weighted by the Laplace approximation of the marginal likelihood of its own data. A hospital whose data agree with the network puts its weight on narrow components and borrows strongly. One whose data conflict with the network puts it on wide or non-borrowing components, and so falls back to its own data. No setting is tuned on outcome data: the release split, the half-Cauchy scale, the default scales, the weight of the non-borrowing components and the treatment of the intercept are fixed in advance and were frozen before the confirmation of Section~\ref{sec:real}.
+
+\paragraph{Why the releases are sums} The simpler design of GHB-lite below failed on real data, for two reasons that shaped the one above (Section~\ref{sec:real}). In GHB-lite each hospital releases its own score, and the network maps it back to the parameter scale under a public feature distribution. Real hospitals' case mixes differ from any such distribution, so the mapping is biased. And the per-hospital noise, calibrated to $1/n_k$, is so large at strong privacy that the network estimate carries almost no information. Joint releases remove both problems: the information matrix comes from the hospitals' real data, and the noise is calibrated to the whole network. The price is a stronger trust model for the summation step, which Proposition~\ref{prop:ghbprivacy} states.
+
+\subsection{GHB-lite: one release per hospital}\label{sec:lite}
+
+Where secure summation is not available, GHB-lite keeps the original design: each hospital releases its mean score at the published anchor,
+\[
+g_k=\frac{1}{n_k}\sum_{i\in k}x_i\bigl(y_i-\sigma(x_i^{\top}\mu_0)\bigr)+\xi_k,\qquad \xi_k\sim\mathcal{N}(0,s_k^2I_p),\quad s_k=\frac{2G}{n_k\sqrt{2\rho}},
+\]
+which is private on its own, whatever the other hospitals do. Under the public feature distribution, $\mathbb{E}g_k=m(\theta_k)-m(\mu_0)$ with $m(\theta)=\mathbb{E}[x\,\sigma(x^{\top}\theta)]$, so the network recovers $\tilde{\theta}_k=a_k+I(a_k)^{-1}(g_k+m(\mu_0)-m(a_k))$ by moment matching, linearized first at the pooled moment estimate and then at each hospital's leave-one-out estimate, where $I$ is the Fisher information under the public feature distribution. Each hospital forms the posterior of $\tau$ from the recovered releases, takes $Q$ quantiles, gossips the inverse-variance-weighted releases for each quantile, combines the result with the anchor unless they conflict, multiplies by the default prior and averages its fits by its own evidence, exactly as above. Evaluating the score at the anchor makes it a control variate: a wrong anchor makes the release noisier, not biased. GHB-lite needs nothing beyond honest-but-curious neighbours, and it learns $\tau$ from the spread of the releases, which GHB cannot, since it releases no per-hospital quantity. Where the public feature distribution is exactly right and every hospital's release is informative, as in the simulations of Section~\ref{sec:experiments}, that makes GHB-lite the more accurate of the two. On the real cancer networks, neither condition held; on the FLamby benchmark \cite{ogierduterrail2022flamby}, whose features are standardized within each hospital, the first nearly does, and GHB-lite is more accurate there under weak privacy (Section~\ref{sec:real}).
+
+\subsection{The protocol and its privacy boundary}\label{sec:algorithm}
+
+With the releases and their use specified, the pieces can be assembled into one protocol, and its privacy can be stated for the whole of it rather than release by release. Algorithm~\ref{alg:ghb} summarizes the protocol, and Figure~\ref{fig:boundary} shows what crosses the custodial boundary: masked shares of two network sums, whose totals are privatized, and nothing else.
+
+\begin{figure}[t]
+\centering
+\resizebox{\linewidth}{!}{\input{../Collectively_Big_Locally_Small/figures/fig_boundary}}
+\caption{The privacy boundary of GHB. Patient records and the local head stay inside the hospital. Only the hospital's masked share $r_k$ of the two network sums crosses the boundary; the masks cancel in the totals, which carry the privacy noise. Everything computed from the totals is post-processing (Proposition~\ref{prop:ghbprivacy}), and the hospital combines it with its own noise-free data locally.}
+\label{fig:boundary}
+\end{figure}
+
+\begin{algorithm}[t]
+\caption{Graph Hierarchical Borrowing (one round of model fitting)}\label{alg:ghb}
+\KwIn{graph $\mathcal{G}$ with gossip matrix $W$; privacy budget $(\epsilon,\delta)$, i.e.\ $\rho$; feature bound $G$; public encoder $f_{\phi_0}$; optionally a published model $\mu_0$ with stated uncertainty $\sigma_0^2$, and the estimates of other networks fitting the same head}
+\ForEach{hospital $k$ in parallel}{
+ adapt $f_{\phi_0}$ to local unlabeled data with adapters (L1)\;
+ compute $\sum_{i\in k}x_i(y_i-\tfrac12)$ and $\sum_{i\in k}x_ix_i^{\top}/4$ (its diagonal alone if $s_J\sqrt{p}>NG^2/(4p)$); add pairwise masks agreed with neighbours and a share $\mathcal{N}(0,s^2/K)$ of the noise, $s_S=2G/\sqrt{\rho}$, $s_J=\sqrt2\,G^2/(4\sqrt{\rho})$\tcp*{the only released quantities}
+}
+gossip the masked shares until consensus: every hospital obtains $\tilde{S}$ and $\tilde{J}$ (Proposition~\ref{prop:gossip})\tcp*{the masks cancel}
+compute $\hat{w}=A\tilde{S}$ and $V_{\mathrm{dp}}=s_S^2AA^{\top}$, $A=(\tilde{J}^{+}+I/s_0^2)^{-1}$; shrink $\hat{w}$ toward other networks' estimates, and combine it with $\mu_0$ unless they conflict\tcp*{post-processing}
+\ForEach{hospital $k$}{
+ compute locally $s_k$ at $\hat{w}$ and $J_k$; leave-one-out estimate $\mu_{-k}=\hat{w}-H_{-k}^{-1}s_k$, $V_{-k}=H_{-k}^{-1}+V_{\mathrm{dp}}$\;
+ fit the local head under each prior $\mathcal{N}(\mu_{-k},\mathrm{diag}(\tau_q^2)+s_0^2e_1e_1^{\top}+V_{-k})\cdot\mathcal{N}(0,D_s)$, $q=1,\dots,Q$, $s\in\{0.5,1,2.5\}$, and under $\mathcal{N}(0,D_s)$ alone (the intercept is not borrowed); average the fits weighted by the marginal likelihood of the local data (Remark~\ref{rem:tau}); in the Gaussian case with known $\tau^2$ this is $\tilde{\theta}_k=\alpha_k^{\star}\hat{\theta}_k+(1-\alpha_k^{\star})\tilde{\mu}_k$ with $\alpha_k^{\star}$ of Proposition~\ref{prop:borrowing}\;
+ calibrate with conformal prediction on local held-out data (L4); rank unlabeled patients by posterior variance (L5)\;
+}
+\end{algorithm}
+
+\begin{proposition}[Privacy of GHB]\label{prop:ghbprivacy}
+Suppose every patient's features satisfy $\|x\|\le G$, the secure summation reveals only the two totals, and the noise of each total has the stated variance. Then the pair $(\tilde{S},\tilde{J})$ satisfies $\rho$-zero-concentrated differential privacy, and hence $(\epsilon,\delta)$-differential privacy with $\epsilon=\rho+2\sqrt{\rho\ln(1/\delta)}$, with respect to replacing the record of any one patient at any hospital. Every model, estimate and message that GHB computes afterwards satisfies the same guarantee. If $c$ of the $K$ hospitals collude and remove their own noise shares from the totals, the guarantee for the other hospitals' patients weakens to $\rho K/(K-c)$.
+\end{proposition}
+\begin{proof}
+Replacing one record changes $\sum\psi_i$ by at most $2G$ and the upper triangle of $\sum\phi_i$, or its diagonal, by at most $\sqrt2\,G^2/4$ in $\ell_2$ norm, as shown above; whether the diagonal or the full matrix is released depends only on public quantities. The Gaussian mechanism with noise $s$ and sensitivity $\Delta$ is $\Delta^2/(2s^2)$-zCDP \cite{bun2016concentrated}, which is $\rho/2$ for each total; zCDP composes additively, so the pair is $\rho$-zCDP, and the conversion to $(\epsilon,\delta)$ is that of \citet{bun2016concentrated}. Everything computed afterwards is a function of the two totals, of public quantities, and, at hospital $k$, of hospital $k$'s own data used only inside it and never released, so post-processing \cite{dwork2014algorithmic} gives the second claim; the networks' exchange of their estimates and the gossip of the masked shares are post-processing as well. Colluders who subtract their shares leave noise of variance $s^2(K-c)/K$, for which the same computation gives $\rho K/(K-c)$.
+\end{proof}
+
+The scope conditions of Section~\ref{sec:privacy} carry over: a patient held by $m$ hospitals contributes $m$ records; site sizes are public; and every refit on the same patients is a new pair of releases, whose costs add under zero-concentrated accounting. A hospital's final model uses its own data without noise and is therefore not private. Like the local estimate in Proposition~\ref{prop:borrowing}, it never leaves the hospital; if it is published, its own privacy must be paid for separately. GHB-lite satisfies the same guarantee per hospital without any trust in summation, since its release is private on its own.
+
+\paragraph{Why this is a principled default} The argument for GHB rests on results that are each well established, combined in a way that, to our knowledge, has not been set out for this setting. Separate estimation of three or more group means is inadmissible under squared error, and empirical Bayes shrinkage toward a common mean dominates it in the Gaussian model with equal variances \cite{efron1973steins,stein1956inadmissibility}; Proposition~\ref{prop:borrowing} gives the best combination of a local and a population estimate in closed form when the population estimate is itself imperfect. Noise calibrated to a sum rather than to each contributor is the cheapest way to make that population estimate private \cite{bonawitz2017practical,dwork2014algorithmic}, and differential privacy is closed under post-processing, which makes everything after the two releases free. Gossip converges at a rate set by the spectral gap \cite{boyd2006randomized,xiao2004fast}, which makes the summation possible without a server. Integrating the unknown heterogeneity out against each hospital's own evidence (Remark~\ref{rem:tau}) lets borrowing switch itself off where it would hurt. And shared representations reduce the problem to a low-dimensional head \cite{maurer2016benefit,tripuraneni2020theory}, which keeps the information matrix small enough to release. None of these is new. The case for GHB is that it is the simplest combination that meets all five requirements at once. Whether it also outperforms the alternatives has to be shown empirically, which Sections~\ref{sec:experiments} and~\ref{sec:real} do.
+
+%% EXPERIMENTS
+\input{sections/experiments}
+
+%% REAL DATA
+\input{sections/real}
+
+%% ===================================================================
+\section{Discussion}\label{sec:discussion}
+
+The simulations and the real networks answer the question of Section~\ref{sec:problem} from two sides: the first under assumptions that GHB-lite was built for, the second under conditions that nobody controlled. This section draws the practical consequences: when each protocol should be used (Section~\ref{sec:when}), what the method does not protect against and what the evidence does not show (Section~\ref{sec:limits}), and the problems that remain open (Section~\ref{sec:open}).
+
+\subsection{When to use GHB, and when not}\label{sec:when}
+
+The simulations and the real networks support a simple reading of the theory. Collaboration pays when hospitals are small relative to their task and differ moderately: Equation~\eqref{eq:borrowed} then adds tens of virtual patients to every hospital, which matters to small ones. When hospitals differ strongly, no method gains much, and integrating $\tau$ out keeps GHB close to local estimation rather than worse than it. When hospitals barely differ and a trusted environment for pooling exists, a single pooled model is better, and GHB can run inside that environment without privacy noise (Section~\ref{sec:problem}).
+
+Which protocol to run depends on what the network can provide. GHB needs secure summation among hospitals that do not collude; in exchange, its noise is calibrated to the whole network, it uses the hospitals' real case mix, and it needs no public feature distribution. On the five confirmation networks it was more accurate than each literature method, tuned on development networks or on the test folds, at both budgets. On the smaller networks of the FLamby benchmark \cite{ogierduterrail2022flamby} it was competitive, the most accurate in some settings and not in others, so a network of four to six hospitals that can tune a personalized method on comparable networks may do better with Ditto \cite{li2021ditto} or DP-FedAvg \cite{mcmahan2018learning} with fine-tuning. Where hospitals are known to share their base rates, the first version of GHB, which borrows the intercept, or GHB-lite is the better choice. GHB-lite needs nothing but honest-but-curious neighbours, and each of its releases is private on its own. It is the better choice when a public feature distribution is known to match the hospitals' patients and when the network is large enough, in hospitals and in patients per hospital, for per-hospital releases to be informative; the simulations describe that case. The real cancer networks of a few to a few dozen small hospitals met neither condition; the FLamby benchmark \cite{ogierduterrail2022flamby}, with features standardized within each hospital, nearly met the first. A network should also check, before committing, that privacy leaves something to share: Equations~\eqref{eq:M} and~\eqref{eq:borrowed}, with the network's total size in place of each hospital's for GHB, give that check from public quantities, namely the sizes, the budget and a prior guess of $\tau^2$.
+
+\subsection{Limits}\label{sec:limits}
+
+Two kinds of limit matter for a network that considers GHB: what the protocol protects against, and what the evidence of Sections~\ref{sec:experiments} and~\ref{sec:real} does and does not show. GHB protects patients against honest-but-curious hospitals and any observer of the messages, under the guarantee of Proposition~\ref{prop:ghbprivacy}; hospitals that collude to remove their noise shares weaken it, and GHB-lite, whose releases are private on their own, is the option where collusion cannot be ruled out. A hospital that lies about its contribution is not excluded by the protocol itself. In Simulation 12 such lies never pushed honest hospitals below local performance under GHB-lite, because a large lie inflates $\hat{\tau}^2$ and switches borrowing off. GHB has no per-hospital release in which to see a lie, so its defence is each hospital's own evidence, which moves the weight to non-borrowing components when the network conflicts with the hospital's data; stronger adversaries call for robust aggregation \cite{blanchard2017machine} or verifiable summation. The privacy guarantee is per pair of releases, so refits compose and must be accounted for \cite{bun2016concentrated,mironov2017renyi}. The Gaussian analysis is asymptotic; for very small $n_k$ the normal approximation is poor, which is one reason the method integrates over components fitted by maximum a posteriori rather than relying on closed forms. GHB's network estimate is a single Newton step from the origin. It is accurate when the pooled model is close to it, as for the clinical heads studied here; heads far from the origin would need a second round of releases, which the development data did not favour.
+
+\paragraph{What the evidence does not show} Several components were added after a version failed, and were chosen with knowledge of that failure. In the simulations, for GHB-lite: the half-Cauchy prior on $\tau$ and the use of the anchor (Simulation 7); keeping the anchor out of the releases (Simulation 11); and, after the first run of Simulation 15, the score release, integrating $\tau$ out and the conflict check. On real data: the evidence-weighted default prior, secure aggregation of per-hospital quantities, the four extensions of the third pre-registration, the joint releases of GHB, selected among about fifteen variants on twelve development networks, and the three changes of its final version, chosen on the same networks, the smaller networks and FLamby \cite{ogierduterrail2022flamby}. The two confirmations guard against overfitting those selections, but they used the same five networks of one data source, with one outcome and an eight-coefficient head, and the second came after the first version's results on them were known. The final version's choice not to borrow the intercept is a bet that base rates differ between hospitals; the final version improved the mean error in every real study we ran it on, except the deviance on Fed-TCGA-BRCA, and cost accuracy in the simulations, where base rates do not differ. Its margins under weak privacy are small, and a different set of networks did reverse them: on the FLamby \cite{ogierduterrail2022flamby} benchmark, a further pre-registered test, three of the first version's four predictions failed. Which features of a network decide between GHB and the best personalized methods, the number of hospitals, the size of the head or how closely a public feature distribution describes the hospitals, is a question the evidence raises but does not answer. The baselines were tuned as well as a consortium could tune them, and their oracle arm shows what more tuning would buy, but other methods, other grids or other ways of tuning could do better. The simulations test internal consistency under Equation~\eqref{eq:model} and its logistic analogue, against adversaries we chose, and they were built for GHB-lite. Beyond one image task, where the margins were small, the evidence says nothing about heads with many more coefficients, about other outcomes, about larger networks, or about participants who are adversarial in ways we did not test. GHB answers the question posed in Section~\ref{sec:problem} only under explicit assumptions: Gaussian site effects in the theory, honest and non-colluding participants, and a known collaboration graph. Relaxing each of them defines most of the open problems that follow.
+
+\subsection{Open problems}\label{sec:open}
+
+The limits above, and the places where the evidence ran out, point to seven problems that we leave open.
+
+\begin{enumerate}[leftmargin=*,itemsep=3pt]
+\item \textbf{Private estimation of heterogeneity.} The value of collaboration is governed by $\tau^2$ (Equation~\eqref{eq:borrowed}), yet hospitals rarely know it before joining a consortium. GHB does not estimate it from the network at all: it integrates over a fixed prior, weighted by each hospital's own evidence. GHB-lite estimates it from per-hospital releases, which is why it is more accurate in simulation, but those releases were too noisy and too biased on real networks. A private estimator of $\tau^2$ from joint releases, for instance from the secure sum of a quadratic statistic, would combine the strengths of both, and would let a hospital predict its benefit before committing. Its difficulty is sensitivity: a quadratic statistic of a hospital's score depends on that hospital's size, and our development attempts were too noisy to help.
+\item \textbf{Topology design.} Since mixing depends on the spectral gap (Proposition~\ref{prop:gossip}), which agreements to sign is an optimization problem with legal and economic constraints. Choosing a few long-range links that maximize the gap is a concrete, under-studied question.
+\item \textbf{Small-site privacy.} DP noise on per-hospital releases scales as $n_j^{-2}$ (Equation~\eqref{eq:M}), and GHB removes that cost by releasing only network sums. The price is trust in the summation. Shuffling, or secure summation that tolerates dropouts and detects collusion, would keep the noise calibrated to the network with a weaker trust model.
+\item \textbf{Incentives and valuation.} Large hospitals gain little from hierarchical borrowing and contribute most. Data valuation \cite{ghorbani2019data} adapted to privatized, decentralized settings could support fair credit, and regulation such as the European Health Data Space \cite{ehds2025} will shape what is feasible.
+\item \textbf{Shift-aware borrowing.} Proposition~\ref{prop:borrowing} treats heterogeneity as random. In practice it has structure, through case mix, devices and time. Combining causal invariance \cite{arjovsky2019invariant,castro2020causality} with hierarchical borrowing could separate the part of $\tau^2$ that is transportable from the part that is site-specific.
+\item \textbf{Group fairness.} GHB shrinks every coefficient of a hospital's head toward the network, including those through which predictions depend on patient groups, so it can carry other hospitals' disparities into a small hospital's model or dilute its own. Simulation 18 finds both effects small for GHB-lite, which estimates $\tau$ per coefficient: a disparity on which hospitals agree is borrowed and estimated better, and one on which they disagree is barely borrowed, while the fairness ratios of decisions stay at those of the true models. Keeping the disparity coefficient local is a privacy-free safeguard when disparities are expected to differ. GHB does not, however, pursue parity of decisions, and doing so in this setting is open: fairness-aware aggregation such as FAIR-FATE \cite{salazar2023fairfate} relies on a server and on many rounds of updates, and under requirement (R1) every fairness statistic that leaves a hospital would be a further private release that GHB's two releases do not budget for.
+\item \textbf{Procurement and strata.} The posterior variances of GHB tell every hospital which patients would be most informative to label next, and nobody has studied the joint design of labeling across a consortium. Equation~\eqref{eq:borrowed} also applies with strata in place of hospitals, which suggests borrowing aimed at small subgroups rather than small sites.
+\end{enumerate}
+
+%% ===================================================================
+\section{Conclusion}\label{sec:conclusion}
+
+Networks of small hospitals that cannot share patient data and have no trusted centre are the default organizational form of healthcare, and they are poorly served by methods that assume a server, fit one model, or must be tuned on data that small hospitals do not have. Graph Hierarchical Borrowing gives each hospital almost the same number of virtual patients, pays the privacy cost once, in two sums over the whole network, and runs over whatever agreements exist. Each hospital turns the network's two releases into a leave-one-out prior with the privacy noise propagated, and integrates the unknown heterogeneity out against its own evidence, so that nothing needs tuning. On five cancer networks that the development of its final version did not use, and under a pre-registered protocol, GHB was more accurate than every federated and personalized method, tuned as a consortium could tune it or on the test data, at strong and at weak privacy. On the public FLamby benchmark \cite{ogierduterrail2022flamby} it is the most accurate method in some settings and not in others, and in simulated worlds where hospitals share their base rates it is not the most accurate. On images, with a frozen public encoder, its pre-registered predictions on Camelyon17 histopathology held, by small margins. The margins are small under weak privacy, the tabular evidence comes from one source of real networks, and the lighter variant that the simulations favour failed on the real cancer networks. Whether the result holds for other outcomes, larger heads and larger networks is the main question this paper leaves open.
+
+\begin{acks}
+This work is funded by national funds through FCT, Foundation for Science and Technology, I.P., within the scope of the research unit UID/00326, Centre for Informatics and Systems of the University of Coimbra, \url{https://doi.org/10.54499/UID/00326/2025}.
+\end{acks}
+
+\bibliographystyle{../Collectively_Big_Locally_Small/ACM-Reference-Format-recovered}
+\bibliography{../Collectively_Big_Locally_Small/references}
+
+\end{document}
