@@ -46,6 +46,8 @@ def cite_row(row):
 # candidates (references such as local estimation, non-private or oracle rows).
 BOLD = {
     "t_flamby_heart.tex": [("colall", [1, 3, 5], "max", ("Local", "Pooled", "Best")), ("colall", [2, 4, 6], "min", ("Local", "Pooled", "Best"))],
+    "t_images.tex": [("colall", [1, 2, 3, 4, 5, 6], "max", ("Local", "Pooled", "Best"))],
+    "s_camelyon.tex": [("colall", [1, 2, 3], "max", ("Local", "Pooled", "Best")), ("colall", [4, 5, 6], "min", ("Local", "Pooled", "Best"))],
     "t_flamby_brca.tex": [("colall", [1, 3, 5], "max", ("Local", "Pooled", "Best")), ("colall", [2, 4, 6], "min", ("Local", "Pooled", "Best"))],
     "t_real_final.tex": [("colall", [1, 2, 4, 5], "min", ("Local",))],
     "t_tcga_tuned.tex": [("colall", [1, 2, 3, 4], "min", ("GHB, frozen",))],
@@ -123,7 +125,7 @@ def bold_rows(name, rows):
     return [(" & ".join(c) + "\\\\") if c is not None else r for r, c in zip(rows, split)]
 
 
-V4_TABLES = ("t_real_final", "t_tcga_", "s_tcga_", "s_real_final_lono", "t_flamby_")  # tables that already use the paper's names
+V4_TABLES = ("t_real_final", "t_tcga_", "s_tcga_", "s_real_final_lono", "t_flamby_", "t_images", "s_camelyon")  # tables that already use the paper's names
 
 
 def write(name, rows):
@@ -770,8 +772,55 @@ def flamby():
         write(name, lines)
 
 
+def images():
+    """Images (dev/PREREG_image.md): ISIC 2019 (development, isic_image.py) and Camelyon17 (pre-registered
+    confirmation, camelyon_image.py); balanced accuracy, every method with the model-implied logit adjustment over the
+    classes the hospital has seen. Supplement: Camelyon17 log-loss."""
+    pi, pc = R / "isic_image_dev.json", R / "camelyon_image.json"
+    if not (pi.exists() and pc.exists()):
+        return
+    isic = json.load(open(pi))["d=32"]["rows"]
+    cam = json.load(open(pc))["rows"]
+    fams = ["DP-FedAvg + FT", "DP-FedAvg-SA + FT", "APFL", "Ditto", "pFedMe", "Clustered DP-FedAvg"]
+    short = {"DP-FedAvg + FT": "DP-FedAvg + FT", "DP-FedAvg-SA + FT": "DP-FedAvg + FT, sec.\\ agg.", "APFL": "APFL",
+             "Ditto": "Ditto", "pFedMe": "pFedMe", "Clustered DP-FedAvg": "Clustered DP-FedAvg"}
+    iv = lambda k: isic[k]["support"]
+    cv = lambda k, m="bacc": cam[k][m]
+    ik = lambda k: k.replace("GHB, eps", "GHB R1=1, eps")
+
+    def lines_for(cols):
+        out = []
+
+        def add(label, keyf):
+            cells = []
+            for get in cols:
+                cells += [f"{get(keyf(e)):.3f}" for e in ("1", "10", "inf")]
+            out.append(label + " & " + " & ".join(cells) + r"\\")
+        add("Local", lambda e: "Local")
+        add("Local, evidence prior", lambda e: "Local, evidence prior")
+        add("Pooled, no DP$^\\dagger$", lambda e: "Pooled")
+        out.append(r"\midrule")
+        add(r"\textbf{GHB}, no tuning", lambda e: f"GHB, eps={e}")
+        for fm in fams:
+            add(short[fm] + ", tuned on development", (lambda fm: lambda e: f"{fm} (realistic), eps={e}")(fm))
+        out.append(r"\midrule")
+        return out, add
+
+    rows, add = lines_for([lambda k: iv(ik(k)), lambda k: cv(k)])
+    best = []
+    for get, sense in ((lambda k: iv(k), max), (lambda k: cv(k), max)):
+        best += [f"{sense(get(f'{fm} (oracle), eps={e}') for fm in fams):.3f}" for e in ("1", "10", "inf")]
+    rows.append("Best of the six, oracle$^\\star$ & " + " & ".join(best) + r"\\")
+    write("t_images.tex", rows)
+    rows, add = lines_for([lambda k: cv(k), lambda k: cv(k, "logloss")])
+    best = [f"{max(cv(f'{fm} (oracle), eps={e}') for fm in fams):.3f}" for e in ("1", "10", "inf")]
+    best += [f"{min(cv(f'{fm} (oracle), eps={e}', 'logloss') for fm in fams):.3f}" for e in ("1", "10", "inf")]
+    rows.append("Best of the six, oracle$^\\star$ & " + " & ".join(best) + r"\\")
+    write("s_camelyon.tex", rows)
+
+
 def main():
-    for fn in (flamby, tcga, tcga_ablation, tcga_tuned, sim8, sim15, sim16, sim17, sim18, real_heart, real_networks, real_final, sim1, sim2, sim3, sim4, sim5, sim6, sim7, sim9, sim11, sim12, sim13, sim14):
+    for fn in (flamby, images, tcga, tcga_ablation, tcga_tuned, sim8, sim15, sim16, sim17, sim18, real_heart, real_networks, real_final, sim1, sim2, sim3, sim4, sim5, sim6, sim7, sim9, sim11, sim12, sim13, sim14):
         fn()
     print("tables:", sorted(p.name for p in OUT.glob("*.tex")))
 
