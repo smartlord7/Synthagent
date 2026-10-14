@@ -63,3 +63,10 @@ moved the update by 1.19 against the old bound 0.56). The pFedMe rows of every c
 noise (`dev/pfedme_fix.py`; the eps = inf rows reproduce exactly and every other method is unchanged). The pFedMe numbers
 above are kept as recorded; the corrected ones are in the paper. With the correction pFedMe is far less accurate at both
 budgets, and the development rule still selects PME|3|2.0|10.0.
+
+Effect on the outcomes recorded above (2026-10-14): with pFedMe's noise corrected, the part of prediction 2 that GHB
+(locked) would not beat pFedMe at eps = 10 no longer holds. Recomputed from results/real_v3_ckpt/fresh_*.json (pooled
+held-out log-loss over the 10 repetitions and all hospitals, relative to Local, averaged over the six networks;
+configuration PME|3|2.0|10.0): corrected pFedMe reaches 1.535 at eps = 10 and 15.83 at eps = 1, against 0.961 and 0.943
+for the locked GHB. The rest of prediction 2 (GHB does not beat DP-FedAvg-SA + FT at eps = 10) and the other outcomes
+are unchanged.
