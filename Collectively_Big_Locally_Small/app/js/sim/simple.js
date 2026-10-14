@@ -23,6 +23,8 @@
  *   - "Each hospital alone"         -> method 'local' (exactly 100 on this scale).
  *   - "Everyone pooled"             -> method 'pooled' (one model on all patients, no privacy; not allowed in
  *                                       practice, shown as a reference).
+ *   - "Set the trust yourself"      -> every fixed trust level t in TRUST_LEVELS (same draws): each hospital moves a
+ *                                       fraction t from its own estimate to GHB's leave-one-out network mean.
  *   Monte Carlo: 2,000 replicates, seed 7 (so a setting always gives the same answer). The same setting is also run
  *   without privacy noise (noDP), same seed, to say in one sentence what privacy costs.
  * Optional second test, "a standard federated method": the Literature arena (sim/arena.js), the paper's logistic
@@ -33,7 +35,9 @@
  */
 import { defaultConfig, normalizeConfig } from '../config.js';
 import { siteSizes } from '../math/random.js';
-import { runMonteCarlo } from './engine.js';
+import { runMonteCarlo, TRUST_LEVELS } from './engine.js';
+
+export { TRUST_LEVELS };
 import { defaultArenaSpec, runArenaSync } from './arena.js';
 
 /** The plain-language choices, their labels, one-line explanations and the parameters they set. */
@@ -98,7 +102,8 @@ export function simpleConfig(ch) {
     ...defaultConfig(), sizeMode: 'table', sizesTable: simpleSizes(ch), K: clampK(ch.K),
     tau2: opt('difference', ch.difference).tau2, eps: opt('privacy', ch.privacy).eps, noDP: false, R: 2000, chunk: 50, seed: 7
   };
-  return normalizeConfig(raw).config;
+  // trustGrid: also run every fixed trust level of TRUST_LEVELS (same draws), for the "set the trust yourself" control
+  return { ...normalizeConfig(raw).config, trustGrid: true };
 }
 
 /**
@@ -118,13 +123,15 @@ export function simpleArenaSpec(ch) {
  * @param {Object} summary engine summary (sim/engine.js summarize) at the chosen privacy level
  * @param {Object|null} noDP engine summary of the same setting without privacy noise (same seed), or null
  * @param {Object} ch choices
- * @returns {Object} plain result: hospitals [{k, n, ghb, ghbSE, pooled, noPrivacy, weightOwn, likePatients}], choices
+ * @returns {Object} plain result: hospitals [{k, n, ghb, ghbSE, pooled, noPrivacy, weightOwn, likePatients, fixed}], choices
+ *   (fixed: error at each fixed trust level of TRUST_LEVELS, the same for every hospital; GHB's own trust is 1 - weightOwn)
  *   (every error is relative to working alone: 1 = as good as alone, below 1 = better)
  */
 export function digest(summary, noDP, ch) {
   const A = summary.agg, hospitals = summary.perHospital.map((p) => ({
     k: p.k, n: p.n, ghb: A.ghb.y[p.k], ghbSE: A.ghb.se[p.k], pooled: A.pooled.y[p.k], noPrivacy: noDP ? noDP.agg.ghb.y[p.k] : NaN,
-    weightOwn: p.alphaJ, likePatients: p.n / A.ghb.y[p.k]
+    weightOwn: p.alphaJ, likePatients: p.n / A.ghb.y[p.k],
+    fixed: A.trust0 ? TRUST_LEVELS.map((t) => A[`trust${t}`].y[p.k]) : null
   }));
   return { choices: { ...ch, K: clampK(ch.K) }, hospitals, replicates: summary.R };
 }

@@ -300,6 +300,16 @@ table.sm-chart { width: 100%; border-collapse: collapse; font-size: var(--rd-t-s
 .sm-grid { position: absolute; top: -4px; bottom: -4px; width: 1px; background: var(--rd-mm-major); }
 .sm-grid.one { width: 2px; background: var(--rd-ink); z-index: 1; }
 .sm-bar { position: absolute; left: 0; top: 3px; height: 12px; background: var(--rd-ghb); border-radius: var(--rd-radius); }
+.sm-bar.cut { border-radius: 0 var(--rd-radius) var(--rd-radius) 0; }
+.sm-auto { position: absolute; top: 3px; width: 8px; height: 8px; margin-left: -6px; background: var(--rd-surface); border: 2px solid var(--rd-ink); border-radius: 50%; z-index: 2; }
+.sm-legend .sw.auto { width: 8px; height: 8px; border: 2px solid var(--rd-ink); border-radius: 50%; }
+.sm-trust { border: var(--rd-hair) solid var(--rd-rule); border-radius: var(--rd-radius); padding: 10px 14px 12px; margin: 10px 0 14px; }
+.sm-trust legend { font-weight: 600; padding: 0 4px; }
+.sm-trust-auto { display: flex; gap: 8px; align-items: center; cursor: pointer; }
+.sm-trust-row { display: flex; gap: 10px; align-items: center; margin-top: 8px; font-size: var(--rd-t-sm); color: var(--rd-muted); }
+.sm-trust-row input { flex: 1; min-width: 0; }
+.sm-trust-row input:disabled { opacity: .4; }
+.sm-trust-say { margin: 8px 0 0; font-size: var(--rd-t-sm); }
 .sm-chart .num.has { color: var(--rd-muted); font-weight: 400; }
 .sm-bar.worse { background: var(--rd-risk); }
 .sm-pool { position: absolute; top: 4px; width: 10px; height: 10px; margin-left: -5px; background: var(--rd-ref); transform: rotate(45deg); z-index: 1; border: 1px solid var(--rd-surface); }

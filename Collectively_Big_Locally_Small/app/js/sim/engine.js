@@ -17,6 +17,9 @@ import {
 } from '../math/ghb.js';
 import { resolveSizes, resolveGraph, resolvePrivacy, resolveAdversaries, resolveRegions } from '../config.js';
 
+/** Fixed trust levels (percent of the way to the network) run when config.trustGrid is set (Simple mode). */
+export const TRUST_LEVELS = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
+
 /** Method identifiers, labels and colour tokens; the same token colours a method everywhere. */
 export const METHODS = [
   { id: 'local', label: 'Local only', tok: '--rd-local' },
@@ -80,6 +83,7 @@ export function prepare(c) {
   if (c.optOut) methods.push('optout');
   if (c.screen) methods.push('screen');
   if (c.gmrf) methods.push('gmrf');
+  if (c.trustGrid) for (const t of TRUST_LEVELS) methods.push(`trust${t}`);
   const v = n.map((x) => c.sigma2 / x), s2 = n.map((x) => dpVar(x, priv.eps, priv.delta, priv.C));
   const totals = n.map((_, k) => tau2m + v[k] + s2[k]);
   const Mth = n.map((_, k) => looMSEiv(totals, k)), Bth = Mth.map((M) => borrowedPatients(tau2m, M, c.sigma2));
@@ -143,6 +147,8 @@ export function replicate(ctx, rng, rep) {
   let keep = null;
   if (methods.includes('screen')) { const s = robustScreenGHB(d.th, d.x, d.r, d.v, c.screenZ); est.screen = s.est; keep = s.keep; }
   if (methods.includes('gmrf')) est.gmrf = gmrfJacobi(d.th, d.x, d.v, d.r, ctx.simA, c.beta, c.gamma, mu0 ?? 0, 100);
+  // fixed trust t (in percent) for every hospital: move a fraction t of the way from its own estimate to GHB's network mean
+  if (c.trustGrid) for (const t of TRUST_LEVELS) est[`trust${t}`] = Float64Array.from(d.th, (th, k) => th + (t / 100) * (j.mu[k] - th));
   return { d, u, b, alpha, est, keep, mu0, j };
 }
 
