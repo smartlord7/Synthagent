@@ -159,37 +159,53 @@ def stage1(rng, data, Xpub, rho1, GS, R1, damp=1.0, init_share=0.0, stepvar=Fals
 
 
 def estimate(data, Xpub, rng, eps, delta, G, cfg=None):
-    """data: list of (X, y int); Xpub: public feature rows (with intercept). Returns (K_hosp, P * K)."""
-    cfg = {"R1": 3, "damp": 1.0, "init_share": 0.0, "stepvar": False, "fixA": False, "safety": True, "safety_w": 1.0 / 3, "free_int": False, "scale": GL.SCALE, **(cfg or {})}
+    """data: list of (X, y int); Xpub: public feature rows (with intercept). Returns (K_hosp, P * K).
+    v5 development options: int_sd (the default prior of the intercepts has this scale whatever s), kdim (borrow only
+    along the intercept and the first kdim public PCA directions: the release covers those, with norm bound
+    sqrt(kdim + 1) instead of G; the other coefficients get the local default prior)."""
+    cfg = {"R1": 3, "damp": 1.0, "init_share": 0.0, "stepvar": False, "fixA": False, "safety": True, "safety_w": 1.0 / 3,
+           "free_int": False, "scale": GL.SCALE, "int_sd": None, "kdim": None, **(cfg or {})}
     K = int(max(y.max() for _, y in data)) + 1 if "K" not in cfg else cfg["K"]
     P = data[0][0].shape[1]
     D = P * K
     dY = [(X, onehot(y, K)) for X, y in data]
     N = sum(len(y) for _, y in data)
     rho = GL.rho_total(eps, delta)
-    w, H, Vdp = stage1(rng, dY, Xpub, rho, 2 * np.sqrt(2) * G, cfg["R1"], cfg["damp"], cfg["init_share"],
+    Ps = P if cfg["kdim"] is None else cfg["kdim"] + 1
+    Ds = Ps * K
+    Gs = G if cfg["kdim"] is None else np.sqrt(Ps)  # features are clipped to [-1, 1] coordinate-wise (isic_image._prep)
+    dYs = [(X[:, :Ps], Y) for X, Y in dY]
+    w, H, Vdp = stage1(rng, dYs, Xpub[:, :Ps], rho, 2 * np.sqrt(2) * Gs, cfg["R1"], cfg["damp"], cfg["init_share"],
                        cfg["stepvar"], cfg["fixA"])
     p = 1.0 / (1 + (GL.GRID / cfg["scale"]) ** 2) * np.gradient(GL.GRID)
     tq = V3.quantiles(p / p.sum())
-    extra = np.zeros(D)
+    extra = np.zeros(Ds)
     if cfg["free_int"]:
         extra[:K] = S0 ** 2  # row 0 of theta (the intercepts) is the first K entries
+    D0 = np.ones(D)
+    if cfg["int_sd"]:
+        D0[:K] = 0.0  # marks the intercepts, whose default prior scale is int_sd
     est = np.empty((len(data), D))
     for j, (X, Y) in enumerate(dY):
-        sj = score(X, Y, w)
-        Hm = _psd(H - hess(X, w), 1e-3 * max(N - len(Y), 1)) + np.eye(D) / S0 ** 2
+        Xs = X[:, :Ps]
+        sj = score(Xs, Y, w)
+        Hm = _psd(H - hess(Xs, w), 1e-3 * max(N - len(Y), 1)) + np.eye(Ds) / S0 ** 2
         V = np.linalg.inv(Hm)
-        mu = w - V @ sj
+        mu = np.zeros(D)
+        mu[:Ds] = w - V @ sj
         V = V + Vdp
         comps = []
         for q in range(Q):
-            Cni = np.linalg.inv(V + np.diag(tq[q] + extra))
+            Cni = np.zeros((D, D))
+            Cni[:Ds, :Ds] = np.linalg.inv(V + np.diag(tq[q] + extra))
             for s in SDS:
-                C = np.linalg.inv(Cni + np.eye(D) / s ** 2)
+                prec0 = np.where(D0 > 0, 1.0 / s ** 2, 1.0 / (cfg["int_sd"] or s) ** 2)
+                C = np.linalg.inv(Cni + np.diag(prec0))
                 comps.append((np.log(1.0 / (Q * len(SDS))), C @ Cni @ mu, C))
         if cfg["safety"]:
             for s in SDS:
-                comps.append((np.log(cfg["safety_w"] / len(SDS)), np.zeros(D), np.eye(D) * s ** 2))
+                comps.append((np.log(cfg["safety_w"] / len(SDS)), np.zeros(D),
+                              np.diag(np.where(D0 > 0, s ** 2, (cfg["int_sd"] or s) ** 2))))
         est[j] = combine(X, Y, comps)
     return est
 

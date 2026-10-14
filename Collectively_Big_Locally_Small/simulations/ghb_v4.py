@@ -84,7 +84,7 @@ def shrink_offdiag(Hr, sh, N):
 
 def noise_aware_mean(M, g, sg):
     """v5: posterior mean and covariance of the network coefficients w given the released score sum g = M w + e,
-    e ~ N(0, sg^2 I) (M = H + I / S0^2 the released information with the default prior), under w ~ N(0, s^2 I) with s
+    e ~ N(0, sg^2 I) (M = H + I / S0^2 the released information with the default prior), under w ~ N(0, diag(S0^2, s^2, ..., s^2)) with s
     chosen by the marginal likelihood of g (empirical Bayes over a grid). With sg = 0 this is M^-1 g, as in v4.
     Post-processing of the releases: no privacy cost, no tuning."""
     P = len(g)
@@ -93,13 +93,13 @@ def noise_aware_mean(M, g, sg):
         return Mi @ g, np.zeros((P, P))
     best = None
     for s in np.logspace(-2, 1, 31):
-        C = s ** 2 * M @ M.T + sg ** 2 * np.eye(P)
+        D2 = np.r_[S0 ** 2, np.full(P - 1, s ** 2)]  # the intercept (coordinate 0) keeps the default prior scale
+        C = (M * D2) @ M.T + sg ** 2 * np.eye(P)
         sign, ld = np.linalg.slogdet(C)
         ll = -0.5 * ld - 0.5 * g @ np.linalg.solve(C, g)
         if best is None or ll > best[0]:
-            best = (ll, s)
-    s = best[1]
-    S = np.linalg.inv(M.T @ M / sg ** 2 + np.eye(P) / s ** 2)
+            best = (ll, D2)
+    S = np.linalg.inv(M.T @ M / sg ** 2 + np.diag(1.0 / best[1]))
     return S @ M.T @ g / sg ** 2, S
 
 
