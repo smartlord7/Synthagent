@@ -77,13 +77,17 @@ export function initArena() {
     'Hospital k has coefficients θ<sub>k</sub> = μ + √τ² z<sub>k</sub> on an intercept and four bounded features (‖x‖ ≤ √5), optionally shifted case mix and regional effects; sizes are the paper\'s log-normal profile (median 100, 24 hospitals). A published model μ₀ = μ + error serves as anchor. Gossip runs on the ring with two-hop links (T = 60).',
     'Every private method spends the same (ε, δ = 10<sup>−5</sup>) per hospital; iterative methods compose their rounds under zero-concentrated DP (Bun &amp; Steinke, 2016), the tightest standard accounting, which favours them. GHB spends ρ on two joint releases (Proposition 5.1); GHB-lite on one release per hospital.'
   ]);
+  explain(nb, 'GHB as released (v5)', [
+    'The arena runs GHB in its released configuration, v5, which changes three things in the first version (v4, still selectable as "GHB v4 (earlier version)"). The intercept is not borrowed: base rates differ across hospitals, so the intercept gets an extra prior variance 2.5² on top of τ² and keeps the default prior scale 2.5, while the slopes are borrowed as before.',
+    'The information release has sensitivity √2 G²/4 instead of G²/2: one patient changes the sum by the difference of two positive semidefinite rank-one terms xx<sup>T</sup>/4 with ‖x‖ ≤ G, whose Frobenius norm is at most √2 G²/4. And when the noise would swamp the matrix (s<sub>J</sub>√P &gt; N G²/(4P), a rule on public quantities fixed before the release), only its diagonal is released.'
+  ]);
   explain(nb, 'Tuning', [
     '<strong>Paper defaults</strong>: each literature method runs one fixed configuration, the one Simulation 15 chose at τ² = 0.05, ε = 1 for the simulation-world baselines and the one frozen for the realistic arm of Section 7 for the personalized methods.',
     '<strong>Oracle</strong>: every configuration of each method\'s grid is evaluated on separate tuning replicates against the true loss; the best is then reported on fresh replicates, as Simulation 15 does. No hospital can tune this way.',
     '<strong>Manual</strong>: set every hyperparameter yourself below the figures. GHB and GHB-lite have nothing to tune; their settings are fixed in advance (Section 5).'
   ]);
   add(nb, `<div><h3 class="rd-h">References</h3><ul class="rd-refs">${ARENA_REFERENCES.map(([k, v]) => `<li><strong>${k}.</strong> ${v.replace(/^[^.]*\. /, '')}</li>`).join('')}</ul></div>`);
-  add(nb, '<div><h3 class="rd-h">Faithful to the paper\'s code</h3><p class="rd-prose">Every method is a line-by-line port of simulations/logit_world.py, ghb_logit.py, ghb_v4.py, literature.py, personalized.py and ghb_sa.py; tests/logit.test.mjs checks each against the Python output on fixed data to 10<sup>−8</sup>, and tests/arena.test.mjs checks the Simulation 15 means. Random draws come from this page\'s generator, so individual numbers differ from numpy\'s within Monte Carlo error.</p></div>');
+  add(nb, '<div><h3 class="rd-h">Faithful to the paper\'s code</h3><p class="rd-prose">Every method is a line-by-line port of simulations/logit_world.py, ghb_logit.py, ghb_v4.py (GHB with the frozen v5 configuration of real_v3.py, and v4), literature.py, personalized.py and ghb_sa.py; tests/logit.test.mjs checks each against the Python output on fixed data to 10<sup>−8</sup>, and tests/arena.test.mjs checks the Simulation 15 means. Random draws come from this page\'s generator, so individual numbers differ from numpy\'s within Monte Carlo error.</p></div>');
 
   /* ---------- method selection ---------- */
   function syncChecks() {
@@ -104,7 +108,7 @@ export function initArena() {
   function renderHyper() {
     const c = store.get(), on = c.aTuning === 'manual', body = hyperBox.querySelector('#arena-hyper-body');
     body.innerHTML = ARENA_METHODS.filter((m) => m.hyper || m.settings).map((m) => {
-      if (m.settings) return `<fieldset><legend>${m.label} (fixed, Section ${m.id === 'ghb' ? '5.2' : '5.3'})</legend><dl>${Object.entries(m.settings).map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl></fieldset>`;
+      if (m.settings) return `<fieldset><legend>${m.label} (fixed, Section ${m.id === 'lite' ? '5.3' : '5.2'})</legend><dl>${Object.entries(m.settings).map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl></fieldset>`;
       const cur = { ...m.def, ...(manual[m.id] || {}) };
       return `<fieldset><legend>${plainLabel(m)}</legend>${m.hyper.map((h) => `<label for="arena-h-${m.id}-${h.k}"><span>${h.label} <span class="rd-cite">grid ${h.grid.join(', ')}</span></span><input type="number" step="any" min="0" id="arena-h-${m.id}-${h.k}" data-m="${m.id}" data-k="${h.k}" value="${cur[h.k]}" ${on ? '' : 'disabled'}></label>`).join('')}</fieldset>`;
     }).join('');
@@ -213,9 +217,10 @@ export function initArena() {
     const g = S.ghb, l = S.lite, within = (a, b) => Math.abs(a.mean - b.mean) <= 2 * Math.hypot(a.se, b.se);
     let t = `<strong>What this shows.</strong> With ${result.K} hospitals, τ² = ${fmt(sp.tau2, 3)}${sp.regions ? ` (plus ${sp.regions} regions, τ_r² = ${fmt(sp.tauR2, 3)})` : ''}, ${isFinite(sp.eps) ? `ε = ${fmt(sp.eps, 2)}` : 'no privacy'}${sp.shift ? `, case-mix shift ${fmt(sp.shift, 2)}` : ''} and ${sp.tuning === 'oracle' ? 'baselines tuned with oracle access to the true loss' : sp.tuning === 'manual' ? 'manually set baselines' : 'the paper-default configurations'}, `
       + `the most accurate private method that uses other hospitals is <strong>${plainLabel(top.m)}</strong> at ${(1000 * top.mean).toFixed(1)} × 10⁻³ nats against ${(1000 * loc).toFixed(1)} for local estimation; ${gain} of ${priv.length} such methods beat local on average.`;
-    if (g && l) t += ` GHB reaches ${(1000 * g.mean).toFixed(1)} and GHB-lite ${(1000 * l.mean).toFixed(1)}${within(g, l) ? ', within Monte Carlo error of each other' : g.mean < l.mean ? ': the joint release wins here, as it does when per-hospital releases are noisy' : ': GHB-lite wins here, as in the paper\'s simulated worlds where its releases are informative'}.`;
+    if (g && l) t += ` GHB reaches ${(1000 * g.mean).toFixed(1)} and GHB-lite ${(1000 * l.mean).toFixed(1)}${within(g, l) ? ', within Monte Carlo error of each other' : g.mean < l.mean ? ': the joint release wins here, as it does when per-hospital releases are noisy' : ': GHB-lite wins here, as in the paper\'s simulated worlds where its releases are informative and base rates are shared, so GHB\'s choice not to borrow the intercept costs it a little'}.`;
+    if (g && S.ghbV4) t += ` Its earlier version, GHB v4, reaches ${(1000 * S.ghbV4.mean).toFixed(1)}${within(g, S.ghbV4) ? ', within Monte Carlo error of GHB' : S.ghbV4.mean < g.mean ? ' (v4 borrows the intercept, which pays when base rates are shared, as in this simulated world)' : ''}.`;
     t += ` ${fair.length ? `Worst hospital within 10% of its own local error: ${fair.join(', ')}.` : 'Every method leaves some hospital more than 10% worse off than alone.'}`;
-    const worstLit = priv.filter((r) => !['ghb', 'lite'].includes(r.id)).sort((a, b) => b.worst - a.worst)[0];
+    const worstLit = priv.filter((r) => r.m.family !== 'ghb').sort((a, b) => b.worst - a.worst)[0];
     if (worstLit && worstLit.worst > 1.2) t += ` The hardest hit hospital under ${worstLit.m.short || worstLit.m.label} is ${worstLit.worst.toFixed(1)} times worse off than alone.`;
     t += ` Differences smaller than about ±${(2000 * top.s.se).toFixed(1)} × 10⁻³ are within Monte Carlo error with ${sp.reps} replicates.`;
     return t;
