@@ -348,7 +348,7 @@ def ditto(fam, rng, data, n, rho, R, eta, lam, G, P, steps=5, eta_p=0.5):
 
 def pfedme(fam, rng, data, n, rho, R, eta, lam, G, P, S=5):
     beta = min(eta * lam, 1.0)
-    sd = _sd(n, rho, R, G, factor=S * beta / lam)
+    sd = _sd(n, rho, R, G, factor=S * beta * np.asarray(n, float) / lam)  # sensitivity S beta 2G / lam (personalized.pfedme)
     w = np.zeros(P)
     for _ in range(R):
         deltas = []

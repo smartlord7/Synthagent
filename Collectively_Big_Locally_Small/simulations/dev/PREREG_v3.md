@@ -52,3 +52,14 @@ Not predicted, and the main finding: at eps=10 every GHB variant is worse than t
 prior (0.942), i.e. on the fresh networks GHB's borrowing hurts when the privacy noise is small enough for it to
 act. At eps=1 GHB equals the local evidence-prior model (no borrowing gain). Any fix found from now on is post hoc
 with respect to these networks and needs further unseen data to be confirmed.
+
+
+## Correction, 2026-10-14: pFedMe privacy calibration
+
+The pFedMe baseline (`personalized.pfedme`, `ghb_glm.pfedme`) calibrated its noise to a sensitivity of S beta 2G / (n lam),
+but its proximal fit minimizes the sum (not the mean) of a hospital's losses, so the correct sensitivity is S beta 2G / lam:
+the noise was n times too small and pFedMe was less private than its stated budget (commit 15e769a; an empirical check
+moved the update by 1.19 against the old bound 0.56). The pFedMe rows of every checkpoint were recomputed with the correct
+noise (`dev/pfedme_fix.py`; the eps = inf rows reproduce exactly and every other method is unchanged). The pFedMe numbers
+above are kept as recorded; the corrected ones are in the paper. With the correction pFedMe is far less accurate at both
+budgets, and the development rule still selects PME|3|2.0|10.0.

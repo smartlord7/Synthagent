@@ -4,6 +4,7 @@
     python3 flamby_bench.py score                         supplement/results/flamby_results.json and summary tables
     python3 flamby_bench.py check                         validation (splits, equivalence of the GLM code, Poisson GHB)
     python3 flamby_bench.py isic-embed                    ISIC2019 embeddings (needs ImageNet weights and the images)
+    python3 flamby_bench.py isic-embed-public ZIP OUT     embeddings of the public ISIC 2019 Test images (isic_image.py)
 
 Data and splits reproduce FLamby (commit edacf54, June 2024) in numpy/pandas without importing it:
   Heart  UCI processed.{cleveland,hungarian,switzerland,va}.data; columns 10-12 dropped, rows with missing values dropped,
@@ -339,12 +340,14 @@ def score():
         cks = [json.load(open(f)) for f in files]
         info = cks[0]["info"]
         K = len(info["names"])
-        # per method, metric: (reps, K) with nan where undefined
+        # per method, metric: (reps, K) with nan where undefined (None: e.g. no comparable pair for the C-index); a
+        # stored NaN loss (every head's probability underflowed, 0 / 0) is a zero probability for the true class: +inf
         arr = {}
         for m in cks[0]["res"]:
             for met, _ in METRICS[ds]:
-                arr[(m, met)] = np.array([[np.nan if c["res"][m][k][met] is None else c["res"][m][k][met] for k in range(K)]
-                                          for c in cks], float)
+                arr[(m, met)] = np.array([[np.nan if c["res"][m][k][met] is None else
+                                           (np.inf if c["res"][m][k][met] != c["res"][m][k][met] else c["res"][m][k][met])
+                                           for k in range(K)] for c in cks], float)
         hosp = {k: np.nanmean(v, 0) for k, v in arr.items()}  # per-hospital mean over reps
         undefined = {met: [info["names"][k] for k in range(K) if np.isnan(hosp[("Local", met)][k])] for met, _ in METRICS[ds]}
         summ = lambda key: float(np.nanmean(hosp[key]))
@@ -409,24 +412,29 @@ def _preprocess(raw):
     return np.transpose(a, (2, 0, 1))
 
 
-def isic_embed(batch=64):
+def isic_embed(batch=64, zpath=None, out=None):
+    """Embeds every ISIC 2019 training image (or, with zpath/out, every image of another zip, e.g. the public ISIC 2019
+    Test images used for the projection of isic_image.py) with FLamby's baseline encoder: efficientnet_pytorch's EfficientNet-B0 with its
+    ImageNet weights (efficientnet-b0-355c32eb.pth, the file EfficientNet.from_pretrained downloads), frozen;
+    the 1280-dimensional output of global average pooling."""
     import torch
-    import torchvision
-    try:
-        m = torchvision.models.efficientnet_b0(weights=torchvision.models.EfficientNet_B0_Weights.IMAGENET1K_V1)
-    except Exception as ex:  # no substitute: random or untrained weights are not the pre-registered encoder
-        raise SystemExit(f"ImageNet weights unavailable ({ex!r}); ISIC2019 not run")
+    from efficientnet_pytorch import EfficientNet
+    wpath = ISIC_DIR / "efficientnet-b0-355c32eb.pth"
+    if not wpath.exists():  # no substitute: random or untrained weights are not the pre-registered encoder
+        raise SystemExit(f"ImageNet weights not found at {wpath}; ISIC2019 not run")
+    m = EfficientNet.from_name("efficientnet-b0")
+    m.load_state_dict(torch.load(wpath, map_location="cpu"))
     m.eval()
-    split = pd.read_csv(DATA / "fed_isic2019" / "train_test_split.csv")
-    zf = zipfile.ZipFile(ISIC_DIR / "ISIC_2019_Training_Input.zip")
+    zf = zipfile.ZipFile(zpath or ISIC_DIR / "ISIC_2019_Training_Input.zip")
     names = {Path(n).stem: n for n in zf.namelist() if n.endswith(".jpg")}
-    images, embs = list(split["image"]), []
+    images = sorted(names) if zpath else list(pd.read_csv(DATA / "fed_isic2019" / "train_test_split.csv")["image"])
+    embs = []
     with torch.no_grad():
         for i in range(0, len(images), batch):
             x = torch.from_numpy(np.stack([_preprocess(zf.read(names[im])) for im in images[i:i + batch]]))
-            embs.append(torch.flatten(m.avgpool(m.features(x)), 1).numpy())
+            embs.append(torch.flatten(torch.nn.functional.adaptive_avg_pool2d(m.extract_features(x), 1), 1).numpy())
             print(i, flush=True)
-    np.savez(ISIC_DIR / "embeddings.npz", images=np.array(images), emb=np.vstack(embs))
+    np.savez(out or ISIC_DIR / "embeddings.npz", images=np.array(images), emb=np.vstack(embs))
 
 
 # ------------------------------------------------------------------------------------------------------------ check
@@ -520,6 +528,8 @@ if __name__ == "__main__":
         check()
     elif cmd == "isic-embed":
         isic_embed()
+    elif cmd == "isic-embed-public":
+        isic_embed(zpath=Path(sys.argv[2]), out=Path(sys.argv[3]))
     else:
         reps = int(sys.argv[sys.argv.index("--reps") + 1]) if "--reps" in sys.argv else 20
         main_run(cmd, reps)

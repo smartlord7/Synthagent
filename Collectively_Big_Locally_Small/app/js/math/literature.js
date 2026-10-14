@@ -243,7 +243,8 @@ export function ditto(rng, data, n, rho, R, eta, lam) {
 }
 
 /**
- * pFedMe (T. Dinh et al., 2020): Moreau-envelope personalization; shared change with sensitivity S beta 2G / (n lam).
+ * pFedMe (T. Dinh et al., 2020): Moreau-envelope personalization; shared change with sensitivity S beta 2G / lam
+ * (the proximal fit minimizes the sum of the losses; corrected 2026-10-14 from S beta 2G / (n lam), n times too small).
  * @param {{n:()=>number}} rng generator
  * @param {Array} data hospitals
  * @param {number[]} n sizes
@@ -256,7 +257,7 @@ export function ditto(rng, data, n, rho, R, eta, lam) {
  * @see Section 7.2; personalized.pfedme
  */
 export function pfedme(rng, data, n, rho, R, eta, lam, S = 5) {
-  const beta = Math.min(eta * lam, 1), sd = sdRound(n, rho, R, S * beta / lam), w = new Float64Array(P), pr = new Float64Array(P).fill(lam);
+  const beta = Math.min(eta * lam, 1), sd = sdRound(n, rho, R, S * beta / lam).map((v, i) => v * n[i]), w = new Float64Array(P), pr = new Float64Array(P).fill(lam);
   for (let r = 0; r < R; r++) {
     const deltas = data.map((d) => { const wk = Float64Array.from(w); for (let s = 0; s < S; s++) { const th = fit(d, wk, pr); for (let a = 0; a < P; a++) wk[a] -= beta * (wk[a] - th[a]); } return wk.map((v, a) => v - w[a]); });
     const m = noisyAvg(rng, deltas, n, sd); for (let a = 0; a < P; a++) w[a] += m[a];

@@ -63,7 +63,10 @@ def ditto(rng, data, n, rho, R, eta, lam, steps=5, eta_p=0.5):
 
 def pfedme(rng, data, n, rho, R, eta, lam, S=5):
     beta = min(eta * lam, 1.0)                    # step of the local copy toward the personal model, kept stable
-    sd = _sd(n, rho, R, factor=S * beta / lam)     # each step moves w_k by beta |d theta| <= beta 2G / (n lam)
+    # fit() minimizes the SUM of the losses + lam/2 |theta - w_k|^2, so one patient moves theta by at most 2G / lam
+    # (not 2G / (n lam): corrected 2026-10-14, the earlier noise was n times too small); the prox is nonexpansive,
+    # so each step adds at most beta 2G / lam to the change of w_k, and S steps S beta 2G / lam
+    sd = _sd(n, rho, R, factor=S * beta * np.asarray(n, float) / lam)
     w = np.zeros(P)
     for _ in range(R):
         deltas = []
