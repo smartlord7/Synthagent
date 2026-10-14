@@ -38,6 +38,7 @@ Simulation & Question & Result\\
 15 Iterative federated learning & Does it beat multi-round training with the same budget and tuned hyperparameters? & At $\tau^2=0.05$: GHB-lite \SimFifteenMidGHB, GHB \SimFifteenMidV, DP-FedAvg \cite{mcmahan2018learning} with fine-tuning \SimFifteenMidFT, decentralized DP-SGD \cite{lian2017can} \SimFifteenMidDec, clustered \SimFifteenMidClus; at $\epsilon=0.3$ GHB-lite \SimFifteenStrictGHB{} against \SimFifteenStrictFT; worst hospital at most \SimFifteenGHBWorstMax{} for GHB-lite except at $\tau^2=0.5$, \SimFifteenFTWorstMin{} to \SimFifteenFTWorstMax{} for fine-tuning\\
 16 Ablation & What does each component contribute? & Error relative to GHB-lite without it: ridge release up to \SimSixteenRidgeMax; $X^\top y$ release \SimSixteenXtyShift{} under case-mix shift; plug-in $\tau^2$ up to \SimSixteenTauMeanMax{} (posterior mean) and \SimSixteenTauDLMax{} (DerSimonian-Laird \cite{dersimonian1986meta}); no conflict check \SimSixteenNoCheckAnchor{} with a wrong anchor; equal weights up to \SimSixteenEqualMax; gossip and accounting free\\
 17 Sensitivity & How much do settings and conditions matter? & Settings: quantiles, public sample, threshold and rounds ($\ge 20$) flat; prior scale of $\tau$ \SimSeventeenScaleMin{} to \SimSeventeenScaleMax; misstated anchor up to \SimSeventeenAnchorSdMax. Conditions: error \SimSeventeenRelMin{} to \SimSeventeenRelMax{} of local, worst hospital at most \SimSeventeenWorstMax\\
+16B, 17B GHB & Which of GHB's components and settings matter, and across which conditions? & Intercept borrowed \SimSixteenBIntMin{} to \SimSixteenBIntMax{} of GHB's error (this world shares base rates); no non-borrowing components down to \SimSixteenBSafetyMin; most settings within \SimSixteenBSmallMax; across conditions \SimSeventeenBRelMin{} to \SimSeventeenBRelMax{} of local, worst hospital at most \SimSeventeenBWorstMax\\
 18 Group fairness & What does borrowing do to a protected group? & Minority excess log-loss ($\times10^{-3}$) with a shared disparity: GHB-lite \SimEighteenSharedGHBMin, local \SimEighteenSharedLocalMin, FAIR-FATE \cite{salazar2023fairfate} \SimEighteenSharedFFEQOMin; disparities that vary: GHB-lite \SimEighteenVariesGHBMin, global \SimEighteenVariesGlobalMin; equalized odds of GHB-lite within 0.02 of the true models, FAIR-FATE closer to parity\\
 Real data & Does it hold on real hospitals, against the literature tuned as a consortium could? & Five held-out TCGA networks: GHB \SimTCOneGHB{} and \SimTCTenGHB{} relative to local at $\epsilon=1$ and 10; best literature method \SimTCOneFT{} and \SimTCTenDitto{} (Section~\ref{sec:real})\\
 \bottomrule
@@ -197,6 +198,15 @@ Condition & Value & GHB-lite / local & \makecell[r]{GHB-lite, $\tau^2$ known\\/ 
 \bottomrule
 \end{tabular}
 \end{table}
+
+\paragraph{The same analysis for GHB} Simulation 16B repeats the ablation and the sensitivity analysis for GHB, in the same eight settings, with every variant on the same data and privacy noise (Figure~\ref{fig:sim-ghb-ablation}; \SimSixteenBReps{} replicates per setting; values in the supplement). This world rewards borrowing, and the components that make GHB cautious cost here what they protect against on real hospitals: borrowing the intercept would lower its error to as little as \SimSixteenBIntMin{} of the released version's when hospitals are nearly identical, dropping the non-borrowing components to \SimSixteenBSafetyMin, and a wider prior on $\tau$ or heavier non-borrowing weight raises it by up to \SimSixteenBScaleTwoMax. The propagated privacy covariance, the leave-one-out step, the tight sensitivity, the budget split and the number of quantiles each move the error by about \SimSixteenBSmallMax{} or less. Across the network conditions of Simulation 17, GHB's error stays between \SimSeventeenBRelMin{} and \SimSeventeenBRelMax{} of local estimation and its worst hospital within a factor \SimSeventeenBWorstMax, always behind GHB-lite in this world (supplement). Which of these choices pays on real hospitals is the subject of Section~\ref{sec:real-tcga}.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{supplement/figures/sim16_ghb}
+\caption{Simulation 16B: ablation (top block) and sensitivity (middle block) of GHB as released (logistic heads, 24 hospitals, \SimSixteenBReps{} replicates per setting). Each cell is the mean excess log-loss of a variant divided by that of GHB on the same data and noise; above 1 (red), the change hurts. Bold: paired difference larger than two standard errors; a trailing dot marks differences within Monte Carlo error. Last row: local estimation, a reference.}
+\label{fig:sim-ghb-ablation}
+\end{figure}
 
 \subsection{Fairness to groups of patients}\label{sec:sim-fairness}
 

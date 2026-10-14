@@ -696,7 +696,7 @@ def tcga_ablation():
                 cells = []
                 for e in ("1", "10"):
                     cells += [f"{r[e]['mean']:.3f}", "" if name == "GHB" else f"{r[e]['ghb_better']}/{len(a['networks'])}"]
-                lab = r"\textbf{GHB}, as released" if name == "GHB" else name.replace("tau", "$\\tau$").replace("Q = ", "$Q=$ ")
+                lab = r"\textbf{GHB}, as released" if name == "GHB" else name.replace("tau", "$\\tau$").replace("Q = ", "$Q=$ ").replace("{", "\\{").replace("}", "\\}")
                 rows.append(lab + " & " + " & ".join(cells) + r"\\")
                 if name == "GHB":
                     rows.append(r"\midrule")
@@ -863,7 +863,7 @@ def sim16_ghb():
             o = res[c][m]
             sig = abs(o["diff"]) > 2 * o["diff_se"]
             cells.append(f"\\textbf{{{o['ratio']:.2f}}}" if sig else f"{o['ratio']:.2f}")
-        rows.append(m.replace("tau", "$\\tau$").replace("Q = ", "$Q=$ ") + " & " + " & ".join(cells) + r"\\")
+        rows.append(m.replace("tau", "$\\tau$").replace("Q = ", "$Q=$ ").replace("{", "\\{").replace("}", "\\}") + " & " + " & ".join(cells) + r"\\")
     write("t_sim16_ghb.tex", rows)
 
 
