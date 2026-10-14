@@ -1,19 +1,23 @@
 /**
  * ui/panels/start.js
- * Responsibility: the Start here tab: what the lab is for, three one-click demos (GHB against GHB-lite under strong
+ * Responsibility: the Start here tab: what the lab is for, a pointer to Simple mode, three one-click demos (GHB against GHB-lite under strong
  * privacy, every literature method at the paper's main setting, the real-data results) and a map of the tabs.
  */
 import { add } from '../dom.js';
 
 /**
  * Build the Start here tab.
- * @param {{demo:(id:string)=>void, tour:()=>void, open:(tab:string)=>void}} act actions provided by main.js
+ * @param {{demo:(id:string)=>void, tour:()=>void, open:(tab:string)=>void, simple?:()=>void}} act actions provided by main.js
  * @returns {{}}
  * @see Sections 4 to 7 of the GHB paper
  */
 export function initStart(act) {
   const stage = document.getElementById('stage-start');
   add(stage, `<div><h2 class="rd-h2">Start here</h2><p class="rd-prose">Graph Hierarchical Borrowing lets small hospitals borrow strength from each other without sharing data, without a server and without tuning. Each hospital shrinks its own model toward a leave-one-out estimate of the network by an amount its own data decide. <strong>GHB</strong> makes two joint releases, sums over every patient privatized once for the whole network by secure summation (Section 5.2); <strong>GHB-lite</strong> has every hospital release on its own (Section 5.3). This lab lets you run both, against every method of the paper, and read the paper's real-data results.</p></div>`);
+  if (act.simple) {
+    const sm = add(stage, '<p class="rd-callout">New to privacy, statistics or AI? <button class="rd-btn" type="button" id="start-simple">Switch to Simple mode</button> for a one-page, plain-language version: set up a few hospitals and test GHB in a minute.</p>');
+    sm.querySelector('#start-simple').onclick = () => act.simple();
+  }
   const cards = add(stage, '<div class="rd-start"></div>');
   const demos = [
     ['ghb-vs-lite', '--rd-ghb', 'GHB against GHB-lite under strong privacy', 'Twenty-four small hospitals (median 30 patients) at ε = 0.1. Per-hospital releases drown in noise, so GHB-lite falls back to local estimation; GHB\'s noise is calibrated to the network sum and it still borrows. Opens Borrowing & metrics with both protocols side by side.', 'Run this demo'],

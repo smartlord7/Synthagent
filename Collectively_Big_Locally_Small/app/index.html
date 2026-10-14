@@ -1,5 +1,15 @@
 <title>GHB Simulation Lab</title>
 <link rel="stylesheet" href="css/researchdata.css">
+<script>
+  // Simple or Expert mode before first paint (same rule as js/ui/mode.js): #simple, an expert tab link, the stored choice, else Simple.
+  (function () {
+    var h = location.hash.slice(1), m = null;
+    try { m = localStorage.getItem('ghb-lab-mode'); } catch (e) { m = null; }
+    if (h === 'simple') m = 'simple';
+    else if (/^(start|calc|setup|network|borrow|arena|real|stress|privacy|regions|sweeps|about|expert)$/.test(h)) m = 'expert';
+    document.documentElement.setAttribute('data-mode', m === 'expert' ? 'expert' : 'simple');
+  })();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@400;500;600&family=Literata:opsz,wght@7..72,400;7..72,600&display=swap">
 
@@ -11,15 +21,20 @@
         ResearchData
       </span>
       <h1>GHB Simulation Lab</h1>
-      <p>Companion to <em>Borrowing Strength Without Borrowing Data</em>, the Graph Hierarchical Borrowing (GHB) paper, and to the survey <em>Collectively Big, Locally Small</em>: measure smallness, watch GHB and GHB-lite move information between hospitals over a sparse graph with differential privacy and no server, test them against every method in the paper, and read the real-data results.</p>
+      <p class="simple-only">How hospitals of every size can learn from each other without sharing a single patient record. Set up a scenario and test it in a minute.</p>
+      <p class="expert-only">Companion to <em>Borrowing Strength Without Borrowing Data</em>, the Graph Hierarchical Borrowing (GHB) paper, and to the survey <em>Collectively Big, Locally Small</em>: measure smallness, watch GHB and GHB-lite move information between hospitals over a sparse graph with differential privacy and no server, test them against every method in the paper, and read the real-data results.</p>
     </div>
     <div class="rd-actions">
-      <div class="rd-ctl"><label for="scenario" class="rd-label">Scenario</label><select id="scenario"></select></div>
-      <button class="rd-btn" id="btn-defaults" type="button">Paper defaults</button>
-      <button class="rd-btn" id="btn-random" type="button">Randomize</button>
-      <button class="rd-btn primary" id="btn-tour" type="button">Guided tour</button>
+      <div class="rd-ctl rd-mode"><span class="rd-label" id="mode-label">View</span><div class="rd-seg" role="group" aria-labelledby="mode-label" id="mode-switch"><button type="button" data-mode="simple" aria-pressed="true">Simple mode</button><button type="button" data-mode="expert" aria-pressed="false">Expert mode</button></div></div>
+      <div class="rd-ctl expert-only"><label for="scenario" class="rd-label">Scenario</label><select id="scenario"></select></div>
+      <button class="rd-btn expert-only" id="btn-defaults" type="button">Paper defaults</button>
+      <button class="rd-btn expert-only" id="btn-random" type="button">Randomize</button>
+      <button class="rd-btn primary expert-only" id="btn-tour" type="button">Guided tour</button>
     </div>
   </header>
+  <main class="simple-only" id="simple-view" aria-label="Simple mode"></main>
+
+  <div class="expert-only" id="expert-view">
   <p class="rd-msg" id="scenario-note" aria-live="polite"></p>
 
   <nav class="rd-tabs" role="tablist" aria-label="Sections">
@@ -49,5 +64,6 @@
   <section class="rd-panel" id="p-regions" role="tabpanel" aria-labelledby="tab-regions" hidden><aside class="rd-rail" id="rail-regions"></aside><div class="rd-stage" id="stage-regions"></div><aside class="rd-notebook" id="nb-regions"></aside></section>
   <section class="rd-panel" id="p-sweeps" role="tabpanel" aria-labelledby="tab-sweeps" hidden><aside class="rd-rail" id="rail-sweeps"></aside><div class="rd-stage" id="stage-sweeps"></div><aside class="rd-notebook" id="nb-sweeps"></aside></section>
   <section class="rd-panel" id="p-about" role="tabpanel" aria-labelledby="tab-about" hidden><aside class="rd-rail" id="rail-about"></aside><div class="rd-stage" id="stage-about"></div><aside class="rd-notebook" id="nb-about"></aside></section>
+  </div>
 </div>
 <script type="module" src="js/main.js"></script>

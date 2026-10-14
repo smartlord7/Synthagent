@@ -91,5 +91,5 @@ def figure():
     style.save(fig, ghb.FIGDIR / "real_final.pdf")
 
 
-if __name__ == "__main__" and False:
-    pass
+if __name__ == "__main__":  # the figure is defined after main(), so it is drawn here (it was silently skipped before)
+    figure()
