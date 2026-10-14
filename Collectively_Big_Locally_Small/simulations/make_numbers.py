@@ -387,7 +387,12 @@ def main():
             for fm, t in (("DP-FedAvg-SA + FT", "FTSA"), ("Ditto", "Ditto"), ("pFedMe", "PFedMe"), ("DP-FedAvg + FT", "FT")):
                 n[f"FHeart{E}{t}"] = f"{hv(f'{fm} (realistic), eps={e}', 'logloss'):.3f}"
                 n[f"FBrca{E}{t}"] = f"{bv(f'{fm} (realistic), eps={e}', 'cindex'):.3f}"
-            n[f"FBrca{E}GHB"] = f"{bv(f'GHB, eps={e}', 'cindex'):.3f}"
+            n[f"FBrca{E}GHB"] = f"{bv(f'GHB, eps={e}', 'cindex'):.3f}"  # GHB v4, the pre-registered version
+            if f"GHB v5, eps={e}" in fr["heart"]["rows"]:  # GHB as released (FLamby was development data for it)
+                n[f"FHeart{E}VFive"] = f"{hv(f'GHB v5, eps={e}', 'logloss'):.3f}"
+                n[f"FBrca{E}VFive"] = f"{bv(f'GHB v5, eps={e}', 'cindex'):.3f}"
+                iv = lambda k, m: fr["isic"]["rows"][k][m]["mean"]
+                n[f"FIsic{E}VFive"] = f"{iv(f'GHB v5, eps={e}', 'bacc'):.3f}"
         n["FHeartLocal"], n["FHeartLocalEB"] = f"{hv('Local', 'logloss'):.3f}", f"{hv('Local, evidence prior', 'logloss'):.3f}"
         n["FBrcaLocal"], n["FBrcaPooled"] = f"{bv('Local', 'cindex'):.3f}", f"{bv('Pooled', 'cindex'):.3f}"
         n["FHeartOneGHBGain"] = f"{100 * (1 - hv('GHB, eps=1', 'logloss') / hv('Local', 'logloss')):.1f}\\%"

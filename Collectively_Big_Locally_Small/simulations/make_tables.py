@@ -754,7 +754,8 @@ def flamby():
         add("Local, evidence prior", lambda e: "Local, evidence prior")
         add("Pooled, no DP$^\\dagger$", lambda e: "Pooled")
         lines.append(r"\midrule")
-        add(r"\textbf{GHB}, no tuning", lambda e: f"GHB, eps={e}")
+        add(r"\textbf{GHB}, no tuning", lambda e: f"GHB v5, eps={e}")  # the released version (development data for it)
+        add("GHB v4 (pre-registered), no tuning", lambda e: f"GHB, eps={e}")  # the version of PREREG_flamby.md
         if any(k.startswith("GHB-lite") for k in rows_):
             add("GHB-lite (evidence prior), no tuning", lambda e: f"GHB-lite, eps={e}")
         for fm in fams:
