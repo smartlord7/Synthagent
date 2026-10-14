@@ -12,7 +12,7 @@ Methods (each repetition r uses seed [2027, r]; epsilon in {1, 10, inf}; softmax
   real_v3.GRIDS (ghb_image.baselines), scored at the realistic configuration (dev/v4_realistic_configs.json) and at
   the oracle (best mean over repetitions per family and budget).
 Balanced accuracy per center (the classes present in its test set), with no adjustment, with the model-implied
-adjustment (ghb_image.predict, adjust="model") and with the center's own training class mix (adjust=freq).
+adjustment (ghb_image.predict, adjust="model") and with it restricted to the classes of the center's training set.
 """
 import json
 import sys
@@ -31,8 +31,8 @@ OUT = ghb.RESDIR / "isic_image_dev.json"
 EPS = (1.0, 10.0, np.inf)
 K = 8
 PUB = FB.ISIC_DIR / "public_test_embeddings.npz"
-VARIANTS = {"GHB": dict(R1=3), "GHB R1=1": dict(R1=1), "GHB free intercepts": dict(R1=3, free_int=True)}
-ADJ = ("none", "model", "own")
+VARIANTS = {"GHB": dict(R1=4, damp=0.7, init_share=0.05), "GHB R1=1": dict(R1=1, init_share=0.05)}
+ADJ = ("none", "model", "support")  # support: model-implied adjustment, only classes seen in the center's training
 
 
 def _prep(Z, mu, sd, C=None):
@@ -86,9 +86,9 @@ def run_rep(rep, d, full_grid):
     for m, th in est.items():
         row = []
         for k, ((Xt, yt), (X, y)) in enumerate(zip(test, train)):
-            own = (np.bincount(y, minlength=K) + 1.0) / (len(y) + K)
-            row.append({a: GI.balanced_accuracy(GI.predict(th[k], Xt, X, None if a == "none" else ("model" if a == "model" else own)), yt)
-                        for a in ADJ})
+            sup = np.bincount(y, minlength=K) > 0
+            row.append({a: GI.balanced_accuracy(GI.predict(th[k], Xt, X, None if a == "none" else "model",
+                                                           sup if a == "support" else None), yt) for a in ADJ})
         res[m] = row
     return res
 

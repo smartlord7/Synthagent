@@ -356,14 +356,17 @@ def baselines(rng, train, rho, G, K, keys=None):
 
 
 # ---------------------------------------------------------------------------------------------------- prediction
-def predict(th, X, Xtr=None, adjust="model"):
+def predict(th, X, Xtr=None, adjust="model", support=None):
     """Class predictions; adjust: None (argmax s), "model" (s - log of the class mix the model implies on the
-    hospital's training images Xtr) or a vector of class frequencies."""
+    hospital's training images Xtr) or a vector of class frequencies. support: the classes the hospital has seen in
+    training (boolean, length K); the others are never predicted (local knowledge, no privacy cost)."""
     S = X @ th.reshape(X.shape[1], -1)
-    if adjust is None:
-        return S.argmax(1)
-    pi = softmax(Xtr @ th.reshape(X.shape[1], -1), 1).mean(0) if isinstance(adjust, str) else np.asarray(adjust)
-    return (S - np.log(np.maximum(pi, 1e-12))).argmax(1)
+    if adjust is not None:
+        pi = softmax(Xtr @ th.reshape(X.shape[1], -1), 1).mean(0) if isinstance(adjust, str) else np.asarray(adjust)
+        S = S - np.log(np.maximum(pi, 1e-12))
+    if support is not None:
+        S = np.where(support[None, :], S, -np.inf)
+    return S.argmax(1)
 
 
 def balanced_accuracy(pred, y):
