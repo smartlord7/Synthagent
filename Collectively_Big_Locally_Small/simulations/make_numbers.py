@@ -361,13 +361,13 @@ def main():
                 n[f"RF{E}EBMin"], n[f"RF{E}EBMax"] = f"{eb.min():.3f}", f"{eb.max():.3f}"
                 locl = np.array([FC.arm_value(rn, nm, "Local, tuned prior", "lono") for nm in conf])
                 n[f"RF{E}EBvsLocWins"] = str(int((eb < locl).sum()))
-                if all(f"GHB v4 {e}" in rn[nm] for nm in conf):  # GHB (joint releases), on its own random stream
-                    v4 = np.array([rn[nm][f"GHB v4 {e}"]["rel"] for nm in conf])
+                if all(f"GHB v5 {e}" in rn[nm] for nm in conf):  # GHB (joint releases), on its own random stream
+                    v4 = np.array([rn[nm][f"GHB v5 {e}"]["rel"] for nm in conf])
                     n[f"RF{E}V"], n[f"RF{E}VMin"], n[f"RF{E}VMax"] = f"{v4.mean():.3f}", f"{v4.min():.3f}", f"{v4.max():.3f}"
                     n[f"RF{E}VvsEBWins"] = str(int((v4 < eb).sum()))
                     n[f"RF{E}VvsLocWins"] = str(int((v4 < locl).sum()))
-                    n[f"RF{E}LiverWorstV"] = f2(rn["TCGA-LIHC"][f"GHB v4 {e}"]["worst"])
-                    n[f"RF{E}VWorstMax"] = f2(max(rn[nm][f"GHB v4 {e}"]["worst"] for nm in conf if rn[nm][f"GHB v4 {e}"]["worst"] == rn[nm][f"GHB v4 {e}"]["worst"]))
+                    n[f"RF{E}LiverWorstV"] = f2(rn["TCGA-LIHC"][f"GHB v5 {e}"]["worst"])
+                    n[f"RF{E}VWorstMax"] = f2(max(rn[nm][f"GHB v5 {e}"]["worst"] for nm in conf if rn[nm][f"GHB v5 {e}"]["worst"] == rn[nm][f"GHB v5 {e}"]["worst"]))
                     for arm, A in (("oracle", "Orc"), ("lono", "Lono")):
                         for lab, t in tagm.items():
                             v = np.array([FC.arm_value(rn, nm, FC.OTHERS[lab].format(e=e), arm) for nm in conf])

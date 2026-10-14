@@ -93,8 +93,8 @@ def real_networks():
     s = load("real_networks.json")["res"]
     conf = FC.CONF
     nets = [dict(id=nm, label=s[nm]["info"]["label"], K=s[nm]["info"]["K"], n=s[nm]["info"]["n"]) for nm in conf]
-    ghb = {e: np.array([s[nm][f"GHB v4 {e}"]["rel"] for nm in conf]) for e in ("1", "10")}
-    head = [("ghb", "GHB", "no tuning", "ghb", lambda e, arm, nm: s[nm][f"GHB v4 {e}"]["rel"]),
+    ghb = {e: np.array([s[nm][f"GHB v5 {e}"]["rel"] for nm in conf]) for e in ("1", "10")}
+    head = [("ghb", "GHB", "no tuning", "ghb", lambda e, arm, nm: s[nm][f"GHB v5 {e}"]["rel"]),
             ("lite", "GHB-lite", "no tuning", "ghb", lambda e, arm, nm: s[nm][f"GHB (DP, eps={e})"]["rel"]),
             ("liteEB", "GHB-lite, evidence prior", "no tuning", "ghb", lambda e, arm, nm: s[nm][f"GHB-EB {e}"]["rel"]),
             ("liteSA", "GHB-lite with secure aggregation", "no tuning", "ghb", lambda e, arm, nm: s[nm][f"GHB-SA {e}"]["rel"]),

@@ -551,9 +551,9 @@ def real_final():
     import final_compare as FC
     s = load("real_networks.json")["res"]
     conf = FC.CONF
-    eb = {e: np.array([s[nm][f"GHB v4 {e}"]["rel"] for nm in conf]) for e in ("1", "10")}  # wins are GHB's
+    eb = {e: np.array([s[nm][f"GHB v5 {e}"]["rel"] for nm in conf]) for e in ("1", "10")}  # wins are GHB's
     rows = []
-    head = [(r"\textbf{GHB}, no tuning", lambda e, arm, nm: s[nm][f"GHB v4 {e}"]["rel"]),
+    head = [(r"\textbf{GHB}, no tuning", lambda e, arm, nm: s[nm][f"GHB v5 {e}"]["rel"]),
             ("GHB-lite, no tuning", lambda e, arm, nm: s[nm][f"GHB (DP, eps={e})"]["rel"]),
             ("GHB-lite, evidence prior, no tuning", lambda e, arm, nm: s[nm][f"GHB-EB {e}"]["rel"]),
             ("GHB-lite with secure aggregation, no tuning", lambda e, arm, nm: s[nm][f"GHB-SA {e}"]["rel"]),
