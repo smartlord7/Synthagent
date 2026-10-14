@@ -127,7 +127,7 @@ Method & Accuracy & Log-loss & Accuracy & Log-loss & Accuracy & Log-loss\\
 \end{table}
 
 \begin{table}[t]
-\caption{FLamby, Fed-TCGA-BRCA (six regions): concordance index (FLamby's metric, higher is better) and held-out Poisson deviance (lower is better) of an exponential survival model, mean over regions and 20 runs. Conventions as in Table~\ref{tab:flamby-heart}.}
+\caption{FLamby, Fed-TCGA-BRCA (six regions): concordance index (FLamby's metric, higher is better) and held-out Poisson deviance (lower is better) of an exponential survival model, mean over regions and 20 runs. Conventions as in Table~\ref{tab:flamby-heart}. d: the method diverged; with its privacy noise correctly calibrated, pFedMe's coefficients at $\epsilon=1$ are so large that its predicted event rates reach the numerical cap $e^{50}$, and its deviance is of order $10^{20}$.}
 \label{tab:flamby-brca}
 \resizebox{\linewidth}{!}{\begin{tabular}{@{}lrrrrrr@{}}
 \toprule
