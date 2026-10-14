@@ -17,14 +17,21 @@ def f2(x):
 
 def tcga_numbers():
     """GHB on TCGA with the richer model: pre-registered confirmation (real_v4_confirm.json) and development."""
-    c = json.load(open(R / "real_v4_confirm.json"))["rel"]
+    c4 = json.load(open(R / "real_v4_confirm.json"))
+    c = c4["rel"]
+    v5c = json.load(open(R / "v5_confirm.json"))  # GHB as released (v5); its networks are listed in real_v3.SETS order
+    order = [v5c["nets"].index(p) for p in c4["nets"]]
     fam = {"FT": "DP-FedAvg + FT", "FTSA": "DP-FedAvg-SA + FT", "APFL": "APFL", "Ditto": "Ditto", "PFedMe": "pFedMe",
            "Clu": "Clustered DP-FedAvg"}
     out = {}
     for e, E in (("1", "One"), ("10", "Ten")):
         r = c[e]
-        g = np.array(r["GHB v4"])
+        g = np.array(v5c["rel"][e]["GHB v5"])[order]
+        g4 = np.array(r["GHB v4"])
         out[f"TC{E}GHB"] = f"{g.mean():.3f}"
+        out[f"TC{E}VFour"] = f"{g4.mean():.3f}"
+        out[f"TC{E}VFourPaired"] = f"{np.mean(v5c['rel'][e]['GHB v4 (paired rerun)']):.3f}"
+        out[f"TC{E}GHBvsVFourWins"] = str(int((g < g4).sum()))
         out[f"TC{E}Lite"] = f"{np.mean(r['GHB-EB']):.3f}"
         out[f"TC{E}Loc"] = f"{np.mean(r['Local, evidence prior']):.3f}"
         out[f"TC{E}GHBvsLocWins"] = str(int((g < np.array(r["Local, evidence prior"])).sum()))
@@ -63,10 +70,16 @@ def tcga_numbers():
             if "v4c R1=1 +pan," in k:
                 k2 = k.replace("v4c R1=1 +pan", "GHB v4")
                 acc[k2][0] += sum(ll); acc[k2][1] += sum(cnt)
+    for fn in glob.glob(str(R / "v5f_dev_ckpt" / "*.json")):  # GHB v5 (frozen), dev/v5_dev.py
+        for k, (ll, cnt) in json.load(open(fn)).items():
+            if "v5 it + auto," in k:
+                k2 = k.replace("v5 it + auto", "GHB v5")
+                acc[k2][0] += sum(ll); acc[k2][1] += sum(cnt)
     dn = sorted({k.split("||")[0] for k in acc})
     L = lambda p, m: (acc[f"{p}||{m}"][0] / acc[f"{p}||{m}"][1]) / (acc[f"{p}||Local"][0] / acc[f"{p}||Local"][1])
     for e, E in (("1", "One"), ("10", "Ten")):
-        out[f"TD{E}GHB"] = f"{np.mean([L(p, f'GHB v4, eps={e}') for p in dn]):.3f}"
+        out[f"TD{E}GHB"] = f"{np.mean([L(p, f'GHB v5, eps={e}') for p in dn]):.3f}"
+        out[f"TD{E}VFour"] = f"{np.mean([L(p, f'GHB v4, eps={e}') for p in dn]):.3f}"
         out[f"TD{E}Lite"] = f"{np.mean([L(p, f'GHB-EB, eps={e}') for p in dn]):.3f}"
         out[f"TD{E}Loc"] = f"{np.mean([L(p, 'Local, evidence prior') for p in dn]):.3f}"
         best = min(min(np.mean([L(p, f"{ckey(cf)}, eps={e}") for p in dn]) for cf in grid) for grid in GRIDS.values())
