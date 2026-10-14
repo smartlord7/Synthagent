@@ -185,6 +185,26 @@ def combine(fam, X, y, comps):
     return (w[:, None] * np.array(fits)).sum(0) / w.sum()
 
 
+def combine_loo(fam, X, y, comps):
+    """ghb_v4.combine_loo (mode pbma) for a GLM family: prior weight x exp(sum of leave-one-out log predictive
+    densities), with eta_-i = eta_i + h_i dloss_i / (1 - w_i h_i) (one Newton step; local data only)."""
+    fits, lw = [], []
+    for logw, m, C in comps:
+        Prec = np.linalg.inv(C)
+        t = fit_mat(fam, X, y, m, Prec)
+        s = X @ t
+        wv = fam.w(s, y)
+        Hi = np.linalg.inv((X * wv[:, None]).T @ X + Prec)
+        h = np.einsum("ij,jk,ik->i", X, Hi, X)
+        el = s + h * fam.dloss(s, y) / np.maximum(1 - wv * h, 1e-6)
+        v = logw - np.sum(fam.nll(el, y))
+        lw.append(v if np.isfinite(v) else -np.inf)
+        fits.append(t)
+    lw = np.array(lw)
+    w = np.exp(lw - lw.max())
+    return (w[:, None] * np.array(fits)).sum(0) / w.sum()
+
+
 def local_eb(fam, X, y):
     P = X.shape[1]
     return combine(fam, X, y, [(0.0, np.zeros(P), np.eye(P) * s ** 2) for s in SDS])
@@ -244,16 +264,23 @@ def estimate(fam, data, rng, eps, delta, G, cfg=None):
         mu = w - V @ sj if cfg["loo"] else w
         V = V + Vdp if cfg["vdp"] else V
         comps = []
-        for q in range(Q):
-            Cn = np.diag(tq[q]) + V
+        ex = np.r_[cfg["free_int"] ** 2, np.zeros(P - 1)] if cfg.get("free_int") else np.zeros(P)  # v5 options:
+        for q in range(Q):                                     # intercept not borrowed, own default prior int_sd
+            Cn = np.diag(tq[q] + ex) + V
             Cni = np.linalg.inv(Cn)
             for s in SDS:
-                C = np.linalg.inv(Cni + np.eye(P) / s ** 2)
+                D0 = np.full(P, 1.0 / s ** 2)
+                if cfg.get("int_sd"):
+                    D0[0] = 1.0 / cfg["int_sd"] ** 2
+                C = np.linalg.inv(Cni + np.diag(D0))
                 comps.append((np.log(1.0 / (Q * len(SDS))), C @ Cni @ mu, C))
         if cfg["safety"]:
             for s in SDS:
-                comps.append((np.log(cfg["safety_w"] / len(SDS)), np.zeros(P), np.eye(P) * s ** 2))
-        est[j] = combine(fam, X, y, comps)
+                Cs = np.eye(P) * s ** 2
+                if cfg.get("int_sd"):
+                    Cs[0, 0] = cfg["int_sd"] ** 2
+                comps.append((np.log(cfg["safety_w"] / len(SDS)), np.zeros(P), Cs))
+        est[j] = combine(fam, X, y, comps) if cfg.get("weights", "evidence") == "evidence" else combine_loo(fam, X, y, comps)
     return est
 
 
