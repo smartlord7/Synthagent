@@ -228,26 +228,28 @@ def estimate(nets, rng, eps, delta, G, inst=None, cfg=None):
                 else:
                     extra = np.zeros(P)
             comps = []
-            if cfg.get("free_int"):  # base rates differ across hospitals (case mix, referral): the intercept is not
-                extra = extra + np.r_[cfg["free_int"] ** 2, np.zeros(P - 1)]  # borrowed, only the slopes are
-            for q in range(Q):
-                t2 = np.maximum(st["tq"][q] + extra, 0.0)
-                Cn = np.diag(t2) + V
-                Cni = np.linalg.inv(Cn)
-                for s in SDS:
-                    D0 = np.full(P, 1.0 / s ** 2)
-                    if cfg.get("int_sd"):  # the default prior's scale s applies to the slopes; the intercept keeps int_sd
-                        D0[0] = 1.0 / cfg["int_sd"] ** 2
-                    C = np.linalg.inv(Cni + np.diag(D0))
-                    comps.append((np.log(1.0 / (Q * len(SDS))), C @ Cni @ (mu + shift), C))
-            if cfg["safety"]:
-                for s in SDS:
-                    Cs = np.eye(P) * s ** 2
-                    if cfg.get("free_int"):
-                        Cs[0, 0] = max(s, cfg["free_int"]) ** 2
-                    if cfg.get("int_sd"):
-                        Cs[0, 0] = cfg["int_sd"] ** 2
-                    comps.append((np.log(cfg["safety_w"] / len(SDS)), np.zeros(P), Cs))
+            # intercept modes: borrowed like the slopes (v4), not borrowed (v5: free_int / int_sd), or both, weighted by
+            # the hospital's own evidence (int_mix, v6 development: whether base rates are shared is decided by the data)
+            modes = [False, True] if cfg.get("int_mix") else [bool(cfg.get("free_int"))]
+            fi, isd = cfg.get("free_int") or S0, cfg.get("int_sd") or S0
+            lm = np.log(1.0 / len(modes))
+            for free in modes:
+                ex = extra + (np.r_[fi ** 2, np.zeros(P - 1)] if free else 0.0)
+                for q in range(Q):
+                    t2 = np.maximum(st["tq"][q] + ex, 0.0)
+                    Cni = np.linalg.inv(np.diag(t2) + V)
+                    for s in SDS:
+                        D0 = np.full(P, 1.0 / s ** 2)
+                        if free:  # the default prior's scale s applies to the slopes; the intercept keeps isd
+                            D0[0] = 1.0 / isd ** 2
+                        C = np.linalg.inv(Cni + np.diag(D0))
+                        comps.append((lm + np.log(1.0 / (Q * len(SDS))), C @ Cni @ (mu + shift), C))
+                if cfg["safety"]:
+                    for s in SDS:
+                        Cs = np.eye(P) * s ** 2
+                        if free:
+                            Cs[0, 0] = isd ** 2
+                        comps.append((lm + np.log(cfg["safety_w"] / len(SDS)), np.zeros(P), Cs))
             est[j] = V3.combine(X, y, comps) if cfg.get("weights", "evidence") == "evidence" else \
                 combine_loo(X, y, comps, cfg["weights"])
         out[c] = est

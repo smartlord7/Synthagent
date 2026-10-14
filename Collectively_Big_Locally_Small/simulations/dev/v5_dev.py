@@ -13,6 +13,7 @@ LOCKED = D.LOCKED
 INT = dict(int_sd=2.5, free_int=2.5)  # the intercept keeps its own wide prior and is not borrowed
 D.VARIANTS = {
     "v5 it + auto": dict(LOCKED, **INT, tight=True, hdiag="auto"),  # = real_v3.GHB_V5, the frozen v5
+    "v6 mix": dict(LOCKED, **INT, tight=True, hdiag="auto", int_mix=True),
 }
 
 if __name__ == "__main__":
