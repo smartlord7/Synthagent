@@ -299,10 +299,12 @@ table.sm-chart { width: 100%; border-collapse: collapse; font-size: var(--rd-t-s
 .sm-track { margin: 0 4px; }
 .sm-grid { position: absolute; top: -4px; bottom: -4px; width: 1px; background: var(--rd-mm-major); }
 .sm-grid.one { width: 2px; background: var(--rd-ink); z-index: 1; }
-.sm-bar { position: absolute; left: 0; top: 3px; height: 12px; background: var(--rd-ghb); border-radius: 0 var(--rd-radius) var(--rd-radius) 0; }
+.sm-bar { position: absolute; left: 0; top: 3px; height: 12px; background: var(--rd-ghb); border-radius: var(--rd-radius); }
+.sm-chart .num.has { color: var(--rd-muted); font-weight: 400; }
 .sm-bar.worse { background: var(--rd-risk); }
 .sm-pool { position: absolute; top: 4px; width: 10px; height: 10px; margin-left: -5px; background: var(--rd-ref); transform: rotate(45deg); z-index: 1; border: 1px solid var(--rd-surface); }
 .sm-pool.off { transform: none; width: 0; height: 0; background: none; border: 0; border-top: 6px solid transparent; border-bottom: 6px solid transparent; border-left: 9px solid var(--rd-ref); margin-left: -9px; top: 3px; }
+.sm-pool.off.left { border-left: 0; border-right: 9px solid var(--rd-ref); margin-left: 0; }
 .sm-fedtable { margin-top: 14px; max-width: 560px; }
 .sm-fedtable th, .sm-fedtable td { white-space: normal; }
 .sm-fedtable td.lab, .sm-fedtable th.lab { min-width: 0; }
