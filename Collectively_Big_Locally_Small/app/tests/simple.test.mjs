@@ -107,3 +107,14 @@ test('no long dashes in any Simple mode text', () => {
   const strings = src.match(/`[^`]*`|'[^'\n]*'/g) || [];
   for (const s of strings) assert.ok(!/(^|[^-<!])--(?![a-z>])/.test(s), `no double hyphen in: ${s.slice(0, 80)}`);
 });
+
+test('fixed trust levels: 0% is working alone, every level is reported for every hospital', () => {
+  const r = runSimpleSync(defaultChoices());
+  for (const h of r.hospitals) {
+    assert.equal(h.fixed.length, 11);
+    assert.ok(h.fixed.every((x) => Number.isFinite(x) && x > 0));
+    assert.ok(Math.abs(h.fixed[0] - 1) < 0.15, `0% trust is working alone (error ${h.fixed[0]})`);
+  }
+  // full trust ignores the hospital's own data: the largest hospital loses
+  assert.ok(r.hospitals.at(-1).fixed[10] > 1);
+});

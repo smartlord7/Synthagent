@@ -9,7 +9,7 @@ import { add } from './dom.js';
 import { initSimpleNetwork } from './simpleNetwork.js';
 import { runJob, cancelJob } from '../sim/scheduler.js';
 import { runArena } from '../sim/arena.js';
-import { CHOICES, HOSPITALS, STORY, STEPS, defaultChoices, simpleJob, simpleArenaSpec, simpleSizes, digestArena, describe } from '../sim/simple.js';
+import { CHOICES, HOSPITALS, STORY, STEPS, TRUST_LEVELS, defaultChoices, simpleJob, simpleArenaSpec, simpleSizes, digestArena, describe } from '../sim/simple.js';
 
 const pct = (x) => Math.round(100 * x);
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -70,7 +70,7 @@ export function initSimple(root, act) {
   const form = wrap.querySelector('#sm-form'), kIn = wrap.querySelector('#sm-K'), kOut = wrap.querySelector('#sm-K-out');
   const sizesEl = wrap.querySelector('#sm-sizes'), resEl = wrap.querySelector('#sm-results'), progEl = wrap.querySelector('#sm-progress');
   const runBtn = wrap.querySelector('#sm-run');
-  let result = null, fed = null, fedState = 'off', worker = null, stale = false;
+  let result = null, fed = null, fedState = 'off', worker = null, stale = false, trustSel = 'auto';
 
   function read() {
     const fd = new FormData(form);
@@ -136,31 +136,9 @@ export function initSimple(root, act) {
 
   function render() {
     const r = result, H = r.hospitals, K = H.length, c = r.choices, d = describe(r, fed);
-    const showPool = c.pooled;
-    // the chart shows patients gained: each hospital is as accurate as if it had "like" patients (its patients divided by
-    // its error compared with working alone), so it gains like - has. Diverging bars around 0, scaled to GHB's gains;
-    // everyone pooled is a diamond (a triangle when it falls off the scale).
-    const like = (h, rel) => h.n / rel, gainG = H.map((h) => like(h, h.ghb) - h.n), gainP = H.map((h) => like(h, h.pooled) - h.n);
-    const span = Math.max(10, ...gainG.map(Math.abs)) * 1.15, lo = gainG.some((g) => g < 0) || showPool ? -span : 0, hi = span;
-    const x = (g) => (100 * (Math.min(hi, Math.max(lo, g)) - lo)) / (hi - lo);
-    const step = [1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000, 5000].find((t) => span / t <= 3) || 10000;
-    const ticks = []; for (let t = Math.ceil(lo / step) * step; t <= hi; t += step) ticks.push(t);
-    const better = H.filter((h) => h.ghb <= 1).length, s0 = H[0], total = gainG.reduce((q, g) => q + g, 0);
-    const sg = (g) => { const r = Math.round(g); return r > 0 ? `+${r}` : `${r}`; };
-    const rows = H.map((h, i) => {
-      const g = gainG[i], gp = gainP[i], worse = g < 0, off = gp > hi || gp < lo;
-      return `<tr>
-        <th scope="row">Hospital ${h.k + 1}</th>
-        <td class="num has">${h.n}</td>
-        <td class="sm-track-cell" aria-hidden="true"><div class="sm-track">
-          ${ticks.map((t) => `<span class="sm-grid${t === 0 ? ' one' : ''}" style="left:${x(t)}%"></span>`).join('')}
-          <span class="sm-bar${worse ? ' worse' : ''}" style="left:${Math.min(x(0), x(g))}%;width:${Math.max(Math.abs(x(g) - x(0)), 0.6)}%"></span>
-          ${showPool ? `<span class="sm-pool${off ? ' off' : ''}${gp < lo ? ' left' : ''}" style="left:${x(gp)}%" title="Everyone pooled: ${sg(gp)} patients"></span>` : ''}
-        </div></td>
-        <td class="num${worse ? ' worse' : ''}">${sg(g)}<small>like ${Math.round(h.n + g)}</small></td>
-        ${showPool ? `<td class="num pool">${sg(gp)}<small>like ${Math.round(h.n + gp)}</small></td>` : ''}
-      </tr>`;
-    }).join('');
+    const showPool = c.pooled, s0 = H[0];
+    const like = (h, rel) => h.n / rel, sg = (g) => { const v = Math.round(g); return v > 0 ? `+${v}` : `${v}`; };
+    const gainG = H.map((h) => like(h, h.ghb) - h.n), better = gainG.filter((g) => g >= 0).length, total = gainG.reduce((q, g) => q + g, 0);
     resEl.innerHTML = `
       <p class="sm-stale rd-callout warn" ${stale ? '' : 'hidden'}>You changed the settings. Press <strong>Run again</strong> to update these results.</p>
       <div class="rd-chips sm-chips">
@@ -171,19 +149,72 @@ export function initSimple(root, act) {
       <h3 class="sm-h3">What we found</h3>
       <ul class="sm-findings">${d.main.map((s) => `<li class="${s.kind}">${esc(s.text)}</li>`).join('')}</ul>
       <h3 class="sm-h3">How many patients each hospital gains</h3>
-      <p class="sm-help">GHB never moves patient records, but it makes each hospital as accurate as if it had more patients. <strong>Has</strong> is the hospital's own patients; the bar and the number are the <strong>patients gained</strong>. For example, Hospital ${s0.k + 1} has ${s0.n} patients and gains ${sg(s0.likePatients - s0.n)}: it predicts as well as a hospital with ${Math.round(s0.likePatients)} patients working alone. A red bar to the left means it ends up slightly worse than working alone.</p>
-      <div class="sm-legend" aria-hidden="true">
-        <span><i class="sw alone"></i>Working alone (no gain)</span><span><i class="sw ghb"></i>Patients gained with GHB</span><span><i class="sw worse"></i>Patients lost with GHB</span>${showPool ? '<span><i class="sw pool"></i>Everyone pooled (not allowed)</span>' : ''}
-      </div>
-      <div class="sm-chart-wrap"><table class="sm-chart">
-        <caption class="sm-vh">Patients each hospital gains with GHB, compared with working alone</caption>
-        <thead><tr><th scope="col">Hospital</th><th scope="col" class="num">Has</th><th scope="col" class="sm-axis-h"><span class="sm-vh">Chart</span><div class="sm-axis" aria-hidden="true">${ticks.map((t) => `<span class="${t === 0 ? 'one' : ''}" style="left:${x(t)}%">${t > 0 ? '+' : ''}${t}</span>`).join('')}</div></th><th scope="col" class="num">Gained with GHB</th>${showPool ? '<th scope="col" class="num">Pooled</th>' : ''}</tr></thead>
-        <tbody>${rows}</tbody>
-      </table></div>
-      ${showPool && gainP.some((g) => g > hi || g < lo) ? `<p class="sm-help">Where pooling everyone gains or loses more than the scale shows, it is marked with a triangle; the numbers on the right are exact. Pooling helps the small hospitals a lot but costs the large ones many patients' worth, because one shared model ignores how the hospitals differ.</p>` : ''}
+      <p class="sm-help">GHB never moves patient records, but it makes each hospital as accurate as if it had more patients. <strong>Has</strong> is the hospital's own patients; the bar and the number are the <strong>patients gained</strong>. For example, Hospital ${s0.k + 1} has ${s0.n} patients and gains ${sg(s0.likePatients - s0.n)}: it predicts as well as a hospital with ${Math.round(s0.likePatients)} patients working alone. A red bar to the left means it ends up worse than working alone.</p>
+      ${H[0].fixed ? `<fieldset class="sm-trust">
+        <legend>How much should the hospitals trust the network?</legend>
+        <label class="sm-trust-auto"><input type="checkbox" id="sm-trust-auto" ${trustSel === 'auto' ? 'checked' : ''}> Let GHB decide (each hospital picks its own trust from its data)</label>
+        <div class="sm-trust-row"><span>Trust nobody</span><input type="range" id="sm-trust" min="0" max="${TRUST_LEVELS.length - 1}" step="1" value="${trustSel === 'auto' ? 5 : TRUST_LEVELS.indexOf(trustSel)}" ${trustSel === 'auto' ? 'disabled' : ''} aria-label="Trust in the network, the same for every hospital"><span>Trust fully</span></div>
+        <p class="sm-trust-say" id="sm-trust-say" aria-live="polite"></p>
+      </fieldset>` : ''}
+      <div id="sm-chartbox"></div>
       ${d.compare.length ? `<h3 class="sm-h3">Compared with other options</h3><ul class="sm-findings">${d.compare.map((s) => `<li class="${s.kind}">${esc(s.text)}</li>`).join('')}</ul>` : ''}
       <div id="sm-fed"></div>`;
+    renderChart();
+    const auto = resEl.querySelector('#sm-trust-auto'), sl = resEl.querySelector('#sm-trust');
+    if (auto) {
+      auto.addEventListener('change', () => { trustSel = auto.checked ? 'auto' : TRUST_LEVELS[+sl.value]; sl.disabled = auto.checked; renderChart(); });
+      sl.addEventListener('input', () => { trustSel = TRUST_LEVELS[+sl.value]; renderChart(); });
+    }
     renderFed();
+  }
+
+  // the chart of patients gained, for GHB's own trust or for one fixed trust level for every hospital (same simulation)
+  function renderChart() {
+    const box = resEl.querySelector('#sm-chartbox'); if (!box) return;
+    const H = result.hospitals, K = H.length, showPool = result.choices.pooled, manual = trustSel !== 'auto' && H[0].fixed;
+    const ti = manual ? TRUST_LEVELS.indexOf(trustSel) : -1, rel = (h) => (manual ? h.fixed[ti] : h.ghb);
+    const sg = (g) => { const v = Math.round(g); return v > 0 ? `+${v}` : `${v}`; };
+    const gainG = H.map((h) => h.n / h.ghb - h.n), gain = H.map((h) => h.n / rel(h) - h.n), gainP = H.map((h) => h.n / h.pooled - h.n);
+    // one scale for the whole run, so moving the slider is comparable: GHB's gains and the gains of every trust level
+    const all = [...gainG, ...(H[0].fixed ? H.flatMap((h) => h.fixed.map((r) => h.n / r - h.n)) : [])];
+    const span = Math.max(10, ...all.filter((g) => g > 0), ...gainG.map(Math.abs)) * 1.1, lo = -span, hi = span;
+    const x = (g) => (100 * (Math.min(hi, Math.max(lo, g)) - lo)) / (hi - lo);
+    const step = [1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000, 5000].find((t) => span / t <= 3) || 10000;
+    const ticks = []; for (let t = Math.ceil(lo / step) * step; t <= hi; t += step) ticks.push(t);
+    const rows = H.map((h, i) => {
+      const g = gain[i], gp = gainP[i], worse = g < 0, offP = gp > hi || gp < lo, cut = g < lo;
+      return `<tr>
+        <th scope="row">Hospital ${h.k + 1}</th>
+        <td class="num has">${h.n}</td>
+        <td class="sm-track-cell" aria-hidden="true"><div class="sm-track">
+          ${ticks.map((t) => `<span class="sm-grid${t === 0 ? ' one' : ''}" style="left:${x(t)}%"></span>`).join('')}
+          <span class="sm-bar${worse ? ' worse' : ''}${cut ? ' cut' : ''}" style="left:${Math.min(x(0), x(g))}%;width:${Math.max(Math.abs(x(g) - x(0)), 0.6)}%"></span>
+          ${manual ? `<span class="sm-auto" style="left:${x(gainG[i])}%" title="GHB deciding for itself: ${sg(gainG[i])}"></span>` : ''}
+          ${showPool ? `<span class="sm-pool${offP ? ' off' : ''}${gp < lo ? ' left' : ''}" style="left:${x(gp)}%" title="Everyone pooled: ${sg(gp)} patients"></span>` : ''}
+        </div></td>
+        <td class="num${worse ? ' worse' : ''}">${sg(g)}<small>like ${Math.round(h.n + g)}</small></td>
+        ${showPool ? `<td class="num pool">${sg(gp)}<small>like ${Math.round(h.n + gp)}</small></td>` : ''}
+      </tr>`;
+    }).join('');
+    const nb = (gs) => gs.filter((g) => g >= 0).length, tot = (gs) => gs.reduce((a, b) => a + b, 0);
+    const say = resEl.querySelector('#sm-trust-say');
+    if (say && H[0].fixed) {
+      const lv = TRUST_LEVELS.map((t, j) => H.map((h) => h.n / h.fixed[j] - h.n)), best = lv.reduce((bi, gs, j) => (tot(gs) > tot(lv[bi]) ? j : bi), 0);
+      const ghbTxt = `GHB deciding for itself: ${nb(gainG)} of ${K} hospitals better off, ${sg(tot(gainG))} patients in total (trust from ${Math.round(100 * Math.min(...H.map((h) => 1 - h.weightOwn)))}% to ${Math.round(100 * Math.max(...H.map((h) => 1 - h.weightOwn)))}%, small hospitals trusting more).`;
+      say.innerHTML = manual
+        ? `Every hospital trusts the network <strong>${trustSel}%</strong>: ${nb(gain)} of ${K} better off, <strong>${sg(tot(gain))}</strong> patients in total. ${ghbTxt} The best single trust level here would be ${TRUST_LEVELS[best]}% (${sg(tot(lv[best]))}), but you can only find it after seeing the answer; GHB has to decide without it.`
+        : `${ghbTxt} Untick the box to set one trust level for every hospital yourself and compare.`;
+    }
+    box.innerHTML = `
+      <div class="sm-legend" aria-hidden="true">
+        <span><i class="sw alone"></i>Working alone (no gain)</span><span><i class="sw ghb"></i>Patients gained${manual ? ` at ${trustSel}% trust` : ' with GHB'}</span><span><i class="sw worse"></i>Patients lost</span>${manual ? '<span><i class="sw auto"></i>GHB deciding for itself</span>' : ''}${showPool ? '<span><i class="sw pool"></i>Everyone pooled (not allowed)</span>' : ''}
+      </div>
+      <div class="sm-chart-wrap"><table class="sm-chart">
+        <caption class="sm-vh">Patients each hospital gains${manual ? ` when every hospital trusts the network ${trustSel}%` : ' with GHB'}, compared with working alone</caption>
+        <thead><tr><th scope="col">Hospital</th><th scope="col" class="num">Has</th><th scope="col" class="sm-axis-h"><span class="sm-vh">Chart</span><div class="sm-axis" aria-hidden="true">${ticks.map((t) => `<span class="${t === 0 ? 'one' : ''}" style="left:${x(t)}%">${t > 0 ? '+' : ''}${t}</span>`).join('')}</div></th><th scope="col" class="num">${manual ? `Gained at ${trustSel}%` : 'Gained with GHB'}</th>${showPool ? '<th scope="col" class="num">Pooled</th>' : ''}</tr></thead>
+        <tbody>${rows}</tbody>
+      </table></div>
+      ${gain.some((g) => g < lo) || (showPool && gainP.some((g) => g > hi || g < lo)) ? `<p class="sm-help">Values beyond the edge of the scale are cut off (pooled: a triangle); the numbers on the right are exact. Trusting the network too much, like pooling everyone, costs the large or unusual hospitals many patients' worth, because the network is not quite like them.</p>` : ''}`;
   }
 
   function renderFed(msg) {
