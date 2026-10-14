@@ -25,7 +25,8 @@ def rel(acc, p, m):
     return (acc[f"{p}||{m}"][0] / acc[f"{p}||{m}"][1]) / (acc[f"{p}||Local"][0] / acc[f"{p}||Local"][1])
 
 
-T = ghb.RESDIR / "v4_tune_ckpt"
+TAG = "v5" if any(a.endswith("v5") for a in sys.argv[1:]) or Path(sys.argv[0]).name == "v5_tune.py" else "v4"
+T = ghb.RESDIR / f"{TAG}_tune_ckpt"
 tdev = load(T / "dev_*.json"); tdev.update(load(T / "fresh_*.json"))
 tcon = load(T / "confirm_*.json")
 bdev = load(ghb.RESDIR / "real_v3_ckpt" / "dev_*.json"); bdev.update(load(ghb.RESDIR / "real_v3_ckpt" / "fresh_*.json"))
@@ -50,4 +51,4 @@ for e in ("1", "10"):
     for k, v in r.items():
         if isinstance(v, list):
             print(f"  {k:36s}" + " ".join(f"{x:.3f}" for x in v) + f"  mean {np.mean(v):.3f}")
-json.dump(out, open(ghb.RESDIR / "real_v4_tuned.json", "w"), indent=1)
+json.dump(out, open(ghb.RESDIR / f"real_{TAG}_tuned.json", "w"), indent=1)

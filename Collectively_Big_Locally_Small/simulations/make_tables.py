@@ -125,7 +125,7 @@ def bold_rows(name, rows):
     return [(" & ".join(c) + "\\\\") if c is not None else r for r, c in zip(rows, split)]
 
 
-V4_TABLES = ("t_real_final", "t_tcga_", "s_tcga_", "s_real_final_lono", "t_flamby_", "t_images", "s_camelyon")  # tables that already use the paper's names
+V4_TABLES = ("t_real_final", "t_tcga_", "s_tcga_", "s_real_final_lono", "t_flamby_", "t_images", "s_camelyon", "t_sim16_ghb", "s_sim17_ghb")  # tables that already use the paper's names
 
 
 def write(name, rows):
@@ -682,7 +682,26 @@ def tcga():
 
 
 def tcga_ablation():
-    """GHB ablation on the twelve development networks (dev/v4_dev.py, v4_ablation_ckpt): one change at a time."""
+    """GHB ablation and sensitivity on the twelve design networks (dev/v5_ablation.py): one change at a time from GHB
+    as released, mean relative log-loss and the number of networks in which GHB is more accurate than the variant."""
+    p5 = R / "v5_ablation.json"
+    if p5.exists():
+        a = json.load(open(p5))
+        rows = []
+        for group in ("ablation", "sensitivity"):
+            if group == "sensitivity":
+                rows.append(r"\midrule")
+                rows.append(r"\multicolumn{5}{@{}l}{\emph{Sensitivity: one setting changed}}\\")
+            for name, r in a[group].items():
+                cells = []
+                for e in ("1", "10"):
+                    cells += [f"{r[e]['mean']:.3f}", "" if name == "GHB" else f"{r[e]['ghb_better']}/{len(a['networks'])}"]
+                lab = r"\textbf{GHB}, as released" if name == "GHB" else name.replace("tau", "$\\tau$").replace("Q = ", "$Q=$ ").replace("{", "\\{").replace("}", "\\}")
+                rows.append(lab + " & " + " & ".join(cells) + r"\\")
+                if name == "GHB":
+                    rows.append(r"\midrule")
+        write("s_tcga_ablation.tex", rows)
+        return
     import glob
     from collections import defaultdict
     acc = defaultdict(lambda: [0.0, 0.0])
@@ -715,15 +734,19 @@ def tcga_ablation():
 
 def tcga_tuned():
     """Tuned GHB against tuned literature on the confirmation networks (dev/v4_tune.py, exploratory)."""
-    path = R / "real_v4_tuned.json"
+    path = R / "real_v5_tuned.json"
+    v5 = path.exists()
+    if not v5:
+        path = R / "real_v4_tuned.json"
     if not path.exists():
         return
     t = json.load(open(path))
     short = {"DP-FedAvg + FT": "DP-FedAvg + FT", "DP-FedAvg-SA + FT": "DP-FedAvg + FT, sec.\\ agg.", "APFL": "APFL",
              "Ditto": "Ditto", "pFedMe": "pFedMe", "Clustered DP-FedAvg": "Clustered DP-FedAvg"}
     mean = lambda v: f"{np.mean(v):.3f}"
-    rows = [r"GHB (intercept borrowed), fixed configuration & " + " & ".join(f"{mean(t[e]['GHB, frozen'])} & {mean(t[e]['GHB, frozen'])}" for e in ("1", "10")) + r"\\",
-            r"\textbf{GHB (intercept borrowed)}, tuned like the others & " + " & ".join(f"{mean(t[e]['GHB, tuned on development'])} & {mean(t[e]['GHB, oracle'])}" for e in ("1", "10")) + r"\\",
+    gl = ("GHB", "GHB") if v5 else ("GHB (intercept borrowed)", "GHB (intercept borrowed)")
+    rows = [gl[0] + r", released configuration & " + " & ".join(f"{mean(t[e]['GHB, frozen'])} & {mean(t[e]['GHB, frozen'])}" for e in ("1", "10")) + r"\\",
+            r"\textbf{" + gl[1] + r"}, tuned like the others & " + " & ".join(f"{mean(t[e]['GHB, tuned on development'])} & {mean(t[e]['GHB, oracle'])}" for e in ("1", "10")) + r"\\",
             r"\midrule"]
     for fm, lab in short.items():
         rows.append(lab + " & " + " & ".join(f"{mean(t[e][fm + ' (realistic)'])} & {mean(t[e][fm + ' (oracle)'])}" for e in ("1", "10")) + r"\\")
@@ -818,8 +841,53 @@ def images():
     write("s_camelyon.tex", rows)
 
 
+SIM16_COLS = ["tau2=0.01", "tau2=0.05", "tau2=0.2", "tau2=0.5", "eps=0.3", "eps=inf", "anchor=1.0", "shift=1.0"]
+
+
+def sim16_ghb():
+    """Simulation 16B (exp16b_ghb.py): ablation and sensitivity of GHB as released, ratio to GHB, bold if the paired
+    difference exceeds two standard errors."""
+    p = R / "sim16_ghb.json"
+    if not p.exists():
+        return
+    s = json.load(open(p))
+    res = s["res"]
+    base = "GHB (as released)"
+    rows = ["GHB as released ($10^{-3}$ nats) & " + " & ".join(milli(res[c][base]["kl"]) for c in SIM16_COLS) + r"\\", r"\midrule"]
+    for m in s["ablation"][1:] + ["SPLIT"] + s["sensitivity"] + ["SPLIT", "Local"]:
+        if m == "SPLIT":
+            rows.append(r"\midrule")
+            continue
+        cells = []
+        for c in SIM16_COLS:
+            o = res[c][m]
+            sig = abs(o["diff"]) > 2 * o["diff_se"]
+            cells.append(f"\\textbf{{{o['ratio']:.2f}}}" if sig else f"{o['ratio']:.2f}")
+        rows.append(m.replace("tau", "$\\tau$").replace("Q = ", "$Q=$ ").replace("{", "\\{").replace("}", "\\}") + " & " + " & ".join(cells) + r"\\")
+    write("t_sim16_ghb.tex", rows)
+
+
+def sim17_ghb():
+    """Simulation 17B (exp17b_ghb.py): GHB and GHB-lite across network conditions."""
+    p = R / "sim17_ghb.json"
+    if not p.exists():
+        return
+    import exp17_sensitivity as E17
+    B = json.load(open(p))["B"]
+    rows = []
+    for cond, vals in E17.CONDITIONS.items():
+        for v in vals:
+            o = B[f"{cond}|{v}"]
+            lab = {"K": "Hospitals", "median": "Median size", "eps": "$\\epsilon$", "delta": "$\\delta$", "topology": "Topology"}[cond]
+            val = ("no DP" if v == np.inf else f"{v:g}") if not isinstance(v, str) else v
+            rows.append(f"{lab} & {val} & " + " & ".join(f(o[m]["rel"], 3) for m in ("GHB", "GHB-lite"))
+                        + f" & {f(o['GHB']['worst'], 2)} & {milli(o['GHB']['kl'])} & {milli(o['Local']['kl'])}" + r"\\")
+        rows.append(r"\midrule")
+    write("s_sim17_ghb.tex", rows[:-1])
+
+
 def main():
-    for fn in (flamby, images, tcga, tcga_ablation, tcga_tuned, sim8, sim15, sim16, sim17, sim18, real_heart, real_networks, real_final, sim1, sim2, sim3, sim4, sim5, sim6, sim7, sim9, sim11, sim12, sim13, sim14):
+    for fn in (flamby, images, sim16_ghb, sim17_ghb, tcga, tcga_ablation, tcga_tuned, sim8, sim15, sim16, sim17, sim18, real_heart, real_networks, real_final, sim1, sim2, sim3, sim4, sim5, sim6, sim7, sim9, sim11, sim12, sim13, sim14):
         fn()
     print("tables:", sorted(p.name for p in OUT.glob("*.tex")))
 
