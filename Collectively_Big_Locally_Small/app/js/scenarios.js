@@ -53,44 +53,45 @@ export function scenarioConfig(id) {
   return c;
 }
 
-const SIM15 = ['local', 'pooled', 'ghb', 'lite', 'liteOracle', 'dittoStyle', 'dpfedavg', 'dpfedavgFT', 'dec', 'clu', 'lgd'];
-const SIM8 = ['local', 'pooled', 'ghb', 'lite', 'fedavg1', 'meta', 'dittoStyle'];
+const SIM15 = ['local', 'pooled', 'ghb', 'ghbV4', 'lite', 'liteOracle', 'dittoStyle', 'dpfedavg', 'dpfedavgFT', 'dec', 'clu', 'lgd'];
+const SIM8 = ['local', 'pooled', 'ghb', 'ghbV4', 'lite', 'fedavg1', 'meta', 'dittoStyle'];
 
 /**
  * Presets of the Literature arena: the settings of Simulations 8, 10 and 15 (Section 6.3; exp8_baselines.py,
  * exp15_literature.py) and a run of every method. `overrides` are arena keys of config.js; `methods` the method ids;
- * `ref` the paper's mean excess log-loss (10^-3 nats) for the methods it reports, from supplement/results.
+ * `ref` the paper's mean excess log-loss (10^-3 nats) for the methods it reports, from supplement/results (GHB: the
+ * released v5, key "GHB v4 (DP)" of sim15_literature.json and sim8_baselines.json after their v5 rerun).
  * @type {Array<{id:string, title:string, note:string, overrides:Object, methods:string[]|null, ref?:Object}>}
  * @see Section 6.3, Tables 3 and 4
  */
 export const ARENA_PRESETS = [
   { id: 'all', title: 'Every method at the paper\'s main setting', note: 'τ² = 0.05, ε = 1, 24 hospitals; every method with its paper-default configuration.', overrides: { aTuning: 'defaults', aTau2: 0.05, aEps: 1 }, methods: null },
   { id: 's15-0.05', title: 'Simulation 15: τ² = 0.05, ε = 1', note: 'The main comparison; baselines oracle-tuned on separate replicates.', overrides: { aTuning: 'oracle', aTau2: 0.05, aEps: 1 }, methods: SIM15,
-    ref: { local: 27.1, lgd: 19.0, ghb: 15.9, lite: 13.8, liteOracle: 12.4, dittoStyle: 15.4, dpfedavg: 27.4, dpfedavgFT: 15.3, dec: 19.1, clu: 21.4, pooled: 17.3 } },
+    ref: { local: 27.1, lgd: 19.0, ghb: 19.2, lite: 13.8, liteOracle: 12.4, dittoStyle: 15.4, dpfedavg: 27.4, dpfedavgFT: 15.3, dec: 19.1, clu: 21.4, pooled: 17.3 } },
   { id: 's15-0.01', title: 'Simulation 15: τ² = 0.01', note: 'Nearly identical hospitals.', overrides: { aTuning: 'oracle', aTau2: 0.01, aEps: 1 }, methods: SIM15,
-    ref: { local: 28.4, lgd: 16.6, ghb: 11.8, lite: 10.1, liteOracle: 8.1, dittoStyle: 12.2, dpfedavg: 15.6, dpfedavgFT: 11.4, dec: 16.6, clu: 16.3, pooled: 4.3 } },
+    ref: { local: 28.4, lgd: 16.6, ghb: 16.6, lite: 10.1, liteOracle: 8.1, dittoStyle: 12.2, dpfedavg: 15.6, dpfedavgFT: 11.4, dec: 16.6, clu: 16.3, pooled: 4.3 } },
   { id: 's15-0.2', title: 'Simulation 15: τ² = 0.2', note: 'Strong heterogeneity.', overrides: { aTuning: 'oracle', aTau2: 0.2, aEps: 1 }, methods: SIM15,
-    ref: { local: 26.7, lgd: 24.4, ghb: 24.1, lite: 21.7, liteOracle: 19.4, dittoStyle: 20.5, dpfedavg: 73.2, dpfedavgFT: 23.2, dec: 24.4, clu: 24.4, pooled: 61.0 } },
+    ref: { local: 26.7, lgd: 24.4, ghb: 24.8, lite: 21.7, liteOracle: 19.4, dittoStyle: 20.5, dpfedavg: 73.2, dpfedavgFT: 23.2, dec: 24.4, clu: 24.4, pooled: 61.0 } },
   { id: 's15-0.5', title: 'Simulation 15: τ² = 0.5', note: 'Hospitals differ so much that no private method gains.', overrides: { aTuning: 'oracle', aTau2: 0.5, aEps: 1 }, methods: SIM15,
-    ref: { local: 26.0, lgd: 29.3, ghb: 28.8, lite: 27.5, liteOracle: 24.0, dittoStyle: 26.0, dpfedavg: 136.6, dpfedavgFT: 28.7, dec: 29.4, clu: 29.4, pooled: 124.4 } },
-  { id: 's15-eps0.3', title: 'Simulation 15: ε = 0.3', note: 'Strict privacy budget, where GHB is more accurate than GHB-lite.', overrides: { aTuning: 'oracle', aTau2: 0.05, aEps: 0.3 }, methods: SIM15,
-    ref: { local: 26.9, lgd: 20.5, ghb: 16.8, lite: 17.5, liteOracle: 15.8, dittoStyle: 30.6, dpfedavg: 45.2, dpfedavgFT: 19.6, dec: 24.8, clu: 20.6, pooled: 17.0 } },
+    ref: { local: 26.0, lgd: 29.3, ghb: 29.0, lite: 27.5, liteOracle: 24.0, dittoStyle: 26.0, dpfedavg: 136.6, dpfedavgFT: 28.7, dec: 29.4, clu: 29.4, pooled: 124.4 } },
+  { id: 's15-eps0.3', title: 'Simulation 15: ε = 0.3', note: 'Strict privacy budget. GHB v4 was more accurate than GHB-lite here; GHB (v5), which does not borrow the intercept, is not, since base rates are shared in this simulated world.', overrides: { aTuning: 'oracle', aTau2: 0.05, aEps: 0.3 }, methods: SIM15,
+    ref: { local: 26.9, lgd: 20.5, ghb: 19.2, lite: 17.5, liteOracle: 15.8, dittoStyle: 30.6, dpfedavg: 45.2, dpfedavgFT: 19.6, dec: 24.8, clu: 20.6, pooled: 17.0 } },
   { id: 's15-nodp', title: 'Simulation 15: no privacy', note: 'Without privacy noise.', overrides: { aTuning: 'oracle', aTau2: 0.05, aNoDP: true }, methods: SIM15,
-    ref: { local: 27.8, lgd: 19.0, ghb: 16.1, lite: 10.4, liteOracle: 9.7, dittoStyle: 10.1, dpfedavg: 16.7, dpfedavgFT: 11.3, dec: 11.8, clu: 13.8, pooled: 16.7 } },
+    ref: { local: 27.8, lgd: 19.0, ghb: 19.4, lite: 10.4, liteOracle: 9.7, dittoStyle: 10.1, dpfedavg: 16.7, dpfedavgFT: 11.3, dec: 11.8, clu: 13.8, pooled: 16.7 } },
   { id: 's15-regional', title: 'Simulation 15: regional world', note: '4 regions, between-region τ_r² = 0.2, within τ² = 0.02 (held out).', overrides: { aTuning: 'oracle', aTau2: 0.02, aEps: 1, aRegions: 4, aTauR2: 0.2 }, methods: SIM15,
-    ref: { local: 28.7, lgd: 26.5, ghb: 23.4, lite: 20.9, liteOracle: 19.9, dittoStyle: 21.2, dpfedavg: 63.1, dpfedavgFT: 24.9, dec: 26.4, clu: 27.1, pooled: 48.5 } },
+    ref: { local: 28.7, lgd: 26.5, ghb: 25.3, lite: 20.9, liteOracle: 19.9, dittoStyle: 21.2, dpfedavg: 63.1, dpfedavgFT: 24.9, dec: 26.4, clu: 27.1, pooled: 48.5 } },
   { id: 's15-anchor', title: 'Simulation 15: wrong anchor', note: 'Published anchor wrong by N(0, 1) per coefficient, stated sd 0.3 (held out).', overrides: { aTuning: 'oracle', aTau2: 0.05, aEps: 1, aAnchorErr: 1 }, methods: SIM15,
-    ref: { local: 34.6, lgd: 41.9, ghb: 16.7, lite: 16.2, liteOracle: 15.0, dittoStyle: 14.8, dpfedavg: 44.6, dpfedavgFT: 21.0, dec: 41.8, clu: 46.3, pooled: 16.9 } },
+    ref: { local: 34.6, lgd: 41.9, ghb: 20.3, lite: 16.2, liteOracle: 15.0, dittoStyle: 14.8, dpfedavg: 44.6, dpfedavgFT: 21.0, dec: 41.8, clu: 46.3, pooled: 16.9 } },
   { id: 's15-mod', title: 'Simulation 15: τ² = 0.1, ε = 0.5', note: 'Moderate heterogeneity and budget (held out).', overrides: { aTuning: 'oracle', aTau2: 0.1, aEps: 0.5 }, methods: SIM15,
-    ref: { local: 26.9, lgd: 22.8, ghb: 19.6, lite: 18.4, liteOracle: 17.1, dittoStyle: 23.8, dpfedavg: 52.6, dpfedavgFT: 21.7, dec: 23.9, clu: 22.9, pooled: 32.7 } },
+    ref: { local: 26.9, lgd: 22.8, ghb: 21.7, lite: 18.4, liteOracle: 17.1, dittoStyle: 23.8, dpfedavg: 52.6, dpfedavgFT: 21.7, dec: 23.9, clu: 22.9, pooled: 32.7 } },
   { id: 's15-K48', title: 'Simulation 15: 48 hospitals', note: 'A larger network (held out).', overrides: { aTuning: 'oracle', aTau2: 0.05, aEps: 1, aK: 48 }, methods: SIM15,
-    ref: { local: 32.4, lgd: 22.4, ghb: 17.7, lite: 14.4, liteOracle: 13.2, dittoStyle: 14.6, dpfedavg: 25.8, dpfedavgFT: 16.0, dec: 22.5, clu: 24.1, pooled: 17.2 } },
+    ref: { local: 32.4, lgd: 22.4, ghb: 22.2, lite: 14.4, liteOracle: 13.2, dittoStyle: 14.6, dpfedavg: 25.8, dpfedavgFT: 16.0, dec: 22.5, clu: 24.1, pooled: 17.2 } },
   { id: 's8-0.05', title: 'Simulation 8: one-shot baselines, τ² = 0.05', note: 'Every private method uses GHB-lite\'s releases; Ditto-style λ tuned.', overrides: { aTuning: 'oracle', aTau2: 0.05, aEps: 1 }, methods: SIM8,
-    ref: { local: 27.4, lite: 13.4, ghb: 15.1, pooled: 16.7, fedavg1: 36.5, meta: 30.3, dittoStyle: 15.6 } },
+    ref: { local: 27.4, lite: 13.4, ghb: 18.4, pooled: 16.7, fedavg1: 36.5, meta: 30.3, dittoStyle: 15.6 } },
   { id: 's8-0.5', title: 'Simulation 8: τ² = 0.5', note: 'Where only Ditto-style gains.', overrides: { aTuning: 'oracle', aTau2: 0.5, aEps: 1 }, methods: SIM8,
-    ref: { local: 27.3, lite: 28.2, ghb: 30.7, pooled: 125.6, fedavg1: 141.1, meta: 138.8, dittoStyle: 26.5 } },
+    ref: { local: 27.3, lite: 28.2, ghb: 30.2, pooled: 125.6, fedavg1: 141.1, meta: 138.8, dittoStyle: 26.5 } },
   { id: 's10-shift', title: 'Simulation 10: case-mix shift', note: 'Feature means differ by 1 sd between hospitals, τ² = 0.05.', overrides: { aTuning: 'oracle', aTau2: 0.05, aEps: 1, aShift: 1 }, methods: SIM8,
-    ref: { local: 22.8, lite: 13.2, ghb: 14.2, pooled: 19.8, fedavg1: 46.3, meta: 43.1, dittoStyle: 14.0 } }
+    ref: { local: 22.8, lite: 13.2, ghb: 16.4, pooled: 19.8, fedavg1: 46.3, meta: 43.1, dittoStyle: 14.0 } }
 ];
 
 /**

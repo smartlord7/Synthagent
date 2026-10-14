@@ -3,7 +3,8 @@
 // on separate replicates, as exp15_literature.py does), checked against the paper's means (supplement/results/
 // sim15_literature.json, 60 replicates, tuning on 20; sim8_baselines.json, 40 replicates) within Monte Carlo
 // tolerance: |JS - Python| <= max(20% of the Python mean, 2.5 combined standard errors). The arena draws its own
-// random numbers, so only agreement in distribution is expected. Runs in about a minute.
+// random numbers, so only agreement in distribution is expected. Runs in about a minute. GHB is the released v5 (its
+// Simulation 15 rerun); GHB v4 is checked against the Simulation 15 run made with v4 before that rerun.
 // Run from app/: node --test tests/
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -11,7 +12,7 @@ import { runArenaSync, defaultArenaSpec, ARENA_METHOD } from '../js/sim/arena.js
 
 // [mean, standard error] of the mean excess log-loss (nats), from the paper's runs
 const REF = {
-  local: [0.02709, 0.00058, 'Simulation 15'], ghb: [0.01588, 0.00044, 'Simulation 15'], lite: [0.01382, 0.00039, 'Simulation 15'],
+  local: [0.02709, 0.00058, 'Simulation 15'], ghb: [0.01923, 0.00063, 'Simulation 15'], ghbV4: [0.01588, 0.00044, 'Simulation 15, v4 run'], lite: [0.01382, 0.00039, 'Simulation 15'],
   liteOracle: [0.01244, 0.00032, 'Simulation 15'], dittoStyle: [0.01542, 0.00056, 'Simulation 15'], dpfedavg: [0.02742, 0.0008, 'Simulation 15'],
   dpfedavgFT: [0.01532, 0.0004, 'Simulation 15'], dec: [0.01905, 0.00068, 'Simulation 15'], clu: [0.02137, 0.00145, 'Simulation 15'],
   lgd: [0.01903, 0.00068, 'Simulation 15'], pooled: [0.01735, 0.00034, 'Simulation 15'],

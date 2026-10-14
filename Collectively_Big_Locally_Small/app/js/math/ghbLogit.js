@@ -4,7 +4,7 @@
  * two joint releases, the privatized sums of every patient's score and information at the origin; each hospital
  * turns them locally into a leave-one-out prior with the privacy covariance propagated and integrates the unknown
  * heterogeneity out against its own evidence (simulations/ghb_v4.py with the frozen configuration f = 1, R1 = 1,
- * no-borrowing components, published anchor). GHB-lite (Section 5.3) has every hospital release its own mean score
+ * no-borrowing components, published anchor; GHB v5 by default, v4 selectable). GHB-lite (Section 5.3) has every hospital release its own mean score
  * at the anchor, inverted under the public feature distribution (simulations/ghb_logit.py). Arrays of per-hospital
  * vectors are arrays of Float64Array(P).
  */
@@ -231,24 +231,37 @@ export function ghbLite(rng, data, n, pub, mu0, avg, o) {
 /* ================= GHB: two joint releases (Section 5.2) ================= */
 
 /**
- * Stage 1: the two joint releases and the network estimate. The information sum (sensitivity G^2/2, Frobenius) and
- * R1 gradient sums (sensitivity 2G) each receive an equal share of rho1; w is R1 damped Newton steps from the origin.
+ * Stage 1: the two joint releases and the network estimate. The information sum and R1 gradient sums (sensitivity
+ * 2G) each receive an equal share of rho1; w is R1 damped Newton steps from the origin. The information release has
+ * sensitivity G^2/2 (Frobenius, v4) or sqrt(2) G^2/4 (tight, v5: the difference of two PSD rank-one terms xx^T/4 with
+ * ||x|| <= G). With hdiag 'auto' (v5) a public rule decides before the release whether only its diagonal is released
+ * (when the noise, sh sqrt(P), exceeds the typical entry N G^2 / (4P)): then P normals are drawn instead of the triangle.
  * @param {{n:()=>number}} rng generator
  * @param {Array<{X:Float64Array,y:Float64Array,n:number}>} data hospitals
  * @param {number} rho1 zCDP budget of the stage
  * @param {number} [R1=1] gradient rounds
- * @returns {{w:Float64Array, H:Float64Array, Vdp:Float64Array, sS:number, sJ:number}}
+ * @param {{tight?:boolean, hdiag?:boolean|'auto'}} [opt] v5 options (defaults: v4)
+ * @returns {{w:Float64Array, H:Float64Array, Vdp:Float64Array, sS:number, sJ:number, diag:boolean}}
  * @see Section 5.2 (S~, J~, w = A S~, V_dp = s_S^2 A A^T); Algorithm 1; ghb_v4.stage1
  */
-export function jointStage1(rng, data, rho1, R1 = 1) {
+export function jointStage1(rng, data, rho1, R1 = 1, opt = {}) {
   const N = data.reduce((s, d) => s + d.n, 0), hs = 1 / (R1 + 1), rg = rho1 * (1 - hs) / R1, rh = rho1 * hs;
-  const sg = isFinite(rg) ? 2 * G / Math.sqrt(2 * rg) : 0, sh = isFinite(rh) ? (G ** 2 / 2) / Math.sqrt(2 * rh) : 0;
+  const sens = opt.tight ? G ** 2 / (2 * Math.SQRT2) : G ** 2 / 2;
+  const sg = isFinite(rg) ? 2 * G / Math.sqrt(2 * rg) : 0, sh = isFinite(rh) ? sens / Math.sqrt(2 * rh) : 0;
   let H = new Float64Array(P * P);
   for (const d of data) H = add(H, infoAtZero(d));
-  const E = new Float64Array(P * P);
-  for (let a = 0; a < P; a++) for (let b = 0; b < P; b++) { const z = rng.n(); if (b >= a) E[a * P + b] = z * sh; }
-  for (let a = 0; a < P; a++) for (let b = a + 1; b < P; b++) E[b * P + a] = E[a * P + b];
-  const H0 = psd(add(H, E), P, 1e-2 * N), A = inv(add(H0, eye(P, 1 / S0 ** 2)), P);
+  const hdiag = opt.hdiag === 'auto' ? sh * Math.sqrt(P) > N * G ** 2 / 4 / P : !!opt.hdiag;
+  let H0;
+  if (hdiag) {
+    H0 = new Float64Array(P * P);
+    for (let a = 0; a < P; a++) H0[a * P + a] = Math.max(H[a * P + a] + sh * rng.n(), 1e-2 * N);
+  } else {
+    const E = new Float64Array(P * P);
+    for (let a = 0; a < P; a++) for (let b = 0; b < P; b++) { const z = rng.n(); if (b >= a) E[a * P + b] = z * sh; }
+    for (let a = 0; a < P; a++) for (let b = a + 1; b < P; b++) E[b * P + a] = E[a * P + b];
+    H0 = psd(add(H, E), P, 1e-2 * N);
+  }
+  const A = inv(add(H0, eye(P, 1 / S0 ** 2)), P);
   let w = new Float64Array(P);
   for (let it = 0; it < R1; it++) {
     const g = new Float64Array(P);
@@ -258,24 +271,35 @@ export function jointStage1(rng, data, rho1, R1 = 1) {
     w = Float64Array.from(w, (x, a) => Math.min(8, Math.max(-8, x + st[a])));
   }
   const Vdp = mul(A, A, P).map((v) => v * sg ** 2 * R1);
-  return { w, H: H0, Vdp, sS: sg, sJ: sh };
+  return { w, H: H0, Vdp, sS: sg, sJ: sh, diag: hdiag };
 }
+
+/**
+ * Frozen configurations (simulations/real_v3.py GHB_V4 and GHB_V5; pan is irrelevant for one network). GHB v5, the
+ * released version: the intercept is not borrowed (prior variance freeInt^2 added to tau_q^2, default-prior and
+ * safety scale intSd whatever s is for the slopes) because base rates differ across hospitals; the information
+ * release uses the tight PSD sensitivity; its diagonal alone is released when a public rule says the full matrix
+ * would be mostly noise.
+ */
+export const GHB_V4 = Object.freeze({ freeInt: null, intSd: null, tight: false, hdiag: false });
+export const GHB_V5 = Object.freeze({ freeInt: 2.5, intSd: 2.5, tight: true, hdiag: 'auto' });
 
 /**
  * GHB estimates for one network (frozen configuration of the paper: the whole budget on the two joint releases, one
  * Newton step, no-borrowing components with a quarter of the prior weight, published anchor dropped on conflict).
+ * Defaults to GHB v5; pass {...GHB_V4} for the earlier version.
  * @param {{n:()=>number}} rng generator (privacy noise)
  * @param {Array<{X:Float64Array,y:Float64Array,n:number}>} data hospitals
  * @param {number} eps epsilon (Infinity: no privacy)
  * @param {number} delta delta
- * @param {{anchor?:{mu0:ArrayLike<number>, sd:number}|null, safety?:boolean, safetyW?:number, scale?:number, loo?:boolean, vdp?:boolean}} [cfg]
+ * @param {{anchor?:{mu0:ArrayLike<number>, sd:number}|null, safety?:boolean, safetyW?:number, scale?:number, loo?:boolean, vdp?:boolean, freeInt?:number|null, intSd?:number|null, tight?:boolean, hdiag?:boolean|'auto'}} [cfg]
  * @returns {{est:Float64Array[], w:Float64Array, anchorUsed:boolean, tq:Float64Array}}
- * @see Section 5.2, Algorithm 1, Proposition 5.1; ghb_v4.estimate with V4_CFG = (f=1, safety, R1=1)
+ * @see Section 5.2, Algorithm 1, Proposition 5.1; ghb_v4.estimate with real_v3.GHB_V5 (or GHB_V4)
  */
 export function ghbJoint(rng, data, eps, delta, cfg = {}) {
-  const c = { safety: true, safetyW: 1 / 3, scale: SCALE, loo: true, vdp: true, anchor: null, ...cfg };
+  const c = { safety: true, safetyW: 1 / 3, scale: SCALE, loo: true, vdp: true, anchor: null, ...GHB_V5, ...cfg };
   const N = data.reduce((s, d) => s + d.n, 0), rho = rhoTotal(eps, delta);
-  const st = jointStage1(rng, data, rho, 1);
+  const st = jointStage1(rng, data, rho, 1, { tight: c.tight, hdiag: c.hdiag });
   const tq = priorQuantiles(c.scale);
   let { w, Vdp } = st; let anchorUsed = false;
   if (c.anchor) {
@@ -293,12 +317,19 @@ export function ghbJoint(rng, data, eps, delta, cfg = {}) {
     let V = inv(Hm, P);
     const step = mv(V, sj, P), mu = c.loo ? Float64Array.from(w, (x, a) => x - step[a]) : w;
     if (c.vdp) V = add(V, Vdp);
-    const comps = [], lq = Math.log(1 / (Q * SDS.length));
+    // v5 (freeInt set): the intercept, coordinate 0, is not borrowed (ghb_v4.estimate with free_int, int_sd)
+    const free = !!c.freeInt, isd = c.intSd || S0, comps = [], lq = Math.log(1 / (Q * SDS.length));
     for (let q = 0; q < Q; q++) {
-      const Cn = add(diag(new Float64Array(P).fill(tq[q])), V), Cni = inv(Cn, P), Cnim = mv(Cni, mu, P);
-      for (const s of SDS) { const C = inv(add(Cni, eye(P, 1 / s ** 2)), P); comps.push({ logw: lq, m: mv(C, Cnim, P), C }); }
+      const t2 = new Float64Array(P).fill(tq[q]);
+      if (free) t2[0] = Math.max(tq[q] + c.freeInt ** 2, 0);
+      const Cni = inv(add(diag(t2), V), P), Cnim = mv(Cni, mu, P);
+      for (const s of SDS) {
+        const D0 = new Float64Array(P).fill(1 / s ** 2);
+        if (free) D0[0] = 1 / isd ** 2;
+        const C = inv(add(Cni, diag(D0)), P); comps.push({ logw: lq, m: mv(C, Cnim, P), C });
+      }
     }
-    if (c.safety) for (const s of SDS) comps.push({ logw: Math.log(c.safetyW / SDS.length), m: new Float64Array(P), C: eye(P, s ** 2) });
+    if (c.safety) for (const s of SDS) { const C = eye(P, s ** 2); if (free) C[0] = isd ** 2; comps.push({ logw: Math.log(c.safetyW / SDS.length), m: new Float64Array(P), C }); }
     return combineFull(d, comps);
   });
   return { est, w, anchorUsed, tq };
