@@ -153,7 +153,7 @@ def main():
     n["NineSmallGHB"], n["NineSmallRobust"], n["NineSmallOpt"] = (f"{so[f'{m} outlier']:.1f}" for m in ("GHB", "Robust GHB", "GHB + opt-out"))
     n["NineLargeGHB"], n["NineLargeRobust"] = f2(sl["GHB outlier"]), f2(sl["Robust GHB outlier"])
     s11 = json.load(open(R / "sim11_anchor.json"))["res"]
-    n["ElevenHonestMax"] = f"{max(s11[e]['kl']['GHB, anchor uncertainty stated honestly'] for e in s11):.4f}"
+    n["ElevenHonestMax"] = f"{max(s11[e]['kl'][m] for e in s11 for m in ('GHB, anchor uncertainty stated honestly', 'GHB, overconfident + conflict check')):.4f}"  # both safeguards
     n["ElevenOverTwo"] = f"{s11['2.0']['kl']['GHB, anchor overconfident (stated 0.3)']:.4f}"
     n["ElevenCheckTwo"] = f"{s11['2.0']['kl']['GHB, overconfident + conflict check']:.4f}"
     n["ElevenLocalTwo"] = f"{s11['2.0']['kl']['Local']:.4f}"

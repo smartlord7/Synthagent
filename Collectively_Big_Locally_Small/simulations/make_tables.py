@@ -24,8 +24,8 @@ def load(name):
 CITES = [("FAIR-FATE", "salazar2023fairfate"), ("Per-FedAvg", "fallah2020personalized"), ("pFedMe", "tdinh2020personalized"),
          ("APFL", "deng2020adaptive"), ("FedRep", "collins2021exploiting"), ("FedProx", "li2020federated"),
          ("Ditto", "li2021ditto"), ("Clustered DP-FedAvg", "ghosh2020efficient,mcmahan2018learning"),
-         ("Decentralized DP-SGD", "lian2017can"), ("sec.\\ agg.", "mcmahan2018learning,bonawitz2017practical"),
-         ("DP-FedAvg", "mcmahan2018learning"), ("FedAvg", "mcmahan2017communication"), ("Meta-analysis", "dersimonian1986meta")]
+         ("Decentralized DP-SGD", "lian2017can"), ("sec.\\ agg.", "mcmahan2018learning,bonawitz2017practical"), ("sec. agg.", "mcmahan2018learning,bonawitz2017practical"),
+         ("DP-FedAvg", "mcmahan2018learning"), ("FedAvg", "mcmahan2017communication"), ("Meta-analysis", "dersimonian1986meta"), ("DerSimonian-Laird", "dersimonian1986meta")]
 
 
 def cite_row(row):
@@ -502,7 +502,7 @@ def real_realistic(s, nm, fam):
 def real_networks():
     s = load("real_networks.json")["res"]
     order = [k for k in REAL_ORDER if k in s]
-    fmt = lambda v: "n/a" if v != v else (f"{v:.3f}" if v < 9.995 else f"{v:.1f}")
+    fmt = lambda v: "n/a" if v != v else f"{v:.3f}"
     for e in ("1", "10"):
         for key, suffix in (("rel", ""), ("rel_small", "_small"), ("worst", "_worst")):
             untuned = [("GHB", f"GHB (DP, eps={e})"), ("GHB-EB", f"GHB-EB {e}"), ("GHB-SA (sec.\\ agg.)", f"GHB-SA {e}")]
@@ -568,7 +568,7 @@ def real_final():
             o = np.array([fun(e, "oracle", nm) for nm in conf])
             r = np.array([fun(e, "lono", nm) for nm in conf])
             w = "" if group == "ghb" else f"{int((eb[e] < r).sum())}"
-            fmt = lambda x: f"{x:.3f}" if x < 9.995 else f"{x:.1f}"
+            fmt = lambda x: f"{x:.3f}"
             cells += [fmt(o.mean()), fmt(r.mean()), w]
         return lab + " & " + " & ".join(cells) + r"\\"
     rows.append(r"\multicolumn{7}{@{}l}{\emph{GHB and the local reference}}\\")
@@ -615,7 +615,8 @@ def tcga():
         best = np.min([v for l, v in lines if not l.startswith("Local") and "oracle" not in l], 0)
         rows.append(f"\\multicolumn{{8}}{{@{{}}l}}{{\\emph{{$\\epsilon={e}$}}}}\\\\")
         for l, v in lines:
-            cells = [(f"\\textbf{{{x:.3f}}}" if abs(x - b) < 1e-12 else f"{x:.3f}") for x, b in zip(v, best)]
+            orc_row = "oracle per network" in l  # the oracle row is never bold (the caption excludes it)
+            cells = [(f"\\textbf{{{x:.3f}}}" if abs(x - b) < 1e-12 and not orc_row else f"{x:.3f}") for x, b in zip(v, best)]
             wins = "" if l.startswith("\\textbf") else f"{int((g < v).sum())}/{len(v)}"
             rows.append(l + " & " + " & ".join(cells) + f" & {v.mean():.3f} & {wins}\\\\")
         if e == "1":
@@ -696,7 +697,7 @@ def tcga_ablation():
             acc[k][0] += sum(ll); acc[k][1] += sum(cnt)
     dn = sorted({k.split("||")[0] for k in acc})
     L = lambda p, m: (acc[f"{p}||{m}"][0] / acc[f"{p}||{m}"][1]) / (acc[f"{p}||Local"][0] / acc[f"{p}||Local"][1])
-    labels = {"v4 locked": "GHB (as frozen)", "v4 - pan-network": "without borrowing across networks",
+    labels = {"v4 locked": "GHB v4 (as frozen)", "v4 - pan-network": "without borrowing across networks",
               "v4 - no-borrowing components": "without the non-borrowing components",
               "v4 - privacy covariance": "without propagating the privacy covariance",
               "v4 - leave-one-out": "without removing the hospital's own data",
@@ -724,8 +725,8 @@ def tcga_tuned():
     short = {"DP-FedAvg + FT": "DP-FedAvg + FT", "DP-FedAvg-SA + FT": "DP-FedAvg + FT, sec.\\ agg.", "APFL": "APFL",
              "Ditto": "Ditto", "pFedMe": "pFedMe", "Clustered DP-FedAvg": "Clustered DP-FedAvg"}
     mean = lambda v: f"{np.mean(v):.3f}"
-    rows = [r"GHB, frozen configuration & " + " & ".join(f"{mean(t[e]['GHB, frozen'])} & {mean(t[e]['GHB, frozen'])}" for e in ("1", "10")) + r"\\",
-            r"\textbf{GHB}, tuned like the others & " + " & ".join(f"{mean(t[e]['GHB, tuned on development'])} & {mean(t[e]['GHB, oracle'])}" for e in ("1", "10")) + r"\\",
+    rows = [r"GHB v4, frozen configuration & " + " & ".join(f"{mean(t[e]['GHB, frozen'])} & {mean(t[e]['GHB, frozen'])}" for e in ("1", "10")) + r"\\",
+            r"\textbf{GHB v4}, tuned like the others & " + " & ".join(f"{mean(t[e]['GHB, tuned on development'])} & {mean(t[e]['GHB, oracle'])}" for e in ("1", "10")) + r"\\",
             r"\midrule"]
     for fm, lab in short.items():
         rows.append(lab + " & " + " & ".join(f"{mean(t[e][fm + ' (realistic)'])} & {mean(t[e][fm + ' (oracle)'])}" for e in ("1", "10")) + r"\\")
