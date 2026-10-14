@@ -40,6 +40,11 @@ SETS = {"dev": ["TCGA-LUSC", "TCGA-HNSC", "TCGA-BLCA", "TCGA-STAD", "TCGA-LIHC",
         # above (AJCC or, for gynecologic cancers, FIGO stage), fixed from counts alone before any model was fitted
         "confirm": ["TCGA-BRCA", "TCGA-MESO", "TCGA-UCEC", "TCGA-OV", "TCGA-UCS"]}
 GHB_V4 = dict(f=1.0, safety=True, R1=1, pan=True)  # locked in dev/PREREG_v4.md
+# GHB v5 (frozen 2026-10-14 in dev/PREREG_v5.md after development on the 12 development networks, the seven small
+# networks, FLamby and ISIC 2019; never run on the confirmation set before): the intercept is not borrowed and keeps
+# the default prior scale, the information release uses the PSD sensitivity bound and is full or diagonal by a public
+# rule, evidence weighting as v4
+GHB_V5 = dict(GHB_V4, int_sd=2.5, free_int=2.5, tight=True, hdiag="auto")
 P, G = 8, np.sqrt(8.0)
 REPEATS, FOLDS, DELTA, MIN_UNIT = 10, 5, 1e-5, 5
 EPS = (1.0, 10.0)

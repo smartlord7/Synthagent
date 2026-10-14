@@ -50,10 +50,13 @@ def tcga_confirm():
     nets = c["nets"]
     out = dict(nets=[dict(id=nm, label=nm.replace("TCGA-", ""), K=info[nm]["K"], n=info[nm]["n"]) for nm in nets],
                repeats=c.get("repeats"), eps={})
+    v5c = load("v5_confirm.json")  # GHB as released (v5); its networks are listed in real_v3.SETS order
+    order = [v5c["nets"].index(p) for p in nets]
     for e in ("1", "10"):
         r = c["rel"][e]
-        g = np.array(r["GHB v4"])
-        rows = [dict(key="ghb", label="GHB", note="no tuning", kind="ghb", values=r["GHB v4"]),
+        g = np.array(v5c["rel"][e]["GHB v5"])[order]
+        rows = [dict(key="ghb", label="GHB", note="no tuning", kind="ghb", values=g.tolist()),
+                dict(key="v4", label="GHB v4 (earlier version)", note="no tuning", kind="ghb", values=r["GHB v4"]),
                 dict(key="lite", label="GHB-lite (evidence prior)", note="no tuning", kind="ghb", values=r["GHB-EB"]),
                 dict(key="local", label="Local, evidence prior", note="no other hospital", kind="local", values=r["Local, evidence prior"])]
         for fm in SHORT:
@@ -93,8 +96,8 @@ def real_networks():
     s = load("real_networks.json")["res"]
     conf = FC.CONF
     nets = [dict(id=nm, label=s[nm]["info"]["label"], K=s[nm]["info"]["K"], n=s[nm]["info"]["n"]) for nm in conf]
-    ghb = {e: np.array([s[nm][f"GHB v4 {e}"]["rel"] for nm in conf]) for e in ("1", "10")}
-    head = [("ghb", "GHB", "no tuning", "ghb", lambda e, arm, nm: s[nm][f"GHB v4 {e}"]["rel"]),
+    ghb = {e: np.array([s[nm][f"GHB v5 {e}"]["rel"] for nm in conf]) for e in ("1", "10")}
+    head = [("ghb", "GHB", "no tuning", "ghb", lambda e, arm, nm: s[nm][f"GHB v5 {e}"]["rel"]),
             ("lite", "GHB-lite", "no tuning", "ghb", lambda e, arm, nm: s[nm][f"GHB (DP, eps={e})"]["rel"]),
             ("liteEB", "GHB-lite, evidence prior", "no tuning", "ghb", lambda e, arm, nm: s[nm][f"GHB-EB {e}"]["rel"]),
             ("liteSA", "GHB-lite with secure aggregation", "no tuning", "ghb", lambda e, arm, nm: s[nm][f"GHB-SA {e}"]["rel"]),

@@ -14,7 +14,7 @@
     "GHB, anchor overconfident (stated 0.3)": 0.013543632544170245,
     "GHB, overconfident + conflict check": 0.013543632544170245,
     "GHB, no anchor": 0.016124431441817636,
-    "GHB v4 (DP)": 0.015858816450821576
+    "GHB v4 (DP)": 0.01910289981275727
    },
    "se": {
     "Local": 0.0007565915424048314,
@@ -22,7 +22,7 @@
     "GHB, anchor overconfident (stated 0.3)": 0.0005136600484160255,
     "GHB, overconfident + conflict check": 0.0005136600484160255,
     "GHB, no anchor": 0.0010546394621744717,
-    "GHB v4 (DP)": 0.0006303262678735794
+    "GHB v4 (DP)": 0.0007571311755617936
    },
    "dropped": 0.0
   },
@@ -33,7 +33,7 @@
     "GHB, anchor overconfident (stated 0.3)": 0.014054944827855879,
     "GHB, overconfident + conflict check": 0.014038047657676921,
     "GHB, no anchor": 0.014930166769078716,
-    "GHB v4 (DP)": 0.015656109092771358
+    "GHB v4 (DP)": 0.018429688903157597
    },
    "se": {
     "Local": 0.0008439884483363148,
@@ -41,7 +41,7 @@
     "GHB, anchor overconfident (stated 0.3)": 0.00045565353768638124,
     "GHB, overconfident + conflict check": 0.00045465372859507074,
     "GHB, no anchor": 0.0005188216906385856,
-    "GHB v4 (DP)": 0.0005017008363947134
+    "GHB v4 (DP)": 0.0006139588731600971
    },
    "dropped": 0.025
   },
@@ -52,7 +52,7 @@
     "GHB, anchor overconfident (stated 0.3)": 0.019001572592281503,
     "GHB, overconfident + conflict check": 0.01545259743123689,
     "GHB, no anchor": 0.014891741252477648,
-    "GHB v4 (DP)": 0.016696333938847948
+    "GHB v4 (DP)": 0.01982734797726173
    },
    "se": {
     "Local": 0.0008890873188048624,
@@ -60,7 +60,7 @@
     "GHB, anchor overconfident (stated 0.3)": 0.0009813700733754538,
     "GHB, overconfident + conflict check": 0.0005078884313093481,
     "GHB, no anchor": 0.0004467252852524142,
-    "GHB v4 (DP)": 0.0006260361163977641
+    "GHB v4 (DP)": 0.000845653218872133
    },
    "dropped": 0.7427083333333333
   },
@@ -71,7 +71,7 @@
     "GHB, anchor overconfident (stated 0.3)": 0.03522563398818541,
     "GHB, overconfident + conflict check": 0.016653273089426244,
     "GHB, no anchor": 0.016653273089426244,
-    "GHB v4 (DP)": 0.0159068739702858
+    "GHB v4 (DP)": 0.01932453443744714
    },
    "se": {
     "Local": 0.004552136534676806,
@@ -79,7 +79,7 @@
     "GHB, anchor overconfident (stated 0.3)": 0.0018614845081124753,
     "GHB, overconfident + conflict check": 0.0011185983329563532,
     "GHB, no anchor": 0.0011185983329563532,
-    "GHB v4 (DP)": 0.00043306874212446555
+    "GHB v4 (DP)": 0.0007061529899859389
    },
    "dropped": 1.0
   },
@@ -90,7 +90,7 @@
     "GHB, anchor overconfident (stated 0.3)": 0.04049005249415025,
     "GHB, overconfident + conflict check": 0.01488807205092379,
     "GHB, no anchor": 0.01488807205092379,
-    "GHB v4 (DP)": 0.015500080253395979
+    "GHB v4 (DP)": 0.018362514194730176
    },
    "se": {
     "Local": 0.006316250289015117,
@@ -98,7 +98,7 @@
     "GHB, anchor overconfident (stated 0.3)": 0.00184222609618191,
     "GHB, overconfident + conflict check": 0.000547382849385295,
     "GHB, no anchor": 0.000547382849385295,
-    "GHB v4 (DP)": 0.0004378972703807288
+    "GHB v4 (DP)": 0.0005588006040791052
    },
    "dropped": 1.0
   }

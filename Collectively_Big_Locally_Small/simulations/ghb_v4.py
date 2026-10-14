@@ -36,7 +36,74 @@ def _psd(H, floor):
     return (U * np.maximum(ev, floor)) @ U.T
 
 
-def stage1(rng, data, rho1, G, R1=2, hshare=None):
+def combine_loo(X, y, comps, mode="stack", iters=300):
+    """Weights the MAP fits under each Gaussian component by their leave-one-out predictive accuracy on the
+    hospital's own patients instead of the Laplace evidence (development, v5). The leave-one-out linear predictor of
+    patient i is the one-Newton-step approximation eta_i + h_i (p_i - y_i) / (1 - w_i h_i), h_i = x_i' H^-1 x_i,
+    w_i = p_i (1 - p_i), H the posterior information (local data only: no privacy cost).
+    mode "pbma": weights proportional to prior weight x exp(sum of leave-one-out log predictive densities);
+    mode "stack": stacking (Yao et al. 2018), mixture weights maximizing the leave-one-out log score (EM)."""
+    fits, lpd, lw0 = [], [], []
+    for logw, m, C in comps:
+        Prec = np.linalg.inv(C)
+        t = V3.fit_mat(X, y, m, Prec)
+        eta = X @ t
+        p = expit(eta)
+        wv = p * (1 - p)
+        Hi = np.linalg.inv((X * wv[:, None]).T @ X + Prec)
+        h = np.einsum("ij,jk,ik->i", X, Hi, X)
+        el = eta + h * (p - y) / np.maximum(1 - wv * h, 1e-6)
+        lpd.append(y * el - np.logaddexp(0, el))
+        fits.append(t)
+        lw0.append(logw)
+    lpd, lw0, fits = np.array(lpd), np.array(lw0), np.array(fits)
+    if mode == "pbma":
+        lw = lw0 + lpd.sum(1)
+        w = np.exp(lw - lw.max())
+    else:
+        w = np.exp(lw0 - lw0.max()); w /= w.sum()
+        L = np.exp(lpd - lpd.max(0, keepdims=True))
+        for _ in range(iters):
+            r = w[:, None] * L
+            w = (r / r.sum(0, keepdims=True)).mean(1)
+    return (w[:, None] * fits).sum(0) / w.sum()
+
+
+
+def shrink_offdiag(Hr, sh, N):
+    """v5: the released information matrix with its off-diagonal entries shrunk by lam = s2 / (s2 + sh^2), where s2,
+    the mean square of the true off-diagonal entries, is estimated from the release itself (mean square of the released
+    off-diagonals minus the known noise variance). Post-processing of the release: no privacy cost, no tuning."""
+    P = len(Hr)
+    off = Hr[~np.eye(P, dtype=bool)]
+    s2 = max(np.mean(off ** 2) - sh ** 2, 0.0) if sh > 0 else 1.0
+    lam = s2 / (s2 + sh ** 2) if sh > 0 else 1.0
+    return _psd(np.diag(np.diag(Hr)) + lam * (Hr - np.diag(np.diag(Hr))), 1e-2 * N)
+
+
+
+def noise_aware_mean(M, g, sg):
+    """v5: posterior mean and covariance of the network coefficients w given the released score sum g = M w + e,
+    e ~ N(0, sg^2 I) (M = H + I / S0^2 the released information with the default prior), under w ~ N(0, diag(S0^2, s^2, ..., s^2)) with s
+    chosen by the marginal likelihood of g (empirical Bayes over a grid). With sg = 0 this is M^-1 g, as in v4.
+    Post-processing of the releases: no privacy cost, no tuning."""
+    P = len(g)
+    if sg == 0:
+        Mi = np.linalg.inv(M)
+        return Mi @ g, np.zeros((P, P))
+    best = None
+    for s in np.logspace(-2, 1, 31):
+        D2 = np.r_[S0 ** 2, np.full(P - 1, s ** 2)]  # the intercept (coordinate 0) keeps the default prior scale
+        C = (M * D2) @ M.T + sg ** 2 * np.eye(P)
+        sign, ld = np.linalg.slogdet(C)
+        ll = -0.5 * ld - 0.5 * g @ np.linalg.solve(C, g)
+        if best is None or ll > best[0]:
+            best = (ll, D2)
+    S = np.linalg.inv(M.T @ M / sg ** 2 + np.diag(1.0 / best[1]))
+    return S @ M.T @ g / sg ** 2, S
+
+
+def stage1(rng, data, rho1, G, R1=2, hshare=None, hshrink=False, tight=False, hdiag=False, noise_aware=False):
     """DP quasi-Newton with secure sums: the pooled information at 0 (sensitivity G^2 / 2, Frobenius) is released
     once, then R1 gradient sums (sensitivity 2G), each release with an equal share of rho1. Returns w, the noisy
     information sum H0, and the covariance of w due to the privacy noise."""
@@ -45,24 +112,35 @@ def stage1(rng, data, rho1, G, R1=2, hshare=None):
     hs = 1.0 / (R1 + 1) if hshare is None else hshare
     rg, rh = rho1 * (1 - hs) / R1, rho1 * hs
     sg = 0.0 if np.isinf(rg) else 2 * G / np.sqrt(2 * rg)
-    sh = 0.0 if np.isinf(rh) else (G ** 2 / 2) / np.sqrt(2 * rh)
+    sh = 0.0 if np.isinf(rh) else (G ** 2 / (2 * np.sqrt(2)) if tight else G ** 2 / 2) / np.sqrt(2 * rh)  # tight: see ghb_glm.stage1
     H = sum(X.T @ X / 4 for X, _ in data)
-    E = np.triu(rng.standard_normal((P, P))) * sh
-    H0 = _psd(H + E + np.triu(E, 1).T, 1e-2 * N)
+    if hdiag == "auto":  # as ghb_glm.stage1: decided from public quantities before the release (m = G^2 / 4)
+        hdiag = bool(sh * np.sqrt(P) > N * G ** 2 / 4 / P)
+    if hdiag:
+        H0 = np.diag(np.maximum(np.diag(H) + sh * rng.standard_normal(P), 1e-2 * N))
+        E = None
+    else:
+        E = np.triu(rng.standard_normal((P, P))) * sh
+    H0 = H0 if hdiag else shrink_offdiag(H + E + np.triu(E, 1).T, sh, N) if hshrink else _psd(H + E + np.triu(E, 1).T, 1e-2 * N)
     A = np.linalg.inv(H0 + np.eye(P) / S0 ** 2)
     w = np.zeros(P)
+    if noise_aware and R1 == 1:  # v5: posterior mean given the noisy release (see noise_aware_mean)
+        g = sum(X.T @ (y - expit(X @ w)) for X, y in data) + sg * rng.standard_normal(P)
+        w, Sw = noise_aware_mean(H0 + np.eye(P) / S0 ** 2, g, sg)
+        return np.clip(w, -8, 8), H0, Sw
     for _ in range(R1):
         g = sum(X.T @ (y - expit(X @ w)) for X, y in data) + sg * rng.standard_normal(P)
         w = np.clip(w + A @ (g - w / S0 ** 2), -8, 8)
     return w, H0, sg ** 2 * A @ A * R1
 
 
-def network_stats(rng, data, eps, delta, G, f, R1=2, hshare=None, scale=GL.SCALE):
+def network_stats(rng, data, eps, delta, G, f, R1=2, hshare=None, scale=GL.SCALE, hshrink=False, tight=False,
+                  hdiag=False, noise_aware=False):
     P = data[0][0].shape[1]
     n = np.array([len(y) for _, y in data], float)
     N = n.sum()
     rho = GL.rho_total(eps, delta)
-    w, H, Vdp = stage1(rng, data, f * rho, G, R1, hshare)
+    w, H, Vdp = stage1(rng, data, f * rho, G, R1, hshare, hshrink, tight, hdiag, noise_aware)
     F = H / N
     st = dict(w=w, H=H, n=n, Vdp=Vdp)
     if f < 1:
@@ -86,7 +164,9 @@ def estimate(nets, rng, eps, delta, G, inst=None, cfg=None):
     """nets: dict name -> list of (X, y); cfg keys f (stage-1 share), safety, cross. Returns dict name -> (K, P)."""
     cfg = {"f": 0.5, "safety": True, "cross": False, "pan": False, "R1": 2, "hshare": None, "loo": True, "vdp": True, "scale": GL.SCALE, "safety_w": 1.0 / 3,
            **(cfg or {})}  # loo, vdp: ablation switches only (leave-one-out mean; propagated privacy covariance)
-    stats = {c: network_stats(rng, d, eps, delta, G, cfg["f"], cfg["R1"], cfg["hshare"], cfg["scale"])
+    stats = {c: network_stats(rng, d, eps, delta, G, cfg["f"], cfg["R1"], cfg["hshare"], cfg["scale"],
+                               cfg.get("hshrink", False), cfg.get("tight", False), cfg.get("hdiag", False),
+                               cfg.get("noise_aware", False))
              for c, d in nets.items()}
     P = next(iter(nets.values()))[0][0].shape[1]
     names = list(nets)
@@ -148,16 +228,29 @@ def estimate(nets, rng, eps, delta, G, inst=None, cfg=None):
                 else:
                     extra = np.zeros(P)
             comps = []
-            for q in range(Q):
-                t2 = np.maximum(st["tq"][q] + extra, 0.0)
-                Cn = np.diag(t2) + V
-                Cni = np.linalg.inv(Cn)
-                for s in SDS:
-                    C = np.linalg.inv(Cni + np.eye(P) / s ** 2)
-                    comps.append((np.log(1.0 / (Q * len(SDS))), C @ Cni @ (mu + shift), C))
-            if cfg["safety"]:
-                for s in SDS:
-                    comps.append((np.log(cfg["safety_w"] / len(SDS)), np.zeros(P), np.eye(P) * s ** 2))
-            est[j] = V3.combine(X, y, comps)
+            # intercept modes: borrowed like the slopes (v4), not borrowed (v5: free_int / int_sd), or both, weighted by
+            # the hospital's own evidence (int_mix, v6 development: whether base rates are shared is decided by the data)
+            modes = [False, True] if cfg.get("int_mix") else [bool(cfg.get("free_int"))]
+            fi, isd = cfg.get("free_int") or S0, cfg.get("int_sd") or S0
+            lm = np.log(1.0 / len(modes))
+            for free in modes:
+                ex = extra + (np.r_[fi ** 2, np.zeros(P - 1)] if free else 0.0)
+                for q in range(Q):
+                    t2 = np.maximum(st["tq"][q] + ex, 0.0)
+                    Cni = np.linalg.inv(np.diag(t2) + V)
+                    for s in SDS:
+                        D0 = np.full(P, 1.0 / s ** 2)
+                        if free:  # the default prior's scale s applies to the slopes; the intercept keeps isd
+                            D0[0] = 1.0 / isd ** 2
+                        C = np.linalg.inv(Cni + np.diag(D0))
+                        comps.append((lm + np.log(1.0 / (Q * len(SDS))), C @ Cni @ (mu + shift), C))
+                if cfg["safety"]:
+                    for s in SDS:
+                        Cs = np.eye(P) * s ** 2
+                        if free:
+                            Cs[0, 0] = isd ** 2
+                        comps.append((lm + np.log(cfg["safety_w"] / len(SDS)), np.zeros(P), Cs))
+            est[j] = V3.combine(X, y, comps) if cfg.get("weights", "evidence") == "evidence" else \
+                combine_loo(X, y, comps, cfg["weights"])
         out[c] = est
     return out

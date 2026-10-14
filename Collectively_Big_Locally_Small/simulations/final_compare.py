@@ -38,7 +38,7 @@ def main():
             rows = {}
             for nm in CONF:
                 v = {lab: arm_value(R, nm, f.format(e=e), arm) for lab, f in OTHERS.items()}
-                g = {"GHB-EB (no tuning)": R[nm][f"GHB-EB {e}"]["rel"], "GHB (no tuning)": R[nm][f"GHB v4 {e}"]["rel"],
+                g = {"GHB-EB (no tuning)": R[nm][f"GHB-EB {e}"]["rel"], "GHB (no tuning)": R[nm][f"GHB v5 {e}"]["rel"],
                      "GHB, tuned prior": arm_value(R, nm, f"GHB, tuned prior (DP), eps={e}", arm)}
                 loc = {"Local, tuned prior": arm_value(R, nm, "Local, tuned prior", arm)}
                 best_other = min(v, key=v.get)
@@ -69,7 +69,7 @@ def figure():
     y = np.arange(len(CONF))[::-1]
     for ax, e in zip(axs, ("1", "10")):
         eb = [R[nm][f"GHB-EB {e}"]["rel"] for nm in CONF]
-        v4 = [R[nm][f"GHB v4 {e}"]["rel"] for nm in CONF]
+        v4 = [R[nm][f"GHB v5 {e}"]["rel"] for nm in CONF]
         lono = [min(arm_value(R, nm, f.format(e=e), "lono") for f in OTHERS.values()) for nm in CONF]
         orc = [min(arm_value(R, nm, f.format(e=e), "oracle") for f in OTHERS.values()) for nm in CONF]
         loc = [arm_value(R, nm, "Local, tuned prior", "lono") for nm in CONF]

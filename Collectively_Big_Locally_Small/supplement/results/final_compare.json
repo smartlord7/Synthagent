@@ -17,7 +17,7 @@
    },
    "ghb": {
     "GHB-EB (no tuning)": 0.9657183141011755,
-    "GHB (no tuning)": 0.9605871438252142,
+    "GHB (no tuning)": 0.9560595270394272,
     "GHB, tuned prior": 0.9612523802099416
    },
    "local": {
@@ -42,7 +42,7 @@
    },
    "ghb": {
     "GHB-EB (no tuning)": 0.9585733643342641,
-    "GHB (no tuning)": 0.9638350203275137,
+    "GHB (no tuning)": 0.9516034197993207,
     "GHB, tuned prior": 0.9550689692570257
    },
    "local": {
@@ -67,7 +67,7 @@
    },
    "ghb": {
     "GHB-EB (no tuning)": 0.9407945607839578,
-    "GHB (no tuning)": 0.9431023080520439,
+    "GHB (no tuning)": 0.9424015528878521,
     "GHB, tuned prior": 0.930570367133059
    },
    "local": {
@@ -92,7 +92,7 @@
    },
    "ghb": {
     "GHB-EB (no tuning)": 0.9331990417393972,
-    "GHB (no tuning)": 0.9444485760566319,
+    "GHB (no tuning)": 0.9374832521554881,
     "GHB, tuned prior": 0.9284703551780243
    },
    "local": {
@@ -117,7 +117,7 @@
    },
    "ghb": {
     "GHB-EB (no tuning)": 0.96557039104206,
-    "GHB (no tuning)": 0.9681138613493161,
+    "GHB (no tuning)": 0.9616140687412107,
     "GHB, tuned prior": 0.9592352343890074
    },
    "local": {
@@ -142,7 +142,7 @@
    },
    "ghb": {
     "GHB-EB (no tuning)": 0.922101802585879,
-    "GHB (no tuning)": 0.926365786073456,
+    "GHB (no tuning)": 0.928653935884622,
     "GHB, tuned prior": 0.9278287890153828
    },
    "local": {
@@ -167,7 +167,7 @@
    },
    "ghb": {
     "GHB-EB (no tuning)": 1.0053618098646377,
-    "GHB (no tuning)": 1.0227214175899688,
+    "GHB (no tuning)": 1.0025758807313352,
     "GHB, tuned prior": 0.9960272295317291
    },
    "local": {
@@ -194,7 +194,7 @@
    },
    "ghb": {
     "GHB-EB (no tuning)": 0.9657183141011755,
-    "GHB (no tuning)": 0.9605871438252142,
+    "GHB (no tuning)": 0.9560595270394272,
     "GHB, tuned prior": 0.9612523802099416
    },
    "local": {
@@ -219,7 +219,7 @@
    },
    "ghb": {
     "GHB-EB (no tuning)": 0.9585733643342641,
-    "GHB (no tuning)": 0.9638350203275137,
+    "GHB (no tuning)": 0.9516034197993207,
     "GHB, tuned prior": 0.9550689692570257
    },
    "local": {
@@ -244,7 +244,7 @@
    },
    "ghb": {
     "GHB-EB (no tuning)": 0.9407945607839578,
-    "GHB (no tuning)": 0.9431023080520439,
+    "GHB (no tuning)": 0.9424015528878521,
     "GHB, tuned prior": 0.9408626580993601
    },
    "local": {
@@ -269,7 +269,7 @@
    },
    "ghb": {
     "GHB-EB (no tuning)": 0.9331990417393972,
-    "GHB (no tuning)": 0.9444485760566319,
+    "GHB (no tuning)": 0.9374832521554881,
     "GHB, tuned prior": 0.9284703551780243
    },
    "local": {
@@ -294,7 +294,7 @@
    },
    "ghb": {
     "GHB-EB (no tuning)": 0.96557039104206,
-    "GHB (no tuning)": 0.9681138613493161,
+    "GHB (no tuning)": 0.9616140687412107,
     "GHB, tuned prior": 0.9592352343890074
    },
    "local": {
@@ -319,7 +319,7 @@
    },
    "ghb": {
     "GHB-EB (no tuning)": 0.922101802585879,
-    "GHB (no tuning)": 0.926365786073456,
+    "GHB (no tuning)": 0.928653935884622,
     "GHB, tuned prior": 0.9278287890153828
    },
    "local": {
@@ -344,7 +344,7 @@
    },
    "ghb": {
     "GHB-EB (no tuning)": 1.0053618098646377,
-    "GHB (no tuning)": 1.0227214175899688,
+    "GHB (no tuning)": 1.0025758807313352,
     "GHB, tuned prior": 0.9991759015419444
    },
    "local": {
@@ -371,7 +371,7 @@
    },
    "ghb": {
     "GHB-EB (no tuning)": 0.9657183141011755,
-    "GHB (no tuning)": 0.9605871438252142,
+    "GHB (no tuning)": 0.9560595270394272,
     "GHB, tuned prior": 0.9612523802099416
    },
    "local": {
@@ -396,7 +396,7 @@
    },
    "ghb": {
     "GHB-EB (no tuning)": 0.9585733643342641,
-    "GHB (no tuning)": 0.9638350203275137,
+    "GHB (no tuning)": 0.9516034197993207,
     "GHB, tuned prior": 0.9550689692570257
    },
    "local": {
@@ -421,7 +421,7 @@
    },
    "ghb": {
     "GHB-EB (no tuning)": 0.9407945607839578,
-    "GHB (no tuning)": 0.9431023080520439,
+    "GHB (no tuning)": 0.9424015528878521,
     "GHB, tuned prior": 0.9408626580993601
    },
    "local": {
@@ -446,7 +446,7 @@
    },
    "ghb": {
     "GHB-EB (no tuning)": 0.9331990417393972,
-    "GHB (no tuning)": 0.9444485760566319,
+    "GHB (no tuning)": 0.9374832521554881,
     "GHB, tuned prior": 0.9284703551780243
    },
    "local": {
@@ -471,7 +471,7 @@
    },
    "ghb": {
     "GHB-EB (no tuning)": 0.96557039104206,
-    "GHB (no tuning)": 0.9681138613493161,
+    "GHB (no tuning)": 0.9616140687412107,
     "GHB, tuned prior": 0.9592352343890074
    },
    "local": {
@@ -496,7 +496,7 @@
    },
    "ghb": {
     "GHB-EB (no tuning)": 0.922101802585879,
-    "GHB (no tuning)": 0.926365786073456,
+    "GHB (no tuning)": 0.928653935884622,
     "GHB, tuned prior": 0.9278287890153828
    },
    "local": {
@@ -521,7 +521,7 @@
    },
    "ghb": {
     "GHB-EB (no tuning)": 1.0053618098646377,
-    "GHB (no tuning)": 1.0227214175899688,
+    "GHB (no tuning)": 1.0025758807313352,
     "GHB, tuned prior": 0.9991759015419444
    },
    "local": {
@@ -548,7 +548,7 @@
    },
    "ghb": {
     "GHB-EB (no tuning)": 0.9540573806398261,
-    "GHB (no tuning)": 0.9514769895501329,
+    "GHB (no tuning)": 0.9479273929829639,
     "GHB, tuned prior": 0.9542505108674336
    },
    "local": {
@@ -573,7 +573,7 @@
    },
    "ghb": {
     "GHB-EB (no tuning)": 0.9680623915262415,
-    "GHB (no tuning)": 0.9568874879173778,
+    "GHB (no tuning)": 0.9447561562208701,
     "GHB, tuned prior": 0.9675049100371806
    },
    "local": {
@@ -598,7 +598,7 @@
    },
    "ghb": {
     "GHB-EB (no tuning)": 0.9360132565710031,
-    "GHB (no tuning)": 0.9324774212850209,
+    "GHB (no tuning)": 0.9279012555478323,
     "GHB, tuned prior": 0.9328007523250637
    },
    "local": {
@@ -623,7 +623,7 @@
    },
    "ghb": {
     "GHB-EB (no tuning)": 0.9229478946713884,
-    "GHB (no tuning)": 0.9174803762354683,
+    "GHB (no tuning)": 0.9007375931190621,
     "GHB, tuned prior": 0.9141894654552364
    },
    "local": {
@@ -648,7 +648,7 @@
    },
    "ghb": {
     "GHB-EB (no tuning)": 0.9491417650530318,
-    "GHB (no tuning)": 0.9487797071450262,
+    "GHB (no tuning)": 0.9338513695291415,
     "GHB, tuned prior": 0.9448350434404579
    },
    "local": {
@@ -673,7 +673,7 @@
    },
    "ghb": {
     "GHB-EB (no tuning)": 0.9231061190350062,
-    "GHB (no tuning)": 0.9212390248444717,
+    "GHB (no tuning)": 0.919164855458884,
     "GHB, tuned prior": 0.9327751936421653
    },
    "local": {
@@ -698,7 +698,7 @@
    },
    "ghb": {
     "GHB-EB (no tuning)": 0.989414448579871,
-    "GHB (no tuning)": 0.9804759795764204,
+    "GHB (no tuning)": 0.9730602236136028,
     "GHB, tuned prior": 0.9869324896394331
    },
    "local": {
@@ -725,7 +725,7 @@
    },
    "ghb": {
     "GHB-EB (no tuning)": 0.9540573806398261,
-    "GHB (no tuning)": 0.9514769895501329,
+    "GHB (no tuning)": 0.9479273929829639,
     "GHB, tuned prior": 0.9555621894241219
    },
    "local": {
@@ -750,7 +750,7 @@
    },
    "ghb": {
     "GHB-EB (no tuning)": 0.9680623915262415,
-    "GHB (no tuning)": 0.9568874879173778,
+    "GHB (no tuning)": 0.9447561562208701,
     "GHB, tuned prior": 0.9675049100371806
    },
    "local": {
@@ -775,7 +775,7 @@
    },
    "ghb": {
     "GHB-EB (no tuning)": 0.9360132565710031,
-    "GHB (no tuning)": 0.9324774212850209,
+    "GHB (no tuning)": 0.9279012555478323,
     "GHB, tuned prior": 0.9384405762600667
    },
    "local": {
@@ -800,7 +800,7 @@
    },
    "ghb": {
     "GHB-EB (no tuning)": 0.9229478946713884,
-    "GHB (no tuning)": 0.9174803762354683,
+    "GHB (no tuning)": 0.9007375931190621,
     "GHB, tuned prior": 0.9141894654552364
    },
    "local": {
@@ -825,7 +825,7 @@
    },
    "ghb": {
     "GHB-EB (no tuning)": 0.9491417650530318,
-    "GHB (no tuning)": 0.9487797071450262,
+    "GHB (no tuning)": 0.9338513695291415,
     "GHB, tuned prior": 0.9476369297939385
    },
    "local": {
@@ -850,7 +850,7 @@
    },
    "ghb": {
     "GHB-EB (no tuning)": 0.9231061190350062,
-    "GHB (no tuning)": 0.9212390248444717,
+    "GHB (no tuning)": 0.919164855458884,
     "GHB, tuned prior": 0.9327751936421653
    },
    "local": {
@@ -875,7 +875,7 @@
    },
    "ghb": {
     "GHB-EB (no tuning)": 0.989414448579871,
-    "GHB (no tuning)": 0.9804759795764204,
+    "GHB (no tuning)": 0.9730602236136028,
     "GHB, tuned prior": 0.9937813634155297
    },
    "local": {
@@ -902,7 +902,7 @@
    },
    "ghb": {
     "GHB-EB (no tuning)": 0.9540573806398261,
-    "GHB (no tuning)": 0.9514769895501329,
+    "GHB (no tuning)": 0.9479273929829639,
     "GHB, tuned prior": 0.9555621894241219
    },
    "local": {
@@ -927,7 +927,7 @@
    },
    "ghb": {
     "GHB-EB (no tuning)": 0.9680623915262415,
-    "GHB (no tuning)": 0.9568874879173778,
+    "GHB (no tuning)": 0.9447561562208701,
     "GHB, tuned prior": 0.9675049100371806
    },
    "local": {
@@ -952,7 +952,7 @@
    },
    "ghb": {
     "GHB-EB (no tuning)": 0.9360132565710031,
-    "GHB (no tuning)": 0.9324774212850209,
+    "GHB (no tuning)": 0.9279012555478323,
     "GHB, tuned prior": 0.9384405762600667
    },
    "local": {
@@ -977,7 +977,7 @@
    },
    "ghb": {
     "GHB-EB (no tuning)": 0.9229478946713884,
-    "GHB (no tuning)": 0.9174803762354683,
+    "GHB (no tuning)": 0.9007375931190621,
     "GHB, tuned prior": 0.9141894654552364
    },
    "local": {
@@ -1002,7 +1002,7 @@
    },
    "ghb": {
     "GHB-EB (no tuning)": 0.9491417650530318,
-    "GHB (no tuning)": 0.9487797071450262,
+    "GHB (no tuning)": 0.9338513695291415,
     "GHB, tuned prior": 0.9476369297939385
    },
    "local": {
@@ -1027,7 +1027,7 @@
    },
    "ghb": {
     "GHB-EB (no tuning)": 0.9231061190350062,
-    "GHB (no tuning)": 0.9212390248444717,
+    "GHB (no tuning)": 0.919164855458884,
     "GHB, tuned prior": 0.9327751936421653
    },
    "local": {
@@ -1052,7 +1052,7 @@
    },
    "ghb": {
     "GHB-EB (no tuning)": 0.989414448579871,
-    "GHB (no tuning)": 0.9804759795764204,
+    "GHB (no tuning)": 0.9730602236136028,
     "GHB, tuned prior": 0.9937813634155297
    },
    "local": {

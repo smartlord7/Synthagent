@@ -27,7 +27,9 @@ from blueprint import dp_noise_var
 from exp7_logistic import LAM, MU, N_TEST, P, R_X, auc, fisher_info, fit
 
 DITTO_GRID = (0.3, 1.0, 3.0, 10.0, 30.0, 100.0)
-V4_CFG = dict(f=1.0, safety=True, R1=1, pan=False)  # GHB v4 as locked in dev/PREREG_v4.md; one network, so no pan
+# GHB as released: v5 (real_v3.GHB_V5, dev/PREREG_v5.md); one network, so no pan-network step. The row key below
+# kept its earlier name, "GHB v4 (DP)", so that every table and macro reads the released version
+V4_CFG = dict(f=1.0, safety=True, R1=1, pan=False, int_sd=2.5, free_int=2.5, tight=True, hdiag="auto")
 V4_NAME = "GHB v4 (DP)"
 METHODS = ("Local", "Global (pooled, no DP)", "FedAvg (DP)", "Meta-analysis (DP)", "Ditto-style (DP)", "GHB (DP)")
 

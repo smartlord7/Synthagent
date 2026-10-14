@@ -17,14 +17,21 @@ def f2(x):
 
 def tcga_numbers():
     """GHB on TCGA with the richer model: pre-registered confirmation (real_v4_confirm.json) and development."""
-    c = json.load(open(R / "real_v4_confirm.json"))["rel"]
+    c4 = json.load(open(R / "real_v4_confirm.json"))
+    c = c4["rel"]
+    v5c = json.load(open(R / "v5_confirm.json"))  # GHB as released (v5); its networks are listed in real_v3.SETS order
+    order = [v5c["nets"].index(p) for p in c4["nets"]]
     fam = {"FT": "DP-FedAvg + FT", "FTSA": "DP-FedAvg-SA + FT", "APFL": "APFL", "Ditto": "Ditto", "PFedMe": "pFedMe",
            "Clu": "Clustered DP-FedAvg"}
     out = {}
     for e, E in (("1", "One"), ("10", "Ten")):
         r = c[e]
-        g = np.array(r["GHB v4"])
+        g = np.array(v5c["rel"][e]["GHB v5"])[order]
+        g4 = np.array(r["GHB v4"])
         out[f"TC{E}GHB"] = f"{g.mean():.3f}"
+        out[f"TC{E}VFour"] = f"{g4.mean():.3f}"
+        out[f"TC{E}VFourPaired"] = f"{np.mean(v5c['rel'][e]['GHB v4 (paired rerun)']):.3f}"
+        out[f"TC{E}GHBvsVFourWins"] = str(int((g < g4).sum()))
         out[f"TC{E}Lite"] = f"{np.mean(r['GHB-EB']):.3f}"
         out[f"TC{E}Loc"] = f"{np.mean(r['Local, evidence prior']):.3f}"
         out[f"TC{E}GHBvsLocWins"] = str(int((g < np.array(r["Local, evidence prior"])).sum()))
@@ -63,10 +70,16 @@ def tcga_numbers():
             if "v4c R1=1 +pan," in k:
                 k2 = k.replace("v4c R1=1 +pan", "GHB v4")
                 acc[k2][0] += sum(ll); acc[k2][1] += sum(cnt)
+    for fn in glob.glob(str(R / "v5f_dev_ckpt" / "*.json")):  # GHB v5 (frozen), dev/v5_dev.py
+        for k, (ll, cnt) in json.load(open(fn)).items():
+            if "v5 it + auto," in k:
+                k2 = k.replace("v5 it + auto", "GHB v5")
+                acc[k2][0] += sum(ll); acc[k2][1] += sum(cnt)
     dn = sorted({k.split("||")[0] for k in acc})
     L = lambda p, m: (acc[f"{p}||{m}"][0] / acc[f"{p}||{m}"][1]) / (acc[f"{p}||Local"][0] / acc[f"{p}||Local"][1])
     for e, E in (("1", "One"), ("10", "Ten")):
-        out[f"TD{E}GHB"] = f"{np.mean([L(p, f'GHB v4, eps={e}') for p in dn]):.3f}"
+        out[f"TD{E}GHB"] = f"{np.mean([L(p, f'GHB v5, eps={e}') for p in dn]):.3f}"
+        out[f"TD{E}VFour"] = f"{np.mean([L(p, f'GHB v4, eps={e}') for p in dn]):.3f}"
         out[f"TD{E}Lite"] = f"{np.mean([L(p, f'GHB-EB, eps={e}') for p in dn]):.3f}"
         out[f"TD{E}Loc"] = f"{np.mean([L(p, 'Local, evidence prior') for p in dn]):.3f}"
         best = min(min(np.mean([L(p, f"{ckey(cf)}, eps={e}") for p in dn]) for cf in grid) for grid in GRIDS.values())
@@ -348,13 +361,13 @@ def main():
                 n[f"RF{E}EBMin"], n[f"RF{E}EBMax"] = f"{eb.min():.3f}", f"{eb.max():.3f}"
                 locl = np.array([FC.arm_value(rn, nm, "Local, tuned prior", "lono") for nm in conf])
                 n[f"RF{E}EBvsLocWins"] = str(int((eb < locl).sum()))
-                if all(f"GHB v4 {e}" in rn[nm] for nm in conf):  # GHB (joint releases), on its own random stream
-                    v4 = np.array([rn[nm][f"GHB v4 {e}"]["rel"] for nm in conf])
+                if all(f"GHB v5 {e}" in rn[nm] for nm in conf):  # GHB (joint releases), on its own random stream
+                    v4 = np.array([rn[nm][f"GHB v5 {e}"]["rel"] for nm in conf])
                     n[f"RF{E}V"], n[f"RF{E}VMin"], n[f"RF{E}VMax"] = f"{v4.mean():.3f}", f"{v4.min():.3f}", f"{v4.max():.3f}"
                     n[f"RF{E}VvsEBWins"] = str(int((v4 < eb).sum()))
                     n[f"RF{E}VvsLocWins"] = str(int((v4 < locl).sum()))
-                    n[f"RF{E}LiverWorstV"] = f2(rn["TCGA-LIHC"][f"GHB v4 {e}"]["worst"])
-                    n[f"RF{E}VWorstMax"] = f2(max(rn[nm][f"GHB v4 {e}"]["worst"] for nm in conf if rn[nm][f"GHB v4 {e}"]["worst"] == rn[nm][f"GHB v4 {e}"]["worst"]))
+                    n[f"RF{E}LiverWorstV"] = f2(rn["TCGA-LIHC"][f"GHB v5 {e}"]["worst"])
+                    n[f"RF{E}VWorstMax"] = f2(max(rn[nm][f"GHB v5 {e}"]["worst"] for nm in conf if rn[nm][f"GHB v5 {e}"]["worst"] == rn[nm][f"GHB v5 {e}"]["worst"]))
                     for arm, A in (("oracle", "Orc"), ("lono", "Lono")):
                         for lab, t in tagm.items():
                             v = np.array([FC.arm_value(rn, nm, FC.OTHERS[lab].format(e=e), arm) for nm in conf])
@@ -374,7 +387,12 @@ def main():
             for fm, t in (("DP-FedAvg-SA + FT", "FTSA"), ("Ditto", "Ditto"), ("pFedMe", "PFedMe"), ("DP-FedAvg + FT", "FT")):
                 n[f"FHeart{E}{t}"] = f"{hv(f'{fm} (realistic), eps={e}', 'logloss'):.3f}"
                 n[f"FBrca{E}{t}"] = f"{bv(f'{fm} (realistic), eps={e}', 'cindex'):.3f}"
-            n[f"FBrca{E}GHB"] = f"{bv(f'GHB, eps={e}', 'cindex'):.3f}"
+            n[f"FBrca{E}GHB"] = f"{bv(f'GHB, eps={e}', 'cindex'):.3f}"  # GHB v4, the pre-registered version
+            if f"GHB v5, eps={e}" in fr["heart"]["rows"]:  # GHB as released (FLamby was development data for it)
+                n[f"FHeart{E}VFive"] = f"{hv(f'GHB v5, eps={e}', 'logloss'):.3f}"
+                n[f"FBrca{E}VFive"] = f"{bv(f'GHB v5, eps={e}', 'cindex'):.3f}"
+                iv = lambda k, m: fr["isic"]["rows"][k][m]["mean"]
+                n[f"FIsic{E}VFive"] = f"{iv(f'GHB v5, eps={e}', 'bacc'):.3f}"
         n["FHeartLocal"], n["FHeartLocalEB"] = f"{hv('Local', 'logloss'):.3f}", f"{hv('Local, evidence prior', 'logloss'):.3f}"
         n["FBrcaLocal"], n["FBrcaPooled"] = f"{bv('Local', 'cindex'):.3f}", f"{bv('Pooled', 'cindex'):.3f}"
         n["FHeartOneGHBGain"] = f"{100 * (1 - hv('GHB, eps=1', 'logloss') / hv('Local', 'logloss')):.1f}\\%"
