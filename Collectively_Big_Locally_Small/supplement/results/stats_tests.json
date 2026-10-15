@@ -1,0 +1,650 @@
+{
+ "family1": [
+  {
+   "family": 1,
+   "data": "TCGA confirmation (5 networks)",
+   "eps": "1",
+   "comparator": "Local",
+   "n": 5,
+   "better": 5,
+   "mean": -0.07538795594416003,
+   "lo": -0.12731693032825173,
+   "hi": -0.023458981560068336,
+   "p": 0.03125,
+   "lower_better": true,
+   "tested": true,
+   "p_holm": 0.125
+  },
+  {
+   "family": 1,
+   "data": "TCGA confirmation (5 networks)",
+   "eps": "1",
+   "comparator": "DP-FedAvg + FT (realistic)",
+   "n": 5,
+   "better": 5,
+   "mean": -0.051653439029006695,
+   "lo": -0.12123337723553622,
+   "hi": 0.01792649917752283,
+   "p": 0.03125,
+   "lower_better": true,
+   "tested": true,
+   "p_holm": 0.125
+  },
+  {
+   "family": 1,
+   "data": "TCGA confirmation (5 networks)",
+   "eps": "1",
+   "comparator": "DP-FedAvg + FT (oracle)",
+   "n": 5,
+   "better": 5,
+   "mean": -0.01412356934539576,
+   "lo": -0.0241449365391745,
+   "hi": -0.00410220215161702,
+   "p": null,
+   "lower_better": true,
+   "tested": false
+  },
+  {
+   "family": 1,
+   "data": "TCGA confirmation (5 networks)",
+   "eps": "10",
+   "comparator": "Local",
+   "n": 5,
+   "better": 5,
+   "mean": -0.09147747453439678,
+   "lo": -0.1434096342104236,
+   "hi": -0.039545314858369957,
+   "p": 0.03125,
+   "lower_better": true,
+   "tested": true,
+   "p_holm": 0.125
+  },
+  {
+   "family": 1,
+   "data": "TCGA confirmation (5 networks)",
+   "eps": "10",
+   "comparator": "Ditto (realistic)",
+   "n": 5,
+   "better": 3,
+   "mean": -0.010023208630411885,
+   "lo": -0.04313711376593547,
+   "hi": 0.023090696505111707,
+   "p": 0.3125,
+   "lower_better": true,
+   "tested": true,
+   "p_holm": 0.3125
+  },
+  {
+   "family": 1,
+   "data": "TCGA confirmation (5 networks)",
+   "eps": "10",
+   "comparator": "Ditto (oracle)",
+   "n": 5,
+   "better": 3,
+   "mean": -0.0027913230863083394,
+   "lo": -0.022712924960261352,
+   "hi": 0.01713027878764467,
+   "p": null,
+   "lower_better": true,
+   "tested": false
+  }
+ ],
+ "family2": [
+  {
+   "family": 2,
+   "data": "Camelyon17 (10 repetitions)",
+   "eps": "10",
+   "comparator": "Local",
+   "n": 10,
+   "better": 10,
+   "mean": 0.010979999999999967,
+   "lo": 0.008798246134606235,
+   "hi": 0.0131617538653937,
+   "p": 0.0009765625,
+   "lower_better": false,
+   "tested": true,
+   "kind": "superiority",
+   "margin": 0.0,
+   "p_holm": 0.009765625
+  },
+  {
+   "family": 2,
+   "data": "Camelyon17 (10 repetitions)",
+   "eps": "10",
+   "comparator": "DP-FedAvg + FT (realistic)",
+   "n": 10,
+   "better": 7,
+   "mean": 0.0018399999999999972,
+   "lo": -0.0011978486368904551,
+   "hi": 0.00487784863689045,
+   "p": 0.1162109375,
+   "lower_better": false,
+   "tested": true,
+   "kind": "superiority",
+   "margin": 0.0,
+   "p_holm": 0.3486328125
+  },
+  {
+   "family": 2,
+   "data": "Camelyon17 (10 repetitions)",
+   "eps": "10",
+   "comparator": "DP-FedAvg-SA + FT (realistic)",
+   "n": 10,
+   "better": 9,
+   "mean": 0.0064999999999999945,
+   "lo": 0.003502511344263811,
+   "hi": 0.009497488655736179,
+   "p": 0.001953125,
+   "lower_better": false,
+   "tested": true,
+   "kind": "superiority",
+   "margin": 0.0,
+   "p_holm": 0.009765625
+  },
+  {
+   "family": 2,
+   "data": "Camelyon17 (10 repetitions)",
+   "eps": "10",
+   "comparator": "APFL (realistic)",
+   "n": 10,
+   "better": 7,
+   "mean": 0.0015199999999999324,
+   "lo": -0.0010765692962966503,
+   "hi": 0.004116569296296516,
+   "p": 0.1162109375,
+   "lower_better": false,
+   "tested": true,
+   "kind": "superiority",
+   "margin": 0.0,
+   "p_holm": 0.3486328125
+  },
+  {
+   "family": 2,
+   "data": "Camelyon17 (10 repetitions)",
+   "eps": "10",
+   "comparator": "Ditto (realistic)",
+   "n": 10,
+   "better": 9,
+   "mean": 0.002059999999999962,
+   "lo": 0.0008071833147040629,
+   "hi": 0.0033128166852958614,
+   "p": 0.0048828125,
+   "lower_better": false,
+   "tested": true,
+   "kind": "superiority",
+   "margin": 0.0,
+   "p_holm": 0.01953125
+  },
+  {
+   "family": 2,
+   "data": "Camelyon17 (10 repetitions)",
+   "eps": "10",
+   "comparator": "pFedMe (realistic)",
+   "n": 10,
+   "better": 10,
+   "mean": 0.12387999999999999,
+   "lo": 0.10076933870008156,
+   "hi": 0.14699066129991842,
+   "p": 0.0009765625,
+   "lower_better": false,
+   "tested": true,
+   "kind": "superiority",
+   "margin": 0.0,
+   "p_holm": 0.009765625
+  },
+  {
+   "family": 2,
+   "data": "Camelyon17 (10 repetitions)",
+   "eps": "10",
+   "comparator": "Clustered DP-FedAvg (realistic)",
+   "n": 10,
+   "better": 6,
+   "mean": 0.0016800000000000148,
+   "lo": -0.001668671858511074,
+   "hi": 0.0050286718585111035,
+   "p": 0.1611328125,
+   "lower_better": false,
+   "tested": true,
+   "kind": "superiority",
+   "margin": 0.0,
+   "p_holm": 0.3486328125
+  },
+  {
+   "family": 2,
+   "data": "Camelyon17 (10 repetitions)",
+   "eps": "1",
+   "comparator": "Local",
+   "n": 10,
+   "better": 10,
+   "mean": 0.007940000000000003,
+   "lo": 0.005487717758431169,
+   "hi": 0.010392282241568837,
+   "p": 0.0009765625,
+   "lower_better": false,
+   "tested": true,
+   "kind": "non-inferiority (margin 0.005)",
+   "margin": 0.005,
+   "p_holm": 0.009765625
+  },
+  {
+   "family": 2,
+   "data": "Camelyon17 (10 repetitions)",
+   "eps": "inf",
+   "comparator": "Local",
+   "n": 10,
+   "better": 10,
+   "mean": 0.01088,
+   "lo": 0.008669507290244845,
+   "hi": 0.013090492709755156,
+   "p": 0.0009765625,
+   "lower_better": false,
+   "tested": true,
+   "kind": "superiority",
+   "margin": 0.0,
+   "p_holm": 0.009765625
+  },
+  {
+   "family": 2,
+   "data": "Camelyon17 (10 repetitions)",
+   "eps": "inf",
+   "comparator": "Pooled",
+   "n": 10,
+   "better": 10,
+   "mean": 0.009360000000000002,
+   "lo": 0.006809741761093559,
+   "hi": 0.011910258238906445,
+   "p": 0.0009765625,
+   "lower_better": false,
+   "tested": true,
+   "kind": "superiority",
+   "margin": 0.0,
+   "p_holm": 0.009765625
+  }
+ ],
+ "family3": [
+  {
+   "family": 3,
+   "data": "All real data sets (16)",
+   "eps": "1",
+   "comparator": "Local",
+   "n": 16,
+   "better": 14,
+   "p": 0.0020904541015625,
+   "tested": true,
+   "p_holm": 0.0062713623046875
+  },
+  {
+   "family": 3,
+   "data": "All real data sets (16)",
+   "eps": "1",
+   "comparator": "strongest realistic competitor",
+   "n": 16,
+   "better": 11,
+   "p": 0.1050567626953125,
+   "tested": true,
+   "p_holm": 0.210113525390625
+  },
+  {
+   "family": 3,
+   "data": "All real data sets (16)",
+   "eps": "10",
+   "comparator": "Local",
+   "n": 16,
+   "better": 15,
+   "p": 0.0002593994140625,
+   "tested": true,
+   "p_holm": 0.00103759765625
+  },
+  {
+   "family": 3,
+   "data": "All real data sets (16)",
+   "eps": "10",
+   "comparator": "strongest realistic competitor",
+   "n": 16,
+   "better": 10,
+   "p": 0.2272491455078125,
+   "tested": true,
+   "p_holm": 0.2272491455078125
+  }
+ ],
+ "family3_detail": {
+  "1": [
+   {
+    "data": "TCGA-BRCA (confirmation)",
+    "ghb": 0.8789456510603468,
+    "local": 1.0,
+    "best": "DP-FedAvg + FT (realistic)",
+    "best_value": 0.8978045308367225,
+    "lower_better": true
+   },
+   {
+    "data": "TCGA-MESO (confirmation)",
+    "ghb": 0.9093107324299273,
+    "local": 1.0,
+    "best": "DP-FedAvg + FT (realistic)",
+    "best_value": 0.9516852786879352,
+    "lower_better": true
+   },
+   {
+    "data": "TCGA-UCEC (confirmation)",
+    "ghb": 0.9569635189433664,
+    "local": 1.0,
+    "best": "Ditto (realistic)",
+    "best_value": 0.9971430391477177,
+    "lower_better": true
+   },
+   {
+    "data": "TCGA-OV (confirmation)",
+    "ghb": 0.9790495408019718,
+    "local": 1.0,
+    "best": "Ditto (realistic)",
+    "best_value": 0.9775246632742154,
+    "lower_better": true
+   },
+   {
+    "data": "TCGA-UCS (confirmation)",
+    "ghb": 0.8987907770435875,
+    "local": 1.0,
+    "best": "DP-FedAvg + FT (realistic)",
+    "best_value": 0.9205072347669411,
+    "lower_better": true
+   },
+   {
+    "data": "medpar (small network)",
+    "ghb": 0.9560595270394272,
+    "local": 1.0,
+    "best": "DP-FedAvg + FT, sec. agg.",
+    "best_value": 0.9569806442703496,
+    "lower_better": true
+   },
+   {
+    "data": "TCGA-LUSC (small network)",
+    "ghb": 0.9516034197993207,
+    "local": 1.0,
+    "best": "DP-FedAvg + FT, sec. agg.",
+    "best_value": 0.9613689449947873,
+    "lower_better": true
+   },
+   {
+    "data": "TCGA-HNSC (small network)",
+    "ghb": 0.9424015528878521,
+    "local": 1.0,
+    "best": "DP-FedAvg + FT, sec. agg.",
+    "best_value": 0.9311994146134942,
+    "lower_better": true
+   },
+   {
+    "data": "TCGA-BLCA (small network)",
+    "ghb": 0.9374832521554881,
+    "local": 1.0,
+    "best": "Ditto",
+    "best_value": 0.9491494563654497,
+    "lower_better": true
+   },
+   {
+    "data": "TCGA-STAD (small network)",
+    "ghb": 0.9616140687412107,
+    "local": 1.0,
+    "best": "DP-FedAvg + FT, sec. agg.",
+    "best_value": 0.963091638728667,
+    "lower_better": true
+   },
+   {
+    "data": "TCGA-LIHC (small network)",
+    "ghb": 0.928653935884622,
+    "local": 1.0,
+    "best": "Ditto",
+    "best_value": 0.9525096020948183,
+    "lower_better": true
+   },
+   {
+    "data": "TCGA-KIRC (small network)",
+    "ghb": 1.0025758807313352,
+    "local": 1.0,
+    "best": "Ditto",
+    "best_value": 1.000838310570568,
+    "lower_better": true
+   },
+   {
+    "data": "FLamby heart",
+    "ghb": 0.44300692962160915,
+    "local": 0.47047896258435157,
+    "best": "Ditto",
+    "best_value": 0.429530499841233,
+    "lower_better": true
+   },
+   {
+    "data": "FLamby brca",
+    "ghb": 0.7848202718209204,
+    "local": 0.7376975983336674,
+    "best": "DP-FedAvg-SA + FT",
+    "best_value": 0.7471133024264464,
+    "lower_better": false
+   },
+   {
+    "data": "FLamby isic",
+    "ghb": 0.29961567101489445,
+    "local": 0.30019182478368517,
+    "best": "Ditto",
+    "best_value": 0.2961841655795836,
+    "lower_better": false
+   },
+   {
+    "data": "Camelyon17",
+    "ghb": 0.89326,
+    "local": 0.8853200000000001,
+    "best": "DP-FedAvg + FT",
+    "best_value": 0.8936400000000001,
+    "lower_better": false
+   }
+  ],
+  "10": [
+   {
+    "data": "TCGA-BRCA (confirmation)",
+    "ghb": 0.8593532408971556,
+    "local": 1.0,
+    "best": "Ditto (realistic)",
+    "best_value": 0.8781060502757654,
+    "lower_better": true
+   },
+   {
+    "data": "TCGA-MESO (confirmation)",
+    "ghb": 0.8967243795168779,
+    "local": 1.0,
+    "best": "Ditto (realistic)",
+    "best_value": 0.8931836352814174,
+    "lower_better": true
+   },
+   {
+    "data": "TCGA-UCEC (confirmation)",
+    "ghb": 0.9317404405274676,
+    "local": 1.0,
+    "best": "DP-FedAvg-SA + FT (realistic)",
+    "best_value": 0.9565260841323173,
+    "lower_better": true
+   },
+   {
+    "data": "TCGA-OV (confirmation)",
+    "ghb": 0.9673272556116626,
+    "local": 1.0,
+    "best": "Ditto (realistic)",
+    "best_value": 0.9738945133823247,
+    "lower_better": true
+   },
+   {
+    "data": "TCGA-UCS (confirmation)",
+    "ghb": 0.8874673107748524,
+    "local": 1.0,
+    "best": "Ditto (realistic)",
+    "best_value": 0.8660095439975396,
+    "lower_better": true
+   },
+   {
+    "data": "medpar (small network)",
+    "ghb": 0.9479273929829639,
+    "local": 1.0,
+    "best": "DP-FedAvg + FT, sec. agg.",
+    "best_value": 0.9422486449389382,
+    "lower_better": true
+   },
+   {
+    "data": "TCGA-LUSC (small network)",
+    "ghb": 0.9447561562208701,
+    "local": 1.0,
+    "best": "DP-FedAvg + FT, sec. agg.",
+    "best_value": 0.94644491107799,
+    "lower_better": true
+   },
+   {
+    "data": "TCGA-HNSC (small network)",
+    "ghb": 0.9279012555478323,
+    "local": 1.0,
+    "best": "Clustered DP-FedAvg",
+    "best_value": 0.9306300585547327,
+    "lower_better": true
+   },
+   {
+    "data": "TCGA-BLCA (small network)",
+    "ghb": 0.9007375931190621,
+    "local": 1.0,
+    "best": "DP-FedAvg + FT, sec. agg.",
+    "best_value": 0.9033511305096427,
+    "lower_better": true
+   },
+   {
+    "data": "TCGA-STAD (small network)",
+    "ghb": 0.9338513695291415,
+    "local": 1.0,
+    "best": "DP-FedAvg + FT, sec. agg.",
+    "best_value": 0.9258238014891199,
+    "lower_better": true
+   },
+   {
+    "data": "TCGA-LIHC (small network)",
+    "ghb": 0.919164855458884,
+    "local": 1.0,
+    "best": "FedProx",
+    "best_value": 0.9354848875904712,
+    "lower_better": true
+   },
+   {
+    "data": "TCGA-KIRC (small network)",
+    "ghb": 0.9730602236136028,
+    "local": 1.0,
+    "best": "Ditto-style (one-shot)",
+    "best_value": 0.9843234753629757,
+    "lower_better": true
+   },
+   {
+    "data": "FLamby heart",
+    "ghb": 0.4274767656424796,
+    "local": 0.47047896258435157,
+    "best": "DP-FedAvg-SA + FT",
+    "best_value": 0.4188621169473594,
+    "lower_better": true
+   },
+   {
+    "data": "FLamby brca",
+    "ghb": 0.8013071663683068,
+    "local": 0.7376975983336674,
+    "best": "DP-FedAvg-SA + FT",
+    "best_value": 0.8131931960674804,
+    "lower_better": false
+   },
+   {
+    "data": "FLamby isic",
+    "ghb": 0.2994208226573743,
+    "local": 0.30019182478368517,
+    "best": "Ditto",
+    "best_value": 0.29619550344806433,
+    "lower_better": false
+   },
+   {
+    "data": "Camelyon17",
+    "ghb": 0.8963000000000001,
+    "local": 0.8853200000000001,
+    "best": "APFL",
+    "best_value": 0.8947799999999999,
+    "lower_better": false
+   }
+  ]
+ },
+ "family4": [
+  {
+   "family": 4,
+   "comparator": "DP-FedAvg",
+   "scenarios": 10,
+   "better": 8,
+   "worse": 1,
+   "worse_in": [
+    "eps=inf"
+   ],
+   "undecided": 1
+  },
+  {
+   "family": 4,
+   "comparator": "DP-FedAvg + fine-tuning",
+   "scenarios": 10,
+   "better": 0,
+   "worse": 4,
+   "worse_in": [
+    "tau2=0.01",
+    "tau2=0.05",
+    "eps=inf",
+    "K=48"
+   ],
+   "undecided": 6
+  },
+  {
+   "family": 4,
+   "comparator": "Decentralized DP-SGD",
+   "scenarios": 10,
+   "better": 2,
+   "worse": 1,
+   "worse_in": [
+    "eps=inf"
+   ],
+   "undecided": 7
+  },
+  {
+   "family": 4,
+   "comparator": "Clustered DP-FedAvg",
+   "scenarios": 10,
+   "better": 1,
+   "worse": 1,
+   "worse_in": [
+    "eps=inf"
+   ],
+   "undecided": 8
+  },
+  {
+   "family": 4,
+   "comparator": "Ditto-style (DP)",
+   "scenarios": 10,
+   "better": 2,
+   "worse": 8,
+   "worse_in": [
+    "tau2=0.01",
+    "tau2=0.05",
+    "tau2=0.2",
+    "tau2=0.5",
+    "eps=inf",
+    "regional",
+    "anchor=1.0",
+    "K=48"
+   ],
+   "undecided": 0
+  },
+  {
+   "family": 4,
+   "comparator": "Local",
+   "scenarios": 10,
+   "better": 9,
+   "worse": 1,
+   "worse_in": [
+    "tau2=0.5"
+   ],
+   "undecided": 0
+  }
+ ]
+}
