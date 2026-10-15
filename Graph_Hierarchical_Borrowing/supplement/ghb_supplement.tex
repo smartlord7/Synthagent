@@ -704,6 +704,49 @@ Method & Cle & Bud & Swi & VA & Cle & Bud & Swi & VA & Cle & Bud & Swi & VA\\
 \end{tabular}
 \end{table}
 
+\section{Statistical Tests}\label{sec:stats}
+
+\paragraph{Plan} The tests follow a plan written after every result was known and committed before any test was computed (\texttt{simulations/dev/STATS\_PLAN.md}; code \texttt{simulations/stats\_tests.py}, output \texttt{supplement/results/stats\_tests.json}). To keep the results from steering the choice of tests, the plan uses conventional tests, the strongest available comparator and a standard multiplicity correction, and reports every outcome. The unit of evidence for a claim about networks is the network: repetitions within a network average out splits and privacy noise, but are not independent evidence about new networks. Four families of tests are run, each with its own Holm correction \cite{holm1979simple} at a familywise level of 0.05.
+\begin{enumerate}
+\item \textbf{Primary, confirmatory:} the five TCGA networks held out from GHB's development, network as unit. At $\epsilon=1$ and $\epsilon=10$: is GHB better than a hospital alone, and better than the strongest realistic competitor (the literature method, tuned on the design networks, with the lowest mean at that budget)? One-sided exact Wilcoxon signed-rank tests \cite{wilcoxon1945individual} on the five paired differences; with five networks the smallest attainable $p$ is $1/32=0.031$. The oracle arm, tuned on the test folds, is reported with an interval but not tested, since no consortium can attain it.
+\item \textbf{Confirmatory, one network:} the four claims stated before Camelyon17 was evaluated, over the \SimCamReps{} paired repetitions: at $\epsilon=10$ above a hospital alone and above each realistic method; at $\epsilon=1$ not more than 0.005 below a hospital alone (non-inferiority); without privacy above a hospital alone and above pooling. Ten one-sided exact Wilcoxon tests.
+\item \textbf{Descriptive:} all \SimStAllN{} real data sets (the five held-out TCGA networks, the seven small networks, FLamby Heart, TCGA-BRCA and ISIC 2019, and Camelyon17), data set as unit, each on its paper metric: one-sided exact sign tests of GHB against a hospital alone and against the strongest realistic competitor of each data set (the realistic method with the best mean on it; on the seven small networks, tuned on the other networks), at both budgets. Ten of the sixteen data sets were used while GHB was developed, so this family describes and cannot confirm.
+\item \textbf{Descriptive:} Simulation 15, setting as unit: GHB against each method, a $z$ statistic from the saved Monte Carlo standard errors combined as if independent (conservative when the replicates are paired), two-sided, Holm within each comparison.
+\end{enumerate}
+A superiority claim in the paper requires an adjusted $p$ below 0.05 in the first or second family.
+
+\paragraph{Results} Table~\ref{tab:s-stats-confirm} gives the confirmatory families. On the held-out TCGA networks GHB was better than a hospital alone on all five networks at both budgets and better than the best realistic method on all five at $\epsilon=1$, each with $p=0.031$, the smallest five networks allow, but $p=0.125$ after the Holm correction over the four primary tests; at $\epsilon=10$ it was better than Ditto on \SimStTTenRealWins{} of five ($p=\SimStTTenRealP$). No primary hypothesis is therefore established at the familywise level of 0.05. The interval against the oracle arm at $\epsilon=1$, \SimStTOneOrcCI, excludes zero, but that comparison was not tested. On Camelyon17, \SimStCamEstablished{} of the \SimStCamTests{} tests are established: GHB beats a hospital alone at every budget (non-inferiority at $\epsilon=1$, superiority otherwise), pooling without privacy, and three of the six realistic methods at $\epsilon=10$; its leads over DP-FedAvg with fine-tuning \cite{mcmahan2018learning}, APFL \cite{deng2020adaptive} and clustered DP-FedAvg \cite{ghosh2020efficient,mcmahan2018learning} are not. Across all sixteen data sets (Tables~\ref{tab:s-stats-all} and~\ref{tab:s-stats-detail}), GHB improved on a hospital alone in \SimStAllOneLocWins{} at $\epsilon=1$ and \SimStAllTenLocWins{} at $\epsilon=10$ (Holm $p=\SimStAllOneLocHolm$ and $\SimStAllTenLocHolm$) and beat the strongest realistic competitor in \SimStAllOneRealWins{} and \SimStAllTenRealWins{} (Holm $p=\SimStAllOneRealHolm$ and $\SimStAllTenRealHolm$). In Simulation 15 (Table~\ref{tab:s-stats-sim15}), GHB with joint releases is significantly better than a hospital alone in \SimStSimLocBetter{} of the \SimStSimLocN{} settings and worse only at $\tau^2=0.5$, better than DP-FedAvg in \SimStSimAvgBetter, but significantly worse than the tuned Ditto-style model in \SimStSimDittoWorse{} settings and than DP-FedAvg with fine-tuning in \SimStSimFTWorse{}; in that world, whose hospitals share their base rates, GHB-lite is the variant that leads (main paper, Simulation 15).
+
+\paragraph{Reading} The tests establish that GHB, untuned, improves on a hospital working alone, across the real data sets and on the held-out image network. They do not establish that it beats the tuned literature: it had the lowest mean error on the held-out cancer networks, at $\epsilon=1$ on every one of them, but five networks are too few for that to survive a multiplicity correction, and elsewhere it leads about as often as it trails. More held-out networks are what would settle it; with ten, winning nine would give a one-sided sign-test $p$ of 0.011 before correction.
+
+\begin{table}[ht]
+\centering
+\caption{Confirmatory tests. Mean difference: GHB minus the comparator, relative log-loss on TCGA (negative favours GHB), balanced accuracy on Camelyon17 (positive favours GHB), with a 95\% $t$ interval over networks or repetitions. Better: networks or repetitions where GHB is better. $p$: one-sided exact Wilcoxon signed-rank test; Holm: adjusted within each family. Bold: established at 0.05 after adjustment. Oracle rows are reported, not tested.}
+\label{tab:s-stats-confirm}
+\resizebox{\linewidth}{!}{\csname @@input\endcsname ../../Collectively_Big_Locally_Small/supplement/results/tables/stats_confirm.tex }
+\end{table}
+
+\begin{table}[ht]
+\centering
+\caption{Descriptive tests over the sixteen real data sets: the number of data sets where GHB is better, a one-sided exact sign test (ties count against GHB) and the Holm-adjusted $p$ over the four tests. Bold: below 0.05 after adjustment.}
+\label{tab:s-stats-all}
+\csname @@input\endcsname ../../Collectively_Big_Locally_Small/supplement/results/tables/stats_all.tex 
+\end{table}
+
+\begin{table}[ht]
+\centering
+\caption{The sixteen real data sets behind Table~\ref{tab:s-stats-all}, on each data set's paper metric: relative log-loss on the TCGA and small networks (lower is better), log-loss on FLamby Heart (lower), concordance on FLamby TCGA-BRCA and balanced accuracy on ISIC 2019 and Camelyon17 (higher). Strongest realistic: the realistic literature method with the best value on that data set. Bold: the better of GHB and that method. $^{c}$: held out from GHB's development.}
+\label{tab:s-stats-detail}
+\resizebox{\linewidth}{!}{\csname @@input\endcsname ../../Collectively_Big_Locally_Small/supplement/results/tables/stats_detail.tex }
+\end{table}
+
+\begin{table}[ht]
+\centering
+\caption{Simulation 15: the number of settings where GHB (joint releases) is significantly better, not distinguishable or significantly worse than each method, two-sided, Holm-adjusted within each row, from the saved Monte Carlo standard errors.}
+\label{tab:s-stats-sim15}
+\resizebox{\linewidth}{!}{\csname @@input\endcsname ../../Collectively_Big_Locally_Small/supplement/results/tables/stats_sim15.tex }
+\end{table}
+
 \section{Revision of GHB-lite in Simulation and Extensions Tried}\label{sec:revision}
 
 The first run of Simulation 15 showed that the earlier GHB-lite lost to DP-FedAvg \cite{mcmahan2018learning} with fine-tuning when hospitals were nearly identical and when the budget was strict. A diagnosis on development seeds (900 to 904, used by no reported simulation) found two causes. First, its plug-in $\tau^2$, the posterior mean under a half-Cauchy prior, is driven by the heavy prior tail when releases are noisy: it averaged 0.8 to 1.1 against a true 0.05 at $\epsilon=0.3$, so GHB-lite barely borrowed. Second, its ridge releases ($\lambda=0.2$) have five times the sensitivity of a score, and undoing the ridge to first order at a fixed reference left a bias in the releases of the largest hospitals without privacy (their squared errors were 2.5 to 9 times their stated variances). The revision makes three changes, each following the design of Section~\ref{M-sec:model}: a score release at the anchor, inverted by public moment matching at anchor-free or check-gated points (scope (d) of Section~\ref{M-sec:privacy}); $\tau$ integrated out over its posterior, weighted by each hospital's own marginal likelihood (Remark~\ref{M-rem:tau}); and the anchor conflict check by default, decided once per hospital on anchor-free information. Table~\ref{tab:dev} gives the development runs that chose between the alternatives; the scripts are in \texttt{simulations/dev/}.

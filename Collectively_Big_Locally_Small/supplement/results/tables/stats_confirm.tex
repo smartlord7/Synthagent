@@ -1,0 +1,22 @@
+\begin{tabular}{llllrll}
+\toprule
+Data & $\varepsilon$ & GHB against & Mean difference [95\% CI] & Better & $p$ & Holm $p$ \\
+\midrule
+TCGA confirmation (5 networks) & 1 & Local & $-0.075$ [$-0.127$, $-0.023$] & 5 of 5 & 0.031 & 0.125 \\
+TCGA confirmation (5 networks) & 1 & DP-FedAvg + FT \cite{mcmahan2018learning} (realistic) & $-0.052$ [$-0.121$, $+0.018$] & 5 of 5 & 0.031 & 0.125 \\
+TCGA confirmation (5 networks) & 1 & DP-FedAvg + FT \cite{mcmahan2018learning} (oracle) & $-0.014$ [$-0.024$, $-0.004$] & 5 of 5 & not tested & not tested \\
+TCGA confirmation (5 networks) & 10 & Local & $-0.091$ [$-0.143$, $-0.040$] & 5 of 5 & 0.031 & 0.125 \\
+TCGA confirmation (5 networks) & 10 & Ditto \cite{li2021ditto} (realistic) & $-0.010$ [$-0.043$, $+0.023$] & 3 of 5 & 0.312 & 0.312 \\
+TCGA confirmation (5 networks) & 10 & Ditto \cite{li2021ditto} (oracle) & $-0.003$ [$-0.023$, $+0.017$] & 3 of 5 & not tested & not tested \\
+Camelyon17 (10 repetitions) & 10 & Local & $+0.011$ [$+0.009$, $+0.013$] & 10 of 10 & <0.001 & \textbf{0.010} \\
+Camelyon17 (10 repetitions) & 10 & DP-FedAvg + FT \cite{mcmahan2018learning} (realistic) & $+0.002$ [$-0.001$, $+0.005$] & 7 of 10 & 0.116 & 0.349 \\
+Camelyon17 (10 repetitions) & 10 & DP-FedAvg-SA + FT \cite{mcmahan2018learning,bonawitz2017practical} (realistic) & $+0.006$ [$+0.004$, $+0.009$] & 9 of 10 & 0.002 & \textbf{0.010} \\
+Camelyon17 (10 repetitions) & 10 & APFL \cite{deng2020adaptive} (realistic) & $+0.002$ [$-0.001$, $+0.004$] & 7 of 10 & 0.116 & 0.349 \\
+Camelyon17 (10 repetitions) & 10 & Ditto \cite{li2021ditto} (realistic) & $+0.002$ [$+0.001$, $+0.003$] & 9 of 10 & 0.005 & \textbf{0.020} \\
+Camelyon17 (10 repetitions) & 10 & pFedMe \cite{tdinh2020personalized} (realistic) & $+0.124$ [$+0.101$, $+0.147$] & 10 of 10 & <0.001 & \textbf{0.010} \\
+Camelyon17 (10 repetitions) & 10 & Clustered DP-FedAvg \cite{ghosh2020efficient,mcmahan2018learning} (realistic) & $+0.002$ [$-0.002$, $+0.005$] & 6 of 10 & 0.161 & 0.349 \\
+Camelyon17 (10 repetitions) & 1 & Local, non-inferiority & $+0.008$ [$+0.005$, $+0.010$] & 10 of 10 & <0.001 & \textbf{0.010} \\
+Camelyon17 (10 repetitions) & $\infty$ & Local & $+0.011$ [$+0.009$, $+0.013$] & 10 of 10 & <0.001 & \textbf{0.010} \\
+Camelyon17 (10 repetitions) & $\infty$ & Pooled & $+0.009$ [$+0.007$, $+0.012$] & 10 of 10 & <0.001 & \textbf{0.010} \\
+\bottomrule
+\end{tabular}
