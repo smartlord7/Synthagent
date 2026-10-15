@@ -167,6 +167,26 @@ def family4():
     return out
 
 
+# ------------------------------------------------------------------- family 5: tuned GHB against tuned literature
+def family5():
+    t = json.load(open(R / "real_v5_tuned.json"))  # every method on the same folds and privacy noise
+    out = []
+    for e in ("1", "10"):
+        v = {m: np.array(x) for m, x in t[e].items() if isinstance(x, list) and len(x) == len(t["nets"])}
+        for arm, gk in (("realistic", "GHB, tuned on development"), ("oracle", "GHB, oracle")):
+            lit = {m: x for m, x in v.items() if m.endswith(f"({arm})")}
+            best = min(lit, key=lambda m: lit[m].mean())
+            d = v[gk] - lit[best]
+            m, lo, hi = tci(d)
+            out.append(dict(family=5, data="TCGA confirmation, both tuned (5 networks)", eps=e, arm=arm,
+                            comparator=best, ghb=f"GHB tuned ({'design networks' if arm == 'realistic' else 'test folds'})",
+                            n=len(d), better=int((d < 0).sum()), mean=m, lo=lo, hi=hi, p=wilcoxon_less(d), tested=True,
+                            ghb_mean=float(v[gk].mean()), comp_mean=float(lit[best].mean())))
+    for r, a in zip(out, holm([r["p"] for r in out])):
+        r["p_holm"] = float(a)
+    return out
+
+
 # ------------------------------------------------------------------------------------------------------------ tables
 def fmt_p(p):
     return "<0.001" if p < 0.001 else f"{p:.3f}"
@@ -206,6 +226,18 @@ def tables(f1, f2, f3, f4):
     (TAB / "stats_sim15.tex").write_text("\n".join(L) + "\n")
 
 
+def tuned_table(f5):
+    L = ["\\begin{tabular}{llllrll}", "\\toprule",
+         "$\\varepsilon$ & Tuned on & GHB against & Mean difference [95\\% CI] & Better & $p$ & Holm $p$ \\\\", "\\midrule"]
+    for r in f5:
+        h = fmt_p(r["p_holm"])
+        L.append(f"{r['eps']} & {'design networks' if r['arm'] == 'realistic' else 'test folds'} & {comp_tex(r['comparator'])} & "
+                 f"${r['mean']:+.3f}$ [${r['lo']:+.3f}$, ${r['hi']:+.3f}$] & {r['better']} of {r['n']} & {fmt_p(r['p'])} & "
+                 f"{'\\textbf{' + h + '}' if r['p_holm'] < 0.05 else h} \\\\")
+    L += ["\\bottomrule", "\\end{tabular}"]
+    (TAB / "stats_tuned.tex").write_text("\n".join(L) + "\n")
+
+
 def detail_table(detail):
     """Per data set, both budgets: GHB, Local, the strongest realistic competitor (name, value); the better of GHB and
     that competitor in bold."""
@@ -231,10 +263,12 @@ def main():
     f1, f2 = family1(), family2()
     f3, detail = family3()
     f4 = family4()
-    json.dump(dict(family1=f1, family2=f2, family3=f3, family3_detail=detail, family4=f4), open(R / "stats_tests.json", "w"), indent=1)
+    f5 = family5()
+    json.dump(dict(family1=f1, family2=f2, family3=f3, family3_detail=detail, family4=f4, family5=f5), open(R / "stats_tests.json", "w"), indent=1)
     tables(f1, f2, f3, f4)
+    tuned_table(f5)
     detail_table(detail)
-    for r in f1 + f2 + f3:
+    for r in f1 + f2 + f3 + f5:
         extra = f" mean {r['mean']:+.4f} [{r['lo']:+.4f}, {r['hi']:+.4f}]" if "mean" in r else ""
         ph = r.get("p_holm")
         print(f"F{r['family']} eps={r['eps']:>3} vs {r['comparator'][:40]:40s} better {r['better']}/{r['n']}{extra} p={r['p'] if r['p'] is None else round(r['p'], 4)} holm={None if ph is None else round(ph, 4)}")
