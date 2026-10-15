@@ -60,7 +60,7 @@ Pedro Henriques Abreu\textsuperscript{1}}
 \maketitle
 
 \begin{abstract}
-Many clinical prediction tasks must be learned from small data: a few hundred patient records, fewer than the task requires, that cannot be pooled with those of other hospitals. Synthetic data generation could enlarge such datasets, but generators fitted to the scarce records themselves, from interpolation methods to deep generative models, cannot add information that the records lack. Large language models (LLMs) can, because they bring knowledge from pre-training and need no training on the target data. Their raw output, however, is not a dataset. Asked directly for a fixed number of records of six medical datasets, a commercial LLM returned that number in none of 60 runs, delivering between 57\% and 103\% of it, and some of its responses could not be parsed. This paper presents \system, a system that places a deterministic control layer between the LLM and the dataset. The control layer selects the real records the model sees, repairs and validates every response against the schema, requests exactly the missing records and logs the cost of each step, so that each run returns a complete dataset of the requested size for about 2\% more tokens than direct prompting. We evaluate \system with four commercial LLMs of two generations and two sizes and compare it with an interpolation method and two deep generative models. With the larger, more recent LLM, \system yields the largest average F1 gain of all generators and never lowers the F1 of a dataset by more than 0.6 points, whereas the other generators lose up to 10.6 points. No generator improves every dataset, a limit that follows from how much information each generator can contribute.
+Many clinical prediction tasks must be learned from small data: a few hundred patient records, fewer than the task requires, that cannot be pooled with those of other hospitals. Synthetic data generation could enlarge such datasets, but generators fitted to the scarce records themselves, from interpolation methods to deep generative models, cannot add information that the records lack. Large language models (LLMs) can, because they bring knowledge from pre-training and need no training on the target data. Their raw output, however, is not a dataset. Asked directly for a fixed number of records of six medical datasets, a commercial LLM returned that number in none of 60 runs, delivering between 57\% and 103\% of it, and some of its responses could not be parsed. This paper presents \system, a system that places a deterministic control layer between the LLM and the dataset. The control layer selects the real records the model sees, repairs and validates every response against the schema, requests exactly the missing records and logs the cost of each step, so that the dataset is completed to the requested size, for about 2\% more tokens than direct prompting. We evaluate \system with four commercial LLMs of two generations and two sizes and compare it with an interpolation method and two deep generative models. With the larger, more recent LLM, \system yields the largest average F1 gain of all generators and never lowers the F1 of a dataset by more than 0.6 points, whereas the other generators lose up to 10.6 points. No generator improves every dataset, a limit that follows from how much information each generator can contribute.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -87,19 +87,19 @@ Large language models (LLMs) are different, and this is why we turn to them. An 
 \begin{figure}[t]
 \centering
 \resizebox{\columnwidth}{!}{\input{figures_teaser.tex}}
-\caption{The problem addressed in this paper, in an illustrative example. Asked for 30 samples of a heart-disease dataset, an LLM response (left) can contain too few samples, invented or missing features and values of the wrong type. \system (right) validates and corrects every response, so the resulting dataset has the requested size and schema, and a log records each correction and its cost.}
+\caption{The problem addressed in this paper, in an illustrative example. Asked for 30 records of a heart-disease dataset, an LLM response (left) can contain too few records, invented or missing features and values of the wrong type. \system (right) validates and corrects every response, so the resulting dataset has the requested size and schema, and a log records each correction and its cost.}
 \label{fig:teaser}
 \end{figure}
 
 This paper addresses that gap. Stated precisely, the problem is the following.
 
-\smallskip\noindent\textbf{Problem statement.} \emph{Given a small dataset $D$ with schema $S$ and a requested number of synthetic records $N$, generate, without training a generator on $D$, a synthetic dataset $G$ that (R1)~has exactly $N$ records, (R2)~conforms to $S$, and (R3)~comes with a measured cost; and that is (R4)~faithful to $D$, (R5)~does not reproduce the records of $D$, and (R6)~improves, or at least does not degrade, the classifiers trained on $D$.}\smallskip
+\smallskip\noindent\textbf{Problem statement.} \emph{Given a small dataset $D$ with schema $S$ (its features and their types) and a requested number of synthetic records $N$, generate, without training a generator on $D$, a synthetic dataset $G$ that (R1)~has exactly $N$ records, (R2)~conforms to $S$, and (R3)~comes with a measured cost; and that is (R4)~faithful to $D$, (R5)~does not reproduce the records of $D$, and (R6)~improves, or at least does not degrade, the classifiers trained on $D$.}\smallskip
 
 The first three requirements describe a dependable data product and can be guaranteed by a system. The last three describe a useful one and can only be measured. Existing generators address different subsets of them (Table~\ref{tab:positioning}). SMOTE needs no training but only interpolates between existing records and ignores feature types. Deep generators~\cite{xu2019ctgan,kotelnikov2023tabddpm,zhang2024tabsyn} and language models fine-tuned on the target data~\cite{borisov2023great,solatorio2023realtabformer} must be trained on the very records that are scarce. LLMs used through prompting~\cite{seedat2024cllm,kim2024epic} avoid training, but the work on them has studied what to put in the prompt and which generated records to keep; whether the output is a well-formed dataset of the requested size, and at what cost, has been left to the model.
 
 \begin{table}[t]
 \centering
-\caption{Requirements met by existing generator families and by \system. \checkmark: by design; (\checkmark): partially (SMOTE's size follows the class balance; fine-tuned LMs discard unparsable samples); $\times$: not addressed.}
+\caption{Requirements met by existing generator families and by \system. \checkmark: by design; (\checkmark): partially (SMOTE's size follows the class balance; fine-tuned LMs discard unparsable records); $\times$: not addressed.}
 \label{tab:positioning}
 \footnotesize
 \setlength{\tabcolsep}{1.5pt}
@@ -143,7 +143,7 @@ To see where \system fits, we first review the families of tabular SDG methods, 
 Tabular SDG methods fall into four families. \emph{Interpolation and statistical models} include SMOTE, which creates minority-class records on the segment between two neighbours~\cite{chawla2002smote}, and Bayesian networks, which have also been used for differentially private release~\cite{zhang2014privbayes}. \emph{Deep generative models} learn the joint distribution with a neural network: CTGAN and TVAE~\cite{xu2019ctgan}, diffusion models such as TabDDPM, CoDi and TabSyn~\cite{kotelnikov2023tabddpm,lee2023codi,zhang2024tabsyn}, and relational and cross-silo variants~\cite{fan2020relational,shankar2024silofuse}. \emph{Fine-tuned language models} serialize each record as text and fine-tune a language model on the target data, as in GReaT~\cite{borisov2023great}, REaLTabFormer~\cite{solatorio2023realtabformer} and TabLoft~\cite{chen2026tabloft}. \emph{Prompted LLMs} generate records from examples placed in the prompt, without training, as in CLLM~\cite{seedat2024cllm} and EPIC~\cite{kim2024epic}.
 
 \subsection{Synthetic Data Generation in Small Data}
-Each family meets small data with a different limitation, and naming them makes clear which ones a new system must address.
+Most of these generators were designed and benchmarked on datasets with tens or hundreds of thousands of records, such as Adult (48,842 records) or Covertype (581,012 records)~\cite{xu2019ctgan}, and their behaviour on a few hundred records has received far less attention. Each family meets small data with a different limitation, and naming the limitations makes clear which ones a new system must address.
 \begin{itemize}[leftmargin=*,itemsep=1pt]
   \item[L1] \emph{No external information.} Interpolation methods and deep generators are fitted only to $D$, so by the conservation result of~\cite{simoes2026smalldata} they cannot add information about the task; they also ignore what the features mean.
   \item[L2] \emph{Training on scarce records.} Deep generators and fine-tuned language models estimate many parameters from few records, so they can produce records outside the observed ranges and types, or reproduce training records~\cite{hyeong2022tabularmia}.
@@ -162,7 +162,7 @@ Data-preparation studies have shown that a step that looks beneficial can harm d
 \section{Problem Formulation}
 \label{sec:problem}
 %======================================================================
-The problem statement of Section~\ref{sec:intro} mixes two kinds of requirement, and making the distinction explicit shapes both the system and its evaluation. Let $D^{\mathrm{tr}}$ and $D^{\mathrm{te}}$ be a training and a test partition of a small dataset $D$ with schema $S$, and let a configuration $\theta$ of the system (LLM, context strategy, active rules) produce a synthetic dataset $G_\theta$ from $D^{\mathrm{tr}}$ without access to $D^{\mathrm{te}}$. Requirements R1 and R2 define the feasible set $\mathcal{F}(S,R,N)$ of datasets with exactly $N$ records that conform to $S$ and to the active rules $R$. The other requirements are objectives: a fidelity loss $L_{\mathrm{fid}}(D^{\mathrm{tr}},G_\theta)$ for R4, a privacy risk $L_{\mathrm{priv}}(D^{\mathrm{tr}},G_\theta)$ for R5, the change in downstream utility $\Delta U(G_\theta)$ for R6 and the generation cost $\kappa(\theta)$ for R3:
+The problem statement of Section~\ref{sec:intro} mixes two kinds of requirement, and making the distinction explicit shapes both the system and its evaluation. Let $D^{\mathrm{tr}}$ and $D^{\mathrm{te}}$ be a training and a test partition of a small dataset $D$ with schema $S$, and let a configuration $\theta$ of the system (LLM, context strategy, active rules) produce a synthetic dataset $G_\theta$ from $D^{\mathrm{tr}}$ without access to $D^{\mathrm{te}}$. Requirements R1 and R2 define the feasible set $\mathcal{F}(S,R,N)$ of datasets with exactly $N$ records that conform to $S$ and to the active rules $R$. The other requirements are objectives: a fidelity loss $L_{\mathrm{fid}}(D^{\mathrm{tr}},G_\theta)$ for R4, a privacy risk $L_{\mathrm{priv}}(D^{\mathrm{tr}},G_\theta)$ for R5, the change in downstream utility $\Delta U(G_\theta)$ for R6 and the generation cost $\kappa(\theta)$, which R3 requires to be measured and which should also be kept low:
 \begin{equation}
 \theta^{\star}\in\operatorname*{arg\,min}_{\theta:\,G_{\theta}\in\mathcal{F}(S,R,N)}
 \bigl(L_{\mathrm{fid}},\;L_{\mathrm{priv}},\;-\Delta U,\;\kappa\bigr)(\theta).
@@ -179,7 +179,7 @@ The objectives in Equation~\eqref{eq:multiobjective} can conflict: records close
 \begin{figure*}[t]
 \centering
 \resizebox{\textwidth}{!}{\input{figures_architecture.tex}}
-\caption{Architecture of \system. Real samples enter a context window of limited size (1); the LLM proposes a JSON batch (2); deterministic checks parse it, map it to the schema and validate the type rules (3); and accepted samples are counted against the requested size (4). Each failure type triggers its own correction (orange). Every stage reads or updates the state $z_t$ of the control layer (purple), which also serves as the audit log of the run.}
+\caption{Architecture of \system. Real records enter a context window of limited size (1); the LLM proposes a JSON batch (2); deterministic checks parse it, map it to the schema and validate the type rules (3); and accepted records are counted against the requested size (4). Each failure type triggers its own correction (orange). Every stage reads or updates the state $z_t$ of the control layer (purple), which also serves as the audit log of the run.}
 \label{fig:architecture}
 \end{figure*}
 
@@ -197,11 +197,11 @@ A_{t+1}=A_t\cup K_{V_{S,R}}\bigl(P_S(Y_t)\bigr).
 Equation~\eqref{eq:acceptance} expresses the central design decision: the LLM only proposes, and a record enters $A_{t+1}$ only after it has been parsed, mapped to $S$ and validated. Because the state is explicit rather than implied by the conversation history, the number of missing records is always known, and $E_t$ records every failure for later inspection. The remaining subsections describe how each component reads and updates this state.
 
 \subsection{Context Selection (R1, R3)}
-The context selector decides which real samples the LLM sees. Table~\ref{tab:prompt-context} lists exactly what the model receives in our experiments. The core evidence is a 20\% sample of the real training split, serialized as compact row-major JSON with the ordered feature columns and the observed target, so the model sees how features and class co-occur in real samples. No free-text description of the clinical task is added, so that no dataset receives more prompt engineering than another; the model must infer the role of each feature from its name and values.
+The context selector decides which real records the LLM sees. Table~\ref{tab:prompt-context} lists exactly what the model receives in our experiments. The core evidence is a 20\% sample of the real training split, serialized as compact row-major JSON with the ordered feature columns and the observed target, so the model sees how features and class co-occur in real records. No free-text description of the clinical task is added, so that no dataset receives more prompt engineering than another; the model must infer the role of each feature from its name and values.
 
 \begin{table*}[t]
 \centering
-\caption{Information boundary for one generation request in the reported study. ``Not supplied'' is intentional: those signals cannot influence the generated rows.}
+\caption{Information boundary for one generation request in the reported study. ``Not supplied'' is intentional: those signals cannot influence the generated records.}
 \label{tab:prompt-context}
 \small
 \begin{tabular}{p{.17\textwidth}p{.36\textwidth}p{.39\textwidth}}
@@ -209,13 +209,13 @@ The context selector decides which real samples the LLM sees. Table~\ref{tab:pro
 Context layer & What the model receives & Why it is included or excluded \\
 \midrule
 Schema & Ordered column names and an exact column-count requirement & Fixes the record interface and prevents invented or omitted fields. \\
-Demonstrations & Compact row-major serialization of a 20\% sample of the training split, with feature and target values & Exposes joint patterns, value formats, label prevalence and plausible cross-column combinations without sending the whole local table. \\
-Generation task & Exact number of new rows for the current chunk, at most 30 & Turns an open-ended completion into a bounded action whose output count can be verified. \\
+Demonstrations & Compact row-major serialization of a 20\% sample of the training records, with feature and target values & Exposes joint patterns, value formats, label prevalence and plausible cross-column combinations without sending the whole local table. \\
+Generation task & Exact number of new records for the current batch, at most 30 & Turns an open-ended completion into a bounded action whose output count can be verified. \\
 Output contract & JSON only, fixed column order, complete cells, raw numeric values, no extra metadata & Makes parsing deterministic and removes interface failures unrelated to statistical quality. \\
 Dynamic feedback & Parser error location after malformed JSON, or grouped field violations after failed validation & Reveals only the evidence needed for a targeted repair instead of replaying the full history. \\
 Free-text metadata & Not supplied & Prevents unequal, dataset-specific prompt engineering from confounding the comparison. \\
 Test information & No holdout rows, predictions, metrics or classifier identities & Preserves the evaluation boundary and prevents optimization against the test set. \\
-Global statistics & No separately computed means, quantiles, correlations or class quotas & Fidelity must arise from the selected rows; the consequence is weaker protection against rare-mode omission. \\
+Global statistics & No separately computed means, quantiles, correlations or class quotas & Fidelity must arise from the selected records; the consequence is weaker protection against rare-mode omission. \\
 \bottomrule
 \end{tabular}
 \end{table*}
@@ -231,30 +231,30 @@ k_t&=\max\{k:T(H,I,C_{t,k},O_t)\leq0.85W\}.
 \end{equation}
 Here $H$ is the schema and output contract, $I$ optional instruction text, $O_t$ the reserved output, $W$ the backend context window and $T$ a token estimator (2.8 characters per token for compact JSON). The slice operator rotates through the pool across chunks, so successive requests see different patients when the pool exceeds one window. If the provider still rejects a request as too long (HTTP 400 or 422), the control layer shrinks the visible context by 40\% and retries, at most three times. ``20\% context'' therefore describes the candidate pool, not a promise that every candidate row appears in every prompt.
 
-The 20\% fraction and the 85\% window limit were fixed before the experiments and not tuned. The default strategy samples the context at random. \emph{Dense} prefers rows with the most observed cells, reducing ambiguity from missing fields. \emph{Diverse} standardizes numerical features, runs $k$-means and selects the rows nearest to the centroids, so that the context covers more of the feature space. Neither strategy is class-stratified, so neither guarantees that a rare diagnosis appears in context; Section~\ref{sec:discussion} returns to this limitation.
+The 20\% fraction and the 85\% window limit were fixed before the experiments and not tuned. The default strategy samples the context at random. \emph{Dense} prefers records with the most observed cells, reducing ambiguity from missing fields. \emph{Diverse} standardizes numerical features, runs $k$-means and selects the records nearest to the centroids, so that the context covers more of the feature space. Neither strategy is class-stratified, so neither guarantees that a rare diagnosis appears in context; Section~\ref{sec:discussion} returns to this limitation.
 
 \subsection{Parsing, Validation and Correction (R2)}
 The parser and the validator decide which parts of a response can enter the accepted set $A_t$ of Equation~\eqref{eq:acceptance}.
-Samples are requested in JSON batches of at most 30, a size that keeps every response within the output limit of the smallest LLM tested and limits the loss when a response fails. A local parser first extracts structured content and fixes common defects (non-finite literals, trailing commas, concatenated objects). If parsing still fails, the control layer issues one repair request at temperature 0.1 that quotes the error position and surrounding text. The returned feature names are then mapped back to the schema.
+Records are requested in JSON batches of at most 30, a size that keeps every response within the output limit of the smallest LLM tested and limits the loss when a response fails. A local parser first extracts structured content and fixes common defects (non-finite literals, trailing commas, concatenated objects). If parsing still fails, the control layer issues one repair request at temperature 0.1 that quotes the error position and surrounding text. The returned feature names are then mapped back to the schema.
 
 Profiling infers a type rule for every feature, and optional boundary rules (numerical ranges with 10\% tolerance, or categorical domains with at most 20 values). Dynamic Pydantic models validate each batch. The validator groups failures by field and reports one representative bad value per field, so the correction prompt does not grow linearly with repeated errors. Up to two correction rounds are attempted per batch. User-defined post-processing rules (noise, rounding, normalization) can be applied deterministically afterwards.
 
 In the reference configuration of our experiments, type rules are active, boundary rules are off and no user rules are supplied, so we evaluate the default system rather than the strictest one. Rules are used only by the validator and are never inserted into the prompt.
 
 \subsection{Completion Loop (R1)}
-LLMs often return fewer samples than requested. The completion loop derives its next request from the accepted state rather than from the conversation:
+LLMs often return fewer records than requested, as RQ1 will show. The completion loop derives its next request from the accepted state rather than from the conversation:
 \begin{equation}
 r_t=\max(0,N-|A_t|),\qquad q_t=\min(30,r_t).
 \label{eq:residual}
 \end{equation}
-Equation~\eqref{eq:residual} requests only the residual $q_t$, and any overshoot is truncated. The loop runs for at most 50 top-up rounds and stops after five consecutive empty or unparsable responses. Successful runs therefore return exactly $N$ rows; persistent provider failure can still end a run short, and that shortfall is recorded rather than hidden. Algorithm~\ref{alg:loop} summarizes the complete loop.
+Equation~\eqref{eq:residual} requests only the residual $q_t$, and any overshoot is truncated. The loop runs for at most 50 top-up rounds and stops after five consecutive empty or unparsable responses. Successful runs therefore return exactly $N$ records; persistent provider failure can still end a run short, and that shortfall is recorded rather than hidden. Algorithm~\ref{alg:loop} summarizes the complete loop.
 
 \begin{algorithm}[t]
 \caption{Generation loop of the control layer}
 \label{alg:loop}
 \small
 \begin{algorithmic}[1]
-\Require table $D^{\mathrm{tr}}$, schema $S$, rules $R$, volume $N$, strategy $s$, window $W$
+\Require training records $D^{\mathrm{tr}}$, schema $S$, rules $R$, size $N$, strategy $s$, window $W$
 \State $\mathcal{P}\gets\operatorname{Select}_s(D^{\mathrm{tr}},\lceil0.2|D^{\mathrm{tr}}|\rceil)$; $A\gets\emptyset$; $E\gets[\,]$
 \For{chunk $t=1,\dots,\lceil N/30\rceil$}
   \State $C_t\gets$ rotated slice of $\mathcal{P}$ that fits $0.85W$ \Comment{Eq.~\eqref{eq:context}}
@@ -268,7 +268,7 @@ Equation~\eqref{eq:residual} requests only the residual $q_t$, and any overshoot
 \EndFor
 \State $u\gets0$
 \While{$|A|<N$ \textbf{and} fewer than 50 rounds \textbf{and} $u<5$} \Comment{Eq.~\eqref{eq:residual}}
-  \State $X\gets P_S(\pi_\phi(S,\text{first 20 rows of }\mathcal{P},\min(30,N-|A|)))$
+  \State $X\gets P_S(\pi_\phi(S,\text{first 20 records of }\mathcal{P},\min(30,N-|A|)))$
   \State \textbf{if} $X=\emptyset$ \textbf{then} $u\gets u+1$ \textbf{else} $A\gets A\cup X$; $u\gets0$
 \EndWhile
 \State \Return first $N$ rows of $A$, together with $E$, token counts and timings
@@ -276,7 +276,7 @@ Equation~\eqref{eq:residual} requests only the residual $q_t$, and any overshoot
 \end{algorithm}
 
 \paragraph*{Audit log and cost accounting (R3)}
-Every run records prompt, completion and total tokens, LLM generation time, parser repair attempts, rule violations, the requested and delivered row counts and the model identifier. These records make a synthetic dataset inspectable after the fact and give the cost term $\kappa(\theta)$ in Equation~\eqref{eq:multiobjective} a measured value.
+Every run records prompt, completion and total tokens, LLM generation time, parser repair attempts, rule violations, the requested and delivered record counts and the model identifier. These records make a synthetic dataset inspectable after the fact and give the cost term $\kappa(\theta)$ in Equation~\eqref{eq:multiobjective} a measured value.
 
 
 \subsection{Deployment Across Hospitals}
@@ -300,7 +300,7 @@ preferably under secure aggregation~\cite{bonawitz2017secure}. The weights count
 \resizebox{\linewidth}{!}{\input{figures_federated.tex}}
 \end{minipage}\hfill
 \begin{minipage}[c]{0.37\textwidth}
-\caption{Deployment across hospitals. Each hospital runs \system (context selection, a locally served LLM, validation and correction) inside its own infrastructure, then decides with paired local validation whether to use the synthetic samples $G_k$ (Hospital~1) or to train on real data only (Hospital~$K$). Only the model update $\Delta w_k$ and approved aggregate diagnostics leave the hospital. The coordinator weights each update by the number of real samples $n_k=|D_k|$ (Equation~\eqref{eq:federated-aggregate}), so generating more samples gives a hospital no extra weight.}
+\caption{Deployment across hospitals. Each hospital runs \system (context selection, a locally served LLM, validation and correction) inside its own infrastructure, then decides with paired local validation whether to use the synthetic records $G_k$ (Hospital~1) or to train on real data only (Hospital~$K$). Only the model update $\Delta w_k$ and approved aggregate diagnostics leave the hospital. The coordinator weights each update by the number of real records $n_k=|D_k|$ (Equation~\eqref{eq:federated-aggregate}), so generating more records gives a hospital no extra weight.}
 \label{fig:federated}
 \end{minipage}
 \end{figure*}
@@ -316,7 +316,7 @@ We use healthcare data because small data is most common there and because the c
 
 \begin{table}[t]
 \centering
-\caption{Evaluation datasets. $n$: samples; $d$: features; $k$: classes; $n_{\min}$: samples in the smallest class; $n^{\star}$: sample complexity by the first criterion of Riley et al.~\cite{riley2019binary} (shrinkage 0.9, $d(k-1)$ parameters, anticipated $R^2_{\mathrm{CS}}$ of 15\% of its maximum); $\sigma=n^{\star}/n_{\mathrm{eff}}$ with $n_{\mathrm{eff}}$ the training size ($0.8n$).}
+\caption{Evaluation datasets. $n$: records; $d$: features; $k$: classes; $n_{\min}$: records in the smallest class; $n^{\star}$: sample complexity by the first criterion of Riley et al.~\cite{riley2019binary} (shrinkage 0.9, $d(k-1)$ parameters, anticipated $R^2_{\mathrm{CS}}$ of 15\% of its maximum); $\sigma=n^{\star}/n_{\mathrm{eff}}$ with $n_{\mathrm{eff}}$ the training size ($0.8n$).}
 \label{tab:datasets}
 \footnotesize
 \setlength{\tabcolsep}{3pt}
@@ -357,7 +357,7 @@ F_{\mathrm{corr}}&=100\bigl(1-\operatorname{mean}|\Sigma_D-\Sigma_G|\bigr),
 \end{aligned}
 \label{eq:fidelity}
 \end{equation}
-where $D_{\mathrm{JS}}$ is the Jensen--Shannon divergence between real and synthetic marginals and $\Sigma_D$, $\Sigma_G$ are their correlation matrices; both scores equal 100 for identical distributions. We add a classifier two-sample test (C2ST)~\cite{lopezpaz2017c2st}, in which a random forest is trained to separate real from synthetic records and an accuracy close to 0.5 means they are hard to tell apart, and, for the established generators, the percentage of \emph{valid} records, whose values lie in the observed ranges and categories and are integers where the real feature is. For \emph{privacy} (R5), a membership-inference attack scores each real record by its distance to the nearest synthetic record and reports the ROC AUC between training and test records, where 0.5 is chance. For \emph{utility} (R6), the paired change for metric $m\in\{\mathrm{accuracy},\mathrm{F1}\}$, dataset $d$, classifier $c$ and repetition $h$ is
+where $D_{\mathrm{JS}}$ is the Jensen--Shannon divergence between real and synthetic marginals and $\Sigma_D$, $\Sigma_G$ are their correlation matrices; both scores equal 100 for identical distributions. We add a classifier two-sample test (C2ST)~\cite{lopezpaz2017c2st}, in which a random forest is trained to separate real from synthetic records and an accuracy close to 0.5 means they are hard to tell apart, and, for the established generators and direct prompting, the percentage of \emph{valid} records, whose values lie in the observed ranges and categories and are integers where the real feature is, a stricter criterion than R2, which concerns features and types only. For \emph{privacy} (R5), a membership-inference attack scores each real record by its distance to the nearest synthetic record and reports the ROC AUC between training and test records, where 0.5 is chance. For \emph{utility} (R6), the paired change for metric $m\in\{\mathrm{accuracy},\mathrm{F1}\}$, dataset $d$, classifier $c$ and repetition $h$ is
 \begin{equation}
 \Delta m_{d,c,h}=m\bigl(D^{\mathrm{tr}}_{d,h}\cup G_{d,h};\,c\bigr)-m\bigl(D^{\mathrm{tr}}_{d,h};\,c\bigr),
 \label{eq:utility}
@@ -404,7 +404,7 @@ Mean & & 87.6 & 10 & $-0.04$ & 100 & $-0.14$ \\
 \end{tabular*}
 \end{table}
 
-The control layer achieves this without changing the records themselves. The two configurations have the same marginal fidelity (JSD 72.7), similar correlation preservation (71.2 versus 72.6) and C2ST accuracy (0.883 versus 0.878), a membership AUC near chance (0.517 versus 0.526) and mean utility changes within the noise floor estimated below ($-1.36$ versus $-1.19$ pp in accuracy, $-0.04$ versus $-0.14$ pp in F1). The direct responses contained no type errors or unknown features with this LLM, so its failures were failures of volume and syntax, exactly the ones the completion loop and the parser address. The cost of the control layer is small: 73,510 tokens per repetition against 72,126, or 1.9\% more. The two configurations differ, in other words, not in what the records look like but in whether the user receives the dataset that was requested.
+The control layer achieves this without changing the quality of the records. The two configurations have the same marginal fidelity (JSD 72.7), similar correlation preservation (71.2 versus 72.6) and C2ST accuracy (0.883 versus 0.878), a membership AUC near chance (0.517 versus 0.526) and mean utility changes within the noise floor estimated below ($-1.36$ versus $-1.19$ pp in accuracy, $-0.04$ versus $-0.14$ pp in F1). The direct responses contained no type errors or unknown features with this LLM, so its failures were failures of volume and syntax, exactly the ones the completion loop and the parser address. The cost of the control layer is small: 73,510 tokens per repetition against 72,126, or 1.9\% more. The two configurations differ, in other words, not in what the records look like but in whether the user receives the dataset that was requested.
 
 \paragraph*{Which components matter} Having established that the control layer is needed, we ask which of its design choices change the outcome. Table~\ref{tab:ablation} compares the seven control-layer variants. The first four rows run the same pipeline, so their spread is the noise floor: JSD 72.43--72.92, correlation 70.83--72.93, mean accuracy change $-1.80$ to $-1.19$ pp, mean F1 change $-0.18$ to $+0.28$ pp and attack AUC 0.523--0.534. Differences of about 0.5 JSD points, 2 correlation points or 0.6 pp of utility between two runs are therefore not evidence of a design effect. The same rows show that generation time is a poor cost measure: the four equivalent runs take 228 to 379 seconds per repetition, depending on the provider, while their token counts differ by less than 2\%. We therefore measure cost in tokens.
 
@@ -442,7 +442,7 @@ Against this floor, the design choices have small effects. Dense context stays i
 \label{fig:ranks}
 \end{figure}
 
-The corrections themselves were rarely needed with GPT-4o mini, which produced no type violation and no response that the parser could not handle. They were needed with GPT-4.1 mini, the fastest LLM we tested, which produced on average 7.4 type violations per repetition on breast cancer and one malformed response in ten repetitions on diabetes. These were detected and sent back for correction instead of entering the dataset, and the resulting datasets were complete and gave the best mean accuracy change of all configurations (Table~\ref{tab:backend}). A faster but less disciplined model can thus be used safely, because its failures are caught. Across all LLMs, the synthetic datasets have 99.7\% (GPT-4o mini) to 100.0\% of their values filled.
+The correction steps were rarely needed with GPT-4o mini: it produced no type violation, and the local parser fixed every defect in its responses without a repair request. They were needed with GPT-4.1 mini, the fastest LLM we tested, which produced on average 7.4 type violations per repetition on breast cancer and one malformed response in ten repetitions on diabetes. These were detected and sent back for correction instead of entering the dataset, and the resulting datasets were complete and gave the best mean accuracy change of all configurations (Table~\ref{tab:backend}). A faster but less disciplined model can thus be used safely, because its failures are caught. Across all LLMs, the synthetic datasets have 99.7\% (GPT-4o mini) to 100.0\% of their values filled.
 
 \noindent\textit{Answer to RQ1.} The control layer is what makes LLM output usable as a dataset: direct prompting never returned the requested size and lost whole batches to malformed responses, whereas \system delivers complete datasets of the requested size, records its cost and catches the failures of less disciplined models, for 1.9\% more tokens. Within one LLM, no design choice moves fidelity or utility beyond the noise floor, except a small fidelity gain from diverse context. The value of the control layer lies in reliability rather than in a higher score, which leads to the next question: how good are the records it delivers?
 
@@ -540,7 +540,7 @@ How does LLM-based synthesis compare with generators fitted to the data? Table~\
 
 \begin{table}[t]
 \centering
-\caption{Generators compared on the same splits (RQ4). Valid: \% of samples within the observed ranges, categories and integer types (not logged for the LLM runs, whose types are enforced by the validator). Seconds: API time for \system, CPU time otherwise.}
+\caption{Generators compared on the same splits (RQ4). Valid: \% of records within the observed ranges, categories and integer types (not logged for the LLM runs, whose types are enforced by the validator). Seconds: API time for \system, CPU time otherwise.}
 \label{tab:generators}
 \scriptsize
 \setlength{\tabcolsep}{1.5pt}
@@ -555,7 +555,7 @@ CTGAN & \best{77.6} & 75.2 & 0.936 & \best{0.503} & 29.6 & $-1.40$ & $-3.37$ & 1
 TVAE & 71.9 & \best{85.6} & 0.868 & 0.515 & 75.6 & \best{$-0.09$} & $-0.21$ & 5.6 & 0 \\
 \bottomrule
 \end{tabular*}
-\par\vspace{2pt}\raggedright\scriptsize $^{\dagger}$Emits only non-majority samples, so its C2ST is not comparable.
+\par\vspace{2pt}\raggedright\scriptsize $^{\dagger}$Emits only non-majority records, so its C2ST is not comparable.
 \end{table}
 
 Average changes, however, hide how much each generator can harm an individual dataset, and in small data a large loss on one dataset matters more than a small gain on average. Table~\ref{tab:robust} reports the F1 change per dataset. SMOTE gives the largest gains where the scored class is rare ($+10.91$ pp on heart failure, $+4.11$ on diabetes) but loses 8.20 pp on liver disease, where the scored class is the majority. CTGAN loses on every dataset, by up to 10.65 pp. TVAE gives the best accuracy change on average but loses 2.86 pp of F1 on heart failure. \system with GPT-4.1 has both the largest mean F1 gain ($+1.09$ pp) and the smallest worst case: it never lowers the F1 of a dataset by more than 0.53 pp, while raising it by 6.35 pp on heart failure. Across datasets, the differences between the five generators are not significant ($\chi^2_F(4)=6.80$, $p=.147$ for accuracy; $\chi^2_F(4)=5.60$, $p=.231$ for F1; every Holm-adjusted $p\ge.25$); TVAE has the best accuracy rank (2.00), and the two \system configurations share the best F1 rank (2.50).
@@ -585,7 +585,7 @@ TVAE & $-0.73$ & $-0.88$ & $-2.86$ & $+0.89$ & $+2.21$ & $+0.10$ & $-0.21$ & $-2
 \section{Discussion and Limitations}
 \label{sec:discussion}
 %======================================================================
-We set out to determine whether a control layer makes LLM-based SDG a reliable and useful option for small data, and the four answers combine into a clear picture. Reliability is achieved, and it is achieved by the control layer: the same LLM, prompted directly, never returned the dataset that was requested, whereas \system always did, recorded its cost and caught the failures of a less disciplined model, at almost no extra cost (RQ1). Usefulness is real but bounded: the synthetic records are faithful without reproducing real ones, yet distinguishable from them (RQ2); they help classifiers that fail on the minority class (RQ3); and with a stronger LLM they give the most consistent F1 gain among the generators compared (RQ4). No generator, however, improves utility significantly on all datasets. This is what our survey's conservation result predicts~\cite{simoes2026smalldata}: SDG cannot replace missing patients, and its benefit is bounded by the knowledge the generator brings. Among the generators we compared, the LLM is the only one that brings such knowledge, and the control layer is what makes it usable.
+We set out to determine whether a control layer makes LLM-based SDG a reliable and useful option for small data, and the four answers combine into a clear picture. Reliability is achieved, and it is achieved by the control layer: the same LLM, prompted directly, never returned the dataset that was requested, whereas \system completes it by construction, records its cost and caught the failures of a less disciplined model, at almost no extra cost (RQ1). Usefulness is real but bounded: the synthetic records are faithful without reproducing real ones, yet distinguishable from them (RQ2); they help classifiers that fail on the minority class (RQ3); and with a stronger LLM they give the most consistent F1 gain among the generators compared (RQ4). No generator, however, improves utility significantly on all datasets. This is what our survey's conservation result predicts~\cite{simoes2026smalldata}: SDG cannot replace missing patients, and its benefit is bounded by the knowledge the generator brings. Among the generators we compared, the LLM is the only one that brings such knowledge, and the control layer is what makes it usable.
 
 These results translate into four practical recommendations. Choose the LLM first, since it is the only factor whose effect exceeds the variation between runs. Measure cost in tokens rather than time, which depends on the provider. Check the effect of synthetic records per classifier, on paired splits, before using them. And do not let the LLM choose its own settings without measuring the extra cost.
 
@@ -597,7 +597,7 @@ Synthetic medical records can support development, teaching and software testing
 \section{Conclusion}
 \label{sec:conclusion}
 %======================================================================
-Small clinical datasets pose a dilemma for synthetic data generation. Generators fitted to the available records cannot add the information those records lack, whereas an LLM can bring knowledge from pre-training but returns text rather than a dataset. \system resolves the dilemma with a control layer that turns LLM responses into complete, validated datasets of the requested size and records their cost, without training on the target data. On six small medical datasets, direct prompting never delivered the requested dataset, while \system always did, at 1.9\% more tokens; with the larger, more recent LLM it gave the largest and most consistent F1 gain of five generators, although no generator was significantly better on every dataset. Because repeated runs of the same pipeline vary as much as most design choices, we recommend that SDG for small data be evaluated against such a noise floor. Future work will evaluate locally served LLMs, class-aware context selection and the deployment across hospitals outlined in Section~\ref{sec:deployment}.
+Small clinical datasets pose a dilemma for synthetic data generation. Generators fitted to the available records cannot add the information those records lack, whereas an LLM can bring knowledge from pre-training but returns text rather than a dataset. \system resolves the dilemma with a control layer that turns LLM responses into complete, validated datasets of the requested size and records their cost, without training on the target data. On six small medical datasets, direct prompting never delivered the requested dataset, while \system completes it by construction, at 1.9\% more tokens; with the larger, more recent LLM it gave the largest and most consistent F1 gain of five generators, although no generator was significantly better on every dataset. Because repeated runs of the same pipeline vary as much as most design choices, we recommend that SDG for small data be evaluated against such a noise floor. Future work will evaluate locally served LLMs, class-aware context selection and the deployment across hospitals outlined in Section~\ref{sec:deployment}.
 
 %======================================================================
 \section*{Acknowledgment}

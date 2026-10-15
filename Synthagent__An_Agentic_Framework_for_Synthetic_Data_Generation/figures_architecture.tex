@@ -33,7 +33,7 @@
 %======================== 1 budgeter ====================
 \begin{scope}[shift={(2.6,-0.65)}]
   \fill[sgray!35]   (0,0) rectangle (0.4,-0.38);  \node at (0.2,-0.19)  {\tiny $H$};
-  \fill[sblue!45]   (0.4,0) rectangle (1.6,-0.38); \node at (1.0,-0.19) {\tiny rows $C_t$};
+  \fill[sblue!45]   (0.4,0) rectangle (1.6,-0.38); \node at (1.0,-0.19) {\tiny records $C_t$};
   \fill[sorange!35] (1.6,0) rectangle (2.2,-0.38); \node at (1.9,-0.19) {\tiny $O_t$};
   \draw[sgray] (0,0) rectangle (2.6,-0.38);
   \draw[red!70!black,thick] (2.2,0.08) -- (2.2,-0.46);
@@ -62,7 +62,7 @@
   \draw[sgray] (0,0) rectangle (2.2,-0.32);
   \node at (0.8,-0.16) {\tiny $|A_t|$}; \node at (1.9,-0.16) {\tiny $r_t$};
   \draw[sgray,|-|] (0,-0.4) -- (2.2,-0.4);
-  \node[font=\tiny,anchor=north] at (1.1,-0.42) {$N$ requested rows};
+  \node[font=\tiny,anchor=north] at (1.1,-0.42) {$N$ requested records};
   \node[font=\tiny,anchor=north west,align=left] at (-0.05,-0.75)
     {$A_{t+1}=A_t\cup K_V(P_S(Y_t))$\\$r_t=\max(0,\,N-|A_t|)$\\overshoot truncated to $N$};
 \end{scope}
@@ -70,7 +70,7 @@
 
 %======================== output ========================
 \node[pan=sgray,anchor=north west,align=left,inner sep=3pt,text width=20mm,font=\sffamily\tiny] (out) at (17.8,0)
-  {\textbf{\scriptsize Synthetic table $G$}\\exactly $N$ schema-valid rows\\[4pt]\textbf{\scriptsize Audit trail}\\tokens and latency\\repairs and violations\\shortfall, model id};
+  {\textbf{\scriptsize Synthetic table $G$}\\exactly $N$ type-checked records\\[4pt]\textbf{\scriptsize Audit trail}\\tokens and latency\\repairs and violations\\shortfall, model id};
 \draw[flow] (17.2,-0.95) -- node[above,font=\tiny]{$r_t{=}0$} (out.west|-0,-0.95);
 
 %======================== recovery loops ================
@@ -82,7 +82,7 @@
 \node[lab=sorange,anchor=south] at (10.55,1.15) {rule violations: grouped field feedback, $\le$2 rounds};
 % residual -> top-up
 \draw[fail] (16.95,0) -- (16.95,1.7) -- (7.55,1.7) -- (7.55,0);
-\node[lab=sorange,anchor=south] at (12.1,1.7) {$r_t>0$: request exactly $q_t=\min(30,r_t)$ more rows; $\le$50 rounds, stop after 5 empty};
+\node[lab=sorange,anchor=south] at (12.1,1.7) {$r_t>0$: request exactly $q_t=\min(30,r_t)$ more records; $\le$50 rounds, stop after 5 empty};
 % overflow -> shrink context (below)
 \draw[fail] (6.6,-2.2) -- (6.6,-2.55) -- (4.6,-2.55) -- (4.6,-2.2);
 \node[lab=sorange,anchor=north,align=center] at (5.6,-2.58) {context overflow (HTTP 400/422):\\shrink $C_t$ by 40\%, at most 3 times};
