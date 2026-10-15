@@ -492,6 +492,13 @@ def main():
             k = f"StAll{E[r['eps']]}{'Loc' if r['comparator'] == 'Local' else 'Real'}"
             n[k + "Wins"], n[k + "Holm"] = str(r["better"]), P(r["p_holm"])
         n["StAllN"] = str(S["family3"][0]["n"])
+        for r in S.get("family5", []):
+            k = f"StTuned{E[r['eps']]}{'Real' if r['arm'] == 'realistic' else 'Orc'}"
+            n[k + "Wins"], n[k + "Mean"], n[k + "CI"] = str(r["better"]), f"{r['mean']:+.3f}", f"[{r['lo']:+.3f}, {r['hi']:+.3f}]"
+            n[k + "P"], n[k + "Holm"] = P(r["p"]), P(r["p_holm"])
+        if S.get("family5"):
+            n["StTunedWins"] = str(sum(r["better"] for r in S["family5"]))
+            n["StTunedPairs"] = str(sum(r["n"] for r in S["family5"]))
         for r in S["family4"]:
             t = {"DP-FedAvg": "Avg", "DP-FedAvg + fine-tuning": "FT", "Decentralized DP-SGD": "Dec", "Clustered DP-FedAvg": "Clu",
                  "Ditto-style (DP)": "Ditto", "Local": "Loc"}[r["comparator"]]
