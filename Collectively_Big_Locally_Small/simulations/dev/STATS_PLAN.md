@@ -64,3 +64,23 @@ worse (two-sided, Holm within each comparison).
 A superiority claim in the paper requires the Holm-adjusted p below 0.05 in Family 1 or 2. Otherwise the paper reports
 the estimate and interval and says the difference is not statistically established. Families 3 and 4 are described as
 supporting evidence, never as confirmation.
+
+## Amendment 1 (2026-10-15, committed before it was computed): tuned against tuned
+
+Families 1 and 2 compare GHB with its released, untuned settings against literature methods that were tuned. The like-
+for-like comparison tunes GHB the same way (dev/v5_tune.py: 36 configurations of the prior scale of tau, the
+non-borrowing weight and the budget split; results/real_v5_tuned.json, where every method shares the same folds and
+privacy noise on the 5 held-out TCGA networks).
+
+## Family 5 (confirmatory data): tuned GHB against tuned literature, unit = network, n = 5
+
+For epsilon in {1, 10}:
+
+- H5a(eps), realistic arm: GHB tuned on the design networks is better than the strongest realistic literature method
+  (lowest mean over the 5 networks at that epsilon, tuned on the same design networks).
+- H5b(eps), oracle arm: GHB tuned on each network's test folds is better than the strongest oracle literature method
+  (lowest mean over the 5 networks, tuned on the same test folds).
+
+One-sided exact Wilcoxon signed-rank tests on the 5 paired differences, Holm over the 4 hypotheses, familywise alpha
+0.05; mean difference with a 95% t interval and the number of networks where GHB is better. The claim rule of the plan
+applies unchanged.
