@@ -1,0 +1,129 @@
+<title>GHB perante os orientadores</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,650&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: uma coluna de leitura (~68ch), perguntas numeradas porque são a ordem habitual da reunião; citações prontas a dizer em caixa própria. */
+:root {
+  --bg: #f7f8f6; --surface: #ffffff; --fg: #1d2421; --muted: #5d6a64; --rule: #d8ded9;
+  --accent: #1f6f5c; --accent-soft: #e3efe9; --warn: #8a4b12; --warn-soft: #f6ece1;
+  --display: "Fraunces", Georgia, "Times New Roman", serif;
+  --body: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #121614; --surface: #1a201d; --fg: #e4ebe7; --muted: #9aa8a1; --rule: #2e3833;
+  --accent: #6fc3a6; --accent-soft: #1d2f28; --warn: #e3a76a; --warn-soft: #2e2419; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #121614; --surface: #1a201d; --fg: #e4ebe7; --muted: #9aa8a1; --rule: #2e3833;
+  --accent: #6fc3a6; --accent-soft: #1d2f28; --warn: #e3a76a; --warn-soft: #2e2419; color-scheme: dark; }
+body { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 17px; line-height: 1.6;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+main { max-width: 68ch; margin: 0 auto; padding-block: 48px 72px; display: flex; flex-direction: column; gap: 40px; }
+header { display: flex; flex-direction: column; gap: 10px; border-bottom: 1px solid var(--rule); padding-bottom: 28px; }
+.eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+h1 { font-family: var(--display); font-weight: 650; font-size: clamp(30px, 6vw, 42px); line-height: 1.1; margin: 0; text-wrap: balance; }
+.lede { color: var(--muted); margin: 0; }
+section { display: flex; flex-direction: column; gap: 12px; }
+h2 { font-family: var(--display); font-weight: 500; font-size: 24px; line-height: 1.25; margin: 0; text-wrap: balance; display: flex; gap: 12px; align-items: baseline; }
+h2 .n { font-family: var(--mono); font-size: 14px; color: var(--accent); flex: none; }
+.q { font-style: italic; color: var(--muted); margin: 0; }
+p, ul, ol { margin: 0; }
+ul, ol { padding-left: 1.3em; display: flex; flex-direction: column; gap: 6px; }
+.say { background: var(--accent-soft); border-radius: 6px; padding: 14px 18px; margin: 0; }
+.say::before { content: "Para dizer"; display: block; font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); margin-bottom: 4px; }
+.say.key { border: 1.5px solid var(--accent); }
+.note { font-size: 15px; color: var(--muted); }
+.warn { background: var(--warn-soft); border-radius: 6px; padding: 12px 16px; font-size: 15px; }
+.warn strong { color: var(--warn); }
+.tablewrap { overflow-x: auto; border: 1px solid var(--rule); border-radius: 6px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 15px; min-width: 520px; }
+th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+th { font-family: var(--mono); font-size: 12px; font-weight: 500; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+tr:last-child td { border-bottom: 0; }
+td.num { font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.formula { font-family: var(--mono); font-size: 15px; background: var(--surface); border: 1px solid var(--rule); border-radius: 4px; padding: 1px 6px; white-space: nowrap; }
+footer { border-top: 1px solid var(--rule); padding-top: 18px; font-size: 14px; color: var(--muted); }
+</style>
+
+<main>
+  <header>
+    <span class="eyebrow">Preparação da reunião com os orientadores</span>
+    <h1>GHB perante os orientadores</h1>
+    <p class="lede">As sete perguntas que voltam sempre, com uma resposta fixa para cada uma. Diga a mesma resposta todas as vezes: grande parte das perguntas repetidas nasce de ouvirem o problema formulado de maneira diferente em cada reunião.</p>
+  </header>
+
+  <section>
+    <h2><span class="n">01</span>Contexto</h2>
+    <p class="q">"De onde vem este problema?"</p>
+    <p class="say">A maior parte das tarefas de predição clínica é pequena no hospital que precisa do modelo. Um hospital regional pode ter entre 30 e 200 doentes para um dado desfecho. Os dados que tornariam a tarefa grande estão noutros hospitais, que não podem partilhar registos de doentes ao abrigo do RGPD e não têm uma entidade central em que todos confiem. O que existe na prática são acordos bilaterais entre pares de hospitais, não uma plataforma central.</p>
+  </section>
+
+  <section>
+    <h2><span class="n">02</span>O problema, numa frase</h2>
+    <p class="q">"Qual é exatamente o problema que quer resolver?"</p>
+    <p class="say key">Como pode um hospital pequeno aprender um modelo de predição melhor com os dados de outros hospitais, quando nenhum registo de doente pode sair de nenhum hospital, não há servidor central, não há dados para afinar hiperparâmetros e nenhum hospital pode ficar pior do que se trabalhasse sozinho?</p>
+    <p class="note">Esta é a frase a decorar. Diga-a palavra por palavra.</p>
+  </section>
+
+  <section>
+    <h2><span class="n">03</span>Motivação</h2>
+    <p class="q">"Porque é que isto importa?"</p>
+    <p class="say">O modelo de um hospital pequeno é ruidoso simplesmente porque tem poucos doentes. As duas soluções óbvias falham. Juntar os dados de todos é ilegal e, mesmo onde é possível, um modelo único prejudica os hospitais diferentes dos restantes: na nossa simulação, o maior hospital perde cerca de 400 doentes de precisão. A aprendizagem federada pressupõe coisas que estas redes não têm.</p>
+  </section>
+
+  <section>
+    <h2><span class="n">04</span>Limitações da literatura</h2>
+    <p class="q">"O que é que os métodos existentes não fazem?"</p>
+    <p>Use os cinco requisitos do artigo (contribuição 1): rede esparsa, sem servidor, privacidade garantida para todo o protocolo, sem afinação de hiperparâmetros e uma garantia para cada hospital. Depois mostre quem falha o quê:</p>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Abordagem</th><th>Onde falha</th></tr></thead>
+        <tbody>
+          <tr><td>DP-FedAvg, FedProx</td><td>Precisa de servidor; um único modelo global; muitas rondas, cada uma a gastar orçamento de privacidade; tem de ser afinado</td></tr>
+          <tr><td>Ditto, pFedMe, APFL (aprendizagem federada personalizada)</td><td>Continua a precisar de servidor e de hiperparâmetros que os hospitais pequenos não têm dados de validação para escolher</td></tr>
+          <tr><td>DP-SGD descentralizado</td><td>Sem servidor, mas com muitas rondas de comunicação com ruído</td></tr>
+          <tr><td>Meta-análise (DerSimonian-Laird)</td><td>Cada hospital divulga a sua própria estimativa, por isso o ruído de privacidade é calibrado hospital a hospital, demasiado ruidoso para centros pequenos</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="say">Nenhum método existente cumpre os cinco requisitos em conjunto. Essa lacuna é a tese.</p>
+  </section>
+
+  <section>
+    <h2><span class="n">05</span>"Não é só um amálgama de métodos?"</h2>
+    <p class="q">A pergunta que mais conta.</p>
+    <p>Não negue que os ingredientes são conhecidos: Bayes hierárquico, soma segura, privacidade diferencial, gossip. Defenda que a contribuição está na forma como se combinam, com três argumentos:</p>
+    <ol>
+      <li><strong>Um resultado que diz como combiná-los.</strong> Cada hospital ganha <span class="formula">B = σ²/(τ² + M)</span> "doentes virtuais", e a privacidade entra apenas através de M. Isso diz onde gastar o orçamento de privacidade: em duas somas sobre toda a rede, não em divulgações por hospital. Essa decisão determina todo o desenho.</li>
+      <li><strong>Cada componente existe para cumprir um requisito, e a ablação mostra quanto vale cada um.</strong> Nas 12 redes de desenho, retirando um componente de cada vez: não partilhar o termo independente é o que mais vale, segue-se partilhar entre tipos de cancro, e a regra para a matriz de informação conta nos dois níveis de privacidade.</li>
+      <li><strong>O que é novo é a ausência de afinação.</strong> Cada hospital integra a heterogeneidade desconhecida usando a sua própria evidência, por isso ninguém escolhe hiperparâmetros. Nenhum dos métodos comparados tem isto.</li>
+    </ol>
+    <p class="say">Uma ponte é feita de aço, betão e cabos, todos conhecidos. A contribuição é o projeto que lhes permite vencer este vão em particular.</p>
+  </section>
+
+  <section>
+    <h2><span class="n">06</span>O que se consegue</h2>
+    <p class="q">"Funciona?" Seja preciso: a precisão é o que dá credibilidade.</p>
+    <ul>
+      <li><strong>Estabelecido:</strong> em 16 conjuntos de dados reais, o GHB melhora face a um hospital sozinho (14 em 16 com ε = 1 e 15 em 16 com ε = 10, significativo após correção para comparações múltiplas).</li>
+      <li><strong>Sugerido, ainda não estabelecido:</strong> em 5 redes de cancro (TCGA) excluídas do desenho, teve o menor erro médio de todos os métodos testados; com ambos os lados afinados da mesma forma, foi melhor em 19 de 20 comparações. Mas 5 redes são poucas para isso sobreviver à correção de Holm (p ajustado 0,125).</li>
+    </ul>
+    <p class="note">Os testes seguem um plano escrito e registado no repositório antes de qualquer teste ser calculado; o suplemento descreve-o.</p>
+  </section>
+
+  <section>
+    <h2><span class="n">07</span>Limitações</h2>
+    <p class="q">Diga-as antes de lhas perguntarem.</p>
+    <ul>
+      <li>A soma segura pressupõe que os hospitais não conspiram entre si. O GHB-lite é a alternativa quando isso não pode ser garantido.</li>
+      <li>Os ganhos medem-se em percentagens, não em múltiplos. Um hospital muito pequeno ganha muito apenas quando os hospitais são realmente parecidos.</li>
+      <li>O GHB é deliberadamente cauteloso. Quando os hospitais são quase idênticos deixa ganhos por aproveitar (cerca de 60 doentes onde seriam possíveis 4 000, no nosso teste), em troca de nunca prejudicar um hospital diferente dos outros.</li>
+      <li>Num dos mundos simulados (Simulação 15), um modelo ao estilo Ditto afinado é melhor em 8 de 10 cenários.</li>
+      <li>Só há 5 redes excluídas do desenho. São precisas mais; é o próximo passo óbvio.</li>
+    </ul>
+    <p class="warn"><strong>Porque dizê-las primeiro:</strong> é o que torna credível tudo o resto que apresenta.</p>
+  </section>
+
+  <footer>Números retirados do artigo "Borrowing Strength Without Borrowing Data" e do respetivo suplemento (versão de outubro de 2026).</footer>
+</main>
