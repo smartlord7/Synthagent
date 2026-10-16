@@ -50,7 +50,7 @@ footer { border-top: 1px solid var(--rule); padding-top: 18px; font-size: 14px; 
   <header>
     <span class="eyebrow">Preparação da reunião com os orientadores</span>
     <h1>GHB perante os orientadores</h1>
-    <p class="lede">As oito perguntas que voltam sempre, com uma resposta fixa para cada uma. Diga a mesma resposta todas as vezes: grande parte das perguntas repetidas nasce de ouvirem o problema formulado de maneira diferente em cada reunião.</p>
+    <p class="lede">As nove perguntas que voltam sempre, com uma resposta fixa para cada uma. Diga a mesma resposta todas as vezes: grande parte das perguntas repetidas nasce de ouvirem o problema formulado de maneira diferente em cada reunião.</p>
   </header>
 
   <section>
@@ -91,7 +91,22 @@ footer { border-top: 1px solid var(--rule); padding-top: 18px; font-size: 14px; 
   </section>
 
   <section>
-    <h2><span class="n">05</span>"Não é só um amálgama de métodos?"</h2>
+    <h2><span class="n">05</span>Como funciona</h2>
+    <p class="q">"Explique o método."</p>
+    <p class="say">Cada hospital treina o seu próprio modelo e depois corrige-o com aquilo que a rede viu, numa medida que os seus próprios dados decidem. É como pedir uma segunda opinião aos colegas e dar-lhe mais ou menos peso conforme os doentes deles se parecem com os nossos.</p>
+    <ol>
+      <li><strong>Resumo local.</strong> Cada hospital resume os seus doentes em dois números agregados (em rigor, um vetor e uma matriz): para onde os seus doentes "puxam" o modelo (o score, a soma de x(y − ½)) e quanta informação contêm (a matriz de informação, a soma de xxᵀ/4). Nenhum registo individual sai do hospital.</li>
+      <li><strong>Soma segura com ruído.</strong> Os hospitais somam esses resumos ao longo dos acordos que já existem entre eles, por gossip, com máscaras aleatórias que se anulam no total. Só o total da rede fica visível, nunca o de um hospital. O ruído de privacidade diferencial é acrescentado uma vez, à soma da rede inteira, e não a cada hospital: é aqui que se poupa a maior parte do custo da privacidade.</li>
+      <li><strong>O que os outros viram.</strong> Cada hospital retira ao total a sua própria parte e obtém uma estimativa do modelo dos restantes hospitais (leave-one-out), sabendo exatamente quanto ruído de privacidade ela contém.</li>
+      <li><strong>Quanto confiar.</strong> Ninguém sabe quão diferentes são os hospitais (a heterogeneidade τ). Em vez de a afinar, cada hospital considera muitos valores possíveis de τ e ainda a hipótese de não partilhar nada, e pondera-os pela forma como cada um explica os seus próprios dados (a evidência). Um hospital pequeno e parecido com os outros confia muito na rede; um hospital grande ou atípico confia pouco. O termo independente (a taxa de base de cada hospital) não é partilhado.</li>
+      <li><strong>Modelo final.</strong> O resultado é o modelo do hospital puxado em direção ao da rede, por uma quantidade que os seus dados escolheram. Uma única ronda de comunicação, sem servidor e sem hiperparâmetros para afinar.</li>
+    </ol>
+    <p><strong>A teoria por trás.</strong> Num modelo gaussiano de efeitos aleatórios, cada hospital ganha cerca de <span class="formula">B = σ²/(τ² + M)</span> doentes virtuais, onde σ² é a variância por doente, τ² a diferença entre hospitais e M o erro da estimativa da rede. A privacidade só entra através de M, por isso calibrar o ruído à soma da rede inteira, e não a cada hospital, mantém M pequeno. Os hospitais pequenos ganham relativamente mais, porque o mesmo número de doentes virtuais pesa mais para quem tem poucos. E o gossip não custa privacidade, porque só reprocessa resultados já protegidos.</p>
+    <p><strong>A garantia de privacidade</strong> é de privacidade diferencial (ε, δ) para o protocolo inteiro, ao nível do doente, desde que os hospitais não conspirem entre si na soma segura. Quando isso não pode ser garantido, existe o <strong>GHB-lite</strong>: cada hospital divulga a sua própria estimativa com ruído, sem soma segura, à custa de mais ruído por hospital.</p>
+  </section>
+
+  <section>
+    <h2><span class="n">06</span>"Não é só um amálgama de métodos?"</h2>
     <p class="q">A pergunta que mais conta.</p>
     <p>Não negue que os ingredientes são conhecidos: Bayes hierárquico, soma segura, privacidade diferencial, gossip. Defenda que a contribuição está na forma como se combinam, com três argumentos:</p>
     <ol>
@@ -103,7 +118,7 @@ footer { border-top: 1px solid var(--rule); padding-top: 18px; font-size: 14px; 
   </section>
 
   <section>
-    <h2><span class="n">06</span>Em que dados foi testado</h2>
+    <h2><span class="n">07</span>Em que dados foi testado</h2>
     <p class="q">"Testou em quê? Só em dados tabulares?"</p>
     <p class="say">Testei em três modalidades: dados clínicos tabulares, sobrevivência e imagem médica, em redes reais de hospitais de cinco fontes públicas (TCGA, Arizona Medicare, UCI, FLamby e Camelyon17) e em 18 simulações. Separei sempre os dados usados para desenhar o método dos dados usados para o avaliar: as 5 redes de cancro e o Camelyon17 nunca foram vistos durante o desenho.</p>
     <div class="tablewrap">
@@ -126,7 +141,7 @@ footer { border-top: 1px solid var(--rule); padding-top: 18px; font-size: 14px; 
   </section>
 
   <section>
-    <h2><span class="n">07</span>O que se consegue</h2>
+    <h2><span class="n">08</span>O que se consegue</h2>
     <p class="q">"Funciona?" Seja preciso: a precisão é o que dá credibilidade.</p>
     <ul>
       <li><strong>Estabelecido:</strong> em 16 conjuntos de dados reais, o GHB melhora face a um hospital sozinho (14 em 16 com ε = 1 e 15 em 16 com ε = 10, significativo após correção para comparações múltiplas).</li>
@@ -136,7 +151,7 @@ footer { border-top: 1px solid var(--rule); padding-top: 18px; font-size: 14px; 
   </section>
 
   <section>
-    <h2><span class="n">08</span>Limitações</h2>
+    <h2><span class="n">09</span>Limitações</h2>
     <p class="q">Diga-as antes de lhas perguntarem.</p>
     <ul>
       <li>A soma segura pressupõe que os hospitais não conspiram entre si. O GHB-lite é a alternativa quando isso não pode ser garantido.</li>
