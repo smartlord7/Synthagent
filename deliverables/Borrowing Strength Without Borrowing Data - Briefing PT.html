@@ -50,7 +50,7 @@ footer { border-top: 1px solid var(--rule); padding-top: 18px; font-size: 14px; 
   <header>
     <span class="eyebrow">Preparação da reunião com os orientadores</span>
     <h1>GHB perante os orientadores</h1>
-    <p class="lede">As sete perguntas que voltam sempre, com uma resposta fixa para cada uma. Diga a mesma resposta todas as vezes: grande parte das perguntas repetidas nasce de ouvirem o problema formulado de maneira diferente em cada reunião.</p>
+    <p class="lede">As oito perguntas que voltam sempre, com uma resposta fixa para cada uma. Diga a mesma resposta todas as vezes: grande parte das perguntas repetidas nasce de ouvirem o problema formulado de maneira diferente em cada reunião.</p>
   </header>
 
   <section>
@@ -103,7 +103,30 @@ footer { border-top: 1px solid var(--rule); padding-top: 18px; font-size: 14px; 
   </section>
 
   <section>
-    <h2><span class="n">06</span>O que se consegue</h2>
+    <h2><span class="n">06</span>Em que dados foi testado</h2>
+    <p class="q">"Testou em quê? Só em dados tabulares?"</p>
+    <p class="say">Testei em três modalidades: dados clínicos tabulares, sobrevivência e imagem médica, em redes reais de hospitais de cinco fontes públicas (TCGA, Arizona Medicare, UCI, FLamby e Camelyon17) e em 18 simulações. Separei sempre os dados usados para desenhar o método dos dados usados para o avaliar: as 5 redes de cancro e o Camelyon17 nunca foram vistos durante o desenho.</p>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Dados</th><th>Modalidade</th><th>Hospitais</th><th>Tarefa</th><th>Papel</th></tr></thead>
+        <tbody>
+          <tr><td>TCGA, 12 tipos de cancro (pulmão escamoso e adenocarcinoma, cabeça e pescoço, bexiga, estômago, fígado, rim de células claras e papilar, cólon, reto, pâncreas, esófago)</td><td>Tabular clínico (idade, sexo, estádio, T, N, neoplasia prévia)</td><td class="num">várias por rede</td><td>Morte a dois anos</td><td>Desenho</td></tr>
+          <tr><td>TCGA, 5 tipos de cancro (mama, mesotelioma, ovário, endométrio, carcinossarcoma uterino)</td><td>Tabular clínico</td><td class="num">5 a 15</td><td>Morte a dois anos</td><td><strong>Avaliação</strong> (nunca vistos no desenho)</td></tr>
+          <tr><td>Arizona Medicare e 6 redes TCGA pequenas</td><td>Tabular clínico (internamentos cardiovasculares; cancro)</td><td class="num">7 a 43</td><td>Morte no internamento; morte a dois anos</td><td>Desenho e comparação</td></tr>
+          <tr><td>UCI Heart Disease</td><td>Tabular clínico</td><td class="num">4</td><td>Doença coronária</td><td>Desenho do GHB-lite</td></tr>
+          <tr><td>FLamby Fed-Heart-Disease</td><td>Tabular clínico (13 variáveis)</td><td class="num">4</td><td>Doença coronária</td><td>Benchmark externo</td></tr>
+          <tr><td>FLamby Fed-TCGA-BRCA</td><td>Sobrevivência (39 variáveis, modelo exponencial)</td><td class="num">6 regiões</td><td>Tempo até à morte</td><td>Benchmark externo</td></tr>
+          <tr><td>FLamby Fed-ISIC2019</td><td>Imagem: dermatoscopia</td><td class="num">6</td><td>8 classes de lesões de pele</td><td>Desenho da versão para imagem</td></tr>
+          <tr><td>Camelyon17</td><td>Imagem: histopatologia (gânglios linfáticos)</td><td class="num">5</td><td>Tumor ou tecido normal</td><td><strong>Avaliação</strong> (nunca visto no desenho)</td></tr>
+          <tr><td>18 simulações</td><td>Sintético (modelo gaussiano e regressão logística)</td><td class="num">até 48</td><td>Heterogeneidade, privacidade, ataques, abandono de hospitais</td><td>Teoria e comportamento</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">Nas imagens, cada hospital usa um codificador público congelado e treina só a última camada; o GHB partilha essa camada. A unidade de privacidade nas imagens é o patch ou a imagem, não o doente, para todos os métodos comparados.</p>
+  </section>
+
+  <section>
+    <h2><span class="n">07</span>O que se consegue</h2>
     <p class="q">"Funciona?" Seja preciso: a precisão é o que dá credibilidade.</p>
     <ul>
       <li><strong>Estabelecido:</strong> em 16 conjuntos de dados reais, o GHB melhora face a um hospital sozinho (14 em 16 com ε = 1 e 15 em 16 com ε = 10, significativo após correção para comparações múltiplas).</li>
@@ -113,7 +136,7 @@ footer { border-top: 1px solid var(--rule); padding-top: 18px; font-size: 14px; 
   </section>
 
   <section>
-    <h2><span class="n">07</span>Limitações</h2>
+    <h2><span class="n">08</span>Limitações</h2>
     <p class="q">Diga-as antes de lhas perguntarem.</p>
     <ul>
       <li>A soma segura pressupõe que os hospitais não conspiram entre si. O GHB-lite é a alternativa quando isso não pode ser garantido.</li>
