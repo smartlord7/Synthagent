@@ -45,3 +45,25 @@
 | "This is the gap the paper addresses," | Mas que gap, e onde é que esse gap existe? |
 | Nota junto a "…satisfies R1–R3 by construction…" (p. 2) | Só mais um exemplo: falas em R1 e R3. Onde é que estão? Mais para a frente… |
 | Nota junto a "The third is an empirical study…" (p. 2) | E o empirical study não é o system? Ou o system não inclui o estudo? |
+
+## Como foram endereçados (v4)
+
+| Comentário | Alteração na v4 |
+|---|---|
+| Introdução com no máximo 1 página, um parágrafo por ponto | A introdução tem agora exatamente seis parágrafos, por esta ordem: contexto, problemática, trabalhos na área e limitações, o nosso trabalho e porque é importante, resultados, estrutura do documento. Ocupa cerca de uma página. |
+| Small data = poucas instâncias / vários hospitais | Small data é definido como um número de registos baixo **em relação ao que a tarefa exige** (número de features, de classes e frequência do outcome). Doenças raras, estudos num único hospital e custo de rotulagem aparecem como exemplos, não como pressupostos. A partilha entre instituições é apenas uma possível mitigação, "frequentemente restringida". |
+| "information that the records lack", "can", "0", "ninguém percebe", "no generator improves every dataset" | O resumo foi reescrito por esta ordem: contexto, problema, limitação dos geradores, porquê LLMs, falha das LLMs com números concretos (88% em média, 10 respostas inválidas), proposta e resultados. Os resultados aparecem em termos de F1-score dos classificadores. A frase sobre "no generator" foi removida. |
+| Keywords 3–4 | Passaram a quatro: small data, synthetic data generation, large language models, tabular data. |
+| "not large" → "suffer from the lack of data" | Adotado: "Many clinical prediction tasks suffer from a lack of data." |
+| Doenças raras no início da frase | Adotado. |
+| "In such settings" a seguir à privacidade | Removido; a privacidade surge apenas como restrição à partilha de dados. |
+| Frases de romance ("What counts as too few…", "this is why we turn to them", "intuition measurable") | Removidas. |
+| "300 doentes podem ser suficientes" | Removido. |
+| Citar o survey não publicado | Todas as referências ao survey foram removidas. A definição de small data usa o critério publicado de Riley et al. O argumento de que os geradores ajustados aos dados não acrescentam informação usa a desigualdade de processamento de dados (Cover & Thomas). A tabela de datasets mostra o rácio entre o tamanho mínimo recomendado por Riley et al. e o tamanho de treino. |
+| Informação do survey sem contexto | O parágrafo sobre sample complexity, effective sample size e smallness index foi eliminado. |
+| "Ainda não percebi o problema, o que existe e o que é novel" | Cada um destes pontos tem agora o seu parágrafo: 2.º (problema), 3.º (trabalhos e limitações) e 4.º (proposta e porque é importante). |
+| "The survey classifies…" | Removido. |
+| Resultados antes da problemática | Os números só aparecem no 5.º parágrafo; no resumo, aparecem depois do problema. |
+| "Que gap e onde?" | O 3.º parágrafo diz explicitamente o que falta em cada linha de trabalho. |
+| R1 e R3 usados antes de definidos | A introdução já não usa R1–R6. Os requisitos são definidos explicitamente no início da Secção III, e a Tabela I usa nomes em texto ("Exact size", "Schema validated", "Cost measured"). |
+| "O empirical study não é o system?" | Passam a ser duas contribuições: o sistema e a metodologia de avaliação. O estudo é a aplicação dessa metodologia. |
