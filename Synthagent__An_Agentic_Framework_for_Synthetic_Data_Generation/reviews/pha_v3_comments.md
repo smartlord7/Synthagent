@@ -67,3 +67,7 @@
 | "Que gap e onde?" | O 3.º parágrafo diz explicitamente o que falta em cada linha de trabalho. |
 | R1 e R3 usados antes de definidos | A introdução já não usa R1–R6. Os requisitos são definidos explicitamente no início da Secção III, e a Tabela I usa nomes em texto ("Exact size", "Schema validated", "Cost measured"). |
 | "O empirical study não é o system?" | Passam a ser duas contribuições: o sistema e a metodologia de avaliação. O estudo é a aplicação dessa metodologia. |
+| (revisão final) Termos usados antes de definidos | RQ1–RQ4 são agora enunciadas explicitamente no 5.º parágrafo da introdução, antes de serem usadas nos resultados. |
+| (revisão final) "Information that the records lack" (reformulação) | A ideia passou a ser explicada de forma concreta: os geradores ajustados aos dados "só podem recombinar padrões já presentes nesses registos, por exemplo interpolando entre dois doentes existentes"; as LLMs trazem conhecimento geral sobre variáveis clínicas (intervalos plausíveis, relações típicas). |
+| (revisão final) Porque é importante | O 4.º parágrafo diz porque importa: o conhecimento das LLMs torna-se utilizável onde os geradores estabelecidos são mais fracos, e o conjunto de dados resultante pode ser auditado como qualquer outra fonte de dados. |
+| (revisão final) Resumo | Sem jargão ("valid JSON" e "tokens" foram substituídos) e com uma frase final de implicação. |
