@@ -532,6 +532,144 @@ Four limitations qualify everything in the next two sections. First, \emph{the c
 
  We now review solution families in the order of the provenance channels of Section~\ref{sec:provenance}. For each family we describe the mechanism, the scarcity classes of Figure~\ref{fig:scarcity} it addresses, the healthcare evidence, and the conditions under which it fails. Pooling receives the most space, because it is the only strong channel against custodial scarcity and therefore the foundation of Section~\ref{sec:blueprint}. Table~\ref{tab:families} gives a compact overview. By primary channel, the corpus holds 102 pooling, 60 proxy, 25 prior, 23 unlabeled, 15 procurement and 32 re-expression works, plus 33 that document a problem without proposing a remedy; the online supplement lists and codes every one of them.
 
+\subsection{How the main remedies work}\label{sec:primer}
+
+Before the review by channel, we state the mechanism of the canonical family of each channel in a common notation (Figure~\ref{fig:mechanisms}, Table~\ref{tab:mechanisms}). Site $k$ holds $\mathcal{D}_k=\{(x_i,y_i)\}_{i=1}^{n_k}$, its empirical risk is $F_k(\theta)=n_k^{-1}\sum_{i\in\mathcal{D}_k}\ell(f_\theta(x_i),y_i)$, and $N=\sum_k n_k$.
+
+\paragraph{P1 Pooling} Federated averaging \cite{mcmahan2017communication} minimizes the pooled risk $F(\theta)=\sum_{k}(n_k/N)F_k(\theta)$ without moving records. In round $t$ each site runs a few local gradient steps from the current model, $\theta_k^{t+1}=\theta^{t}-\eta\sum_{s}\nabla F_k(\cdot)$, and a server averages,
+\begin{equation}\label{eq:fedavg}
+\theta^{t+1}=\sum_{k=1}^{K}\frac{n_k}{N}\,\theta_k^{t+1}.
+\end{equation}
+Personalized variants keep one model per site and tie it to the shared one, as in Ditto \cite{li2021ditto}: $\min_{\theta_k}F_k(\theta_k)+\tfrac{\lambda}{2}\|\theta_k-\theta^{\ast}\|^2$, with $\lambda$ to be tuned. Privacy is added on top. A randomized algorithm $\mathcal{A}$ is $(\epsilon,\delta)$-differentially private \cite{dwork2006calibrating,dwork2014algorithmic} if, for any two datasets $\mathcal{D},\mathcal{D}'$ that differ in one patient and every set of outputs $S$,
+\begin{equation}\label{eq:dp}
+\Pr[\mathcal{A}(\mathcal{D})\in S]\;\le\;e^{\epsilon}\,\Pr[\mathcal{A}(\mathcal{D}')\in S]+\delta .
+\end{equation}
+The Gaussian mechanism achieves it by releasing $g(\mathcal{D})+\mathcal{N}(0,s^2I)$ with $s=\Delta\sqrt{2\ln(1.25/\delta)}/\epsilon$ for $\epsilon<1$, where $\Delta$ is the largest change one patient can cause in $g$; DP-SGD clips each patient's gradient to bound $\Delta$ and composes the cost over steps \cite{abadi2016deep}. Secure aggregation \cite{bonawitz2017practical} reveals only the sum: every pair of sites shares a random mask $r_{kj}=-r_{jk}$, each sends $x_k+\sum_{j}r_{kj}$, and the masks cancel in $\sum_k x_k$.
+
+\paragraph{P2 Proxy} Transfer learning starts from parameters $\theta^{\mathrm{src}}$ fitted on a large related source and fine-tunes on the target, often with a penalty that keeps the solution near the start \cite{pan2010survey,xuhong2018explicit}:
+\begin{equation}\label{eq:finetune}
+\hat\theta=\arg\min_\theta\;F_k(\theta)+\lambda\,\|\theta-\theta^{\mathrm{src}}\|^2 .
+\end{equation}
+Self-supervised pretraining creates $\theta^{\mathrm{src}}$ without labels. Contrastive learning \cite{chen2020simple} pulls the embeddings $z_i,z_j$ of two augmented views of one input together and pushes other inputs away, $\ell_{ij}=-\log\bigl(e^{\mathrm{sim}(z_i,z_j)/T}/\sum_{m\neq i}e^{\mathrm{sim}(z_i,z_m)/T}\bigr)$; masked autoencoders reconstruct hidden patches instead \cite{he2022masked}.
+
+\paragraph{P3 Prior} Bayesian inference combines the likelihood with a prior, $p(\theta\mid\mathcal{D})\propto p(\mathcal{D}\mid\theta)\,p(\theta)$ \cite{gelman2013bayesian}. In the hierarchical normal model that Section~\ref{sec:blueprint} builds on, $\theta_k\sim\mathcal{N}(\mu,\tau^2)$ and $\hat\theta_k\mid\theta_k\sim\mathcal{N}(\theta_k,v_k)$, and the posterior mean shrinks the local estimate toward the population,
+\begin{equation}\label{eq:shrink}
+\mathbb{E}[\theta_k\mid\hat\theta_k]=\alpha_k\,\hat\theta_k+(1-\alpha_k)\,\mu,\qquad \alpha_k=\frac{\tau^2}{\tau^2+v_k},
+\end{equation}
+the empirical Bayes form of Stein's estimator \cite{stein1956inadmissibility,efron1973steins}. The smaller the site, the larger $v_k$ and the more it borrows. Knowledge that is not data enters the same way, as a prior on parameters, as a constraint from a mechanistic model \cite{raissi2019physics}, or as structure from an ontology \cite{choi2017gram}.
+
+\paragraph{P4 Unlabeled} Semi-supervised learning adds a term on the $n_U$ unlabeled inputs. Pseudo-labelling \cite{lee2013pseudo} and FixMatch \cite{sohn2020fixmatch} train on the model's own confident predictions,
+\begin{equation}\label{eq:fixmatch}
+\mathcal{L}=F_k(\theta)+\lambda\,\frac{1}{n_U}\sum_{u}\mathbb{1}\bigl[\max p_\theta(y\mid a_w(u))\ge c\bigr]\;\ell\bigl(f_\theta(a_s(u)),\,\hat y_u\bigr),\qquad \hat y_u=\arg\max_y p_\theta(y\mid a_w(u)),
+\end{equation}
+where $a_w$ and $a_s$ are weak and strong augmentations and $c$ a confidence threshold.
+
+\paragraph{P5 Procurement} Active learning spends a labelling budget where it is most informative \cite{settles2009active}. With a pool $\mathcal{U}$ of unlabeled candidates, it queries
+\begin{equation}\label{eq:bald}
+x^{\ast}=\arg\max_{x\in\mathcal{U}}\;\mathrm{I}\bigl[y;\theta\mid x,\mathcal{D}_k\bigr],
+\end{equation}
+the mutual information between the label and the parameters (BALD), estimated in deep networks by Monte Carlo dropout \cite{gal2017deep}; predictive entropy is the simpler alternative.
+
+\paragraph{P6 Re-expression} Augmentation minimizes the risk over transformed copies, $\mathbb{E}_{(x,y)}\mathbb{E}_{a}\,\ell(f_\theta(a(x)),y)$, with transformations chosen to preserve the label \cite{shorten2019survey}, or over interpolations such as mixup, $\tilde x=\lambda x_i+(1-\lambda)x_j$, $\tilde y=\lambda y_i+(1-\lambda)y_j$ \cite{zhang2018mixup}. Synthetic data come from a generator fitted to the same data, for example a denoising diffusion model trained with $\mathbb{E}_{t,x_0,\varepsilon}\|\varepsilon-\varepsilon_\phi(x_t,t)\|^2$ \cite{ho2020denoising} or a GAN \cite{goodfellow2014generative}; minority classes can also be oversampled by interpolation \cite{chawla2002smote}. Because the generator is fitted to $\mathcal{D}_k$, these samples add no information about $\theta_k$ that $\mathcal{D}_k$ did not contain (Proposition~\ref{prop:nfl}); they change how it is used.
+
+\begin{figure*}[t]
+\centering
+\resizebox{\linewidth}{!}{%
+\begin{tikzpicture}[
+  box/.style={draw=#1,fill=#1!10,line width=0.5pt,rounded corners=2pt,align=center,font=\scriptsize\sffamily,minimum height=0.62cm,inner sep=2.5pt},
+  ar/.style={draw=#1,line width=0.7pt,-{Stealth[length=1.6mm]}},
+  ttl/.style={font=\footnotesize\sffamily\bfseries,text=#1,anchor=west},
+  lab/.style={font=\tiny\sffamily,text=gray600,align=center,fill=white,inner sep=1pt}]
+% P1 pooling
+\begin{scope}[shift={(0,0)}]
+\node[ttl=famC] at (-0.2,1.55) {P1 Pooling: federated averaging};
+\node[box=famC,minimum width=1.25cm] (s1) at (0,0.65) {site 1};
+\node[box=famC,minimum width=1.25cm] (s2) at (0,-0.1) {site 2};
+\node[box=famC,minimum width=1.25cm] (sk) at (0,-0.85) {site $K$};
+\node[box=famC,minimum width=1.5cm] (srv) at (3.3,-0.1) {server\\ $\sum_k \tfrac{n_k}{N}\theta_k$};
+\foreach \s in {s1,s2,sk}{\draw[ar=famC] (\s.east) to[bend left=8] (srv.west);}
+\draw[ar=famC,dashed] (srv.south) |- node[lab,pos=0.75]{new $\theta$, next round} (0.9,-1.35) -- (sk.south east);
+\node[lab] at (1.6,0.95) {local updates (+ DP noise)};
+\end{scope}
+% P2 proxy
+\begin{scope}[shift={(6.0,0)}]
+\node[ttl=famT] at (-0.2,1.55) {P2 Proxy: pretrain, then fine-tune};
+\node[box=famT,minimum width=1.6cm] (src) at (0,0.3) {large source\\ (public, other task)};
+\node[box=famT,minimum width=1.4cm] (pre) at (2.4,0.3) {$\theta^{\mathrm{src}}$};
+\node[box=famT,minimum width=1.6cm] (tgt) at (2.4,-0.9) {small target $\mathcal{D}_k$};
+\node[box=famT,minimum width=1.2cm] (ft) at (4.5,-0.3) {$\hat\theta$};
+\draw[ar=famT] (src) -- node[lab,above=1pt]{pretrain} (pre);
+\draw[ar=famT] (pre) -- (ft);
+\draw[ar=famT] (tgt) -- node[lab,below=2pt]{fine-tune} (ft);
+\end{scope}
+% P3 prior
+\begin{scope}[shift={(12.0,0)}]
+\node[ttl=famO] at (-0.2,1.55) {P3 Prior: Bayesian shrinkage};
+\node[box=famO,minimum width=1.6cm] (pr) at (0,0.35) {prior $p(\theta)$\\ knowledge, other sites};
+\node[box=famO,minimum width=1.6cm] (lk) at (0,-0.85) {likelihood\\ $p(\mathcal{D}_k\mid\theta)$};
+\node[box=famO,minimum width=1.9cm] (po) at (3.2,-0.25) {posterior\\ $\alpha_k\hat\theta_k+(1-\alpha_k)\mu$};
+\draw[ar=famO] (pr) -- (po);
+\draw[ar=famO] (lk) -- (po);
+\end{scope}
+% P4 unlabeled
+\begin{scope}[shift={(0,-3.6)}]
+\node[ttl=famE] at (-0.2,1.55) {P4 Unlabeled: semi-supervised learning};
+\node[box=famE,minimum width=1.5cm] (lab) at (0,0.45) {few labeled};
+\node[box=famE,minimum width=1.5cm] (unl) at (0,-0.75) {many unlabeled};
+\node[box=famE,minimum width=1.2cm] (mod) at (2.6,0.45) {model};
+\node[box=famE,minimum width=1.6cm] (ps) at (2.6,-0.75) {confident\\ pseudo-labels};
+\draw[ar=famE] (lab) -- node[lab,above=1pt]{train} (mod);
+\draw[ar=famE] (unl) -- (ps);
+\draw[ar=famE] (mod) -- node[lab,right=1pt]{predict} (ps);
+\draw[ar=famE,dashed] (ps.east) -- ++(0.6,0) |- node[lab,pos=0.25,right=1pt]{retrain} (mod.east);
+\end{scope}
+% P5 procurement
+\begin{scope}[shift={(6.0,-3.6)}]
+\node[ttl=violetc] at (-0.2,1.55) {P5 Procurement: active learning};
+\node[box=violetc,minimum width=1.5cm] (pool) at (0,-0.15) {unlabeled pool $\mathcal{U}$};
+\node[box=violetc,minimum width=1.6cm] (q) at (2.4,0.45) {query $x^{\ast}$\\ most informative};
+\node[box=violetc,minimum width=1.4cm] (or) at (4.6,0.45) {clinician\\ labels};
+\node[box=violetc,minimum width=1.3cm] (m5) at (3.5,-0.75) {model};
+\draw[ar=violetc] (pool) -- (q);
+\draw[ar=violetc] (q) -- (or);
+\draw[ar=violetc] (or) -- (m5);
+\draw[ar=violetc,dashed] (m5) -- node[lab,below left=0pt]{scores} (q);
+\end{scope}
+% P6 re-expression
+\begin{scope}[shift={(12.0,-3.6)}]
+\node[ttl=grayc] at (-0.2,1.55) {P6 Re-expression: augment, synthesize};
+\node[box=grayc,minimum width=1.4cm] (d6) at (0,-0.15) {local data $\mathcal{D}_k$};
+\node[box=grayc,minimum width=1.7cm] (g6) at (2.3,0.45) {transform $a(x)$\\ or generator};
+\node[box=grayc,minimum width=1.6cm] (aug) at (2.3,-0.75) {augmented or\\ synthetic data};
+\node[box=grayc,minimum width=1.1cm] (m6) at (4.5,-0.15) {model};
+\draw[ar=grayc] (d6) -- (g6);
+\draw[ar=grayc] (g6) -- (aug);
+\draw[ar=grayc] (aug) -- (m6);
+\draw[ar=grayc] (d6) -- (m6);
+\end{scope}
+\end{tikzpicture}}
+\caption{How the canonical family of each provenance channel works (Section~\ref{sec:primer}). P1: sites update a shared model locally and a server averages the updates (Equation~\eqref{eq:fedavg}); serverless variants replace the server by neighbour averaging. P2: a model fitted on a large source is fine-tuned on the small target (Equation~\eqref{eq:finetune}). P3: the prior and the local likelihood combine into a posterior that shrinks small sites toward the population (Equation~\eqref{eq:shrink}). P4: the model labels unlabeled inputs it is confident about and retrains on them (Equation~\eqref{eq:fixmatch}). P5: the model chooses which inputs a clinician labels next (Equation~\eqref{eq:bald}). P6: local data are transformed or resynthesized; the added samples carry no new information about the target.}
+\label{fig:mechanisms}
+\end{figure*}
+
+\begin{table}[t]
+\caption{Canonical mechanism of each provenance channel: what it optimizes or computes, what it needs, and its main cost in a network of small hospitals.}
+\label{tab:mechanisms}
+\footnotesize
+\begin{tabularx}{\linewidth}{@{}p{1.55cm}p{2.6cm}p{2.55cm}X@{}}
+\toprule
+Channel & Canonical family & Needs & Main cost\\
+\midrule
+P1 Pooling & federated averaging \cite{mcmahan2017communication}, personalized FL \cite{li2021ditto}, DP \cite{dwork2006calibrating} & other custodians with the same task; a server or a communication graph & privacy noise and rounds of communication; one shared model can hurt atypical sites\\
+P2 Proxy & fine-tuning \cite{pan2010survey}, self-supervised pretraining \cite{chen2020simple,he2022masked} & a large related source & gains shrink as the source drifts from the target\\
+P3 Prior & Bayesian and hierarchical models \cite{gelman2013bayesian} & a credible prior or mechanistic model & a wrong prior biases every site toward it\\
+P4 Unlabeled & pseudo-labelling \cite{lee2013pseudo}, FixMatch \cite{sohn2020fixmatch} & many unlabeled inputs from the target & confirmation bias when early predictions are wrong\\
+P5 Procurement & active learning \cite{settles2009active,gal2017deep} & a clinician who can label on request & labelling time; the first model must be good enough to choose\\
+P6 Re-expression & augmentation \cite{shorten2019survey}, mixup \cite{zhang2018mixup}, generative models \cite{ho2020denoising} & only the local data & no new information about the target (Proposition~\ref{prop:nfl})\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
 \subsection{P1 Pooling: bringing the same task from other custodians}\label{sec:S6_1}
 
 \paragraph{Centralized pooling and common data models} The simplest form of pooling is a shared repository. Public datasets such as MIMIC-III \cite{johnson2016mimic} have been central to the field precisely because they removed custodial scarcity for one population. Distributed networks built on common data models, such as OHDSI on the OMOP model \cite{hripcsak2015observational,overhage2012validation}, keep data local but harmonize their structure so that the same analysis can be run everywhere. Harmonization reduces C2 scarcity but does not by itself allow joint model fitting.
