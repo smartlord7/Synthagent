@@ -1,0 +1,269 @@
+\subsection*{P1 Pooling (62 works)}
+\begin{longtable}{@{}p{2.6cm}p{0.7cm}p{1.2cm}p{4.4cm}p{4.6cm}@{}}
+\toprule
+Work & Year & Modality & Data (size) & Reported result\\
+\midrule
+\endhead
+\cite{dersimonian1986meta} & 1986 & Tabular & no dataset (review, theory, guidance or simulation) & -\\
+\cite{sweeney2002k} & 2002 & Tabular & no dataset (review, theory, guidance or simulation) & -\\
+\cite{riley2010meta} & 2010 & Tabular & no dataset (review, theory, guidance or simulation) & -\\
+\cite{overhage2012validation} & 2012 & EHR & 10 observational healthcare databases & no number in abstract\\
+\cite{wu2012grid} & 2012 & Tabular & simulated data; clinically relevant data (unnamed) & GLORE results identical to centrally estimated logistic regression to 10\textasciicircum{}-15 precision\\
+\cite{jiang2013webglore} & 2013 & Tabular & no dataset (review, theory, guidance or simulation) & -\\
+\cite{gaye2014datashield} & 2014 & Tabular & Healthy Obese Project and Environmental Core Project (BioSHaRE-EU) data sets (10 data sets) & no number in abstract\\
+\cite{hripcsak2015observational} & 2015 & EHR & no dataset (review, theory, guidance or simulation) & -\\
+\cite{lu2015webdisco} & 2015 & Tabular & publicly available dataset (unnamed), 3 sites & no number in abstract\\
+\cite{jochems2016distributed} & 2016 & Tabular & Lung cancer patients from MAASTRO, Jessa, Liege, Aachen and Eindhoven (287 patients), 5 sites & AUC 0.61 (95\%CI 0.51-0.70) in 5-fold cross-validation; 0.59 to 0.71 on external validation sets\\
+\cite{johnson2016mimic} & 2016 & EHR & MIMIC-III, 1 site & no number in abstract\\
+\cite{mandel2016smart} & 2016 & EHR & no dataset (review, theory, guidance or simulation) & -\\
+\cite{jochems2017developing} & 2017 & Tabular & Maastro clinic (Netherlands) cohort (559 patients); Michigan university (United States) cohort (139 patients); The Christie (United Kingdom) external validation cohort (196 patients) & AUC 0.66 on external validation set and 0.62 in 5-fold cross-validation; T and N category model AUC 0.47 on validation set.\\
+\cite{kim2017federated} & 2017 & EHR & real medical datasets (multiple hospitals; not named) & no number in abstract\\
+\cite{brisimi2018federated} & 2018 & EHR & patients' Electronic Health Records (unnamed) & no number in abstract\\
+\cite{chang2018distributed} & 2018 & Imaging & Kaggle Diabetic Retinopathy (retinal fundus photos) (35 126 color digital retinal fundus photos); Curated Breast Imaging Subset of the Digital Database for Screening Mammography (DDSM); ImageNet & no number in abstract\\
+\cite{cho2018secure} & 2018 & Omics & genotype/phenotype cohorts (unnamed) (9K, 13K, and 23K individuals) & no number in abstract\\
+\cite{lee2018privacy} & 2018 & EHR & MIMIC-III & Averaged AUC 0.9154 (balanced) and 0.8012 (imbalanced data) with k-nearest neighbor, k=3\\
+\cite{reps2018design} & 2018 & EHR & 4 observational databases (OMOP Common Data Model) & no number in abstract\\
+\cite{vepakomma2018split} & 2018 & Multimodal & not stated & no number in abstract\\
+\cite{choudhury2019differential} & 2019 & EHR & Limited MarketScan Explorys Claims-EMR Data (LCED) (over 1 million commercially insured patients); MIMIC III (over 40,000 ICU stays) & no number in abstract\\
+\cite{huang2019patient} & 2019 & EHR & non-IID ICU EMRs & no number in abstract\\
+\cite{li2019privacy} & 2019 & Imaging & BraTS & no number in abstract\\
+\cite{poirot2019split} & 2019 & Imaging & fundus photo data set (9000 fundus photos); chest X-ray data set (156,535 chest X-rays) & Split learning performance constant for 1-50 clients vs single-center; marked difference vs non-collaborative after 2 clients (p < 0.001)\\
+\cite{raisaro2019medco} & 2019 & Multimodal & The Cancer Genome Atlas & no number in abstract\\
+\cite{roy2019braintorrent} & 2019 & Imaging & not stated & no number in abstract\\
+\cite{sheller2019multi} & 2019 & Imaging & multimodal brain scans (multi-institutional, unnamed) & Federated segmentation Dice 0.852 vs 0.862 for models trained by sharing data\\
+\cite{suchard2019comprehensive} & 2019 & EHR & global network of six administrative claims and three electronic health record databases (4$\cdot$9 million patients) & Thiazide diuretics vs ACE inhibitors: acute MI HR 0$\cdot$84 (0$\cdot$75-0$\cdot$95), heart failure hospitalisation 0$\cdot$83, stroke 0$\cdot$83\\
+\cite{beyan2020distributed} & 2020 & Multimodal & abstract not accessible & -\\
+\cite{chen2020fedhealth} & 2020 & Signals & not stated & 5.3\% accuracy improvement for wearable activity recognition compared to traditional methods\\
+\cite{deist2020distributed} & 2020 & Tabular & Lung cancer patient databases of oncology departments (Personal Health Train) (23 203 patient cases), 8 sites & no number in abstract\\
+\cite{duan2020learning} & 2020 & EHR & dataset from the University of Pennsylvania Health System, 1 site & no number in abstract\\
+\cite{duan2020learninglocal} & 2020 & EHR & 4 datasets from the Observational Health Data Sciences and Informatics (OHDSI) network; simulation study & OHDSI application: ODAC relative bias <5\% for 15 of 16 log hazard ratios; meta-analysis estimates had substantially higher bias. Simulation: relative bias <0.1\% vs pooled estimator.\\
+\cite{kaissis2020secure} & 2020 & Imaging & no dataset (review, theory, guidance or simulation) & -\\
+\cite{li2020multi} & 2020 & Imaging & ABIDE & no number in abstract\\
+\cite{rieke2020future} & 2020 & Multimodal & no dataset (review, theory, guidance or simulation) & -\\
+\cite{roth2020federated} & 2020 & Imaging & Mammography datasets from seven clinical institutions, 7 sites & FL models 6.3\% better on average than models trained on local data alone; 45.8\% relative improvement in generalizability to other sites.\\
+\cite{sheller2020federated} & 2020 & Imaging & multi-institutional data (10 federated institutions; not named in abstract), 10 sites & Federated learning among 10 institutions reached 99\% of the model quality achieved with centralized data.\\
+\cite{bai2021advancing} & 2021 & Imaging & UCADI chest CT scans from hospitals in China and the UK (9,573 chest CT scans from 3,336 patients), 23 sites & FL model test sensitivity/specificity China 0.973/0.951, UK 0.730/0.942, outperforming all local models\\
+\cite{dayan2021federated} & 2021 & Multimodal & data from 20 institutes across the globe (vital signs, laboratory data, chest X-rays), 20 sites & Average AUC >0.92 at 24 and 72 h; 16\% average AUC improvement and 38\% generalizability increase vs single-site models\\
+\cite{dou2021federated} & 2021 & Imaging & multinational COVID-19 chest CT cohort (Hong Kong, Mainland China, Germany) (132 patients), 7 sites & no number in abstract\\
+\cite{froelicher2021truly} & 2021 & Omics & not stated & no number in abstract\\
+\cite{guo2021multi} & 2021 & Imaging & not stated & no number in abstract\\
+\cite{kaissis2021end} & 2021 & Imaging & abstract not accessible & -\\
+\cite{liu2021feddg} & 2021 & Imaging & retinal fundus images from public datasets, 4 sites; prostate T2-weighted MRI images from public datasets, 6 sites & Fundus segmentation: ELCFS improves over FedAvg by 2.02\% Dice and 2.86 HD overall\\
+\cite{sarma2021federated} & 2021 & Imaging & Private prostate MRI datasets from UCLA, SUNY Upstate Medical University and NCI (1 prostate MRI from each of 100 patients per institution), 3 sites; SPIE-AAPM-NCI PROSTATEx (challenge dataset) (343 axial T2W images) & FL model overall mean Dice 0.889, significantly superior to every single-institution model (P < .001)\\
+\cite{vaid2021federated} & 2021 & EHR & Mount Sinai Health System EHR data, 5 sites & no number in abstract\\
+\cite{warnatherresthal2021swarm} & 2021 & Multimodal & blood transcriptomes from 127 clinical studies (more than 16,400 blood transcriptomes); chest X-ray images (more than 95,000 chest X-ray images) & no number in abstract\\
+\cite{xu2021federated} & 2021 & Multimodal & no dataset (review, theory, guidance or simulation) & -\\
+\cite{ziller2021medical} & 2021 & Imaging & paediatric pneumonia dataset; Medical Segmentation Decathlon Liver dataset & no number in abstract\\
+\cite{adnan2022federated} & 2022 & Imaging & The Cancer Genome Atlas (TCGA) & no number in abstract\\
+\cite{jiang2022harmofl} & 2022 & Imaging & Camelyon17 (450,000 histology images), 5 sites; MoNuSAC2020; MoNuSAC2018; multi-site prostate segmentation dataset (6 data sources from 3 public datasets) & no number in abstract\\
+\cite{lu2022federated} & 2022 & Imaging & histology whole slide images (unnamed) (thousands of histology whole slide images) & no number in abstract\\
+\cite{nguyen2022federated} & 2022 & Multimodal & no dataset (review, theory, guidance or simulation) & -\\
+\cite{ogierduterrail2022flamby} & 2022 & Multimodal & FLamby (7 healthcare datasets with natural splits) (7 datasets) & no number in abstract\\
+\cite{pati2022federated} & 2022 & Imaging & glioblastoma data from 71 sites across 6 continents (n = 6,314), 71 sites & 33\% delineation improvement for surgically targetable tumor and 23\% for complete tumor extent over a publicly trained model.\\
+\cite{saldanha2022swarm} & 2022 & Imaging & Epi700 (661 patients); DACHS (2,448 patients); TCGA (632 patients); QUASAR; YCR BCIP & MSI in QUASAR: swarm AUROCs 0.8001 and 0.8151 vs 0.7884 for Epi700 single-cohort model\\
+\cite{tedeschini2022decentralized} & 2022 & Imaging & representative clinical datasets obtained from the daily clinical workflow & no number in abstract\\
+\cite{xu2022closing} & 2022 & Imaging & not stated & no number in abstract\\
+\cite{kalra2023decentralized} & 2023 & Imaging & popular image datasets; gigapixel histology whole slide images (cancer diagnostic problem) & no number in abstract\\
+\cite{ogierduterrail2023federated} & 2023 & Imaging & multicentric TNBC whole-slide image and clinical data & no number in abstract\\
+\cite{yan2023label} & 2023 & Imaging & simulated and real-world medical imaging non-IID federated datasets (retinal, dermatology, chest X-ray) & Under severe heterogeneity, test accuracy improved 5.06\%, 1.53\%, 4.58\% (retinal, dermatology, chest X-ray) vs supervised baseline with ImageNet pre-training.\\
+\bottomrule
+\end{longtable}
+
+\subsection*{P2 Proxy (47 works)}
+\begin{longtable}{@{}p{2.6cm}p{0.7cm}p{1.2cm}p{4.4cm}p{4.6cm}@{}}
+\toprule
+Work & Year & Modality & Data (size) & Reported result\\
+\midrule
+\endhead
+\cite{choi2016doctor} & 2016 & EHR & longitudinal time stamped EHR data (unnamed) (260K patients over 8 years) & Differential diagnosis up to 79\% recall@30, significantly higher than several baselines\\
+\cite{gulshan2016development} & 2016 & Imaging & retrospective development data set (128 175 retinal images); EyePACS-1 (9963 images from 4997 patients); Messidor-2 (1748 images from 874 patients) & AUC 0.991 (EyePACS-1) and 0.990 (Messidor-2) for referable diabetic retinopathy\\
+\cite{shin2016deep} & 2016 & Imaging & not stated & no number in abstract\\
+\cite{tajbakhsh2016convolutional} & 2016 & Imaging & not stated & no number in abstract\\
+\cite{esteva2017dermatologist} & 2017 & Imaging & clinical skin lesion images (129,450 clinical images) & no number in abstract\\
+\cite{kamnitsas2017unsupervised} & 2017 & Imaging & two MR databases of subjects with traumatic brain injuries & no number in abstract\\
+\cite{alsentzer2019publicly} & 2019 & Text & MIMIC-III v1.4 (approximately 2 million notes); MedNLI; i2b2 2006; i2b2 2010; i2b2 2012; i2b2 2014 & MedNLI accuracy 82.7\% vs prior state of the art 73.5\%\\
+\cite{chen2019med3d} & 2019 & Imaging & 3DSeg-8 (aggregated from several medical challenges); LIDC; LiTS challenge & 2x faster convergence vs Kinetics pretraining, 10x vs scratch; accuracy gains 3\% to 20\%; 94.6\% Dice on LiTS\\
+\cite{gurovich2019identifying} & 2019 & Imaging & community-driven phenotyping platform facial images (over 17,000 images) & DeepGestalt 91\% top-10 accuracy identifying the correct syndrome on 502 images\\
+\cite{prabhu2019few} & 2019 & Imaging & realistic dataset of dermatological conditions & no number in abstract\\
+\cite{raghu2019transfusion} & 2019 & Imaging & not stated & no number in abstract\\
+\cite{zhang2019metapred} & 2019 & EHR & real patient EHR repository from Oregon Health \& Science University, 1 site & no number in abstract\\
+\cite{lee2020biobert} & 2020 & Text & PubMed abstracts (4.5B words); PubMed Central (PMC) full-text articles (13.5B words) & Vs previous SOTA: NER +0.62\% F1, relation extraction +2.80\% F1, QA +12.24\% MRR\\
+\cite{li2020behrt} & 2020 & EHR & Clinical Practice Research Datalink (CPRD) (nearly 1.6 million individuals), 674 sites & 8.0-13.2\% improvement in average precision over state-of-the-art deep EHR models\\
+\cite{mahajan2020meta} & 2020 & Imaging & abstract not accessible & -\\
+\cite{roy2020squeeze} & 2020 & Imaging & Visceral Dataset & no number in abstract\\
+\cite{azizi2021big} & 2021 & Imaging & dermatology digital camera images; chest X-ray images (multi-label) & +6.7\% top-1 accuracy (dermatology) and +1.1\% mean AUC (chest X-ray) over supervised ImageNet-pretrained baselines.\\
+\cite{huang2021gloria} & 2021 & Imaging & not stated & no number in abstract\\
+\cite{rasmy2021med} & 2021 & EHR & Cerner Health Facts (28,490,650 patients); Truven Health MarketScan & AUC improved by 1.21-6.14\% in two disease prediction tasks; >20\% with small fine-tuning sets\\
+\cite{sowrirajan2021moco} & 2021 & Imaging & CheXpert (224k chest X-rays collected from 65k patients); Shenzhen Hospital X-ray set (662 X-ray images) & Pleural effusion, 0.1\% labels: linear model AUC 0.776 with MoCo-CXR vs 0.683 ImageNet-pretrained (+0.096)\\
+\cite{steinberg2021language} & 2021 & EHR & not stated & 3.5\% mean AUROC improvement over standard baselines on five tasks; 19\% average improvement with few training records\\
+\cite{zhou2021models} & 2021 & Imaging & not stated & no number in abstract\\
+\cite{agrawal2022large} & 2022 & Text & CASI dataset (re-annotated) & no number in abstract\\
+\cite{guan2022domain} & 2022 & Imaging & no dataset (review, theory, guidance or simulation) & -\\
+\cite{hsieh2022gestaltmatcher} & 2022 & Imaging & patient photographs (Clinical Face Phenotype Space) (17,560 patients with 1,115 rare disorders) & no number in abstract\\
+\cite{mei2022radimagenet} & 2022 & Imaging & RadImageNet (1.35 million annotated medical images in 131 872 patients) & no number in abstract\\
+\cite{tiu2022expert} & 2022 & Imaging & not stated & no number in abstract\\
+\cite{wang2022medclip} & 2022 & Imaging & not stated & With only 20K pre-training data, MedCLIP outperforms the state-of-the-art method using $\approx$200K data\\
+\cite{zhang2022contrastive} & 2022 & Imaging & not stated & Needs only 10\% as much labeled data as ImageNet-initialized counterpart for better or comparable performance on 4 classification tasks.\\
+\cite{banerjee2023machine} & 2023 & Multimodal & no dataset (review, theory, guidance or simulation) & -\\
+\cite{hegselmann2023tabllm} & 2023 & Tabular & Bank (45,211 rows); Blood (748 rows); California (20,640 rows); Car (1,728 rows); Credit-g (1,000 rows); Income (48,842 rows); Jungle (44,819 rows); Diabetes (Kaggle) (768 rows); Heart (Kaggle) (918 rows); de-identified health claims dataset from a U.S. health insurer & Zero-shot AUC on health claims tasks from 0.67 (Surgery) to 0.71 (LoH)\\
+\cite{hollmann2023tabpfn} & 2023 & Tabular & OpenML-CC18 suite (18 datasets) (up to 1 000 training data points each); additional small numerical datasets from OpenML (67 datasets) & Outperforms boosted trees, on par with state-of-the-art AutoML with up to 230x speedup (5 700x on GPU)\\
+\cite{jiang2023health} & 2023 & Text & clinical notes from the authors' health system & NYUTron AUC 78.7-94.9\%, improving AUC by 5.36-14.7\% over traditional models\\
+\cite{moor2023foundation} & 2023 & Multimodal & no dataset (review, theory, guidance or simulation) & -\\
+\cite{nori2023capabilities} & 2023 & Text & USMLE official practice materials; MultiMedQA & GPT-4 exceeds USMLE passing score by over 20 points; outperforms GPT-3.5 and Med-PaLM.\\
+\cite{singhal2023large} & 2023 & Text & MultiMedQA; HealthSearchQA; MedQA; MedMCQA; PubMedQA; MMLU clinical topics & Flan-PaLM 67.6\% accuracy on MedQA, surpassing prior state of the art by more than 17\%.\\
+\cite{theodoris2023transfer} & 2023 & Omics & large-scale corpus of single-cell transcriptomes (unnamed) (about 30 million single-cell transcriptomes) & no number in abstract\\
+\cite{wornow2023shaky} & 2023 & EHR & no dataset (review, theory, guidance or simulation) & -\\
+\cite{zhou2023foundation} & 2023 & Imaging & unlabelled retinal images (RETFound pretraining) (1.6 million unlabelled retinal images) & no number in abstract\\
+\cite{chen2024general} & 2024 & Imaging & diagnostic H\&E-stained WSIs across 20 major tissue types (pretraining) (more than 100 million images from over 100,000 WSIs) & no number in abstract\\
+\cite{cui2024scgpt} & 2024 & Omics & single-cell sequencing data repository (over 33 million cells) & no number in abstract\\
+\cite{lu2024visual} & 2024 & Imaging & histopathology image-caption pairs from diverse sources (CONCH pretraining) (over 1.17 million image-caption pairs) & no number in abstract\\
+\cite{ma2024segment} & 2024 & Imaging & curated dataset from publicly available medical image segmentation datasets (1,570,263 image-mask pairs) & no number in abstract\\
+\cite{pai2024foundation} & 2024 & Imaging & DeepLesion (11,467 radiographic lesions used for pretraining; dataset comprises 32,735 lesions from 4,427 unique patients); LUNA16 (507 lung nodules); HarvardRT (n = 291); LUNG1 (NSCLC-Radiomics) (n = 420); RADIO (NSCLC-Radiogenomics) (n = 133) & LUNG1 2-year survival: Foundation (features) AUC 0.638 (95\% CI 0.584-0.692), exceeding all baselines\\
+\cite{vorontsov2024foundation} & 2024 & Imaging & not stated & Pan-cancer detection specimen-level AUC 0.95 across nine common and seven rare cancers\\
+\cite{xu2024whole} & 2024 & Imaging & Providence health network whole slides (171,189 whole slides (1.3 billion tiles; more than 30,000 patients)), 28 sites; TCGA & State-of-the-art on 25 of 26 tasks; significant improvement over second-best method on 18 tasks\\
+\cite{hollmann2025accurate} & 2025 & Tabular & synthetic datasets (pretraining) (millions of synthetic datasets) & In 2.8 s, TabPFN outperforms an ensemble of strongest baselines tuned for 4 h (classification, datasets up to 10,000 samples).\\
+\bottomrule
+\end{longtable}
+
+\subsection*{P3 Prior (15 works)}
+\begin{longtable}{@{}p{2.6cm}p{0.7cm}p{1.2cm}p{4.4cm}p{4.6cm}@{}}
+\toprule
+Work & Year & Modality & Data (size) & Reported result\\
+\midrule
+\endhead
+\cite{steyerberg2000prognostic} & 2000 & Tabular & small data sets of patients with acute myocardial infarction & no number in abstract\\
+\cite{choi2017gram} & 2017 & EHR & electronic health records (unnamed) & Vs basic RNN: 10\% higher accuracy for rare diseases; 3\% higher heart-failure AUC\\
+\cite{rotmensch2017learning} & 2017 & EHR & de-identified patient records (273,174 de-identified patient records) & Noisy OR model precision 0.85 at recall 0.6 in clinical evaluation; outperforms logistic regression and naive Bayes (p < 0.01)\\
+\cite{ma2018kame} & 2018 & EHR & abstract not accessible & -\\
+\cite{shang2019gamenet} & 2019 & EHR & real EHR data & Outperformed all baselines in all effectiveness measures; 3.60\% DDI rate reduction from existing EHR data\\
+\cite{subbaswamy2019preventing} & 2019 & EHR & not stated & no number in abstract\\
+\cite{castro2020causality} & 2020 & Imaging & no dataset (review, theory, guidance or simulation) & -\\
+\cite{kissas2020machine} & 2020 & Imaging & in-vivo 4D flow MRI measurements near the aorta/carotid bifurcation (a healthy human subject) & no number in abstract\\
+\cite{lagergren2020biologically} & 2020 & Tabular & wound healing assays with varying initial cell densities & no number in abstract\\
+\cite{sahlicostabal2020physics} & 2020 & Signals & abstract not accessible & -\\
+\cite{vancalster2020regression} & 2020 & Tabular & no dataset (review, theory, guidance or simulation) & -\\
+\cite{kohler2021human} & 2021 & Text & no dataset (review, theory, guidance or simulation) & -\\
+\cite{lu2021neural} & 2021 & Tabular & PK data from two treatment regimens of trastuzumab emtansine & no number in abstract\\
+\cite{riley2021penalization} & 2021 & Tabular & not stated & no number in abstract\\
+\cite{zhang2021empirical} & 2021 & Multimodal & eICU collaborative research database V2.0 (30,680 patients (study cohort)), over 200 sites; MIMIC-CXR; CheXpert; Chest-Xray8; PadChest & no number in abstract\\
+\bottomrule
+\end{longtable}
+
+\subsection*{P4 Unlabeled (18 works)}
+\begin{longtable}{@{}p{2.6cm}p{0.7cm}p{1.2cm}p{4.4cm}p{4.6cm}@{}}
+\toprule
+Work & Year & Modality & Data (size) & Reported result\\
+\midrule
+\endhead
+\cite{agarwal2016learning} & 2016 & EHR & not stated & Precision/accuracy 0.90/0.89 (T2DM) and 0.86/0.89 (MI) vs rule-based 0.96/0.92 and 0.84/0.87\\
+\cite{halpern2016electronic} & 2016 & EHR & retrospective EMR data on emergency department patients & Triage-time AUCs: infection 0.89, cancer 0.88, septic shock 0.93, pneumonia 0.90; disposition-time AUCs up to 0.97 (septic shock, pneumonia)\\
+\cite{bai2017semi} & 2017 & Imaging & abstract not accessible & -\\
+\cite{wang2017chestx} & 2017 & Imaging & ChestX-ray8 (108,948 frontal-view X-ray images of 32,717 unique patients) & no number in abstract\\
+\cite{ilse2018attention} & 2018 & Imaging & MNIST-bags (from MNIST); Breast cancer histopathology dataset (Gelasca et al., 2008) (58 H\&E images); Colon cancer histopathology dataset (Sirinukunwattana et al., 2016) (100 H\&E images) & no number in abstract\\
+\cite{campanella2019clinical} & 2019 & Imaging & whole slide image dataset (44,732 whole slide images from 15,187 patients) & AUC above 0.98 for prostate cancer, basal cell carcinoma and breast cancer metastases\\
+\cite{cheplygina2019not} & 2019 & Imaging & no dataset (review, theory, guidance or simulation) & -\\
+\cite{fries2019weakly} & 2019 & Imaging & UK Biobank (up to 4,000 unlabeled cardiac MRI sequences) & Model identifies individuals with a 1.8-fold increase in risk of a major adverse cardiac event; outperforms supervised hand-labeled model\\
+\cite{irvin2019chexpert} & 2019 & Imaging & CheXpert (224,316 chest radiographs of 65,240 patients) & no number in abstract\\
+\cite{wang2019clinical} & 2019 & Text & Mayo Clinic smoking status classification (institutional), 1 site; Mayo Clinic proximal femur (hip) fracture classification (institutional), 1 site; i2b2 2006 smoking status classification shared task & CNN best: F1 0.92 (Mayo smoking status) and 0.97 (fracture classification).\\
+\cite{yu2019uncertainty} & 2019 & Imaging & MICCAI 2018 Atrial Segmentation Challenge dataset (100 3D gadolinium-enhanced MR imaging scans) & With 16 labeled scans, unlabeled data improves Dice by 2.85\% and Jaccard 4.15\% over labeled-only Bayesian V-Net\\
+\cite{chaitanya2020contrastive} & 2020 & Imaging & ACDC (100 3D short-axis cardiac cine-MRIs); Prostate (MICCAI 2018 medical segmentation decathlon) (48 3D T2-weighted MRIs); MMWHS (20 3D cardiac MRIs) & Within 8\% of benchmark using only two labeled MRI volumes (4\% of ACDC training data)\\
+\cite{ouyang2020self} & 2020 & Imaging & not stated & no number in abstract\\
+\cite{tajbakhsh2020embracing} & 2020 & Imaging & no dataset (review, theory, guidance or simulation) & -\\
+\cite{taleb20203d} & 2020 & Imaging & 3D MRI (Brain Tumor Segmentation); 3D CT (Pancreas Tumor Segmentation); 2D Fundus images (Diabetic Retinopathy Detection) & no number in abstract\\
+\cite{li2021transformation} & 2021 & Imaging & International Skin Imaging Collaboration (ISIC) 2017; Retinal Fundus Glaucoma Challenge (REFUGE); Liver Tumor Segmentation Challenge (LiTS) & no number in abstract\\
+\cite{lu2021data} & 2021 & Imaging & not stated & no number in abstract\\
+\cite{krishnan2022self} & 2022 & Multimodal & no dataset (review, theory, guidance or simulation) & -\\
+\bottomrule
+\end{longtable}
+
+\subsection*{P5 Procurement (12 works)}
+\begin{longtable}{@{}p{2.6cm}p{0.7cm}p{1.2cm}p{4.4cm}p{4.6cm}@{}}
+\toprule
+Work & Year & Modality & Data (size) & Reported result\\
+\midrule
+\endhead
+\cite{peduzzi1996simulation} & 1996 & Tabular & cardiac trial data (673 patients) & EPV of 10 or greater: no major problems; EPV below 10: biased coefficients and poor variance/coverage\\
+\cite{figueroa2012predicting} & 2012 & Text & learning curves from clinical text and waveform classification tasks & 80 to 560 annotated samples needed for mean average and RMSE below 0.01; weighted fitting outperformed un-weighted baseline\\
+\cite{cho2015much} & 2015 & Imaging & Massachusetts General Hospital (MGH) PACS CT images (6000 test CT images; training sizes 5-200), 1 site & no number in abstract\\
+\cite{yang2017suggestive} & 2017 & Imaging & 2015 MICCAI Gland Challenge dataset; lymph node ultrasound image segmentation dataset & State-of-the-art segmentation performance achieved using only 50\% of training data.\\
+\cite{smailagic2018medal} & 2018 & Imaging & Messidor (1200 eye fundus images); Breast Cancer Diagnosis Dataset (ICIAR 2018 Grand Challenge) (400 images); Skin Cancer dataset (900 images) & 80\% DR detection accuracy with 425 labeled images; 32\% fewer labels than uncertainty sampling, 40\% fewer than random\\
+\cite{balki2019sample} & 2019 & Imaging & no dataset (review, theory, guidance or simulation) & 22 of 167 articles included; only 4 discussed sample-size determination methodologies\\
+\cite{riley2019minimum} & 2019 & Tabular & no dataset (review, theory, guidance or simulation) & -\\
+\cite{riley2019minimumsample} & 2019 & Tabular & no dataset (review, theory, guidance or simulation) & -\\
+\cite{smeden2019sample} & 2019 & Tabular & no dataset (review, theory, guidance or simulation) & -\\
+\cite{riley2020calculating} & 2020 & Tabular & no dataset (review, theory, guidance or simulation) & -\\
+\cite{budd2021survey} & 2021 & Imaging & no dataset (review, theory, guidance or simulation) & -\\
+\cite{nath2021diminishing} & 2021 & Imaging & MRI scans of the hippocampus; CT scans of pancreas and tumors & Full accuracy using only 22.69\% and 48.85\% of available data for each dataset\\
+\bottomrule
+\end{longtable}
+
+\subsection*{P6 Re-expression (26 works)}
+\begin{longtable}{@{}p{2.6cm}p{0.7cm}p{1.2cm}p{4.4cm}p{4.6cm}@{}}
+\toprule
+Work & Year & Modality & Data (size) & Reported result\\
+\midrule
+\endhead
+\cite{chawla2002smote} & 2002 & Tabular & not stated & no number in abstract\\
+\cite{choi2017generating} & 2017 & EHR & not stated & no number in abstract\\
+\cite{bowles2018gan} & 2018 & Imaging & not stated & Dice Similarity Coefficient improvements of 1 to 5 percentage points from adding GAN-derived synthetic training data.\\
+\cite{fernandez2018smote} & 2018 & Tabular & no dataset (review, theory, guidance or simulation) & -\\
+\cite{fridadar2018gan} & 2018 & Imaging & CT images of liver lesions (limited dataset) (182 liver lesions) & Sensitivity/specificity 85.7\%/92.4\% with synthetic augmentation vs 78.6\%/88.4\% with classic augmentation\\
+\cite{shin2018medical} & 2018 & Imaging & Alzheimer's Disease Neuroimaging Initiative (ADNI) (3,416 pairs of T1-weighted images); BRATS 2015 training data set (264 studies) & no number in abstract\\
+\cite{walonoski2018synthea} & 2018 & EHR & Synthea synthetic patient records (One million synthetic patient records) & no number in abstract\\
+\cite{baowaly2019synthesizing} & 2019 & EHR & MIMIC-III; National Health Insurance Research Database (NHIRD), Taiwan & no number in abstract\\
+\cite{beaulieujones2019privacy} & 2019 & Tabular & SPRINT trial (Systolic Blood Pressure Trial) & no number in abstract\\
+\cite{jordon2019pate} & 2019 & Tabular & abstract not accessible & -\\
+\cite{xu2019modeling} & 2019 & Tabular & adult (UCI); census (UCI); covertype (UCI); intrusion (UCI); news (UCI); credit (Kaggle); MNIST28 / MNIST12 (from MNIST); 7 simulated datasets & CTGAN surpasses Bayesian networks on at least 87.5\% of benchmark datasets\\
+\cite{yi2019generative} & 2019 & Imaging & no dataset (review, theory, guidance or simulation) & -\\
+\cite{zhao2019data} & 2019 & Imaging & not stated & no number in abstract\\
+\cite{goncalves2020generation} & 2020 & EHR & Surveillance Epidemiology and End Results (SEER) cancer registry (over 360,000 individual cases) & no number in abstract\\
+\cite{yoon2020anonymization} & 2020 & EHR & four independent datasets (4 datasets) & no number in abstract\\
+\cite{zhang2020ensuring} & 2020 & EHR & billing codes from EMRs at Vanderbilt University Medical Center (over 1 million EMRs), 1 site & no number in abstract\\
+\cite{chaitanya2021semi} & 2021 & Imaging & cardiac; prostate; pancreas & no number in abstract\\
+\cite{chen2021synthetic} & 2021 & Multimodal & abstract not accessible & -\\
+\cite{chlap2021review} & 2021 & Imaging & no dataset (review, theory, guidance or simulation) & -\\
+\cite{stadler2022synthetic} & 2022 & Tabular & not stated & no number in abstract\\
+\cite{goorbergh2022harm} & 2022 & Tabular & ovarian cancer diagnosis case study data & no number in abstract\\
+\cite{borisov2023language} & 2023 & Tabular & numerous real-world and synthetic data sets (not named) & no number in abstract\\
+\cite{kazerouni2023diffusion} & 2023 & Imaging & no dataset (review, theory, guidance or simulation) & -\\
+\cite{khader2023denoising} & 2023 & Imaging & ADNI (brain MRI) (998 studies); LIDC (chest CT) (1010 studies); DUKE (breast MRI) (1844 studies); MRNet (knee MRI) (1250 studies) & Breast segmentation Dice 0.95 with synthetic data vs 0.91 without\\
+\cite{kotelnikov2023tabddpm} & 2023 & Tabular & not stated & no number in abstract\\
+\cite{ktena2024generative} & 2024 & Imaging & histopathology images; chest X-ray images; dermatology images & no number in abstract\\
+\bottomrule
+\end{longtable}
+
+\subsection*{No remedy (documents a problem) (26 works)}
+\begin{longtable}{@{}p{2.6cm}p{0.7cm}p{1.2cm}p{4.4cm}p{4.6cm}@{}}
+\toprule
+Work & Year & Modality & Data (size) & Reported result\\
+\midrule
+\endhead
+\cite{elemam2011systematic} & 2011 & Tabular & no dataset (review, theory, guidance or simulation) & Pooled re-identified proportion 0.26 (95\% CI 0.046-0.478) overall and 0.34 for health data, across 14 attacks.\\
+\cite{varoquaux2018cross} & 2018 & Imaging & not stated & Sample sizes of many neuroimaging studies lead to large cross-validation error bars, e.g. $\pm$10\% for 100 samples.\\
+\cite{zech2018variable} & 2018 & Imaging & National Institutes of Health Clinical Center (NIH) (112,120 radiographs from 30,805 patients), 1 site; Mount Sinai Hospital (MSH) (42,396 radiographs from 12,904 patients), 1 site; Indiana University Network for Patient Care (IU) (3,807 radiographs from 3,683 patients), 1 site & Sorting by hospital system alone achieved AUC 0.861 on joint MSH-NIH data; better internal than external in 3/5 comparisons\\
+\cite{brasil2019artificial} & 2019 & Multimodal & no dataset (review, theory, guidance or simulation) & -\\
+\cite{christodoulou2019systematic} & 2019 & Tabular & no dataset (review, theory, guidance or simulation) & Low-risk-of-bias comparisons (145): logit(AUC) difference LR vs ML 0.00 (95\% CI -0.18 to 0.18)\\
+\cite{kim2019design} & 2019 & Imaging & no dataset (review, theory, guidance or simulation) & Of 516 eligible studies, only 6\% (31 studies) performed external validation\\
+\cite{liu2019comparison} & 2019 & Imaging & no dataset (review, theory, guidance or simulation) & Pooled sensitivity 87.0\% (DL) vs 86.4\% (clinicians); pooled specificity 92.5\% vs 90.5\%, in 14 studies.\\
+\cite{obermeyer2019dissecting} & 2019 & EHR & not stated & Remedying the bias would increase Black patients receiving additional help from 17.7\% to 46.5\%.\\
+\cite{rocher2019estimating} & 2019 & Tabular & 210 populations (unnamed) (210 populations) & AUC 0.84-0.97 for predicting individual uniqueness; 99.98\% of Americans re-identifiable with 15 attributes\\
+\cite{schwarz2019identification} & 2019 & Imaging & deidentified cranial MRI scans & no number in abstract\\
+\cite{nagendran2020artificial} & 2020 & Imaging & no dataset (review, theory, guidance or simulation) & High overall risk of bias in 58 of 81 non-randomised studies; data and code unavailable in 95\% and 93\%\\
+\cite{nguengangwakap2020estimating} & 2020 & Tabular & Orphanet database (6172 unique rare diseases) & Population prevalence of rare diseases estimated at 3.5-5.9\%, i.e. 263-446 million persons globally\\
+\cite{oakdenrayner2020hidden} & 2020 & Imaging & CIFAR-100; multiple real-world medical imaging datasets & Hidden stratification can cause relative performance differences of over 20\% on clinically important subsets.\\
+\cite{schaefer2020use} & 2020 & Multimodal & no dataset (review, theory, guidance or simulation) & 211 studies from 32 countries on 74 rare diseases; only 11.8\% evaluated on an external data set.\\
+\cite{willemink2020preparing} & 2020 & Imaging & no dataset (review, theory, guidance or simulation) & -\\
+\cite{wynants2020prediction} & 2020 & Multimodal & no dataset (review, theory, guidance or simulation) & 169 studies, 232 models; all at high or unclear risk of bias; C index 0.54 to >0.99\\
+\cite{chen2021ethical} & 2021 & Multimodal & no dataset (review, theory, guidance or simulation) & -\\
+\cite{finlayson2021clinician} & 2021 & Multimodal & no dataset (review, theory, guidance or simulation) & -\\
+\cite{koh2021wilds} & 2021 & Multimodal & WILDS benchmark (10 datasets) & no number in abstract\\
+\cite{roberts2021common} & 2021 & Imaging & no dataset (review, theory, guidance or simulation) & 61 studies included (of 2,212 identified); none of the models identified are of potential clinical use.\\
+\cite{wong2021external} & 2021 & EHR & Michigan Medicine (University of Michigan) hospitalized patients (27,697 patients with 38,455 hospitalizations), 1 site & Epic Sepsis Model hospitalization-level AUROC 0.63 (95\% CI 0.62-0.64)\\
+\cite{gichoya2022ai} & 2022 & Imaging & Emory CXR; Emory Chest CT; Emory Cervical Spine; Emory Mammogram; MIMIC-CXR; CheXpert; National Lung Cancer Screening Trial; RSNA Pulmonary Embolism CT; Digital Hand Atlas & Race prediction AUC 0$\cdot$91-0$\cdot$99 (x-ray), 0$\cdot$87-0$\cdot$96 (CT chest), 0$\cdot$81 (mammography) under external validation\\
+\cite{packhauser2022deep} & 2022 & Imaging & ChestX-ray14 (112,120 frontal-view chest X-ray images from 30,805 unique patients); CheXpert; COVID-19 Image Data Collection & Same-patient verification AUC 0.9940, accuracy 95.55\% on ChestX-ray14; external datasets AUC up to 0.9870\\
+\cite{varoquaux2022machine} & 2022 & Imaging & no dataset (review, theory, guidance or simulation) & -\\
+\cite{yu2022external} & 2022 & Imaging & no dataset (review, theory, guidance or simulation) & 81\% (70 of 86) algorithms showed decreased external vs internal performance; 24\% a substantial decrease (>=0.10).\\
+\cite{hatamizadeh2023do} & 2023 & Imaging & not stated & no number in abstract\\
+\bottomrule
+\end{longtable}
+
