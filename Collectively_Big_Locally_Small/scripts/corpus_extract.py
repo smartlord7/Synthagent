@@ -19,17 +19,19 @@ ROOT = Path(__file__).resolve().parent.parent
 TAB = ROOT / "supplement" / "tables"
 CH = {"P1": "P1 Pooling", "P2": "P2 Proxy", "P3": "P3 Prior", "P4": "P4 Unlabeled", "P5": "P5 Procurement",
       "P6": "P6 Re-expression", "none": "No remedy (documents a problem)"}
-METRICS = {  # metric label: regular expression on the reported result
-    "AUROC / AUC": r"\bAUR?OC\b|\bAUC\b|area under the (receiver|ROC|curve)",
-    "Accuracy": r"\baccura(cy|te)\b",
-    "Sensitivity / specificity": r"\bsensitivit|\bspecificit|\brecall\b",
-    "Dice / IoU": r"\bDice\b|\bDSC\b|\bIoU\b|Jaccard",
-    "F1": r"\bF1\b|F-score|F1-score",
-    "AUPRC / precision": r"\bAUPRC\b|\bAUC-?PR\b|\bprecision\b|\bPPV\b",
-    "Calibration / Brier": r"calibrat|\bBrier\b|\bECE\b",
-    "C-index": r"\bC-?index\b|concordance",
-    "Error (MSE, MAE, RMSE)": r"\bR?MSE\b|\bMAE\b|mean (squared|absolute) error",
-    "Relative change": r"%|percent|fold\b",
+METRICS = {  # macro suffix: regular expression on the reported result (headline result as stated in the abstract)
+    "Auc": r"\bAUR?OC\b|\bAUC\b|area under the (receiver|ROC|curve)",
+    "Acc": r"\baccura(cy|te)\b",
+    "Sens": r"\bsensitivit|\bspecificit|\brecall\b",
+    "Prc": r"\bAUPRC\b|\bAUC-?PR\b|\bprecision\b|\bPPV\b",
+    "Fone": r"\bF1\b|F-score|F1-score",
+    "Dice": r"\bDice\b|\bDSC\b|\bIoU\b|Jaccard",
+    "Cal": r"calibrat|\bBrier\b|\bECE\b",
+    "Logloss": r"log-?loss|cross-?entropy|deviance|log-?likelihood",
+    "Cindex": r"\bC-?index\b|concordance",
+    "Err": r"\bR?MSE\b|\bMAE\b|mean (squared|absolute) error",
+    "Eps": r"\u03b5|epsilon|differential privacy|privacy budget",
+    "Rel": r"%|percent|fold\b",
 }
 
 
@@ -41,7 +43,8 @@ def tex(s):
     s = (s or "").replace("\\", "/")
     for a, b in (("&", "\\&"), ("%", "\\%"), ("$", "\\$"), ("#", "\\#"), ("_", "\\_"), ("{", "\\{"), ("}", "\\}"),
                  ("~", "\\textasciitilde{}"), ("^", "\\textasciicircum{}"), ("—", ", "), ("–", "-"), ("≥", "$\\ge$"),
-                 ("≤", "$\\le$"), ("±", "$\\pm$"), ("×", "$\\times$")):
+                 ("≤", "$\\le$"), ("±", "$\\pm$"), ("×", "$\\times$"), ("≈", "$\\approx$"), ("·", "$\\cdot$"),
+                 ("\u202f", " "), ("\u2009", " "), ("\u00a0", " "), ("’", "'"), ("‘", "'"), ("“", "``"), ("”", "''")):
         s = s.replace(a, b)
     return s
 
@@ -59,7 +62,7 @@ def verify(ext, look):
     for r in ext:
         if r.get("source") != "epmc_abstract":
             continue
-        ab = norm(look.get(r["key"], {}).get("abstract"))
+        ab = norm(look.get(r["key"], {}).get("abstract")) + " " + norm(look.get(r["key"], {}).get("title"))
         miss = [q for q in r.get("evidence", []) if norm(q) not in ab]
         if miss:
             bad.append((r["key"], miss))
@@ -87,13 +90,13 @@ def main():
                 "Work & Year & Modality & Data (size) & Reported result\\\\", "\\midrule", "\\endhead"]
         for c, e in sorted(rows[ch], key=lambda t: (t[0]["year"], t[0]["citation"])):
             if e.get("status") == "not_empirical":
-                data, res = "no dataset (review, theory or position)", tex(e.get("result")) or "-"
+                data, res = "no dataset (review, theory, guidance or simulation)", tex(e.get("result")) or "-"
             elif e.get("status") == "no_source":
                 data, res = "abstract not accessible", "-"
             else:
                 ds = e.get("datasets") or []
                 data = "; ".join(tex(d.get("name")) + (f" ({tex(d['size'])})" if d.get("size") else "")
-                                 + (f", {d['sites']} sites" if d.get("sites") else "") for d in ds) or "not stated"
+                                 + (f", {d['sites']} site{'' if str(d['sites']) == '1' else 's'}" if d.get("sites") else "") for d in ds) or "not stated"
                 res = tex(e.get("result")) or "no number in abstract"
             flag = "$^{\\ast}$" if c["key"] in bad else ""
             out.append(f"\\cite{{{c['key']}}}{flag} & {c['year']} & {c['modality']} & {data} & {res}\\\\")
@@ -103,21 +106,21 @@ def main():
     # dataset analysis
     emp = [E[k] for k, c in corpus.items() if c["modality"] != "General" and k in E and E[k].get("status") == "ok"]
     names, access, sizes, sites = Counter(), Counter(), [], []
+    def is_public(d):
+        return d.get("access") == "public" or canon(d.get("name") or "") != (d.get("name") or "").strip()
     for e in emp:
-        acc = {d.get("access") for d in e.get("datasets") or []}
-        access["public" if acc == {"public"} else "private" if acc == {"private"} else
-               "public and private" if {"public", "private"} <= acc else "not stated"] += 1
-        for d in e.get("datasets") or []:
-            if d.get("access") == "public" and d.get("name"):
-                names[canon(d["name"])] += 1
-            if d.get("sites"):
-                try:
-                    sites.append(int(re.sub(r"[^\d]", "", str(d["sites"]))))
-                except ValueError:
-                    pass
-            n = first_number(d.get("size"))
-            if n:
-                sizes.append(n)
+        ds = e.get("datasets") or []
+        pub = [d for d in ds if is_public(d)]
+        access["none described" if not ds else "public" if len(pub) == len(ds) else
+               "institutional only" if not pub else "public and institutional"] += 1
+        for nm in {canon(d["name"]) for d in pub}:
+            names[nm] += 1
+        st = [int(re.sub(r"[^\d]", "", str(d["sites"]))) for d in ds if d.get("sites") and re.sub(r"[^\d]", "", str(d["sites"]))]
+        if st:
+            sites.append(max(st))
+        sz = [first_number(d.get("size")) for d in ds if first_number(d.get("size"))]
+        if sz:
+            sizes.append(max(sz))
     mets = Counter()
     for e in emp:
         r = e.get("result") or ""
@@ -127,13 +130,19 @@ def main():
     num = {"CxEmpirical": len(emp), "CxHealth": sum(1 for c in corpus.values() if c["modality"] != "General"),
            "CxNotEmp": sum(1 for k, c in corpus.items() if c["modality"] != "General" and E.get(k, {}).get("status") == "not_empirical"),
            "CxNoSource": sum(1 for k, c in corpus.items() if c["modality"] != "General" and E.get(k, {}).get("status") == "no_source"),
-           "CxPublic": access["public"], "CxPrivate": access["private"], "CxBoth": access["public and private"],
-           "CxAccessNS": access["not stated"], "CxWithResult": sum(1 for e in emp if e.get("result")),
+           "CxPublic": access["public"], "CxInst": access["institutional only"], "CxBoth": access["public and institutional"],
+           "CxNoData": access["none described"], "CxWithResult": sum(1 for e in emp if e.get("result")),
            "CxWithSize": sum(1 for e in emp if any(first_number(d.get("size")) for d in e.get("datasets") or [])),
            "CxMultiSite": sum(1 for s in sites if s >= 2), "CxSitesStated": len(sites)}
     if sizes:
         sizes.sort()
-        num["CxSizeMedian"] = f"{sizes[len(sizes) // 2]:,}".replace(",", "{,}")
+        q = lambda f: f"{sizes[int(f * (len(sizes) - 1))]:,}".replace(",", "{,}")
+        num["CxSizeQOne"], num["CxSizeMedian"], num["CxSizeQThree"] = q(0.25), q(0.5), q(0.75)
+        num["CxSizeUnderThousand"] = sum(1 for x in sizes if x < 1000)
+    if sites:
+        num["CxSitesMax"] = max(sites)
+    for m in METRICS:
+        num[f"CxMet{m}"] = mets[m]
     lines = ["% Generated by scripts/corpus_extract.py. Do not edit."] + [f"\\newcommand{{\\{k}}}{{{v}}}" for k, v in num.items()]
     (TAB / "corpus_numbers.tex").write_text("\n".join(lines) + "\n")
     top = names.most_common(15)
@@ -141,18 +150,16 @@ def main():
     L += [f"{tex(n)} & {c}\\\\" for n, c in top if c >= 2]
     L += ["\\bottomrule", "\\end{tabular}"]
     (TAB / "corpus_datasets.tex").write_text("\n".join(L) + "\n")
-    L = ["\\begin{tabular}{@{}lr@{}}", "\\toprule", "Metric in the reported result & Works\\\\", "\\midrule"]
-    L += [f"{tex(m)} & {c}\\\\" for m, c in mets.most_common()]
-    L += ["\\bottomrule", "\\end{tabular}"]
-    (TAB / "corpus_metrics_counts.tex").write_text("\n".join(L) + "\n")
     print(json.dumps(num, indent=1), top, mets.most_common(), sep="\n")
 
 
-ALIASES = [(r"mimic[- ]?iii", "MIMIC-III"), (r"mimic[- ]?iv", "MIMIC-IV"), (r"\beicu", "eICU"), (r"chexpert", "CheXpert"),
-           (r"chestx-?ray ?14|chest ?x-?ray14|nih chest", "ChestX-ray14"), (r"uk biobank", "UK Biobank"),
+ALIASES = [(r"mimic-cxr", "MIMIC-CXR"), (r"mimic[- ]?iii", "MIMIC-III"), (r"mimic[- ]?iv", "MIMIC-IV"), (r"\beicu", "eICU"),
+           (r"chexpert", "CheXpert"), (r"chest-?x-?ray ?(8|14)|nih chest", "ChestX-ray8/14"), (r"\badni\b|alzheimer", "ADNI"),
+           (r"messidor", "Messidor"), (r"eyepacs|kaggle diabetic", "EyePACS / Kaggle DR"), (r"\blits\b|liver tumor segmentation", "LiTS"),
+           (r"decathlon", "Medical Segmentation Decathlon"), (r"\bi2b2\b", "i2b2/n2c2"), (r"openml", "OpenML"), (r"\buci\b", "UCI repository"), (r"uk biobank", "UK Biobank"),
            (r"\btcga\b|cancer genome atlas", "TCGA"), (r"brats", "BraTS"), (r"isic", "ISIC"), (r"camelyon", "Camelyon"),
-           (r"mimic-cxr", "MIMIC-CXR"), (r"physionet", "PhysioNet"), (r"kaggle", "Kaggle"), (r"ham10000", "HAM10000"),
-           (r"eyepacs", "EyePACS"), (r"luna16|lidc", "LIDC-IDRI / LUNA16"), (r"imagenet", "ImageNet")]
+           (r"physionet", "PhysioNet"), (r"kaggle", "Kaggle"), (r"ham10000", "HAM10000"),
+           (r"luna16|lidc", "LIDC-IDRI / LUNA16"), (r"imagenet", "ImageNet")]
 
 
 def canon(n):

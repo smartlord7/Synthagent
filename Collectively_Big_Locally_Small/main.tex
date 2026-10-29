@@ -8,6 +8,7 @@
 \citestyle{acmauthoryear}
 \input{prisma/prisma_numbers}
 \input{supplement/results/sim_numbers}
+\input{supplement/tables/corpus_numbers}
 
 \usepackage{tabularx}
 \usepackage{enumitem}
@@ -500,6 +501,8 @@ Contribution type & method, theory, study, multi-site, resource, review, evidenc
 
 Each work was coded on the five attributes of Table~\ref{tab:coding}. Channels and scarcity classes are those of Sections~\ref{sec:scarcity} and~\ref{sec:provenance}. A work has exactly one primary channel, the one through which most of its information gain is claimed, and at most one secondary channel; 48 of the 257 works that propose or study a remedy have one. Works that document a problem without proposing a remedy (33) are coded with the channel ``none''. Scarcity classes are multi-label and were assigned from the problem the work states it addresses and from its evaluation setting, not from what the method could do in principle. Contribution type records the primary contribution. A work is coded as a multi-site study only when its main contribution is training or validating on data held by two or more independent institutions; method papers that also report an external validation remain methods, and simulated partitions of a single dataset count as single-dataset evidence. The full coding is listed in the online supplement and released with the paper as a CSV file together with the scripts that produce every count and figure in Section~\ref{sec:evidence}.
 
+\paragraph{Data extraction} For the works evaluated on health data, we also extracted the datasets, their size and number of sites, and the headline result, from each work's abstract or own page, each field supported by a verbatim quote (Section~\ref{sec:datasets}).
+
 \subsection{Systematic search}\label{sec:search}
 
 The snowballed corpus was complemented by a systematic database search, executed on \PrismaSearchDate{} and reported following PRISMA 2020 \cite{page2021prisma} (Figure~\ref{fig:prisma}). Its purpose is to test the corpus, not to replace it: we ask how much of the corpus a reproducible search recovers, and whether the coverage profile and the gaps of Section~\ref{sec:evidence} hold in the wider literature.
@@ -792,6 +795,45 @@ Figure~\ref{fig:corpus} profiles the corpus. Two thirds of the 290 works (204) a
 \end{figure}
 
 Figure~\ref{fig:gapmap} sets the coverage of each cell of the taxonomy against the judged potential of Figure~\ref{fig:matrix}. Coverage is very uneven. Label poverty (E1, 100 works) and custodial fragmentation (C1, 97 works) dominate, and they are served by different channels: E1 mainly by proxy (56) and unlabeled data (33), C1 almost only by pooling (93). Temporal obsolescence (T1) and measurement poverty (E2) are targeted by 8 works each, and stratum sparsity (O3) by 10, although these are the classes that the external-validation failures of Section~\ref{sec:intro} point to. Ten cells judged at least moderately promising contain two works or fewer; they are outlined in red. The systematic search of Section~\ref{sec:search} confirms seven of them in the wider literature; the exceptions are dimensional excess addressed by pooling or by unlabeled data, which the corpus under-covers, and stratum sparsity addressed by pooling, where the wider literature borrows across strata mainly in trial design. Four of them lie in the T1 row and four in the procurement column. Channels are also rarely combined. Of the 257 remedy works, 48 have a secondary channel, mostly self-supervised pretraining that mixes proxy and unlabeled information (16) and personalized pooling that mixes pooling with a prior or a shared representation (11). No work in the corpus combines pooling with procurement.
+
+\subsection{Datasets and evaluation metrics}\label{sec:datasets}
+
+To see what the literature is evaluated on, we extracted from each of the \CxHealth{} corpus works evaluated on health data the datasets it uses, their size and number of sites, and its headline result, from the work's abstract or, where the abstract was not available, its own page, with a verbatim quote supporting every field; the online supplement lists every work. \CxEmpirical{} works report an evaluation on data, \CxNotEmp{} are reviews, guidance, theory or simulation studies, and for \CxNoSource{} no abstract could be reached. Entries reflect what the abstracts state: a dataset or number they omit may still be in the paper.
+
+\paragraph{Datasets} Of the \CxEmpirical{} empirical works, \CxPublic{} evaluate only on named public datasets, \CxBoth{} combine public and institutional data, \CxInst{} use institutional or unnamed data only, and \CxNoData{} name no data in the abstract. Reuse is low (Table~\ref{tab:datasets}): MIMIC-III \cite{johnson2016mimic} and CheXpert \cite{irvin2019chexpert} appear in five works each and TCGA in four, and no other dataset in more than three, so few results can be compared across works. Where a size is stated (\CxWithSize{} works), the median of each work's largest dataset is \CxSizeMedian{} records, patients or images (interquartile range \CxSizeQOne{} to \CxSizeQThree), and only \CxSizeUnderThousand{} state fewer than 1,000. The data on which remedies for small data are evaluated are therefore mostly large, often pooled or public collections, not the few dozen to few hundred patients per hospital of Section~\ref{sec:definition}. Sites are rarely reported: \CxSitesStated{} abstracts state the number of institutions, \CxMultiSite{} of them two or more, which echoes the observation of Section~\ref{sec:S7_2} that pooling is the only channel tested across institutions.
+
+\paragraph{Metrics} Table~\ref{tab:metrics} defines the metrics in use and counts how often each appears in the headline result of an abstract. Only \CxWithResult{} of the \CxEmpirical{} empirical works give any number there. The area under the ROC curve is the most frequent named metric (\CxMetAuc{} works), followed by accuracy (\CxMetAcc) and the Dice coefficient for segmentation (\CxMetDice); \CxMetRel{} report a percentage or relative change against a baseline. No headline result reports calibration, log-loss or a concordance index, although calibration is what decides whether a small hospital can act on a predicted risk \cite{vancalster2019calibration}. A remedy for small data should be judged at least by discrimination and calibration at each site, against that site working alone.
+
+\begin{table}[t]
+\caption{Public datasets named in at least two of the \CxEmpirical{} empirical corpus works on health data (from the abstracts; every work is listed in the online supplement).}
+\label{tab:datasets}
+\footnotesize
+\csname @@input\endcsname supplement/tables/corpus_datasets.tex 
+\end{table}
+
+\begin{table*}[t]
+\caption{Evaluation metrics: definition, direction, and the number of the \CxEmpirical{} empirical corpus works whose abstract reports the metric in its headline result. $s(x)$: predicted score; $p_i$: predicted probability; $\mathrm{TP},\mathrm{FP},\mathrm{TN},\mathrm{FN}$: true and false positives and negatives; $A,B$: predicted and reference segmentations; $T_i$: survival time.}
+\label{tab:metrics}
+\footnotesize
+\begin{tabularx}{\linewidth}{@{}p{3.1cm}Xp{3.3cm}r@{}}
+\toprule
+Metric & Definition & Better & Works\\
+\midrule
+AUROC & $\Pr\{s(x^{+})>s(x^{-})\}$ for a random positive and negative & higher; 0.5 is chance & \CxMetAuc\\
+Accuracy, balanced accuracy & share of correct predictions; mean of the per-class recalls & higher & \CxMetAcc\\
+Sensitivity, specificity & $\mathrm{TP}/(\mathrm{TP}+\mathrm{FN})$; $\mathrm{TN}/(\mathrm{TN}+\mathrm{FP})$ & higher & \CxMetSens\\
+Precision, AUPRC & $\mathrm{TP}/(\mathrm{TP}+\mathrm{FP})$; area under the precision-recall curve & higher; the baseline is the prevalence & \CxMetPrc\\
+F1 & $2\,\mathrm{precision}\cdot\mathrm{recall}/(\mathrm{precision}+\mathrm{recall})$ & higher & \CxMetFone\\
+Dice, IoU & $2|A\cap B|/(|A|+|B|)$; $|A\cap B|/|A\cup B|$ & higher; 1 is perfect overlap & \CxMetDice\\
+Calibration & Brier score $n^{-1}\sum_i(p_i-y_i)^2$; calibration slope; expected calibration error & Brier and error lower; slope 1 & \CxMetCal\\
+Log-loss & $-n^{-1}\sum_i[y_i\ln p_i+(1-y_i)\ln(1-p_i)]$ & lower & \CxMetLogloss\\
+Concordance index & $\Pr\{s_i>s_j\mid T_i<T_j\}$ over comparable pairs & higher; 0.5 is chance & \CxMetCindex\\
+MSE, MAE & mean squared or absolute error & lower & \CxMetErr\\
+Privacy budget & $\epsilon$ of Equation~\eqref{eq:dp} & lower is more private & \CxMetEps\\
+Relative change & (method $-$ baseline)/baseline, in percent & depends on the metric & \CxMetRel\\
+\bottomrule
+\end{tabularx}
+\end{table*}
 
 \subsection{What the reported results show}\label{sec:S7_2}
 

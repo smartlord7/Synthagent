@@ -5,6 +5,7 @@
 \externaldocument[M-]{../main}
 \input{../prisma/prisma_numbers}
 \input{results/sim_numbers}
+\input{tables/corpus_numbers}
 \renewcommand{\thesection}{S\arabic{section}}
 \renewcommand{\thefigure}{S\arabic{figure}}
 \renewcommand{\thetable}{S\arabic{table}}
@@ -151,6 +152,14 @@ Each eligible record was coded from its title and abstract by dictionaries for t
 
 %% ===================================================================
 \input{corpus_table}
+
+\section{Data and Reported Results of Every Coded Work}\label{sec:works}
+
+For each of the \CxHealth{} corpus works evaluated on health data, this section gives the data it uses and its headline result (Section~\ref{M-sec:datasets} of the paper). They were extracted from the work's Europe PMC abstract when available (\texttt{prisma/data/corpus\_lookup.jsonl}) and otherwise from its arXiv abstract, its PubMed record or its own page. Every non-empty field is supported by a verbatim quote, stored with its source in \texttt{data/corpus\_extraction.json}; for works taken from their Europe PMC abstract, \texttt{scripts/corpus\_extract.py} checks that each quote occurs in the abstract or title. Where an abstract does not name its data, the entry describes the data in the abstract's words or reads ``not stated''; ``no number in abstract'' means the abstract gives no headline number, not that the paper has none. Sizes and results are quoted as the authors state them. Works are grouped by primary channel and ordered by year.
+
+{\scriptsize
+\csname @@input\endcsname tables/corpus_works.tex 
+}
 
 \bibliographystyle{../ACM-Reference-Format-recovered}
 \bibliography{../references}
