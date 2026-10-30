@@ -125,7 +125,7 @@ def bold_rows(name, rows):
     return [(" & ".join(c) + "\\\\") if c is not None else r for r, c in zip(rows, split)]
 
 
-V4_TABLES = ("t_real_final", "t_tcga_", "s_tcga_", "s_real_final_lono", "t_flamby_", "t_images", "s_camelyon", "t_sim16_ghb", "s_sim17_ghb")  # tables that already use the paper's names
+V4_TABLES = ("t_real_final", "t_tcga_", "s_tcga_", "s_real_final_lono", "t_flamby_", "t_images", "s_camelyon", "t_sim16_ghb", "s_sim17_ghb", "t_stress")  # tables that already use the paper's names
 
 
 def write(name, rows):
@@ -886,8 +886,33 @@ def sim17_ghb():
     write("s_sim17_ghb.tex", rows[:-1])
 
 
+STRESS_LAB = {"standard": "Standard (as in Table~\\ref{tab:tcga-confirm})", "alone": "Each network fitted alone",
+              "K6": "6 hospitals per network", "K4": "4 hospitals per network", "p14": "14 coefficients",
+              "p40": "40 coefficients", "flamby": "4 hospitals, 14 coefficients, alone"}
+
+
+def stress():
+    """Stress tests on the TCGA networks (stress_tcga.py): mean relative log-loss over the five held-out networks."""
+    p = R / "stress_tcga.json"
+    if not p.exists():
+        return
+    s = json.load(open(p))
+    rows = []
+    for cond, lab in STRESS_LAB.items():
+        if cond not in s:
+            continue
+        cells = []
+        for e in ("1", "10"):
+            x = s[cond][e]
+            vals = [round(v, 3) for v in (x["GHB"], x["GHB-lite"], x["Local, evidence prior"], x["realistic"][x["best_realistic"]], x["oracle"][x["best_oracle"]])]
+            best = min(vals[:2] + vals[3:4])  # bold: the best method a consortium could run (oracle and local excluded)
+            cells += [f"\\textbf{{{v:.3f}}}" if i in (0, 1, 3) and abs(v - best) < 1e-12 else f"{v:.3f}" for i, v in enumerate(vals)]
+        rows.append(lab + " & " + " & ".join(cells) + r"\\")
+    write("t_stress.tex", rows)
+
+
 def main():
-    for fn in (flamby, images, sim16_ghb, sim17_ghb, tcga, tcga_ablation, tcga_tuned, sim8, sim15, sim16, sim17, sim18, real_heart, real_networks, real_final, sim1, sim2, sim3, sim4, sim5, sim6, sim7, sim9, sim11, sim12, sim13, sim14):
+    for fn in (flamby, images, sim16_ghb, sim17_ghb, stress, tcga, tcga_ablation, tcga_tuned, sim8, sim15, sim16, sim17, sim18, real_heart, real_networks, real_final, sim1, sim2, sim3, sim4, sim5, sim6, sim7, sim9, sim11, sim12, sim13, sim14):
         fn()
     print("tables:", sorted(p.name for p in OUT.glob("*.tex")))
 
