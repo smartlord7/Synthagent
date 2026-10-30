@@ -208,12 +208,13 @@ def tables(out):
             cells += [f"${out[e]['rho'][v]:+.2f}$", f"${out[e]['within'][v]:+.2f}$"]
         L.append(f"{lab[v]} & " + " & ".join(cells) + "\\\\")
     L.append("\\midrule")
-    L.append("$D$ [95\\% CI] & \\multicolumn{2}{c}{" + f"${out['1']['D']:+.2f}$ [${out['1']['D_ci'][0]:+.2f}$, ${out['1']['D_ci'][1]:+.2f}$]" + "} & \\multicolumn{2}{c}{"
-             + f"${out['10']['D']:+.2f}$ [${out['10']['D_ci'][0]:+.2f}$, ${out['10']['D_ci'][1]:+.2f}$]" + "}\\\\")
+    L.append("$D$ [95\\% CI] & \\multicolumn{2}{c}{" + f"${out['1']['D']:+.3f}$ [${out['1']['D_ci'][0]:+.3f}$, ${out['1']['D_ci'][1]:+.3f}$]" + "} & \\multicolumn{2}{c}{"
+             + f"${out['10']['D']:+.3f}$ [${out['10']['D_ci'][0]:+.3f}$, ${out['10']['D_ci'][1]:+.3f}$]" + "}\\\\")
     L += ["\\bottomrule", "\\end{tabular}"]
     (TAB / "sigma_validation.tex").write_text("\n".join(L) + "\n")
     # per-hospital table for the supplement
-    L = ["\\begin{longtable}{@{}llrrrrrrr@{}}", "\\toprule",
+    L = ["\\begin{longtable}{@{}llrrrrrrr@{}}",
+         "\\caption{Every hospital of the test: size, events, events per variable (EPV), Riley minimum sample size $n^{\\star}$, smallness index $\\sigma$ and gain from GHB over local estimation (one minus the ratio of held-out log-losses). Sets: held out and design TCGA networks, and the networks of the seven-network study (small; Arizona Medicare and UCI Heart Disease are in the primary set, the six TCGA networks in the secondary set).}\\label{tab:sigma-hosp}\\\\", "\\toprule",
          "Network & Set & $n$ & Events & EPV & $n^{\\star}$ & $\\sigma$ & Gain, $\\epsilon=1$ & Gain, $\\epsilon=10$\\\\", "\\midrule", "\\endhead"]
     H = {}
     for r in out["hospitals"]:
@@ -230,8 +231,8 @@ def tables(out):
         for v in PRED:
             n[f"Sg{E}Rho{v.capitalize()}"] = f"{out[e]['rho'][v]:+.2f}"
             n[f"Sg{E}Within{v.capitalize()}"] = f"{out[e]['within'][v]:+.2f}"
-        n[f"Sg{E}D"] = f"{out[e]['D']:+.2f}"
-        n[f"Sg{E}DLo"], n[f"Sg{E}DHi"] = f"{out[e]['D_ci'][0]:+.2f}", f"{out[e]['D_ci'][1]:+.2f}"
+        n[f"Sg{E}D"] = f"{out[e]['D']:+.3f}"
+        n[f"Sg{E}DLo"], n[f"Sg{E}DHi"] = f"{out[e]['D_ci'][0]:+.3f}", f"{out[e]['D_ci'][1]:+.3f}"
         n[f"Sg{E}SecRhoSigma"] = f"{out[e]['secondary']['rho']['sigma']:+.2f}"
         n[f"Sg{E}SecRhoN"] = f"{out[e]['secondary']['rho']['n']:+.2f}"
         n[f"SgWithinNets"] = out[e]["within_networks"]

@@ -9,6 +9,7 @@
 \input{prisma/prisma_numbers}
 \input{supplement/results/sim_numbers}
 \input{supplement/tables/corpus_numbers}
+\input{supplement/tables/sigma_numbers}
 
 \usepackage{tabularx}
 \usepackage{enumitem}
@@ -126,7 +127,7 @@ The term ``small data'' appears in social science \cite{kitchin2015small}, in pe
 
 \paragraph{Contributions} This paper is both a survey and a position paper. Its contributions are as follows.
 \begin{enumerate}[leftmargin=*]
-\item \textbf{A formal definition.} We define small data relative to a task, through an \emph{effective sample size} $n^{\eff}$ that accounts for clustering, missing labels, label noise, distribution shift and outcome rarity, and a \emph{smallness index} $\sigma = n^{\star}/n^{\eff}$ that compares it with the sample complexity $n^{\star}$ of the task (Section~\ref{sec:definition}). The definition assembles known ingredients (Kish's design effect, the sample complexity of learning with label noise, and the sample-size criteria used for clinical prediction models) into one task-relative quantity. It is a first-order heuristic for diagnosis and comparison, not a new estimator.
+\item \textbf{A unifying, task-relative definition.} We define small data relative to a task, through an \emph{effective sample size} $n^{\eff}$ that accounts for clustering, missing labels, label noise, distribution shift and outcome rarity, and a \emph{smallness index} $\sigma = n^{\star}/n^{\eff}$ that compares it with the sample size the task requires (Section~\ref{sec:definition}). The definition brings existing quantities (Kish's design effect, the sample complexity of learning with label noise, and the sample-size criteria of clinical prediction models) into one place, decomposes the shortfall by cause so that each factor points to a remedy, and extends it to data split across custodians (\emph{siloed smallness}), which no existing notion covers (Table~\ref{tab:notions}). It is a diagnostic, not a new estimator: in a test on \SgHospOne{} hospitals it did not predict the gain from collaboration better than raw size (Section~\ref{sec:sigma-test}).
 \item \textbf{A new taxonomy.} We propose the Scarcity-Provenance taxonomy (Sections~\ref{sec:scarcity} and~\ref{sec:provenance}). Its first axis classifies ten forms of scarcity in healthcare by the term of $\sigma$ they degrade. Its second axis classifies remedies by where the missing information comes from. We prove a ``no free lunch'' result for re-expression (Proposition~\ref{prop:nfl}) that explains formally why augmentation and synthetic data cannot by themselves solve a small-data problem.
 \begin{figure*}[t]
 \centering
@@ -200,13 +201,14 @@ The fourth group is \emph{empirical}: it measures, rather than predicts, how per
 
 Table~\ref{tab:notions} compares these notions with ours on six properties. The criterion-based notions are quantitative and relative to the task, but tied to regression and blind to how the data were collected; learning curves measure the actual model, which no formula can do, but only after data have been gathered and models trained, and they do not say why the data are small; the relational notions name the cause but give no number. No existing notion addresses data that are sufficient in aggregate but split across custodians. Our definition does not replace these quantities. It uses the Riley criteria, or any other estimate of sample complexity, as its numerator; it adds a denominator that records where the information of the nominal records was lost, so that each loss points to a cause and a remedy (Sections~\ref{sec:scarcity} and~\ref{sec:provenance}); and it extends to several custodians.
 
-\begin{table*}[t]
-\caption{Notions of small data compared on six properties. \yes: has the property; \partly: partially; \no: does not. Task-relative: the verdict depends on the model and outcome. Data quality: accounts for clustering, missing or noisy labels or distribution shift. Cause: says why the data are small. Multi-site: addresses data split across custodians. Before training: computable without fitting the model.}
+\begin{table*}[!tp]
+\caption{Notions of small data compared on six properties. \yes: has the property; \partly: partially; \no: does not. Task: the verdict is relative to the task (model and outcome). Model class: the models it applies to. Quality: accounts for clustering, missing or noisy labels or distribution shift. Cause: says why the data are small. Sites: addresses data split across custodians. Pre-fit: computable without fitting the model.}
 \label{tab:notions}
 \footnotesize
-\begin{tabularx}{\linewidth}{@{}p{3.9cm}cp{2.0cm}cccc X@{}}
+\setlength{\tabcolsep}{3.5pt}
+\begin{tabularx}{\linewidth}{@{}p{3.3cm}cp{1.75cm}ccccX@{}}
 \toprule
-Notion & Task-relative & Model class & Data quality & Cause & Multi-site & Before training & Main strength or limitation\\
+Notion & Task & Model class & Quality & Cause & Sites & Pre-fit & Main strength or limitation\\
 \midrule
 Absolute record count & \no & any & \no & \no & \no & \yes & simple; ignores the task\\
 Events per variable \cite{peduzzi1996simulation} & \partly & regression & \no & \no & \no & \yes & counts the minority outcome; the threshold of 10 is a rule of thumb \cite{smeden2019sample}\\
@@ -279,6 +281,21 @@ Let $\mathcal{D}_1,\dots,\mathcal{D}_K$ be held by $K$ custodians and let $\math
 \end{definition}
 
 A siloed-small task can be solved in principle without collecting a single new patient; the obstacle is access. A task that is small even for $\mathcal{D}_{\cup}$ is \emph{intrinsically small}, and no amount of collaboration among the existing custodians will solve it. Rare disease work often sits between the two. The distinction matters because the remedies are different, and because heterogeneity between custodians can make $n^{\eff}(\mathcal{D}_{\cup})$ much smaller than $\sum_k n^{\eff}(\mathcal{D}_k)$. Section~\ref{sec:blueprint} makes this precise.
+
+\subsection{Does the index predict who gains?}\label{sec:sigma-test}
+
+A definition can be useful without being a better predictor, and we tested the stronger claim directly, under a plan committed before any number was computed (online supplement). For each of the \SgHospOne{} hospitals of \SgNets{} real networks (the five held-out and twelve design TCGA networks, Arizona Medicare and UCI Heart Disease of Section~\ref{sec:blueprint}), we computed $\sigma$ with the Riley criteria as $n^{\star}$, and its raw size, events and events per variable, and correlated each with the hospital's gain from hierarchical borrowing over working alone. In these data $n^{\eff}=n$, since every record is a different patient with an adjudicated label and the target is the hospital's own population, so the test can show only whether the task-relativity of $\sigma$ adds predictive value.
+
+It does not (Table~\ref{tab:sigma-test}). None of the four quantities predicts the gain: every Spearman correlation is between $-0.11$ and $+0.11$, pooled or within networks. The difference $D$ between the absolute correlation of $\sigma$ and that of the best other quantity is $\SgOneD$ at $\epsilon=1$ (95\% interval $\SgOneDLo$ to $\SgOneDHi$) and $\SgTenD$ at $\epsilon=10$ ($\SgTenDLo$ to $\SgTenDHi$), so $\sigma$ is, if anything, slightly worse than raw size. Which hospital gains is decided less by how small it is than by how much it resembles the others, which none of these quantities measures. On the six tables of a synthetic-data study \cite{simoes2026synthagent}, where $\sigma$ ranges from \SgSynSigmaMin{} to \SgSynSigmaMax, the larger tables gained more from synthetic rows (Spearman $\SgSynN$ for size, $\SgSynSigma$ for $\sigma$), consistent with Proposition~\ref{prop:nfl}; with six tables this is descriptive only.
+
+We therefore claim no predictive advantage for $\sigma$. Its value is that of a diagnostic: it is relative to the task, it decomposes the loss of information by cause so that each factor points to a remedy, and it extends to data split across custodians, which no other notion of Table~\ref{tab:notions} does.
+
+\begin{table}[!htbp]
+\caption{Spearman correlation of each quantity with a hospital's gain from hierarchical borrowing over working alone (one minus the ratio of held-out log-losses), \SgHospOne{} hospitals of \SgNets{} networks, pooled and averaged within the \SgWithinNets{} networks with at least five hospitals. A predictor of the gain should correlate positively ($\sigma$) or negatively (the others). $D$: absolute correlation of $\sigma$ minus the largest absolute correlation of the others, with a 95\% cluster-bootstrap interval over networks. Per-hospital values are in the online supplement.}
+\label{tab:sigma-test}
+\footnotesize
+\csname @@input\endcsname supplement/tables/sigma_validation.tex 
+\end{table}
 
 \subsection{Why healthcare is a special case}
 
