@@ -6,6 +6,7 @@
 \input{../prisma/prisma_numbers}
 \input{results/sim_numbers}
 \input{tables/corpus_numbers}
+\input{tables/sigma_numbers}
 \renewcommand{\thesection}{S\arabic{section}}
 \renewcommand{\thefigure}{S\arabic{figure}}
 \renewcommand{\thetable}{S\arabic{table}}
@@ -159,6 +160,15 @@ For each of the \CxHealth{} corpus works evaluated on health data, this section 
 
 {\scriptsize
 \csname @@input\endcsname tables/corpus_works.tex 
+}
+
+\section{Does the Smallness Index Predict the Gain from Borrowing?}\label{sec:sigma}
+
+The test of Section~\ref{M-sec:sigma-test} of the paper followed a plan written and committed before any correlation was computed (\texttt{simulations/dev/SIGMA\_PLAN.md}; code \texttt{simulations/sigma\_validation.py}; output \texttt{supplement/results/sigma\_validation.json}). Hospitals: the five held-out TCGA networks (GHB as released), the twelve TCGA design networks (the same configuration), and Arizona Medicare and UCI Heart Disease, rerun with the folds of the seven-network study, local estimation and GHB only, and per-hospital losses kept. The six small TCGA networks, whose hospitals largely coincide with six design networks, form a secondary set (Spearman correlation of $\sigma$ with the gain $\SgOneSecRhoSigma$ at $\epsilon=1$ and $\SgTenSecRhoSigma$ at $\epsilon=10$, of $n$ $\SgOneSecRhoN$ and $\SgTenSecRhoN$). Gain: one minus the ratio of summed held-out log-losses of GHB and local estimation. $n^{\star}$: the largest of the three criteria of Riley et al.\ for a binary outcome (shrinkage 0.9, optimism in Nagelkerke $R^2$ at most 0.05, intercept within 0.05), with $p$ the number of predictor parameters, prevalence clipped to $[0.5/n,1-0.5/n]$ and anticipated $R^2_{\mathrm{CS}}$ equal to 15\% of its maximum; our implementation reproduces the $n^{\star}=2{,}707$ of Example~\ref{M-ex:icu}. The claim rule was that $\sigma$ is a better predictor only if the lower end of the 95\% cluster-bootstrap interval of $D$ is above zero at both budgets. It is below zero at both, and $\sigma$ is reported in the paper as a diagnostic, not as a better predictor. Table~\ref{tab:sigma-hosp} lists every hospital.
+
+{\scriptsize
+\setlength{\tabcolsep}{4pt}
+\csname @@input\endcsname tables/sigma_hospitals.tex 
 }
 
 \bibliographystyle{../ACM-Reference-Format-recovered}
