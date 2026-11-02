@@ -62,7 +62,7 @@ def setup():
     })
 
 
-_KEEP_NAMES = {"real_final.pdf", "real_networks.pdf"}  # figures whose labels already use the paper's names
+_KEEP_NAMES = {"real_final.pdf", "real_networks.pdf", "sim16_ghb.pdf", "sim17_ghb_conditions.pdf"}  # figures whose labels already use the paper's names
 
 
 def _rename(t):

@@ -8,19 +8,19 @@
 \path[draw=famC, line width=0.8pt, dashed, rounded corners=4pt] (-0.25,-3.55) rectangle (6.15,0.55);
 \node[anchor=north west, font=\scriptsize\bfseries, text=famC] at (-0.15,0.48) {Hospital $k$: inside the custodial boundary};
 \node[blk=grayc] (data) at (1.2,-0.55) {patient records\\ $n_k$ patients};
-\node[blk] (fit) at (4.5,-0.55) {local head $\hat{\theta}_k$\\ (never released)};
-\node[blk=famT] (noise) at (4.5,-1.95) {statistic $z_k$ (estimate or score at $\mu_0$), add $\mathcal{N}(0,s_k^2 I)$};
-\node[blk] (final) at (1.2,-2.85) {borrowed estimate:\\ posterior mean of $\theta_k$, $\tau$ integrated out};
+\node[blk] (sums) at (4.5,-0.55) {own sums of scores and information (never released)};
+\node[blk=famT] (noise) at (4.5,-1.95) {add a noise share $\mathcal{N}(0,s^2/K)$ and pairwise masks: share $r_k$};
+\node[blk] (final) at (1.2,-2.85) {leave-one-out prior and evidence-weighted fit of the head};
 % outside
-\node[blk=famE, text width=3.3cm] (net) at (9.25,-1.95) {gossip over the agreement graph\\ releases $r_j$ and public $n_j$ only};
-\node[blk=famE, text width=3.3cm] (post) at (9.25,-3.25) {post-processing: inversion, posterior of $\tau$, $\tilde{\mu}_k$, $M_k$, conflict check};
-\node[blk=famO, text width=3.3cm] (anchor) at (9.25,-0.45) {published anchor $\mu_0$ (public knowledge, L3)};
+\node[blk=famE, text width=3.3cm] (net) at (9.25,-1.95) {exact sum of the shares over the agreement graph: masks cancel};
+\node[blk=famE, text width=3.3cm] (post) at (9.25,-3.25) {two privatized totals $\tilde S$, $\tilde J$: network estimate $\hat w$, $V_{\mathrm{dp}}$};
+\node[blk=famO, text width=3.3cm] (anchor) at (9.25,-0.45) {published anchor $\mu_0$, other networks' estimates (optional)};
 % arrows
-\draw[arr] (data) -- (fit);
-\draw[arr] (fit) -- (noise);
+\draw[arr] (data) -- (sums);
+\draw[arr] (sums) -- (noise);
 \draw[priv] (noise.east) -- node[above, text=famT, font=\scriptsize\bfseries] {$r_k$ only} (net.west);
 \draw[arr] (net) -- (post);
 \draw[arr] (post.west) -- (final.east |- post.west);
 \draw[arr] (anchor.west) -- ++(-0.55,0) |- ([yshift=4pt]final.east);
-\draw[arr] (fit.south west) to[out=-120, in=30] (final.north east);
+\draw[arr] (data.south) -- (final.north);
 \end{tikzpicture}
