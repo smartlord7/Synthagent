@@ -11,7 +11,7 @@
   \texttt{\tiny \ \{"age":"sixty","sex":0,..\},}\\
   \texttt{\tiny \ \{"age":41,"bmi\_est":31.2,..\},}\\
   \texttt{\tiny \ \{"age":57,"chol":192\} ...]}\\[3pt]
-  {\tiny\textcolor{sorange}{\textbullet} 22 of 30 requested rows}\\
+  {\tiny\textcolor{sorange}{\textbullet} 22 of 30 requested records}\\
   {\tiny\textcolor{sorange}{\textbullet} wrong type: \texttt{age="sixty"}}\\
   {\tiny\textcolor{sorange}{\textbullet} invented column: \texttt{bmi\_est}}\\
   {\tiny\textcolor{sorange}{\textbullet} missing columns, cost not recorded}};
@@ -19,16 +19,16 @@
 % ---------------- controller ----------------
 \node[box=spurple,anchor=north west,text width=1.95cm,align=center] (ctl) at (4.85,-0.55) {%
   \textbf{\textcolor{spurple}{\system}}\\[2pt]
-  {\tiny parse \& repair\\ map to schema\\ validate types\\ correct fields\\ top up missing rows\\ log cost}};
+  {\tiny parse \& repair\\ map to schema\\ validate types\\ correct fields\\ top up missing records\\ log cost}};
 
 % ---------------- admitted table ----------------
 \node[box=sgreen,anchor=north west,text width=2.55cm] (ok) at (7.45,0) {%
   \textbf{\textcolor{sgreen}{Admitted table}}\\[2pt]
-  {\tiny\textcolor{sgreen}{\checkmark} exactly 30 rows}\\
+  {\tiny\textcolor{sgreen}{\checkmark} exactly 30 records}\\
   {\tiny\textcolor{sgreen}{\checkmark} declared columns only}\\
   {\tiny\textcolor{sgreen}{\checkmark} declared types}\\[3pt]
   \textbf{\tiny Audit log}\\
-  {\tiny tokens, time, repairs,\\ violations, requested\\ vs.\ delivered rows}};
+  {\tiny tokens, time, repairs,\\ violations, requested\\ vs.\ delivered records}};
 
 \draw[->,very thick,sgray] (raw.east |- ctl.west) -- (ctl.west);
 \draw[->,very thick,sgray] (ctl.east) -- (ok.west |- ctl.east);

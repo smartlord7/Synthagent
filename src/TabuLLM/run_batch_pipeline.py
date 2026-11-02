@@ -258,6 +258,11 @@ ABLATION_ARMS: dict[str, dict] = {
     # No-controller ablation: same prompts and context, no repair, bridge, correction,
     # overflow retry, top-up or post-processing (see LocalOpenAIProvider.generate_bulk_data).
     "raw_prompting":      {"raw_prompting": True},
+    # Reference configuration rerun with the current code, which logs delivered rows and
+    # schema validity (the original "full" runs predate both counters).
+    "full_logged":        {},
+    # Reference configuration with the validator also enforcing inferred ranges/domains.
+    "boundaries":         {"enforce_boundaries": True},
 }
 
 # Special arms that don't fit the simple "config override on the same LLM" mold and get
