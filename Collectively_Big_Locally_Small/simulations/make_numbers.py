@@ -495,6 +495,12 @@ def main():
             n[f"Reid{E}Mu"] = f"{b['mu']:.2f}"
             n[f"Reid{E}GHBAuc"] = f"{rr['attack'][f'ghb eps={e}']['mean_auc']:.2f}"
         n["ReidPatients"] = f"{rr['realized']['1']['patients']:,}"
+        if "lr_attack" in rr:
+            for e, E in (("1", "One"), ("10", "Ten")):
+                la = rr["lr_attack"][e]
+                n[f"Reid{E}LRAdv"], n[f"Reid{E}LRAna"] = pc(la["empirical_advantage"]), pc(la["analytic_advantage"])
+                n[f"Reid{E}LRTpr"] = pc(la["empirical_tpr_1pct"])
+            n["ReidLRPatients"] = str(rr["lr_attack"]["1"]["patients"])
         a = rr["attack"]
         n["ReidLocSmallAuc"], n["ReidLocMedAuc"], n["ReidLocLargeAuc"] = (f"{a['local'][b]['pooled_auc']:.2f}" for b in ("small", "medium", "large"))
         n["ReidPooledAuc"] = f"{a['pooled']['mean_auc']:.2f}"

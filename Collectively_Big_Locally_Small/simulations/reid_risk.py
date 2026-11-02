@@ -67,6 +67,44 @@ def realized(eps):
     return dict(patients=int(len(a)), median=float(np.median(a)), p95=float(np.quantile(a, 0.95)), max=float(a.max()))
 
 
+def lr_attack(eps, patients=300, draws=4000, seed=7):
+    """Simulated likelihood-ratio attack on the raw releases by an attacker who knows every other record: for real
+    patients drawn at random from the 17 networks, release the two noisy sums with the patient (or with its most
+    different replacement) many times, and tell the two apart by the Neyman-Pearson test. Returns the empirical
+    advantage and TPR at 1% FPR, and the analytic values for the same patients, which they must match."""
+    sS, sJ = noise(eps)
+    rng = np.random.default_rng(seed)
+    pool = []
+    for which in ("dev", "fresh", "confirm"):
+        for p in RV.SETS[which]:
+            data, _ = RV.load(p)
+            pool.append((np.vstack([x for x, _ in data]), np.concatenate([t for _, t in data])))
+    iu = np.triu_indices(RV.P)
+    emp_adv, emp_tpr, ana_adv, ana_tpr = [], [], [], []
+    for _ in range(patients):
+        X, y = pool[rng.integers(len(pool))]
+        i = rng.integers(len(y))
+        psi = X * (y - 0.5)[:, None]
+        phi = np.array([np.outer(x, x)[iu] / 4 for x in X])
+        d = np.r_[0, 0]
+        dist = np.sqrt((np.linalg.norm(psi - psi[i], axis=1) / sS) ** 2 + (np.linalg.norm(phi - phi[i], axis=1) / sJ) ** 2)
+        j = int(dist.argmax())
+        delta = np.r_[(psi[i] - psi[j]) / sS, (phi[i] - phi[j]) / sJ]  # whitened difference of the two releases
+        mu = np.linalg.norm(delta)
+        # the attacker sees z = (with patient: delta) or (with replacement: 0) plus N(0, I); the LR statistic is z.delta
+        z1 = rng.standard_normal((draws, len(delta))) @ delta / mu + mu
+        z0 = rng.standard_normal((draws, len(delta))) @ delta / mu
+        thr_half = mu / 2
+        emp_adv.append(np.mean(z1 > thr_half) - np.mean(z0 > thr_half))
+        t1 = np.quantile(z0, 0.99)
+        emp_tpr.append(np.mean(z1 > t1))
+        ana_adv.append(2 * norm.cdf(mu / 2) - 1)
+        ana_tpr.append(norm.cdf(norm.ppf(0.01) + mu))
+    return dict(patients=patients, draws=draws, empirical_advantage=float(np.mean(emp_adv)), analytic_advantage=float(np.mean(ana_adv)),
+                empirical_tpr_1pct=float(np.mean(emp_tpr)), analytic_tpr_1pct=float(np.mean(ana_tpr)),
+                empirical_advantage_max=float(np.max(emp_adv)))
+
+
 def auc(member, non):
     """AUC of the score -loss for telling members (training) from non-members (held-out); 0.5 = no information."""
     s = np.concatenate([-member, -non]); lab = np.r_[np.ones(len(member)), np.zeros(len(non))]
@@ -143,6 +181,6 @@ def who_gains():
 
 if __name__ == "__main__":
     res = {"bound": {f"{e:g}": bound(e) for e in EPS}, "realized": {f"{e:g}": realized(e) for e in EPS},
-           "attack": attack(), "who_gains": who_gains()}
+           "attack": attack(), "who_gains": who_gains(), "lr_attack": {f"{e:g}": lr_attack(e) for e in EPS}}
     json.dump(res, open(ghb.RESDIR / "reid_risk.json", "w"), indent=1)
-    print(json.dumps({k: res[k] for k in ("bound", "realized", "attack")}, indent=1))
+    print(json.dumps({k: res[k] for k in ("bound", "realized", "attack", "lr_attack")}, indent=1))
