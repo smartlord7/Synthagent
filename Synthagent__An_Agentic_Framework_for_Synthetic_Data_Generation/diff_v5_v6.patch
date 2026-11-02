@@ -1,5 +1,5 @@
 --- /tmp/claude-0/-home-user-TabuLLM/177710a6-83c7-584b-8f2f-a9a7012a7684/scratchpad/main_v5.tex	2026-11-02 21:44:27.225341576 +0000
-+++ main.tex	2026-11-02 21:50:21.745604667 +0000
++++ main.tex	2026-11-02 22:57:01.169409651 +0000
 @@ -44,7 +44,7 @@
  
  \begin{document}
@@ -14,7 +14,7 @@
  
  \begin{abstract}
 -Prediction models in healthcare are often trained on small datasets, in which the number of records is too low for the complexity of the task, for example because a disease is rare or because labelling records is expensive. Synthetic data generation can be a solution for such contexts, but established generators, such as oversampling techniques and generative adversarial networks, learn only from the available records and can therefore only reproduce patterns that already exist in the data. Large language models (LLMs) can go beyond these patterns, because they bring domain knowledge acquired during pre-training and do not need to be trained on the target data. When prompted directly, however, LLMs often return fewer records than requested, malformed records or values of the wrong type, so their output cannot be used as a dataset without further processing. To address this issue, we present \system, a system that places a control layer between the LLM and the synthetic dataset. The control layer infers the names and types of the columns from the real data, checks every response of the LLM against them, asks the model to correct the values that violate them, and keeps requesting records until the number set by the user is reached, while recording the cost of every request. \system was evaluated on six public healthcare datasets with four LLMs, three established generators and ten classifiers. It completed every synthetic dataset to the requested number of records, which direct prompting of the same LLM never achieved, at a cost only 1.9\% higher. With the strongest LLM, adding its records to the training data increased the average F1-score of the classifiers by 1.1 percentage points, the largest gain among the generators compared, and \system was the only generator whose records never lowered the F1-score of any dataset by more than one point.
-+Prediction tasks in healthcare, such as diagnosing a disease or anticipating an adverse outcome, often have to be learned from small datasets, because the disease is rare or because labelling records is expensive. Synthetic data generation can be a solution for such contexts, but established generators, such as oversampling techniques and generative adversarial networks, learn only from the available records, recombining patterns that already exist in the data. Large language models (LLMs) can address this issue by adding domain knowledge acquired during pre-training, without being trained on the target data. When prompted directly, however, LLMs often return fewer records than requested, malformed records or values of the wrong type, so their output cannot be used as a dataset. To address this issue, we present \system, a synthetic data generation system for small healthcare datasets that combines an LLM with a control layer. Inferring the columns and their types from the real data, the control layer checks every response of the LLM, asks for the correction of invalid values and requests new records until the configured number is reached, while recording the cost of every request. In an evaluation on six public healthcare datasets, \system always delivered a usable synthetic dataset of the configured size, which direct prompting of the same LLM never did, with a negligible increase in cost. Added to the training data of ten classifiers, its records yielded the largest average F1-score gain among the generators compared and avoided the losses of up to 10.6 points that SMOTE, CTGAN and TVAE caused on individual datasets.
++Prediction tasks in healthcare, such as diagnosing a disease or anticipating an adverse outcome, often have to be learned from small datasets, because the disease is rare or because labelling records is expensive. Synthetic data generation can be a solution for such contexts, but established generators, such as oversampling techniques and generative adversarial networks, learn only from the available records, recombining patterns that already exist in the data. Large language models (LLMs) can address this issue by adding domain knowledge acquired during pre-training, without being trained on the target data. When prompted directly, however, LLMs often return fewer records than requested, malformed records or values of the wrong type, so their output cannot be used as a dataset. To address this issue, we present \system, a synthetic data generation system for small healthcare datasets that combines an LLM with a control layer. Inferring the columns and their types from the real data, the control layer checks every response of the LLM, asks for the correction of invalid values and requests new records until the configured number is reached, while recording the cost of every request. In an evaluation on six public healthcare datasets, \system completed the synthetic datasets to the configured size, which direct prompting of the same LLM did not achieve in any run, at a small additional cost. Added to the training data of ten classifiers, its records yielded the largest average F1-score gain among the generators compared and avoided the losses of up to 10.6 points that SMOTE, CTGAN and TVAE caused on individual datasets.
  \end{abstract}
  
  \begin{IEEEkeywords}
@@ -213,18 +213,18 @@
 -Here $H$ is the schema and output contract, $I$ optional instruction text, $O_t$ the reserved output, $W$ the backend context window and $T$ a token estimator (2.8 characters per token for compact JSON). The slice operator rotates through the pool across chunks, so successive requests see different patients when the pool exceeds one window. If the provider still rejects a request as too long (HTTP 400 or 422), the control layer shrinks the visible context by 40\% and retries, at most three times. ``20\% context'' therefore describes the candidate pool, not a promise that every candidate row appears in every prompt.
 -
 -The 20\% fraction and the 85\% window limit were fixed before the experiments and not tuned. The default strategy samples the context at random. \emph{Dense} prefers records with the most observed cells, reducing ambiguity from missing fields. \emph{Diverse} standardizes numerical features, runs $k$-means and selects the records nearest to the centroids, so that the context covers more of the feature space. Neither strategy is class-stratified, so neither guarantees that a rare diagnosis appears in context; Section~\ref{sec:discussion} returns to this limitation.
-+where $T$ estimates the length in tokens of a prompt that contains $k$ records. The slice rotates through the sample across batches, so successive requests see different patients. If the provider still rejects a request as too long, the selector shows fewer records and retries. The default strategy samples at random; \emph{dense} prefers records with fewer missing values, and \emph{diverse} selects the records closest to the centres of $k$-means clusters, so that the sample covers more of the feature space. Neither strategy is class-stratified, a limitation discussed in Section~\ref{sec:discussion}.
- 
+-
 -\subsection{Parsing, Validation and Correction (R2)}
 -The parser and the validator decide which parts of a response can enter the accepted set $A_t$ of Equation~\eqref{eq:acceptance}.
 -Records are requested in JSON batches of at most 30, a size that keeps every response within the output limit of the smallest LLM tested and limits the loss when a response fails. A local parser first extracts structured content and fixes common defects (non-finite literals, trailing commas, concatenated objects). If parsing still fails, the control layer issues one repair request at temperature 0.1 that quotes the error position and surrounding text. The returned feature names are then mapped back to the schema.
+-
+-Profiling infers a type rule for every feature, and optional boundary rules (numerical ranges with 10\% tolerance, or categorical domains with at most 20 values). Dynamic Pydantic models validate each batch. The validator groups failures by field and reports one representative bad value per field, so the correction prompt does not grow linearly with repeated errors. Up to two correction rounds are attempted per batch. User-defined post-processing rules (noise, rounding, normalization) can be applied deterministically afterwards.
++where $T$ estimates the length in tokens of a prompt that contains $k$ records. The slice rotates through the sample across batches, so successive requests see different patients. If the provider still rejects a request as too long, the selector shows fewer records and retries. The default strategy samples at random; \emph{dense} prefers records with fewer missing values, and \emph{diverse} selects the records closest to the centres of $k$-means clusters, so that the sample covers more of the feature space. Neither strategy is class-stratified, a limitation discussed in Section~\ref{sec:discussion}.
+ 
+-In the reference configuration of our experiments, type rules are active, boundary rules are off and no user rules are supplied, so we evaluate the default system rather than the strictest one. Rules are used only by the validator and are never inserted into the prompt.
 +\subsection{Parsing, Validation and Correction}
 +Records are requested in batches of $b=30$. A local parser extracts the records from each response and fixes common syntax defects; if parsing still fails, the control layer sends one repair request that quotes the position of the error. The returned column names are then mapped back to $S$. The validator checks that every value has the type inferred for its column; optional rules can also bound numerical ranges or restrict categories, but they were off in our experiments. Failures are grouped by column and sent back to the LLM with one example of an invalid value per column, for at most $c=2$ correction rounds.
  
--Profiling infers a type rule for every feature, and optional boundary rules (numerical ranges with 10\% tolerance, or categorical domains with at most 20 values). Dynamic Pydantic models validate each batch. The validator groups failures by field and reports one representative bad value per field, so the correction prompt does not grow linearly with repeated errors. Up to two correction rounds are attempted per batch. User-defined post-processing rules (noise, rounding, normalization) can be applied deterministically afterwards.
--
--In the reference configuration of our experiments, type rules are active, boundary rules are off and no user rules are supplied, so we evaluate the default system rather than the strictest one. Rules are used only by the validator and are never inserted into the prompt.
--
 -\subsection{Completion Loop (R1)}
 -LLMs often return fewer records than requested, as RQ1 will show. The completion loop derives its next request from the accepted state rather than from the conversation:
 +\subsection{Completion Loop}
@@ -526,7 +526,7 @@
  \label{tab:robust}
  \scriptsize
  \setlength{\tabcolsep}{1pt}
-@@ -565,25 +567,21 @@
+@@ -565,31 +567,32 @@
  \end{tabular*}
  \end{table}
  
@@ -556,3 +556,14 @@
  
  %======================================================================
  \section*{Acknowledgment}
+ %======================================================================
+ This work is funded by national funds through FCT -- Foundation for Science and Technology, I.P., within the scope of the research unit UID/00326 -- Centre for Informatics and Systems of the University of Coimbra, \url{https://doi.org/10.54499/UID/00326/2025}.
+ 
++%======================================================================
++\section*{AI-Generated Content Acknowledgement}
++%======================================================================
++The authors used Claude (Anthropic) to assist with code development and with the writing of the manuscript, and take full responsibility for all content.
++
+ \bibliographystyle{IEEEtran}
+ \bibliography{references}
+ 
