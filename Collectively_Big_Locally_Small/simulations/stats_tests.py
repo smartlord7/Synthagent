@@ -109,6 +109,12 @@ def datasets(e):
         real = {m: rel[m][i] for m in rel if m.endswith("(realistic)")}
         b = min(real, key=real.get)
         rows.append((f"{nm} (confirmation)", rel["GHB v5"][i], 1.0, b, real[b], True))
+    cp = json.load(open(R / "cptac_heldout.json"))
+    for i, nm in enumerate(cp["nets"]):
+        rl = cp["rel"][e]
+        real = {m: rl[m][i] for m in rl if m.endswith("(realistic)")}
+        b = min(real, key=real.get)
+        rows.append((f"{nm} (confirmation)", rl["GHB v5"][i], 1.0, b, real[b], True))
     rn = json.load(open(R / "real_networks.json"))["res"]
     for nm in FC.CONF:
         real = {lab: FC.arm_value(rn, nm, f.format(e=e), "lono") for lab, f in FC.OTHERS.items()}
@@ -183,6 +189,32 @@ def family5():
                             n=len(d), better=int((d < 0).sum()), mean=m, lo=lo, hi=hi, p=wilcoxon_less(d), tested=True,
                             ghb_mean=float(v[gk].mean()), comp_mean=float(lit[best].mean())))
     for r, a in zip(out, holm([r["p"] for r in out])):
+        r["p_holm"] = float(a)
+    return out
+
+
+# ------------------------------------------------------- family 6 (primary): all held-out networks, TCGA and CPTAC
+def family6():
+    """dev/CPTAC_PLAN.md: the 5 TCGA held-out networks and the 3 CPTAC networks, unit = network, n = 8."""
+    t, c = json.load(open(R / "v5_confirm.json")), json.load(open(R / "cptac_heldout.json"))
+    out = []
+    for e in ("1", "10"):
+        rel = {m: np.array(t["rel"][e][m] + c["rel"][e][m]) for m in t["rel"][e] if m in c["rel"][e]}
+        g = rel["GHB v5"]
+        real = {m: v for m, v in rel.items() if m.endswith("(realistic)")}
+        orc = {m: v for m, v in rel.items() if m.endswith("(oracle)")}
+        best = min(real, key=lambda m: real[m].mean())
+        bo = min(orc, key=lambda m: orc[m].mean())
+        per_net = np.min(np.array(list(orc.values())), axis=0)
+        for comp, v, test in (("Local", np.ones_like(g), True), (best, real[best], True), (bo, orc[bo], False),
+                              ("Best per network (oracle)", per_net, False)):
+            d = g - v
+            m, lo, hi = tci(d)
+            out.append(dict(family=6, data="All held-out (8 networks)", eps=e, comparator=comp, n=len(d),
+                            better=int((d < 0).sum()), mean=m, lo=lo, hi=hi, p=wilcoxon_less(d) if test else None,
+                            lower_better=True, tested=test, ghb_mean=float(g.mean()), comp_mean=float(v.mean())))
+    ad = holm([r["p"] for r in out if r["tested"]])
+    for r, a in zip([r for r in out if r["tested"]], ad):
         r["p_holm"] = float(a)
     return out
 
@@ -266,11 +298,12 @@ def main():
     f3, detail = family3()
     f4 = family4()
     f5 = family5()
-    json.dump(dict(family1=f1, family2=f2, family3=f3, family3_detail=detail, family4=f4, family5=f5), open(R / "stats_tests.json", "w"), indent=1)
-    tables(f1, f2, f3, f4)
+    f6 = family6()
+    json.dump(dict(family1=f1, family2=f2, family3=f3, family3_detail=detail, family4=f4, family5=f5, family6=f6), open(R / "stats_tests.json", "w"), indent=1)
+    tables(f6 + f1, f2, f3, f4)
     tuned_table(f5)
     detail_table(detail)
-    for r in f1 + f2 + f3 + f5:
+    for r in f6 + f1 + f2 + f3 + f5:
         extra = f" mean {r['mean']:+.4f} [{r['lo']:+.4f}, {r['hi']:+.4f}]" if "mean" in r else ""
         ph = r.get("p_holm")
         print(f"F{r['family']} eps={r['eps']:>3} vs {r['comparator'][:40]:40s} better {r['better']}/{r['n']}{extra} p={r['p'] if r['p'] is None else round(r['p'], 4)} holm={None if ph is None else round(ph, 4)}")
