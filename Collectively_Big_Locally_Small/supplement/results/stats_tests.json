@@ -2,7 +2,7 @@
  "family1": [
   {
    "family": 1,
-   "data": "TCGA confirmation (5 networks)",
+   "data": "TCGA held-out (5 networks)",
    "eps": "1",
    "comparator": "Local",
    "n": 5,
@@ -17,7 +17,7 @@
   },
   {
    "family": 1,
-   "data": "TCGA confirmation (5 networks)",
+   "data": "TCGA held-out (5 networks)",
    "eps": "1",
    "comparator": "DP-FedAvg + FT (realistic)",
    "n": 5,
@@ -32,7 +32,7 @@
   },
   {
    "family": 1,
-   "data": "TCGA confirmation (5 networks)",
+   "data": "TCGA held-out (5 networks)",
    "eps": "1",
    "comparator": "DP-FedAvg + FT (oracle)",
    "n": 5,
@@ -46,7 +46,7 @@
   },
   {
    "family": 1,
-   "data": "TCGA confirmation (5 networks)",
+   "data": "TCGA held-out (5 networks)",
    "eps": "10",
    "comparator": "Local",
    "n": 5,
@@ -61,7 +61,7 @@
   },
   {
    "family": 1,
-   "data": "TCGA confirmation (5 networks)",
+   "data": "TCGA held-out (5 networks)",
    "eps": "10",
    "comparator": "Ditto (realistic)",
    "n": 5,
@@ -76,7 +76,7 @@
   },
   {
    "family": 1,
-   "data": "TCGA confirmation (5 networks)",
+   "data": "TCGA held-out (5 networks)",
    "eps": "10",
    "comparator": "Ditto (oracle)",
    "n": 5,
@@ -650,7 +650,7 @@
  "family5": [
   {
    "family": 5,
-   "data": "TCGA confirmation, both tuned (5 networks)",
+   "data": "TCGA held-out, both tuned (5 networks)",
    "eps": "1",
    "arm": "realistic",
    "comparator": "DP-FedAvg + FT (realistic)",
@@ -668,7 +668,7 @@
   },
   {
    "family": 5,
-   "data": "TCGA confirmation, both tuned (5 networks)",
+   "data": "TCGA held-out, both tuned (5 networks)",
    "eps": "1",
    "arm": "oracle",
    "comparator": "DP-FedAvg + FT (oracle)",
@@ -686,7 +686,7 @@
   },
   {
    "family": 5,
-   "data": "TCGA confirmation, both tuned (5 networks)",
+   "data": "TCGA held-out, both tuned (5 networks)",
    "eps": "10",
    "arm": "realistic",
    "comparator": "Ditto (realistic)",
@@ -704,7 +704,7 @@
   },
   {
    "family": 5,
-   "data": "TCGA confirmation, both tuned (5 networks)",
+   "data": "TCGA held-out, both tuned (5 networks)",
    "eps": "10",
    "arm": "oracle",
    "comparator": "Ditto (oracle)",

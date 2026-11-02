@@ -1,29 +1,40 @@
 {
  "confirm eps=1": {
   "hospitals": 52,
-  "seconds": 0.8220975399017334,
-  "per_hospital": 0.015809568075033333
+  "seconds": 0.7888345718383789,
+  "per_hospital": 0.015169895612276517
  },
  "confirm eps=10": {
   "hospitals": 52,
-  "seconds": 0.7248060703277588,
-  "per_hospital": 0.013938578275533823
+  "seconds": 0.841048002243042,
+  "per_hospital": 0.016174000043135423
  },
  "dev eps=1": {
   "hospitals": 65,
-  "seconds": 0.9521212577819824,
-  "per_hospital": 0.014648019350492036
+  "seconds": 1.0767974853515625,
+  "per_hospital": 0.016566115159254807
  },
  "dev eps=10": {
   "hospitals": 65,
-  "seconds": 0.8614304065704346,
-  "per_hospital": 0.013252775485698993
+  "seconds": 0.9832756519317627,
+  "per_hospital": 0.015127317722027118
+ },
+ "fresh eps=1": {
+  "hospitals": 54,
+  "seconds": 0.9000809192657471,
+  "per_hospital": 0.01666816517158791
+ },
+ "fresh eps=10": {
+  "hospitals": 54,
+  "seconds": 0.7756810188293457,
+  "per_hospital": 0.01436446331165455
  },
  "message_numbers": 44,
  "message_bytes": 352,
- "gossip": {
-  "rounds": 60,
-  "degree": 4,
-  "bytes_per_hospital": 84480
+ "largest_network_hospitals": 17,
+ "tree": {
+  "max_degree": 4,
+  "key_bytes": 32,
+  "bytes_per_hospital": 2656
  }
 }
