@@ -151,5 +151,25 @@
     "largest": 14
    }
   }
+ },
+ "lr_attack": {
+  "1": {
+   "patients": 300,
+   "draws": 4000,
+   "empirical_advantage": 0.026773333333333333,
+   "analytic_advantage": 0.02689545931983505,
+   "empirical_tpr_1pct": 0.012211666666666666,
+   "analytic_tpr_1pct": 0.011947848889269834,
+   "empirical_advantage_max": 0.053750000000000075
+  },
+  "10": {
+   "patients": 300,
+   "draws": 4000,
+   "empirical_advantage": 0.22850166666666666,
+   "analytic_advantage": 0.2286967112895003,
+   "empirical_tpr_1pct": 0.04155333333333334,
+   "analytic_tpr_1pct": 0.04110551202769751,
+   "empirical_advantage_max": 0.303
+  }
  }
 }
