@@ -44,7 +44,7 @@ def main():
 
     style.setup()
     fig, (a, b) = plt.subplots(1, 2, figsize=(6.8, 2.4), gridspec_kw=dict(wspace=0.32))
-    a.plot(n, (n + B) / n, color=style.TEAL700, lw=1.0, label=r"Theory $1+B/n_k$ (Eq. 5)")
+    a.plot(n, (n + B) / n, color=style.TEAL700, lw=1.0, label=r"Theory $1+B/n_k$")
     a.errorbar(n, (1.0 / r_ghb) / n, yerr=2 * se_ghb / r_ghb ** 2 / n, fmt="o", ms=3, color=style.TEAL700,
                mfc="white", mew=0.8, elinewidth=0.6, label=rf"GHB plug-in, gossip, $\epsilon$=1")
     a.plot(n, (1.0 / r_pool) / n, "s", ms=3, color=style.RED700, mfc="white", mew=0.8,

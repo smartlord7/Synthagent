@@ -226,9 +226,10 @@ def fmt_p(p):
 
 def comp_tex(c):
     base = name(c)
+    disp = {"DP-FedAvg-SA + FT": "DP-FedAvg + FT, sec.\\ agg.", "DP-FedAvg + FT, sec. agg.": "DP-FedAvg + FT, sec.\\ agg."}
     arm = " (oracle)" if c.endswith("(oracle)") else (" (realistic)" if c.endswith("(realistic)") else "")
     key = CITE.get(base)
-    return f"{base} \\cite{{{key}}}{arm}" if key else base
+    return f"{disp.get(base, base)} \\cite{{{key}}}{arm}" if key else disp.get(base, base)
 
 
 def tables(f1, f2, f3, f4):
@@ -287,7 +288,7 @@ def detail_table(detail):
             gw = (g < c) if r["lower_better"] else (g > c)
             fg = f"\\textbf{{{g:.3f}}}" if gw else f"{g:.3f}"
             fc = f"{c:.3f}" if gw else f"\\textbf{{{c:.3f}}}"
-            cells += [fg, f"{r['local']:.3f}", comp_tex(r["best"]), fc]
+            cells += [fg, f"{r['local']:.3f}", comp_tex(name(r["best"])), fc]
         L.append(f"{dn(a['data'])} & " + " & ".join(cells) + " \\\\")
     L += ["\\bottomrule", "\\end{tabular}"]
     (TAB / "stats_detail.tex").write_text("\n".join(L) + "\n")

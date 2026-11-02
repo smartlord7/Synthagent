@@ -122,7 +122,7 @@ def main():
     ax.bar(xs, [sl[f"{m} outlier"] for m in names], 0.26, color=cols, alpha=0.6, hatch="////", edgecolor=style.SLATE800, lw=0, label=f"outlier is largest ($n$={int(n[-1])})")
     ax.bar(xs + 0.27, [ss[f"{m} others"] for m in names], 0.26, color=cols, alpha=0.3, label="other hospitals")
     ax.axhline(1, color=style.SLATE800, lw=0.6)
-    ax.set_xticks(xs, ["GHB", "Robust", "Opt-out"])
+    ax.set_xticks(xs, ["GHB-lite", "Robust", "Opt-out"])
     ax.set_yscale("log")
     ax.set_title(r"One hospital at $u=6\tau$", fontsize=7.5)
     ax.legend(frameon=False, fontsize=5.8, loc="upper center", bbox_to_anchor=(0.5, -0.18), ncol=1)

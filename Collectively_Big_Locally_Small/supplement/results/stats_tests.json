@@ -264,47 +264,47 @@
  "family3": [
   {
    "family": 3,
-   "data": "All real data sets (16)",
+   "data": "All real data sets (19)",
    "eps": "1",
    "comparator": "Local",
-   "n": 16,
-   "better": 14,
-   "p": 0.0020904541015625,
+   "n": 19,
+   "better": 17,
+   "p": 0.0003643035888671875,
    "tested": true,
-   "p_holm": 0.0062713623046875
+   "p_holm": 0.0010929107666015625
   },
   {
    "family": 3,
-   "data": "All real data sets (16)",
+   "data": "All real data sets (19)",
    "eps": "1",
    "comparator": "strongest realistic competitor",
-   "n": 16,
-   "better": 11,
-   "p": 0.1050567626953125,
+   "n": 19,
+   "better": 13,
+   "p": 0.08353424072265625,
    "tested": true,
-   "p_holm": 0.210113525390625
+   "p_holm": 0.1670684814453125
   },
   {
    "family": 3,
-   "data": "All real data sets (16)",
+   "data": "All real data sets (19)",
    "eps": "10",
    "comparator": "Local",
-   "n": 16,
-   "better": 15,
-   "p": 0.0002593994140625,
+   "n": 19,
+   "better": 18,
+   "p": 3.814697265625e-05,
    "tested": true,
-   "p_holm": 0.00103759765625
+   "p_holm": 0.000152587890625
   },
   {
    "family": 3,
-   "data": "All real data sets (16)",
+   "data": "All real data sets (19)",
    "eps": "10",
    "comparator": "strongest realistic competitor",
-   "n": 16,
+   "n": 19,
    "better": 10,
-   "p": 0.2272491455078125,
+   "p": 0.5,
    "tested": true,
-   "p_holm": 0.2272491455078125
+   "p_holm": 0.5
   }
  ],
  "family3_detail": {
@@ -347,6 +347,30 @@
     "local": 1.0,
     "best": "DP-FedAvg + FT (realistic)",
     "best_value": 0.9205072347669411,
+    "lower_better": true
+   },
+   {
+    "data": "CPTAC-PDA (confirmation)",
+    "ghb": 0.848930888762433,
+    "local": 1.0,
+    "best": "DP-FedAvg + FT (realistic)",
+    "best_value": 0.8233542427781682,
+    "lower_better": true
+   },
+   {
+    "data": "CPTAC-CM (confirmation)",
+    "ghb": 0.9626869259387104,
+    "local": 1.0,
+    "best": "DP-FedAvg + FT (realistic)",
+    "best_value": 0.9796909182794852,
+    "lower_better": true
+   },
+   {
+    "data": "CPTAC-LUAD (confirmation)",
+    "ghb": 0.8953168609801853,
+    "local": 1.0,
+    "best": "Clustered DP-FedAvg (realistic)",
+    "best_value": 0.9050851717881236,
     "lower_better": true
    },
    {
@@ -477,6 +501,30 @@
     "local": 1.0,
     "best": "Ditto (realistic)",
     "best_value": 0.8660095439975396,
+    "lower_better": true
+   },
+   {
+    "data": "CPTAC-PDA (confirmation)",
+    "ghb": 0.854336939693905,
+    "local": 1.0,
+    "best": "Clustered DP-FedAvg (realistic)",
+    "best_value": 0.8231245696237565,
+    "lower_better": true
+   },
+   {
+    "data": "CPTAC-CM (confirmation)",
+    "ghb": 0.9619150107937512,
+    "local": 1.0,
+    "best": "Ditto (realistic)",
+    "best_value": 0.9410460066314635,
+    "lower_better": true
+   },
+   {
+    "data": "CPTAC-LUAD (confirmation)",
+    "ghb": 0.8981332610166164,
+    "local": 1.0,
+    "best": "Ditto (realistic)",
+    "best_value": 0.8925087572912846,
     "lower_better": true
    },
    {
@@ -719,6 +767,140 @@
    "ghb_mean": 0.8977291468975871,
    "comp_mean": 0.9113138485519116,
    "p_holm": 0.125
+  }
+ ],
+ "family6": [
+  {
+   "family": 6,
+   "data": "All held-out (8 networks)",
+   "eps": "1",
+   "comparator": "Local",
+   "n": 8,
+   "better": 8,
+   "mean": -0.08375063800493394,
+   "lo": -0.12176420217458013,
+   "hi": -0.04573707383528776,
+   "p": 0.00390625,
+   "lower_better": true,
+   "tested": true,
+   "ghb_mean": 0.916249361995066,
+   "comp_mean": 1.0,
+   "p_holm": 0.015625
+  },
+  {
+   "family": 6,
+   "data": "All held-out (8 networks)",
+   "eps": "1",
+   "comparator": "DP-FedAvg + FT (realistic)",
+   "n": 8,
+   "better": 7,
+   "mean": -0.03347613375633039,
+   "lo": -0.07611377238794323,
+   "hi": 0.009161504875282452,
+   "p": 0.0546875,
+   "lower_better": true,
+   "tested": true,
+   "ghb_mean": 0.916249361995066,
+   "comp_mean": 0.9497254957513964,
+   "p_holm": 0.109375
+  },
+  {
+   "family": 6,
+   "data": "All held-out (8 networks)",
+   "eps": "1",
+   "comparator": "DP-FedAvg + FT (oracle)",
+   "n": 8,
+   "better": 7,
+   "mean": -0.008696737909127325,
+   "lo": -0.02474020310824354,
+   "hi": 0.007346727289988891,
+   "p": null,
+   "lower_better": true,
+   "tested": false,
+   "ghb_mean": 0.916249361995066,
+   "comp_mean": 0.9249460999041934
+  },
+  {
+   "family": 6,
+   "data": "All held-out (8 networks)",
+   "eps": "1",
+   "comparator": "Best per network (oracle)",
+   "n": 8,
+   "better": 6,
+   "mean": -0.004249005177779416,
+   "lo": -0.01908801126545555,
+   "hi": 0.010590000909896714,
+   "p": null,
+   "lower_better": true,
+   "tested": false,
+   "ghb_mean": 0.916249361995066,
+   "comp_mean": 0.9204983671728455
+  },
+  {
+   "family": 6,
+   "data": "All held-out (8 networks)",
+   "eps": "10",
+   "comparator": "Local",
+   "n": 8,
+   "better": 8,
+   "mean": -0.09287527014596392,
+   "lo": -0.12873148538679677,
+   "hi": -0.057019054905131074,
+   "p": 0.00390625,
+   "lower_better": true,
+   "tested": true,
+   "ghb_mean": 0.907124729854036,
+   "comp_mean": 1.0,
+   "p_holm": 0.015625
+  },
+  {
+   "family": 6,
+   "data": "All held-out (8 networks)",
+   "eps": "10",
+   "comparator": "Ditto (realistic)",
+   "n": 8,
+   "better": 4,
+   "mean": -0.003878731964432461,
+   "lo": -0.02322607632009633,
+   "hi": 0.015468612391231408,
+   "p": 0.421875,
+   "lower_better": true,
+   "tested": true,
+   "ghb_mean": 0.907124729854036,
+   "comp_mean": 0.9110034618184686,
+   "p_holm": 0.421875
+  },
+  {
+   "family": 6,
+   "data": "All held-out (8 networks)",
+   "eps": "10",
+   "comparator": "Ditto (oracle)",
+   "n": 8,
+   "better": 3,
+   "mean": 0.007136416703124496,
+   "lo": -0.010022446668911056,
+   "hi": 0.024295280075160047,
+   "p": null,
+   "lower_better": true,
+   "tested": false,
+   "ghb_mean": 0.907124729854036,
+   "comp_mean": 0.8999883131509117
+  },
+  {
+   "family": 6,
+   "data": "All held-out (8 networks)",
+   "eps": "10",
+   "comparator": "Best per network (oracle)",
+   "n": 8,
+   "better": 2,
+   "mean": 0.013164517186593477,
+   "lo": -0.0035319466605373134,
+   "hi": 0.029860981033724268,
+   "p": null,
+   "lower_better": true,
+   "tested": false,
+   "ghb_mean": 0.907124729854036,
+   "comp_mean": 0.8939602126674426
   }
  ]
 }
