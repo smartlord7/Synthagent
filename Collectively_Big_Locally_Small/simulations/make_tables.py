@@ -125,7 +125,7 @@ def bold_rows(name, rows):
     return [(" & ".join(c) + "\\\\") if c is not None else r for r, c in zip(rows, split)]
 
 
-V4_TABLES = ("t_real_final", "t_tcga_", "s_tcga_", "s_real_final_lono", "t_flamby_", "t_images", "s_camelyon", "t_sim16_ghb", "s_sim17_ghb", "t_stress")  # tables that already use the paper's names
+V4_TABLES = ("t_real_final", "t_tcga_", "s_tcga_", "s_real_final_lono", "t_flamby_", "t_images", "s_camelyon", "t_sim16_ghb", "s_sim17_ghb", "t_stress", "t_reid", "s_reid_attack", "t_who_gains")  # tables that already use the paper's names
 
 
 def write(name, rows):
@@ -911,8 +911,37 @@ def stress():
     write("t_stress.tex", rows)
 
 
+def reid():
+    """Re-identification risk (reid_risk.py): bound, realized risk and empirical attack; and who gains by size."""
+    p = R / "reid_risk.json"
+    if not p.exists():
+        return
+    r = json.load(open(p))
+    pc = lambda x: f"{100 * x:.1f}\\%"
+    rows = []
+    for e in ("1", "10"):
+        b, z = r["bound"][e], r["realized"][e]
+        rows.append(f"$\\epsilon={e}$ & {pc(b['advantage'])} & {pc(b['tpr_at_fpr_1pct'])} & {pc(z['median'])} & {pc(z['max'])} & "
+                    f"{r['attack'][f'ghb eps={e}']['mean_auc']:.2f}" + r"\\")
+    write("t_reid.tex", rows)
+    a = r["attack"]
+    rows = [f"Each hospital's own model, no privacy, hospitals of 5 to 15 patients & {a['local']['small']['pooled_auc']:.2f}" + r"\\",
+            f"Each hospital's own model, no privacy, 16 to 40 patients & {a['local']['medium']['pooled_auc']:.2f}" + r"\\",
+            f"Each hospital's own model, no privacy, over 40 patients & {a['local']['large']['pooled_auc']:.2f}" + r"\\",
+            f"Pooled network model, no privacy & {a['pooled']['mean_auc']:.2f}" + r"\\",
+            f"GHB's released network estimate, $\\epsilon=1$ & {a['ghb eps=1']['mean_auc']:.2f}" + r"\\",
+            f"GHB's released network estimate, $\\epsilon=10$ & {a['ghb eps=10']['mean_auc']:.2f}" + r"\\"]
+    write("s_reid_attack.tex", rows)
+    w = r["who_gains"]
+    rows = []
+    for band, lab in (("5-15", "5 to 15"), ("16-40", "16 to 40"), ("over 40", "over 40")):
+        t, al = w["standard"][band], w["alone"][band]
+        rows.append(f"{lab} & {t['hospitals']} & {t['patients']} & {t['eb']:.3f} & {t['ghb_1']:.3f} & {t['ghb_10']:.3f} & {al['ghb_1']:.3f} & {al['ghb_10']:.3f}" + r"\\")
+    write("t_who_gains.tex", rows)
+
+
 def main():
-    for fn in (flamby, images, sim16_ghb, sim17_ghb, stress, tcga, tcga_ablation, tcga_tuned, sim8, sim15, sim16, sim17, sim18, real_heart, real_networks, real_final, sim1, sim2, sim3, sim4, sim5, sim6, sim7, sim9, sim11, sim12, sim13, sim14):
+    for fn in (flamby, images, sim16_ghb, sim17_ghb, stress, reid, tcga, tcga_ablation, tcga_tuned, sim8, sim15, sim16, sim17, sim18, real_heart, real_networks, real_final, sim1, sim2, sim3, sim4, sim5, sim6, sim7, sim9, sim11, sim12, sim13, sim14):
         fn()
     print("tables:", sorted(p.name for p in OUT.glob("*.tex")))
 
