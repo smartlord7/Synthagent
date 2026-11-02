@@ -81,6 +81,23 @@ Method & BRCA & MESO & OV & UCEC & UCS & Mean & Wins\\
 
 \paragraph{Results} GHB has the lowest mean error at both budgets, whichever way its competitors are tuned (Table~\ref{tab:tcga-confirm}). At $\epsilon=1$ it reaches \SimTCOneGHB{} of the local error, against \SimTCOneFT{} for the best realistic literature method, DP-FedAvg \cite{mcmahan2018learning} with fine-tuning, and \SimTCOneFTOrc{} for the same method tuned on the test folds; even the best method chosen afresh for each network reaches only \SimTCOneBestOrc. At $\epsilon=10$ it reaches \SimTCTenGHB, against \SimTCTenDitto{} for Ditto \cite{li2021ditto} tuned on the design networks and \SimTCTenDittoOrc{} tuned on the test folds; only the best method chosen afresh for each network with hindsight is ahead (\SimTCTenBestOrc). The margin at $\epsilon=10$ is small: GHB beats Ditto in \SimTCTenDittoWins{} of the five networks, losing on mesothelioma and uterine carcinosarcoma, the two with the fewest patients. GHB's lead does not come from leaving its competitors untuned: tuned like them over \SimTuneConfigs{} configurations of its prior scale, non-borrowing weight and budget split, GHB itself would gain only a little more (\SimTuneOneDev{} and \SimTuneTenDev{} tuned on the design networks, \SimTuneOneOrc{} and \SimTuneTenOrc{} tuned on the test folds; supplement), so its released settings are close to the best it can do. Five networks are a small sample, and formal tests show how small (Table~\ref{tab:stats}; the test plan, written and committed before any test was computed, is in the supplement). At $\epsilon=1$ GHB was below a hospital alone and below the best realistic method on all five networks (mean difference \SimStTOneRealMean{} against DP-FedAvg with fine-tuning \cite{mcmahan2018learning}, 95\% interval \SimStTOneRealCI), the strongest result five networks allow (one-sided Wilcoxon signed-rank test \cite{wilcoxon1945individual}, $p=\SimStTOneRealP$), yet not significant once the four primary tests are corrected for multiplicity (Holm \cite{holm1979simple} $p=\SimStTOneRealHolm$). At $\epsilon=10$ the difference to Ditto is within noise (\SimStTTenRealMean, interval \SimStTTenRealCI), and rerun with fresh privacy noise (Section~\ref{sec:real-stress}) the best literature method tuned on the test folds reaches \SimStressStdTenOrc, level with GHB (\SimStressStdTenGHB). The claim is therefore specific: on networks not used to design it, untuned GHB had the lowest mean error of the methods compared tuned as a consortium could, at both budgets, and of those tuned on the test patients at $\epsilon=1$, with which it is level at $\epsilon=10$; whether it would lead on new networks is suggested at $\epsilon=1$ and open at $\epsilon=10$. Tuning both sides the same way does not change this: GHB tuned on the design networks against the literature tuned on the same networks, and GHB tuned on the test folds against the literature tuned on them, GHB is better in \SimStTunedWins{} of the \SimStTunedPairs{} network comparisons (for example \SimStTunedOneRealMean{} at $\epsilon=1$ against DP-FedAvg with fine-tuning, both tuned on the design networks), but each test again stops at the floor five networks impose (Holm $p=\SimStTunedOneRealHolm$; supplement).
 
+\paragraph{Who gains, and from whom} Most of these hospitals are tiny: \SimWhoSmallHosp{} of the 52 hold 5 to 15 eligible patients, and they gain the most (Table~\ref{tab:who-gains}). At $\epsilon=10$ their error falls to \SimWhoTogSmallTen{} of what they reach alone on average, against \SimWhoTogMidTen{} and \SimWhoTogLargeTen{} for hospitals of 16 to 40 and over 40 patients, as Equation~\eqref{eq:borrowed} predicts for a fixed number of virtual patients. Their partners are just as small; what helps them is the sum. A local model with a better prior, which borrows nothing, recovers only part of the gain (\SimWhoSmallEB{} for the smallest hospitals). Fitted alone, without the other cancer types, the smallest hospitals keep most of their gain at $\epsilon=1$ (\SimWhoAloneSmallOne) but lose part of it at $\epsilon=10$ (\SimWhoAloneSmallTen): related networks are a further source of the patients that each hospital borrows.
+
+\begin{table}[t]
+\caption{Who gains on the five held-out networks: held-out log-loss relative to local estimation, mean over the hospitals of each size (ten repetitions). Local, evidence prior: a hospital alone with the evidence-weighted default prior, which borrows nothing.}
+\label{tab:who-gains}
+\scriptsize
+\begin{tabular}{@{}lrrrrrrr@{}}
+\toprule
+ & & & & \multicolumn{2}{c}{GHB, networks together} & \multicolumn{2}{c}{GHB, each network alone}\\
+\cmidrule(lr){5-6}\cmidrule(l){7-8}
+Patients per hospital & Hospitals & Patients & \makecell[r]{Local,\\evid.\ prior} & $\epsilon=1$ & $\epsilon=10$ & $\epsilon=1$ & $\epsilon=10$\\
+\midrule
+\csname @@input\endcsname../Collectively_Big_Locally_Small/supplement/results/tables/t_who_gains.tex 
+\bottomrule
+\end{tabular}
+\end{table}
+
 \paragraph{Which components matter on real networks} Table~\ref{tab:tcga-ablation} removes one component of GHB at a time on the twelve design networks, with the same folds and privacy noise for every variant, and then varies each fixed setting. Three components carry the gain. Not borrowing the intercept is worth the most (\SimAblOneInt{} and \SimAblTenInt{} with the intercept borrowed, against \SimAblOneGHB{} and \SimAblTenGHB; worse in \SimAblOneIntWins{} and \SimAblTenIntWins{} of the \SimAblNets{} networks), the reverse of the simulations, whose hospitals share their base rates. Borrowing across cancer types comes next (\SimAblOnePan{} and \SimAblTenPan{} without it), and the public rule that releases only the diagonal of the information matrix matters at both ends: the full matrix is worse at $\epsilon=1$ (\SimAblOneFull) and the diagonal alone at $\epsilon=10$ (\SimAblTenDiag). Propagating the privacy covariance helps at $\epsilon=1$ (\SimAblOneVdp{} without it), and the tight sensitivity at $\epsilon=10$. Two safeguards cost a little on these networks: the non-borrowing components (\SimAblTenSafety{} without them at $\epsilon=10$) and the leave-one-out step, kept because Proposition~\ref{prop:borrowing} requires an estimate independent of the hospital and because they protect atypical hospitals (Section~\ref{sec:sim-attacks}). The settings hardly matter: the scale of the prior on $\tau$, the non-borrowing weight, the budget split and the number of quantiles keep the mean between \SimSensOneMin{} and \SimSensOneMax{} at $\epsilon=1$ and between \SimSensTenMin{} and \SimSensTenMax{} at $\epsilon=10$. Only the grid of default prior scales matters: a single scale of 2.5 is much worse (\SimSensOneScalesWide), a single scale of 1 slightly better (\SimSensOneScalesOne), so averaging over $\{0.5,1,2.5\}$ by each hospital's evidence protects against a badly chosen scale at a small cost.
 
 \begin{table}[t]
@@ -173,6 +190,27 @@ Method & $\epsilon=1$ & $\epsilon=10$ & no privacy & $\epsilon=1$ & $\epsilon=10
 \csname @@input\endcsname ../Collectively_Big_Locally_Small/supplement/results/tables/t_images.tex 
 \bottomrule
 \end{tabular}}
+\end{table}
+
+\subsection{What the releases reveal about patients}\label{sec:real-reid}
+
+Differential privacy is a bound on re-identification, and it can be read as one. GHB's two releases form a Gaussian mechanism with parameter $\mu=\sqrt{2\rho}$ in the sense of Gaussian differential privacy \cite{dong2022gaussian}: whatever the attacker knows, no test can tell whether a given patient's record was used, against any replacement, with a true-positive rate above $\Phi(\Phi^{-1}(\alpha)+\mu)$ at false-positive rate $\alpha$. Table~\ref{tab:reid} gives what this means. At $\epsilon=1$ no attacker can gain more than \SimReidOneAdv{} in true-positive minus false-positive rate, and at a 1\% false-positive rate it detects at most \SimReidOneTprOne{} of members. At $\epsilon=10$ the guarantee is far weaker, up to \SimReidTenAdv, which is why weak privacy should be chosen knowingly. The bound assumes a patient whose contribution reaches the sensitivity limit; computed with each of the \SimReidPatients{} real TCGA patients' actual contributions, against the most different patient of the same network, the attainable advantage is at most \SimReidOneRealMax{} at $\epsilon=1$ and \SimReidTenRealMax{} at $\epsilon=10$.
+
+An attack confirms the bound in practice. A membership-inference attack that thresholds each patient's loss \cite{shokri2017membership} cannot tell training from held-out patients through GHB's released network estimate (AUC \SimReidOneGHBAuc{} at $\epsilon=1$ and \SimReidTenGHBAuc{} at $\epsilon=10$, where 0.5 means no information). The same attack against a hospital's own model, released without privacy as federated or meta-analytic sharing would, reaches \SimReidLocSmallAuc{} for hospitals of 5 to 15 patients, and less for larger ones (supplement): the smallest hospitals, whose patients are easiest to single out, are those whose shared models leak most, and those GHB protects by releasing only noisy network sums.
+
+\begin{table}[t]
+\caption{Re-identification risk of GHB's two releases. Worst case: the largest advantage (true-positive minus false-positive rate) of any test of whether a patient's record was used, and its largest true-positive rate at a 1\% false-positive rate, from the Gaussian differential privacy of the releases. Realized: the same advantage for each of the \SimReidPatients{} real TCGA patients, with their actual contributions against the most different patient of their network (median and maximum). Attack: AUC of a loss-threshold membership-inference attack against GHB's released network estimate, mean over networks and repetitions (0.5: no information).}
+\label{tab:reid}
+\scriptsize
+\begin{tabular}{@{}lrrrrr@{}}
+\toprule
+ & \multicolumn{2}{c}{Worst case} & \multicolumn{2}{c}{Realized, real patients} & Attack\\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(l){6-6}
+Budget & Advantage & \makecell[r]{TPR at\\1\% FPR} & Median & Maximum & AUC\\
+\midrule
+\csname @@input\endcsname../Collectively_Big_Locally_Small/supplement/results/tables/t_reid.tex 
+\bottomrule
+\end{tabular}
 \end{table}
 
 \subsection{What the real data say}\label{sec:real-summary}
