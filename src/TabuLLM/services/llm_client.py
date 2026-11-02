@@ -109,13 +109,17 @@ class LocalOpenAIProvider(BaseLLMProvider):
         subclasses (e.g. OpenAIProvider) that need an Authorization header."""
         return {'Content-Type': 'application/json'}
 
-    def _call_local_llm(self, messages, core_model=None, temperature=0.7, json_mode=False):
+    def _call_local_llm(self, messages, core_model=None, temperature=0.7, json_mode=False, response_format=None):
         active_model = core_model if core_model else self.default_model
         payload = {
             "model": active_model,
             "messages": messages,
             "temperature": temperature
         }
+        # Structured-output baseline: schema-constrained decoding on endpoints that
+        # support OpenAI's response_format (json_schema, strict).
+        if response_format is not None:
+            payload["response_format"] = response_format
 
         logger.info(f"--- [SERVICE] CALLING LOCAL LLM: {active_model} (Timeout: {self.timeout}s) ---")
         data = json.dumps(payload).encode('utf-8')
@@ -261,7 +265,9 @@ class LocalOpenAIProvider(BaseLLMProvider):
         except Exception:
             stats["parse_failures"] += 1
             return []
-        if isinstance(parsed, dict):
+        if isinstance(parsed, dict) and "records" in parsed:
+            cols, data = None, parsed.get("records", [])
+        elif isinstance(parsed, dict):
             cols, data = parsed.get("cols"), parsed.get("data", [])
         else:
             cols, data = None, parsed
@@ -296,7 +302,9 @@ class LocalOpenAIProvider(BaseLLMProvider):
         stats["rule_violations"] += len(violations)
         stats["invalid_rows"] += len({v["row_index"] for v in violations})
 
-    def generate_bulk_data(self, rows_payload, context, all_columns, all_fields, algorithm, instructions, temperature, num_empty=0, chunk_size=30, rules_metadata=None, enforce_rules=True, raw_mode=False):
+    def generate_bulk_data(self, rows_payload, context, all_columns, all_fields, algorithm, instructions, temperature, num_empty=0, chunk_size=30, rules_metadata=None, enforce_rules=True, raw_mode=False, response_format=None):
+        # response_format (with raw_mode) is the structured-output baseline: the same
+        # no-controller path, but the endpoint constrains decoding to a JSON schema.
         # raw_mode is the no-controller ablation: the same prompts and context, but strict
         # json.loads with no repair, no schema bridge, rule violations counted but never
         # corrected, no context-overflow retry, no top-up and no overshoot truncation.
@@ -442,7 +450,8 @@ class LocalOpenAIProvider(BaseLLMProvider):
                 messages.append({"role": "user", "content": final_prompt})
 
                 try:
-                    response = self._call_local_llm(messages, core_model=algorithm, temperature=temperature, json_mode=True)
+                    response = self._call_local_llm(messages, core_model=algorithm, temperature=temperature, json_mode=True,
+                                                    response_format=response_format if raw_mode else None)
                     content = response["choices"][0]["message"]["content"]
                     usage = response.get("usage", {})
 
@@ -868,11 +877,11 @@ class OpenAIProvider(LocalOpenAIProvider):
             headers['Authorization'] = f'Bearer {self.api_key}'
         return headers
 
-    def _call_local_llm(self, messages, core_model=None, temperature=0.7, json_mode=False):
+    def _call_local_llm(self, messages, core_model=None, temperature=0.7, json_mode=False, response_format=None):
         active_model = (core_model or self.default_model).lower()
         if active_model.startswith(self._REASONING_MODEL_PREFIXES):
             temperature = 1
-        return super()._call_local_llm(messages, core_model=core_model, temperature=temperature, json_mode=json_mode)
+        return super()._call_local_llm(messages, core_model=core_model, temperature=temperature, json_mode=json_mode, response_format=response_format)
 
     def get_available_models(self):
         """Query OpenAI's /v1/models for every model this key can access, filtered
@@ -1242,11 +1251,11 @@ def get_dataset_description(df_sample, provided_metadata=None, algorithm=None):
     p = registry.get_provider(algorithm)
     return p.get_dataset_description(df_sample, provided_metadata, algorithm=algorithm)
 
-def generate_bulk_data(rows_payload, context, all_columns, all_fields, algorithm, instructions, temperature, num_empty=0, chunk_size=30, rules_metadata=None, enforce_rules=True, raw_mode=False):
+def generate_bulk_data(rows_payload, context, all_columns, all_fields, algorithm, instructions, temperature, num_empty=0, chunk_size=30, rules_metadata=None, enforce_rules=True, raw_mode=False, response_format=None):
     p = registry.get_provider(algorithm)
     if raw_mode:
         # Only the OpenAI-compatible providers implement the no-controller ablation.
-        return p.generate_bulk_data(rows_payload, context, all_columns, all_fields, algorithm, instructions, temperature, num_empty, chunk_size, rules_metadata, enforce_rules, raw_mode=True)
+        return p.generate_bulk_data(rows_payload, context, all_columns, all_fields, algorithm, instructions, temperature, num_empty, chunk_size, rules_metadata, enforce_rules, raw_mode=True, response_format=response_format)
     return p.generate_bulk_data(rows_payload, context, all_columns, all_fields, algorithm, instructions, temperature, num_empty, chunk_size, rules_metadata, enforce_rules)
 
 def detect_target_columns(df_sample, single_target=False, algorithm=None):

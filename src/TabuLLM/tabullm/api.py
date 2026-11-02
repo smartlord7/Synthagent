@@ -137,6 +137,7 @@ class TabuLLM:
         apply_post_processing: bool = True,
         raw_prompting: bool = False,
         enforce_boundaries: bool = False,
+        structured_output: bool = False,
         temperature: float = 0.3,
         resume_fold_results: Optional[dict] = None,
         on_fold_done: Optional[Callable[[int, dict], None]] = None,
@@ -168,6 +169,9 @@ class TabuLLM:
             enforce_boundaries (bool): Whether the validator also enforces the inferred
                 numeric ranges (observed min/max relaxed by 10%) and categorical domains,
                 not only feature types. Default False.
+            structured_output (bool): Structured-output baseline. The no-controller path,
+                but the endpoint constrains decoding to a JSON schema built from the
+                real columns and types (OpenAI response_format json_schema). Default False.
             temperature (float): LLM sampling temperature for generation. Default 0.3.
                 See ponder_hyperparameters() for an LLM-recommended alternative.
             resume_fold_results (dict | None): {fold_num: fold_result} for folds already
@@ -202,6 +206,7 @@ class TabuLLM:
             "apply_post_processing": apply_post_processing,
             "raw_prompting": raw_prompting,
             "enforce_boundaries": enforce_boundaries,
+            "structured_output": structured_output,
             "temperature": temperature,
             "ml_config": {"selected_models": ml_models, "params": {}},
             "na_strategy": na_strategy,
