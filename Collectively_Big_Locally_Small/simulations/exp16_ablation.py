@@ -146,7 +146,7 @@ def figure(res):
             ax.text(j, i, f"{Z[i, j]:.2f}" + ("" if sig or i == 0 else " ·"), ha="center", va="center",
                     fontsize=5.6, color="white" if abs(lz[i, j]) > 0.6 else "black", fontweight="bold" if sig else "normal")
     ax.set_xticks(range(len(cols)), [LABELS[c] for c in cols], fontsize=6, rotation=30, ha="right")
-    ax.set_yticks(range(len(rows)), rows, fontsize=6)
+    ax.set_yticks(range(len(rows)), [r.replace("GHB (reported)", "GHB-lite (reported)").replace("GHB, earlier version", "GHB-lite, earlier version") for r in rows], fontsize=6)
     ax.tick_params(length=0)
     cb = fig.colorbar(im, ax=ax, fraction=0.03, pad=0.02, ticks=[-1, -0.5, 0, 0.5, 1])
     cb.ax.set_yticklabels(["0.5", "0.71", "1", "1.41", "2"], fontsize=6)

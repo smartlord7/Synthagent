@@ -64,7 +64,7 @@ def family1():
         for comp, v, test in (("Local", np.ones_like(g), True), (best, real[best], True), (bo, orc[bo], False)):
             d = g - v
             m, lo, hi = tci(d)
-            out.append(dict(family=1, data="TCGA confirmation (5 networks)", eps=e, comparator=comp, n=len(d),
+            out.append(dict(family=1, data="TCGA held-out (5 networks)", eps=e, comparator=comp, n=len(d),
                             better=int((d < 0).sum()), mean=m, lo=lo, hi=hi, p=wilcoxon_less(d) if test else None,
                             lower_better=True, tested=test))
     ad = holm([r["p"] for r in out if r["tested"]])
@@ -178,7 +178,7 @@ def family5():
             best = min(lit, key=lambda m: lit[m].mean())
             d = v[gk] - lit[best]
             m, lo, hi = tci(d)
-            out.append(dict(family=5, data="TCGA confirmation, both tuned (5 networks)", eps=e, arm=arm,
+            out.append(dict(family=5, data="TCGA held-out, both tuned (5 networks)", eps=e, arm=arm,
                             comparator=best, ghb=f"GHB tuned ({'design networks' if arm == 'realistic' else 'test folds'})",
                             n=len(d), better=int((d < 0).sum()), mean=m, lo=lo, hi=hi, p=wilcoxon_less(d), tested=True,
                             ghb_mean=float(v[gk].mean()), comp_mean=float(lit[best].mean())))
@@ -241,7 +241,9 @@ def tuned_table(f5):
 def detail_table(detail):
     """Per data set, both budgets: GHB, Local, the strongest realistic competitor (name, value); the better of GHB and
     that competitor in bold."""
-    dn = lambda d: d.replace(" (confirmation)", "$^{c}$").replace(" (small network)", "").replace("FLamby ", "FLamby ").replace("_", "\\_")
+    names = {"medpar": "Arizona Medicare", "FLamby heart": "FLamby Fed-Heart-Disease", "FLamby brca": "FLamby Fed-TCGA-BRCA",
+             "FLamby isic": "FLamby Fed-ISIC2019"}
+    dn = lambda d: names.get(d.replace(" (confirmation)", "").replace(" (small network)", ""), d.replace(" (confirmation)", "").replace(" (small network)", "")).replace("_", "\\_") + ("$^{c}$" if " (confirmation)" in d else "")
     L = ["\\begin{tabular}{lrrlrrrlr}", "\\toprule",
          " & \\multicolumn{4}{c}{$\\varepsilon=1$} & \\multicolumn{4}{c}{$\\varepsilon=10$} \\\\",
          "\\cmidrule(lr){2-5}\\cmidrule(l){6-9}",
