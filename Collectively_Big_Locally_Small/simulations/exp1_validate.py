@@ -74,7 +74,7 @@ def main():
     a.set_xscale("log"); a.set_yscale("log")
     a.set_xlabel("Hospital size $n_k$"); a.set_ylabel(r"Risk $\mathbb{E}(\tilde\theta_k-\theta_k)^2$")
     a.legend(frameon=False, fontsize=6.3, loc="lower left")
-    a.set_title("Proposition 8.1: lines theory, markers simulation", fontsize=7.5)
+    a.set_title("Lines theory, markers simulation", fontsize=7.5)
 
     cols = {0.05: style.RED700, 0.1: style.AMBER600, 0.3: style.VIOLET600, 1.0: style.BLUE600,
             3.0: style.TEAL700, None: style.GRAY400}
@@ -86,9 +86,9 @@ def main():
     lo, hi = min(r["theory"] for r in grid) / 1.5, max(r["theory"] for r in grid) * 1.5
     b.plot([lo, hi], [lo, hi], color=style.SLATE800, lw=0.6, ls="--")
     b.set_xscale("log"); b.set_yscale("log")
-    b.set_xlabel("$M$ from Equation (6)"); b.set_ylabel("$M$ simulated")
+    b.set_xlabel("$M$, theory"); b.set_ylabel("$M$ simulated")
     b.legend(frameon=False, fontsize=6.3, loc="upper left", ncol=2)
-    b.set_title(r"Proposition 8.2, $n_j\in\{20,\dots,2000\}$", fontsize=7.5)
+    b.set_title(r"$n_j\in\{20,\dots,2000\}$", fontsize=7.5)
     ghb.FIGDIR.mkdir(parents=True, exist_ok=True); ghb.RESDIR.mkdir(parents=True, exist_ok=True)
     ghb.tidy(a, b)
     ghb.tidy(a, b)

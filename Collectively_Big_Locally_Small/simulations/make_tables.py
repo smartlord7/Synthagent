@@ -125,7 +125,7 @@ def bold_rows(name, rows):
     return [(" & ".join(c) + "\\\\") if c is not None else r for r, c in zip(rows, split)]
 
 
-V4_TABLES = ("t_real_final", "t_tcga_", "s_tcga_", "s_real_final_lono", "t_flamby_", "t_images", "s_camelyon", "t_sim16_ghb", "s_sim17_ghb", "t_stress", "t_reid", "s_reid_attack", "t_who_gains")  # tables that already use the paper's names
+V4_TABLES = ("t_real_final", "t_tcga_", "s_tcga_", "s_real_final_lono", "t_flamby_", "t_images", "s_camelyon", "t_sim16_ghb", "s_sim17_ghb", "t_stress", "t_reid", "s_reid_attack", "t_who_gains", "t_cptac")  # tables that already use the paper's names
 
 
 def write(name, rows):
@@ -618,10 +618,37 @@ def tcga():
             orc_row = "oracle per network" in l  # the oracle row is never bold (the caption excludes it)
             cells = [(f"\\textbf{{{x:.3f}}}" if abs(x - b) < 1e-12 and not orc_row else f"{x:.3f}") for x, b in zip(v, best)]
             wins = "" if l.startswith("\\textbf") else f"{int((g < v).sum())}/{len(v)}"
-            rows.append(l + " & " + " & ".join(cells) + f" & {v.mean():.3f} & {wins}\\\\")
+            bm = min(x.mean() for ll, x in lines if not ll.startswith("Local") and "oracle" not in ll)
+            mc = f"\\textbf{{{v.mean():.3f}}}" if abs(v.mean() - bm) < 1e-12 and not orc_row else f"{v.mean():.3f}"
+            rows.append(l + " & " + " & ".join(cells) + f" & {mc} & {wins}\\\\")
         if e == "1":
             rows.append("\\midrule")
     write("t_tcga_confirm.tex", rows)
+    cp = load("cptac_heldout.json")  # second held-out set (cptac_heldout.py), same layout
+    rows = []
+    for e in ("1", "10"):
+        r = cp["rel"][e]
+        g = np.array(r["GHB v5"])
+        lines = [(r"\textbf{GHB}, no tuning", g), ("GHB-lite (evidence prior), no tuning", np.array(r["GHB-lite"])),
+                 ("Local, evidence prior$^\\ddagger$", np.array(r["Local, evidence prior"]))]
+        lines += [(short[fm] + ", tuned on development", np.array(r[fm + " (realistic)"])) for fm in fams]
+        lines.append(("Best of the six, oracle per network$^\\star$", np.array(r["Best per network (oracle)"])))
+        best = np.min([v for l, v in lines if not l.startswith("Local") and "oracle" not in l], 0)
+        rows.append(f"\\multicolumn{{6}}{{@{{}}l}}{{\\emph{{$\\epsilon={e}$}}}}\\\\")
+        for l, v in lines:
+            orc_row = "oracle per network" in l
+            cells = [(f"\\textbf{{{x:.3f}}}" if abs(x - b) < 1e-12 and not orc_row else (f"{x:.3f}" if x < 9.995 else f"{x:.1f}")) for x, b in zip(v, best)]
+            wins = "" if l.startswith("\\textbf") else f"{int((g < v).sum())}/{len(v)}"
+            mean = v.mean()
+            bm = min(x.mean() for ll, x in lines if not ll.startswith("Local") and "oracle" not in ll)
+            ms = f"{mean:.3f}" if mean < 9.995 else f"{mean:.1f}"
+            if abs(mean - bm) < 1e-12 and not orc_row:
+                ms = f"\\textbf{{{ms}}}"
+            rows.append(l + " & " + " & ".join(cells) + f" & {ms}")
+            rows[-1] += f" & {wins}\\\\"
+        if e == "1":
+            rows.append("\\midrule")
+    write("t_cptac.tex", rows)
     # oracle arm per method and network, and the configurations frozen for the realistic arm
     sel = json.load(open(ghb.ROOT / "simulations" / "dev" / "v4_realistic_configs.json"))
     rows = []

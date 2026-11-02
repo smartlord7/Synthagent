@@ -74,7 +74,7 @@ def main():
     style.setup()
     fig, ax = plt.subplots(figsize=(3.6, 2.4))
     ax.plot(TAU2_R, out["ghb"], "-o", ms=3, color=style.TEAL700, lw=1.3, label="GHB, exchangeable prior")
-    ax.plot(TAU2_R, out["gmrf"], "-s", ms=3, color=style.VIOLET600, lw=1.3, label="GHB, GMRF prior by region (Eq. 7)")
+    ax.plot(TAU2_R, out["gmrf"], "-s", ms=3, color=style.VIOLET600, lw=1.3, label="GHB, GMRF prior by region")
     ax.plot(TAU2_R, out["ghb_worst"], ":", color=style.TEAL700, lw=1.0, label="worst hospital")
     ax.plot(TAU2_R, out["gmrf_worst"], ":", color=style.VIOLET600, lw=1.0)
     ax.axhline(1, color=style.SLATE800, lw=0.6)

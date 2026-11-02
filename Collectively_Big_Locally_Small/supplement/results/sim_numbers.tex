@@ -2179,6 +2179,7 @@
 \newcommand{\SimReidOneRealMed}{2.8\%}
 \newcommand{\SimReidOneRealMax}{3.7\%}
 \newcommand{\SimReidOneMu}{0.20}
+\newcommand{\SimReidOneAdvHosp}{9.1\%}
 \newcommand{\SimReidOneGHBAuc}{0.50}
 \newcommand{\SimReidTenAdv}{62.1\%}
 \newcommand{\SimReidTenTprOne}{28.6\%}
@@ -2186,6 +2187,7 @@
 \newcommand{\SimReidTenRealMed}{23.6\%}
 \newcommand{\SimReidTenRealMax}{30.8\%}
 \newcommand{\SimReidTenMu}{1.76}
+\newcommand{\SimReidTenAdvHosp}{67.5\%}
 \newcommand{\SimReidTenGHBAuc}{0.51}
 \newcommand{\SimReidPatients}{3,390}
 \newcommand{\SimReidOneLRAdv}{2.7\%}
@@ -2226,6 +2228,82 @@
 \newcommand{\SimDeployBytes}{352}
 \newcommand{\SimDeployKB}{3}
 \newcommand{\SimDeployKmax}{17}
+\newcommand{\SimCpHosp}{15}
+\newcommand{\SimCpPatients}{332}
+\newcommand{\SimCpMinN}{5}
+\newcommand{\SimCpMaxN}{50}
+\newcommand{\SimCpOneGHB}{0.902}
+\newcommand{\SimCpOneLite}{0.918}
+\newcommand{\SimCpOneEB}{0.918}
+\newcommand{\SimCpOneBestReal}{0.905}
+\newcommand{\SimCpOneBestRealName}{DP-FedAvg + FT}
+\newcommand{\SimCpOneBestOrc}{0.902}
+\newcommand{\SimCpOneBestOrcName}{DP-FedAvg + FT}
+\newcommand{\SimCpOneNetOrc}{0.899}
+\newcommand{\SimCpOneRealAhead}{0}
+\newcommand{\SimCpOneWins}{2}
+\newcommand{\SimCpTenGHB}{0.905}
+\newcommand{\SimCpTenLite}{0.920}
+\newcommand{\SimCpTenEB}{0.918}
+\newcommand{\SimCpTenBestReal}{0.898}
+\newcommand{\SimCpTenBestRealName}{Ditto}
+\newcommand{\SimCpTenBestOrc}{0.881}
+\newcommand{\SimCpTenBestOrcName}{Ditto}
+\newcommand{\SimCpTenNetOrc}{0.879}
+\newcommand{\SimCpTenRealAhead}{3}
+\newcommand{\SimCpTenWins}{1}
+\newcommand{\SimStHOneLocWins}{8}
+\newcommand{\SimStHOneLocMean}{-0.084}
+\newcommand{\SimStHOneLocCI}{[-0.122, -0.046]}
+\newcommand{\SimStHOneLocGHB}{0.916}
+\newcommand{\SimStHOneLocComp}{1.000}
+\newcommand{\SimStHOneLocP}{0.004}
+\newcommand{\SimStHOneLocHolm}{0.016}
+\newcommand{\SimStHOneRealWins}{7}
+\newcommand{\SimStHOneRealMean}{-0.033}
+\newcommand{\SimStHOneRealCI}{[-0.076, +0.009]}
+\newcommand{\SimStHOneRealGHB}{0.916}
+\newcommand{\SimStHOneRealComp}{0.950}
+\newcommand{\SimStHOneRealName}{DP-FedAvg + FT}
+\newcommand{\SimStHOneRealP}{0.055}
+\newcommand{\SimStHOneRealHolm}{0.109}
+\newcommand{\SimStHOneOrcWins}{7}
+\newcommand{\SimStHOneOrcMean}{-0.009}
+\newcommand{\SimStHOneOrcCI}{[-0.025, +0.007]}
+\newcommand{\SimStHOneOrcGHB}{0.916}
+\newcommand{\SimStHOneOrcComp}{0.925}
+\newcommand{\SimStHOneOrcName}{DP-FedAvg + FT}
+\newcommand{\SimStHOneNetWins}{6}
+\newcommand{\SimStHOneNetMean}{-0.004}
+\newcommand{\SimStHOneNetCI}{[-0.019, +0.011]}
+\newcommand{\SimStHOneNetGHB}{0.916}
+\newcommand{\SimStHOneNetComp}{0.920}
+\newcommand{\SimStHTenLocWins}{8}
+\newcommand{\SimStHTenLocMean}{-0.093}
+\newcommand{\SimStHTenLocCI}{[-0.129, -0.057]}
+\newcommand{\SimStHTenLocGHB}{0.907}
+\newcommand{\SimStHTenLocComp}{1.000}
+\newcommand{\SimStHTenLocP}{0.004}
+\newcommand{\SimStHTenLocHolm}{0.016}
+\newcommand{\SimStHTenRealWins}{4}
+\newcommand{\SimStHTenRealMean}{-0.004}
+\newcommand{\SimStHTenRealCI}{[-0.023, +0.015]}
+\newcommand{\SimStHTenRealGHB}{0.907}
+\newcommand{\SimStHTenRealComp}{0.911}
+\newcommand{\SimStHTenRealName}{Ditto}
+\newcommand{\SimStHTenRealP}{0.422}
+\newcommand{\SimStHTenRealHolm}{0.422}
+\newcommand{\SimStHTenOrcWins}{3}
+\newcommand{\SimStHTenOrcMean}{+0.007}
+\newcommand{\SimStHTenOrcCI}{[-0.010, +0.024]}
+\newcommand{\SimStHTenOrcGHB}{0.907}
+\newcommand{\SimStHTenOrcComp}{0.900}
+\newcommand{\SimStHTenOrcName}{Ditto}
+\newcommand{\SimStHTenNetWins}{2}
+\newcommand{\SimStHTenNetMean}{+0.013}
+\newcommand{\SimStHTenNetCI}{[-0.004, +0.030]}
+\newcommand{\SimStHTenNetGHB}{0.907}
+\newcommand{\SimStHTenNetComp}{0.894}
 \newcommand{\SimStTOneLocWins}{5}
 \newcommand{\SimStTOneLocMean}{-0.075}
 \newcommand{\SimStTOneLocCI}{[-0.127, -0.023]}
@@ -2258,15 +2336,15 @@
 \newcommand{\SimStCamLit}{6}
 \newcommand{\SimStCamLitNot}{DP-FedAvg + FT, APFL, Clustered DP-FedAvg}
 \newcommand{\SimStCamMaxHolm}{0.010}
-\newcommand{\SimStAllOneLocWins}{14}
-\newcommand{\SimStAllOneLocHolm}{0.006}
-\newcommand{\SimStAllOneRealWins}{11}
-\newcommand{\SimStAllOneRealHolm}{0.210}
-\newcommand{\SimStAllTenLocWins}{15}
-\newcommand{\SimStAllTenLocHolm}{0.001}
+\newcommand{\SimStAllOneLocWins}{17}
+\newcommand{\SimStAllOneLocHolm}{0.001}
+\newcommand{\SimStAllOneRealWins}{13}
+\newcommand{\SimStAllOneRealHolm}{0.167}
+\newcommand{\SimStAllTenLocWins}{18}
+\newcommand{\SimStAllTenLocHolm}{<0.001}
 \newcommand{\SimStAllTenRealWins}{10}
-\newcommand{\SimStAllTenRealHolm}{0.227}
-\newcommand{\SimStAllN}{16}
+\newcommand{\SimStAllTenRealHolm}{0.500}
+\newcommand{\SimStAllN}{19}
 \newcommand{\SimStTunedOneRealWins}{5}
 \newcommand{\SimStTunedOneRealMean}{-0.056}
 \newcommand{\SimStTunedOneRealCI}{[-0.127, +0.014]}

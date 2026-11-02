@@ -215,6 +215,8 @@ def tables(out):
     # per-hospital table for the supplement
     L = ["\\begin{longtable}{@{}llrrrrrrr@{}}",
          "\\caption{Every hospital of the test: size, events, events per variable (EPV), Riley minimum sample size $n^{\\star}$, smallness index $\\sigma$ and gain from GHB over local estimation (one minus the ratio of held-out log-losses). Sets: held out and design TCGA networks, and the networks of the seven-network study (small; Arizona Medicare and UCI Heart Disease are in the primary set, the six TCGA networks in the secondary set).}\\label{tab:sigma-hosp}\\\\", "\\toprule",
+         "Network & Set & $n$ & Events & EPV & $n^{\\star}$ & $\\sigma$ & Gain, $\\epsilon=1$ & Gain, $\\epsilon=10$\\\\", "\\midrule", "\\endfirsthead",
+         "\\caption[]{(continued)}\\\\", "\\toprule",
          "Network & Set & $n$ & Events & EPV & $n^{\\star}$ & $\\sigma$ & Gain, $\\epsilon=1$ & Gain, $\\epsilon=10$\\\\", "\\midrule", "\\endhead"]
     H = {}
     for r in out["hospitals"]:

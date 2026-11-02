@@ -4,20 +4,23 @@
 \cmidrule(lr){2-5}\cmidrule(l){6-9}
 Data set & GHB & Local & \multicolumn{2}{l}{Strongest realistic} & GHB & Local & \multicolumn{2}{l}{Strongest realistic} \\
 \midrule
-TCGA-BRCA$^{c}$ & \textbf{0.879} & 1.000 & DP-FedAvg + FT \cite{mcmahan2018learning} (realistic) & 0.898 & \textbf{0.859} & 1.000 & Ditto \cite{li2021ditto} (realistic) & 0.878 \\
-TCGA-MESO$^{c}$ & \textbf{0.909} & 1.000 & DP-FedAvg + FT \cite{mcmahan2018learning} (realistic) & 0.952 & 0.897 & 1.000 & Ditto \cite{li2021ditto} (realistic) & \textbf{0.893} \\
-TCGA-UCEC$^{c}$ & \textbf{0.957} & 1.000 & Ditto \cite{li2021ditto} (realistic) & 0.997 & \textbf{0.932} & 1.000 & DP-FedAvg-SA + FT \cite{mcmahan2018learning,bonawitz2017practical} (realistic) & 0.957 \\
-TCGA-OV$^{c}$ & 0.979 & 1.000 & Ditto \cite{li2021ditto} (realistic) & \textbf{0.978} & \textbf{0.967} & 1.000 & Ditto \cite{li2021ditto} (realistic) & 0.974 \\
-TCGA-UCS$^{c}$ & \textbf{0.899} & 1.000 & DP-FedAvg + FT \cite{mcmahan2018learning} (realistic) & 0.921 & 0.887 & 1.000 & Ditto \cite{li2021ditto} (realistic) & \textbf{0.866} \\
-Arizona Medicare & \textbf{0.956} & 1.000 & DP-FedAvg + FT, sec. agg. \cite{mcmahan2018learning,bonawitz2017practical} & 0.957 & 0.948 & 1.000 & DP-FedAvg + FT, sec. agg. \cite{mcmahan2018learning,bonawitz2017practical} & \textbf{0.942} \\
-TCGA-LUSC & \textbf{0.952} & 1.000 & DP-FedAvg + FT, sec. agg. \cite{mcmahan2018learning,bonawitz2017practical} & 0.961 & \textbf{0.945} & 1.000 & DP-FedAvg + FT, sec. agg. \cite{mcmahan2018learning,bonawitz2017practical} & 0.946 \\
-TCGA-HNSC & 0.942 & 1.000 & DP-FedAvg + FT, sec. agg. \cite{mcmahan2018learning,bonawitz2017practical} & \textbf{0.931} & \textbf{0.928} & 1.000 & Clustered DP-FedAvg \cite{ghosh2020efficient,mcmahan2018learning} & 0.931 \\
-TCGA-BLCA & \textbf{0.937} & 1.000 & Ditto \cite{li2021ditto} & 0.949 & \textbf{0.901} & 1.000 & DP-FedAvg + FT, sec. agg. \cite{mcmahan2018learning,bonawitz2017practical} & 0.903 \\
-TCGA-STAD & \textbf{0.962} & 1.000 & DP-FedAvg + FT, sec. agg. \cite{mcmahan2018learning,bonawitz2017practical} & 0.963 & 0.934 & 1.000 & DP-FedAvg + FT, sec. agg. \cite{mcmahan2018learning,bonawitz2017practical} & \textbf{0.926} \\
+TCGA-BRCA$^{c}$ & \textbf{0.879} & 1.000 & DP-FedAvg + FT \cite{mcmahan2018learning} & 0.898 & \textbf{0.859} & 1.000 & Ditto \cite{li2021ditto} & 0.878 \\
+TCGA-MESO$^{c}$ & \textbf{0.909} & 1.000 & DP-FedAvg + FT \cite{mcmahan2018learning} & 0.952 & 0.897 & 1.000 & Ditto \cite{li2021ditto} & \textbf{0.893} \\
+TCGA-UCEC$^{c}$ & \textbf{0.957} & 1.000 & Ditto \cite{li2021ditto} & 0.997 & \textbf{0.932} & 1.000 & DP-FedAvg + FT, sec.\ agg. \cite{mcmahan2018learning,bonawitz2017practical} & 0.957 \\
+TCGA-OV$^{c}$ & 0.979 & 1.000 & Ditto \cite{li2021ditto} & \textbf{0.978} & \textbf{0.967} & 1.000 & Ditto \cite{li2021ditto} & 0.974 \\
+TCGA-UCS$^{c}$ & \textbf{0.899} & 1.000 & DP-FedAvg + FT \cite{mcmahan2018learning} & 0.921 & 0.887 & 1.000 & Ditto \cite{li2021ditto} & \textbf{0.866} \\
+CPTAC-PDA$^{c}$ & 0.849 & 1.000 & DP-FedAvg + FT \cite{mcmahan2018learning} & \textbf{0.823} & 0.854 & 1.000 & Clustered DP-FedAvg \cite{ghosh2020efficient,mcmahan2018learning} & \textbf{0.823} \\
+CPTAC-CM$^{c}$ & \textbf{0.963} & 1.000 & DP-FedAvg + FT \cite{mcmahan2018learning} & 0.980 & 0.962 & 1.000 & Ditto \cite{li2021ditto} & \textbf{0.941} \\
+CPTAC-LUAD$^{c}$ & \textbf{0.895} & 1.000 & Clustered DP-FedAvg \cite{ghosh2020efficient,mcmahan2018learning} & 0.905 & 0.898 & 1.000 & Ditto \cite{li2021ditto} & \textbf{0.893} \\
+Arizona Medicare & \textbf{0.956} & 1.000 & DP-FedAvg + FT, sec.\ agg. \cite{mcmahan2018learning,bonawitz2017practical} & 0.957 & 0.948 & 1.000 & DP-FedAvg + FT, sec.\ agg. \cite{mcmahan2018learning,bonawitz2017practical} & \textbf{0.942} \\
+TCGA-LUSC & \textbf{0.952} & 1.000 & DP-FedAvg + FT, sec.\ agg. \cite{mcmahan2018learning,bonawitz2017practical} & 0.961 & \textbf{0.945} & 1.000 & DP-FedAvg + FT, sec.\ agg. \cite{mcmahan2018learning,bonawitz2017practical} & 0.946 \\
+TCGA-HNSC & 0.942 & 1.000 & DP-FedAvg + FT, sec.\ agg. \cite{mcmahan2018learning,bonawitz2017practical} & \textbf{0.931} & \textbf{0.928} & 1.000 & Clustered DP-FedAvg \cite{ghosh2020efficient,mcmahan2018learning} & 0.931 \\
+TCGA-BLCA & \textbf{0.937} & 1.000 & Ditto \cite{li2021ditto} & 0.949 & \textbf{0.901} & 1.000 & DP-FedAvg + FT, sec.\ agg. \cite{mcmahan2018learning,bonawitz2017practical} & 0.903 \\
+TCGA-STAD & \textbf{0.962} & 1.000 & DP-FedAvg + FT, sec.\ agg. \cite{mcmahan2018learning,bonawitz2017practical} & 0.963 & 0.934 & 1.000 & DP-FedAvg + FT, sec.\ agg. \cite{mcmahan2018learning,bonawitz2017practical} & \textbf{0.926} \\
 TCGA-LIHC & \textbf{0.929} & 1.000 & Ditto \cite{li2021ditto} & 0.953 & \textbf{0.919} & 1.000 & FedProx \cite{li2020federated} & 0.935 \\
 TCGA-KIRC & 1.003 & 1.000 & Ditto \cite{li2021ditto} & \textbf{1.001} & \textbf{0.973} & 1.000 & Ditto-style (one-shot) \cite{li2021ditto} & 0.984 \\
-FLamby Fed-Heart-Disease & 0.443 & 0.470 & Ditto \cite{li2021ditto} & \textbf{0.430} & 0.427 & 0.470 & DP-FedAvg-SA + FT \cite{mcmahan2018learning,bonawitz2017practical} & \textbf{0.419} \\
-FLamby Fed-TCGA-BRCA & \textbf{0.785} & 0.738 & DP-FedAvg-SA + FT \cite{mcmahan2018learning,bonawitz2017practical} & 0.747 & 0.801 & 0.738 & DP-FedAvg-SA + FT \cite{mcmahan2018learning,bonawitz2017practical} & \textbf{0.813} \\
+FLamby Fed-Heart-Disease & 0.443 & 0.470 & Ditto \cite{li2021ditto} & \textbf{0.430} & 0.427 & 0.470 & DP-FedAvg + FT, sec.\ agg. \cite{mcmahan2018learning,bonawitz2017practical} & \textbf{0.419} \\
+FLamby Fed-TCGA-BRCA & \textbf{0.785} & 0.738 & DP-FedAvg + FT, sec.\ agg. \cite{mcmahan2018learning,bonawitz2017practical} & 0.747 & 0.801 & 0.738 & DP-FedAvg + FT, sec.\ agg. \cite{mcmahan2018learning,bonawitz2017practical} & \textbf{0.813} \\
 FLamby Fed-ISIC2019 & \textbf{0.300} & 0.300 & Ditto \cite{li2021ditto} & 0.296 & \textbf{0.299} & 0.300 & Ditto \cite{li2021ditto} & 0.296 \\
 Camelyon17 & 0.893 & 0.885 & DP-FedAvg + FT \cite{mcmahan2018learning} & \textbf{0.894} & \textbf{0.896} & 0.885 & APFL \cite{deng2020adaptive} & 0.895 \\
 \bottomrule
