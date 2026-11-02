@@ -635,6 +635,28 @@ Method & $\epsilon=1$ & $\epsilon=10$ & no privacy & $\epsilon=1$ & $\epsilon=10
 
 \paragraph{Results} At $\epsilon=10$ GHB was above a hospital alone in every repetition and above every realistic literature method, by 0.0015 to 0.0021 over the four closest (one to two paired standard errors); at $\epsilon=1$ it was above a hospital alone and slightly below DP-FedAvg with fine-tuning; without privacy it was above a hospital alone and the pooled model; its log-loss at $\epsilon=10$ was lower than local. Over the local model with the evidence-weighted prior, GHB gained 0.0036 of balanced accuracy at $\epsilon=10$, in all ten repetitions; Ditto (realistic) matched its log-loss.
 
+\section{Re-identification Risk}\label{sec:reid}
+
+\paragraph{Bound} GHB's two releases are Gaussian mechanisms with half of a zero-concentrated budget $\rho$ each, so together they are $\mu$-Gaussian differentially private with $\mu=\sqrt{2\rho}$ \cite{dong2022gaussian}: for any test of whether a given patient's record was used (against any replacement record), the true-positive rate at false-positive rate $\alpha$ is at most $\Phi(\Phi^{-1}(\alpha)+\mu)$, and the advantage, true-positive minus false-positive rate, at most $2\Phi(\mu/2)-1$. With $\delta=10^{-5}$, $\mu=\SimReidOneMu$ at $\epsilon=1$ and $\mu=\SimReidTenMu$ at $\epsilon=10$; the largest true-positive rate at a 10\% false-positive rate is \SimReidOneTprTen{} and \SimReidTenTprTen.
+
+\paragraph{Realized risk} For each of the \SimReidPatients{} patients of the 17 TCGA networks, the attainable $\mu_i$ is the norm of the change that replacing the patient's record by another patient's of the same network makes to the two sums, each divided by its noise standard deviation, maximized over the replacements; the patient's attainable advantage is $2\Phi(\mu_i/2)-1$ (\texttt{simulations/reid\_risk.py}).
+
+\paragraph{Attack} A loss-threshold membership-inference attack \cite{shokri2017membership}: members are the training patients of a fold, non-members the held-out patients of the same hospitals; the attacker scores each patient by minus its log-loss under the released model, and the AUC of that score measures what it learns (0.5: nothing). Five repetitions, one random fold each, all 17 networks. Each hospital's own model is fitted with the default prior; the pooled network model by maximum a posteriori on all training patients; GHB's released network estimate is the one Newton step from its two releases (Section~\ref{M-sec:logit}). For each hospital's own model the AUC pools the members and non-members of all hospitals of a size band, since a hospital's held-out fold has one to three patients.
+
+\begin{table}[ht]
+\centering
+\caption{Membership-inference attack on the 17 TCGA networks: AUC of telling training from held-out patients by their loss under each released model (0.5: no information).}
+\label{tab:reid-attack}
+\scriptsize
+\begin{tabular}{@{}lr@{}}
+\toprule
+Released model & AUC\\
+\midrule
+\csname @@input\endcsname../../Collectively_Big_Locally_Small/supplement/results/tables/s_reid_attack.tex 
+\bottomrule
+\end{tabular}
+\end{table}
+
 \section{Real Data: Eight Smaller Networks}\label{sec:eight}
 
 These tables give every network's result behind Table~\ref{M-tab:real-final} of the paper, in the leave-one-network-out arm: every literature method uses the configuration with the lowest mean error over the other networks. Medicare is Arizona Medicare (43 hospitals); the TCGA networks use the five-coefficient head of the paper and are fitted one at a time. Values are held-out log-loss relative to local estimation; bold marks the lowest per network among methods that use other hospitals.
