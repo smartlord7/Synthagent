@@ -263,6 +263,9 @@ ABLATION_ARMS: dict[str, dict] = {
     "full_logged":        {},
     # Reference configuration with the validator also enforcing inferred ranges/domains.
     "boundaries":         {"enforce_boundaries": True},
+    # Structured-output baseline: direct prompting with schema-constrained decoding
+    # (OpenAI response_format json_schema, strict), no repair, correction or top-up.
+    "structured_output":  {"structured_output": True},
 }
 
 # Special arms that don't fit the simple "config override on the same LLM" mold and get

@@ -170,6 +170,39 @@ def _aggregate_overall_ml(results: list) -> dict:
     return overall_ml
 
 
+def _structured_output_format(df_real: pd.DataFrame) -> "tuple[dict, dict]":
+    """
+    JSON schema for the structured-output baseline: an object {"records": [...]} whose
+    items have exactly the real columns, numerical columns as numbers and other columns
+    restricted to their observed values. Property names are sanitized because some
+    providers only accept [A-Za-z0-9_-]; the second return value maps them back.
+    """
+    import re
+    props, back, used = {}, {}, set()
+    for col in df_real.columns:
+        key = re.sub(r"[^A-Za-z0-9_-]", "_", str(col)) or "col"
+        base, i = key, 1
+        while key in used:
+            i += 1
+            key = f"{base}_{i}"
+        used.add(key)
+        back[key] = col
+        if pd.api.types.is_numeric_dtype(df_real[col]):
+            props[key] = {"type": "number"}
+        else:
+            values = sorted(df_real[col].dropna().astype(str).unique().tolist())
+            props[key] = {"type": "string", "enum": values} if 0 < len(values) <= 500 else {"type": "string"}
+    schema = {
+        "type": "object",
+        "properties": {"records": {"type": "array", "items": {
+            "type": "object", "properties": props,
+            "required": list(props), "additionalProperties": False}}},
+        "required": ["records"], "additionalProperties": False,
+    }
+    fmt = {"type": "json_schema", "json_schema": {"name": "synthetic_records", "strict": True, "schema": schema}}
+    return fmt, back
+
+
 def _align_raw_rows(rows: list, df_real: pd.DataFrame) -> "tuple[list, int]":
     """
     Evaluation-side alignment for the no-controller arm: keeps only columns whose name
@@ -210,7 +243,9 @@ def run_single_dataset_benchmark(args):
     enforce_rules = config.get("enforce_rules", True)
     enforce_boundaries = config.get("enforce_boundaries", False)
     inject_inferred_rules = bool(config.get("inject_inferred_rules", True))
-    raw_prompting = bool(config.get("raw_prompting", False))
+    structured_output = bool(config.get("structured_output", False))
+    # The structured-output baseline is the no-controller path with schema-constrained decoding.
+    raw_prompting = bool(config.get("raw_prompting", False)) or structured_output
     apply_post_processing = bool(config.get("apply_post_processing", True)) and not raw_prompting
 
     progress_dict = config.get("_progress_dict")
@@ -327,12 +362,17 @@ def run_single_dataset_benchmark(args):
             # Rule hierarchy + audit are computed once per dataset (see above the fold loop)
             # and reused unchanged across every fold.
             all_fields = list(df_orig_all.columns)
+            response_format, key_map = _structured_output_format(df_orig_all) if structured_output else (None, {})
             gen_start_time = time.time()
             result_bundle = generate_bulk_data(
                 [], context_dict, all_fields, all_fields, algorithm, instructions, temperature,
                 num_empty=num_empty, chunk_size=chunk_size,
-                rules_metadata=rules_hierarchy, enforce_rules=True, raw_mode=raw_prompting
+                rules_metadata=rules_hierarchy, enforce_rules=True, raw_mode=raw_prompting,
+                response_format=response_format
             )
+            if result_bundle and key_map:
+                result_bundle["data"] = [{key_map.get(k, k): v for k, v in row.items()}
+                                         for row in result_bundle["data"]]
             generation_seconds = time.time() - gen_start_time
 
             if result_bundle:
