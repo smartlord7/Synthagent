@@ -266,7 +266,7 @@ SHORT_ARM = {
     "no_context_join": "No context join",
     "strategy_dense": "Dense context",
     "strategy_diverse": "Diverse context",
-    "ponder_strategy": "LLM-set hyperparams",
+    "ponder_strategy": "LLM-chosen settings",
     "smote": "SMOTE",
     "ctgan": "CTGAN",
     "tvae": "TVAE",
@@ -493,7 +493,7 @@ def plot_frontier(df: pd.DataFrame):
                          textcoords="offset points", ha="right" if arm in left else "left",
                          va="center", fontsize=5.8, color=arm_color(arm))
     r = p.loc["ponder_strategy"]
-    axes[1].annotate("LLM-set\nhyperparams", (r.tokens / 1000, r.F1), xytext=(0, 5),
+    axes[1].annotate("LLM-chosen\nsettings", (r.tokens / 1000, r.F1), xytext=(0, 5),
                      textcoords="offset points", ha="center", va="bottom", fontsize=5.8,
                      color=arm_color("ponder_strategy"))
     r = p.loc["structured_output"]
@@ -505,10 +505,10 @@ def plot_frontier(df: pd.DataFrame):
     axes[0].set(xlabel="Generated-only JSD (0–100)", ylabel="Mean ΔF1 (pp)")
     axes[1].set(xlabel="Tokens per repetition (thousands)")
     handles = [plt.Line2D([], [], marker="o", ls="", color=c, ms=4, label=l)
-               for c, l in ((C_REF, "Reference"), (C_LLM, "Control variants"), (C_BACK, "Backends"),
+               for c, l in ((C_REF, "Reference"), (C_LLM, "Control-layer variants"), (C_BACK, "LLM variants"),
                                 (C_NOCTL, "No control layer"))]
-    fig.legend(handles=handles, loc="upper center", ncol=4, frameon=False,
-               bbox_to_anchor=(.55, 1.04), handletextpad=.05, columnspacing=.5)
+    fig.legend(handles=handles, loc="upper center", ncol=2, frameon=False,
+               bbox_to_anchor=(.55, 1.12), handletextpad=.05, columnspacing=1.0)
     fig.subplots_adjust(left=.14, right=.99, top=.9, bottom=.18)
     save(fig, "quality_cost_frontier")
 
