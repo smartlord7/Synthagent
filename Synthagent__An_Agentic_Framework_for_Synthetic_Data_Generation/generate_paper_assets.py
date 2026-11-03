@@ -61,16 +61,21 @@ ARM_LABELS = {
     "backend_gpt_4_1_mini": "GPT-4.1 mini",
     "backend_gpt_4o": "GPT-4o",
     "backend_gpt_4_1": "GPT-4.1",
+    "full_logged": "Logged rerun",
+    "boundaries": "Range enforcement",
+    "structured_output": "Structured outputs",
 }
 ARCH_ARMS = [
     "full", "no_rule_injection", "no_post_processing", "no_context_join",
-    "strategy_dense", "strategy_diverse", "ponder_strategy", "smote",
+    "strategy_dense", "strategy_diverse", "ponder_strategy", "full_logged", "boundaries", "smote",
 ]
 BACKEND_ARMS = ["full", "backend_gpt_4_1_mini", "backend_gpt_4o", "backend_gpt_4_1"]
 # Non-LLM generators against the reference and the strongest backend.
 BASELINE_ARMS = ["full", "backend_gpt_4_1", "smote", "ctgan", "tvae"]
 # Reported only once all six datasets and ten repetitions are complete.
 OPTIONAL_ARMS = ["raw_prompting"]
+# The same LLM without the control layer, with free and schema-constrained decoding.
+PROMPTING_ARMS = ["full", "raw_prompting", "structured_output"]
 
 
 def completed_arms(summary: pd.DataFrame) -> list[str]:
@@ -265,13 +270,18 @@ SHORT_ARM = {
     "smote": "SMOTE",
     "ctgan": "CTGAN",
     "tvae": "TVAE",
-    "raw_prompting": "Raw prompting",
+    "raw_prompting": "Direct prompting",
+    "structured_output": "Structured outputs",
+    "full_logged": "Logged rerun",
+    "boundaries": "Range enforcement",
     "backend_gpt_4_1_mini": "GPT-4.1 mini",
     "backend_gpt_4o": "GPT-4o",
     "backend_gpt_4_1": "GPT-4.1",
 }
 NON_LLM = {"smote", "ctgan", "tvae"}
 C_REF, C_LLM, C_BASE, C_BACK = "#1f4e79", "#7fb3d5", "#e67e22", "#2e8b57"
+C_NOCTL = "#8e44ad"
+NO_CONTROL = {"raw_prompting", "structured_output"}
 
 
 def print_style():
@@ -293,6 +303,8 @@ def arm_color(arm: str) -> str:
         return C_BASE
     if arm.startswith("backend_"):
         return C_BACK
+    if arm in NO_CONTROL:
+        return C_NOCTL
     return C_LLM
 
 
@@ -432,7 +444,7 @@ def plot_configuration_scorecard(df: pd.DataFrame):
 def plot_ranks(rank_results):
     acc, f1 = rank_results["accuracy"], rank_results["f1"]
     order = ((acc + f1) / 2).sort_values().index[::-1]
-    fig, ax = plt.subplots(figsize=(COL_W, 1.95))
+    fig, ax = plt.subplots(figsize=(COL_W, 2.35))
     y = np.arange(len(order))
     ax.hlines(y, [min(acc[a], f1[a]) for a in order], [max(acc[a], f1[a]) for a in order],
               color="0.75", lw=1.2, zorder=1)
@@ -455,7 +467,7 @@ def plot_ranks(rank_results):
 
 def plot_frontier(df: pd.DataFrame):
     """Fidelity, utility and token cost of every complete LLM arm; baselines noted."""
-    llm_arms = [a for a in ARCH_ARMS + BACKEND_ARMS[1:] if a not in NON_LLM]
+    llm_arms = [a for a in ARCH_ARMS + BACKEND_ARMS[1:] + PROMPTING_ARMS[1:] if a not in NON_LLM]
     rows = []
     for arm in llm_arms + [a for a in BASELINE_ARMS if a in NON_LLM]:
         g = df[df.arm == arm]
@@ -473,7 +485,8 @@ def plot_frontier(df: pd.DataFrame):
         ax.axhline(0, color="0.4", lw=.6)
     # Direct labels for the points that matter; the rest are the noise-floor cloud.
     left = {"backend_gpt_4_1"}
-    for arm in ("full", "backend_gpt_4_1", "backend_gpt_4_1_mini", "backend_gpt_4o", "ponder_strategy"):
+    for arm in ("full", "backend_gpt_4_1", "backend_gpt_4_1_mini", "backend_gpt_4o", "ponder_strategy",
+                "structured_output"):
         r = p.loc[arm]
         name = SHORT_ARM[arm].replace(" (ref.)", "")
         axes[0].annotate(name, (r.JSD, r.F1), xytext=(-3 if arm in left else 3, 1),
@@ -483,14 +496,19 @@ def plot_frontier(df: pd.DataFrame):
     axes[1].annotate("LLM-set\nhyperparams", (r.tokens / 1000, r.F1), xytext=(0, 5),
                      textcoords="offset points", ha="center", va="bottom", fontsize=5.8,
                      color=arm_color("ponder_strategy"))
+    r = p.loc["structured_output"]
+    axes[1].annotate("Structured\noutputs", (r.tokens / 1000, r.F1), xytext=(0, 5),
+                     textcoords="offset points", ha="center", va="bottom", fontsize=5.8,
+                     color=arm_color("structured_output"))
     for ax in axes:
         ax.margins(x=.12, y=.12)
     axes[0].set(xlabel="Generated-only JSD (0–100)", ylabel="Mean ΔF1 (pp)")
     axes[1].set(xlabel="Tokens per repetition (thousands)")
     handles = [plt.Line2D([], [], marker="o", ls="", color=c, ms=4, label=l)
-               for c, l in ((C_REF, "Reference"), (C_LLM, "Control variants"), (C_BACK, "Backends"))]
-    fig.legend(handles=handles, loc="upper center", ncol=3, frameon=False,
-               bbox_to_anchor=(.55, 1.04), handletextpad=.1, columnspacing=1.0)
+               for c, l in ((C_REF, "Reference"), (C_LLM, "Control variants"), (C_BACK, "Backends"),
+                                (C_NOCTL, "No control layer"))]
+    fig.legend(handles=handles, loc="upper center", ncol=4, frameon=False,
+               bbox_to_anchor=(.55, 1.04), handletextpad=.05, columnspacing=.5)
     fig.subplots_adjust(left=.14, right=.99, top=.9, bottom=.18)
     save(fig, "quality_cost_frontier")
 
@@ -767,7 +785,7 @@ def main():
     print_style()
     summary = pd.read_csv(RUN / "ablation_summary.csv")
     valid = completed_arms(summary)
-    expected = set(ARCH_ARMS + BACKEND_ARMS + BASELINE_ARMS)
+    expected = set(ARCH_ARMS + BACKEND_ARMS + BASELINE_ARMS + PROMPTING_ARMS)
     missing = expected - set(valid)
     if missing:
         raise RuntimeError(f"Required complete arms missing: {sorted(missing)}")
@@ -789,7 +807,7 @@ def main():
     architecture_ranks = {}
     rank_rows = []
     for family, arms in (("architecture", ARCH_ARMS), ("backend", BACKEND_ARMS),
-                         ("baseline", BASELINE_ARMS)):
+                         ("baseline", BASELINE_ARMS), ("prompting", PROMPTING_ARMS)):
         for metric in ("accuracy", "f1"):
             ranks, omnibus, comparisons = rank_and_test(summary, arms, metric, family)
             omnibus_rows.append(omnibus)
