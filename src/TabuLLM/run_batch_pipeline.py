@@ -210,7 +210,7 @@ PIPELINE: dict = {
     "endpoint_url": os.getenv("LOCAL_LLM_URL",       "http://127.0.0.1:1234/v1/chat/completions"),
     # 'openai' provider only -- required unless OPENAI_API_KEY is already set in the
     # environment (services.llm_client.OpenAIProvider falls back to that env var too).
-    "api_key":      os.getenv("ANTHROPIC_API_KEY") if _provider == "anthropic" else os.getenv("OPENAI_API_KEY"),
+    "api_key":      (os.getenv("TABULLM_ANTHROPIC_API_KEY") or os.getenv("ANTHROPIC_API_KEY")) if _provider == "anthropic" else os.getenv("OPENAI_API_KEY"),
     "folds":        int(os.getenv("TABULLM_FOLDS",   "10")),
     "strategy":     os.getenv("TABULLM_STRATEGY",    "random"),   # random | dense | diverse
     "na_strategy":  os.getenv("TABULLM_NA",          "impute"),   # impute | drop
