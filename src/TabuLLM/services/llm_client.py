@@ -1215,6 +1215,107 @@ class GeminiProvider(BaseLLMProvider):
 
 
 # ==========================================
+class AnthropicProvider(LocalOpenAIProvider):
+    """Provider for Anthropic's Claude models through the official Anthropic SDK.
+
+    Reuses LocalOpenAIProvider's chunking, budgeting and repair logic by translating each
+    request to the Messages API and the response back to the Chat Completions shape that
+    logic reads (choices[0].message.content and usage.prompt/completion/total_tokens).
+    Settings, applied identically to every Claude model so that only the model differs:
+      - no temperature: the 5.5 models reject non-default sampling parameters, so it is
+        left at each model's default for all four;
+      - thinking off: omitted on Haiku 4.5 / Sonnet 4.6 (no thinking by default),
+        {"type": "disabled"} on Haiku 5.5 and {"type": "between_tools"} on Sonnet 5.5
+        (which accepts no "disabled"); with no tools, the latter also means no thinking.
+    The base URL is fixed to the public API (ANTHROPIC_BASE_URL may point elsewhere in
+    some environments) unless TABULLM_ANTHROPIC_BASE_URL overrides it.
+    """
+
+    _KNOWN_CONTEXTS = {
+        "claude-haiku-4-5": 200000, "claude-sonnet-4-6": 1000000,
+        "claude-haiku-5-5": 1000000, "claude-sonnet-5-5": 1000000,
+    }
+    _MAX_TOKENS = 16000
+
+    def __init__(self, model_name="claude-haiku-5-5", api_key=None):
+        super().__init__(endpoint_url="https://api.anthropic.com/v1/messages", model_name=model_name)
+        self.api_key = api_key or os.getenv("ANTHROPIC_API_KEY")
+        self._client = None
+
+    def _get_client(self):
+        if self._client is None:
+            import anthropic
+            self._client = anthropic.Anthropic(
+                api_key=self.api_key,
+                base_url=os.getenv("TABULLM_ANTHROPIC_BASE_URL", "https://api.anthropic.com"),
+                timeout=float(self.timeout),
+                max_retries=self._max_retries(),
+            )
+        return self._client
+
+    @staticmethod
+    def _thinking_for(model: str) -> Optional[dict]:
+        if model.startswith("claude-sonnet-5-5"):
+            return {"type": "between_tools"}
+        if model.startswith(("claude-haiku-5-5", "claude-opus-5", "claude-sonnet-5")):
+            return {"type": "disabled"}
+        return None
+
+    @staticmethod
+    def _to_anthropic_messages(messages: list) -> "tuple[str, list]":
+        """System messages go to the top-level system prompt; the rest keep their order."""
+        system_parts, out = [], []
+        for m in messages:
+            if m.get("role") == "system":
+                system_parts.append(str(m.get("content", "")))
+            else:
+                out.append({"role": m["role"], "content": str(m.get("content", ""))})
+        return "\n\n".join(system_parts), out
+
+    def _call_local_llm(self, messages, core_model=None, temperature=0.7, json_mode=False, response_format=None):
+        import anthropic
+        model = core_model or self.default_model
+        system, msgs = self._to_anthropic_messages(messages)
+        kwargs = {"model": model, "max_tokens": self._MAX_TOKENS, "messages": msgs}
+        if system:
+            kwargs["system"] = system
+        thinking = self._thinking_for(model)
+        if thinking:
+            kwargs["thinking"] = thinking
+        if response_format is not None:
+            schema = response_format.get("json_schema", {}).get("schema", response_format.get("schema"))
+            kwargs["output_config"] = {"format": {"type": "json_schema", "schema": schema}}
+
+        logger.info(f"--- [SERVICE] CALLING ANTHROPIC: {model} (Timeout: {self.timeout}s) ---")
+        try:
+            resp = self._get_client().messages.create(**kwargs)
+        except anthropic.APIStatusError as e:
+            # Same contract as the HTTP providers: callers handle 400/422 themselves.
+            raise urllib.error.HTTPError(self.endpoint_url, e.status_code, str(e), None, None) from e
+        except anthropic.APIConnectionError as e:
+            raise ConnectionError(str(e)) from e
+
+        text = "".join(b.text for b in resp.content if getattr(b, "type", None) == "text")
+        if resp.stop_reason == "refusal":
+            logger.warning(f"Anthropic refusal on {model}: {getattr(resp, 'stop_details', None)}")
+        u = resp.usage
+        prompt_tok = (u.input_tokens or 0) + (getattr(u, "cache_creation_input_tokens", 0) or 0) \
+            + (getattr(u, "cache_read_input_tokens", 0) or 0)
+        completion_tok = u.output_tokens or 0
+        return {
+            "choices": [{"message": {"role": "assistant", "content": text},
+                         "finish_reason": resp.stop_reason}],
+            "usage": {"prompt_tokens": prompt_tok, "completion_tokens": completion_tok,
+                      "total_tokens": prompt_tok + completion_tok},
+        }
+
+    def get_available_models(self):
+        return [{"id": mid, "max_context": ctx} for mid, ctx in self._KNOWN_CONTEXTS.items()]
+
+    def can_handle(self, model_id: Optional[str]) -> bool:
+        return bool(model_id) and model_id.lower().startswith("claude-")
+
+
 # MULTI-PROVIDER REGISTRY CONFIGURATION
 # ==========================================
 
@@ -1223,6 +1324,7 @@ class LLMRegistry:
         self.providers = [
             GeminiProvider(),
             OpenAIProvider(),
+            AnthropicProvider(),
             LocalOpenAIProvider() # Fallback
         ]
 

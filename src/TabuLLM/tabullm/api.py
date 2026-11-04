@@ -7,7 +7,7 @@ from typing import Callable, Optional
 # Ensure the root services and utils are accessible to the library
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from services.llm_client import BaseLLMProvider, LocalOpenAIProvider, GeminiProvider, OpenAIProvider
+from services.llm_client import BaseLLMProvider, LocalOpenAIProvider, GeminiProvider, OpenAIProvider, AnthropicProvider
 from services.pipeline_manager import PipelineManager
 from services.report_generator import generate_benchmark_pdf
 from services.auditor import DatasetAuditor
@@ -53,6 +53,8 @@ class TabuLLM:
             self.llm = GeminiProvider(model_name=model)
         elif provider == "openai":
             self.llm = OpenAIProvider(model_name=model, api_key=api_key, endpoint_url=endpoint_url)
+        elif provider == "anthropic":
+            self.llm = AnthropicProvider(model_name=model, api_key=api_key)
         else:
             raise ValueError(f"Unsupported provider: {provider}")
 

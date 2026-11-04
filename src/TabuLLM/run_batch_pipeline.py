@@ -198,6 +198,7 @@ _DEFAULT_MODEL_BY_PROVIDER = {
     "local":  "google/gemma-4-e2b",
     "gemini": "gemini-2.0-flash",
     "openai": "gpt-4o-mini",
+    "anthropic": "claude-haiku-5-5",
 }
 
 _provider = os.getenv("TABULLM_PROVIDER", "local")
@@ -209,7 +210,7 @@ PIPELINE: dict = {
     "endpoint_url": os.getenv("LOCAL_LLM_URL",       "http://127.0.0.1:1234/v1/chat/completions"),
     # 'openai' provider only -- required unless OPENAI_API_KEY is already set in the
     # environment (services.llm_client.OpenAIProvider falls back to that env var too).
-    "api_key":      os.getenv("OPENAI_API_KEY"),
+    "api_key":      os.getenv("ANTHROPIC_API_KEY") if _provider == "anthropic" else os.getenv("OPENAI_API_KEY"),
     "folds":        int(os.getenv("TABULLM_FOLDS",   "10")),
     "strategy":     os.getenv("TABULLM_STRATEGY",    "random"),   # random | dense | diverse
     "na_strategy":  os.getenv("TABULLM_NA",          "impute"),   # impute | drop
@@ -230,7 +231,7 @@ def _make_lib(model_id: str) -> TabuLLM:
         provider=PIPELINE["provider"],
         model=model_id,
         endpoint_url=PIPELINE["endpoint_url"] if PIPELINE["provider"] == "local" else None,
-        api_key=PIPELINE["api_key"] if PIPELINE["provider"] == "openai" else None,
+        api_key=PIPELINE["api_key"] if PIPELINE["provider"] in ("openai", "anthropic") else None,
     )
 
 
@@ -341,8 +342,9 @@ def _discover_model_sweep_arms(exclude_model_id: str) -> "dict[str, str]":
             continue
         sweep_arms[_slugify_model_id(model_id)] = model_id
 
-    if PIPELINE["provider"] == "openai":
-        extra_models = os.getenv("TABULLM_OPENAI_SWEEP_MODELS", "")
+    if PIPELINE["provider"] in ("openai", "anthropic"):
+        sweep_var = "TABULLM_ANTHROPIC_SWEEP_MODELS" if PIPELINE["provider"] == "anthropic" else "TABULLM_OPENAI_SWEEP_MODELS"
+        extra_models = os.getenv(sweep_var, "")
         for model_id in (m.strip() for m in extra_models.split(",")):
             if model_id and model_id != exclude_model_id:
                 sweep_arms[_slugify_model_id(model_id)] = model_id
