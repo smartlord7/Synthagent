@@ -64,6 +64,11 @@ ARM_LABELS = {
     "full_logged": "Logged rerun",
     "boundaries": "Range enforcement",
     "structured_output": "Structured outputs",
+    "backend_claude_haiku_4_5": "Claude Haiku 4.5",
+    "backend_claude_sonnet_4_6": "Claude Sonnet 4.6",
+    "backend_claude_sonnet_5_5": "Claude Sonnet 5.5",
+    "raw_prompting_claude_haiku_5_5": "Direct prompting (Claude Haiku 5.5)",
+    "structured_output_claude_haiku_5_5": "Structured outputs (Claude Haiku 5.5)",
 }
 ARCH_ARMS = [
     "full", "no_rule_injection", "no_post_processing", "no_context_join",
@@ -76,6 +81,10 @@ BASELINE_ARMS = ["full", "backend_gpt_4_1", "smote", "ctgan", "tvae"]
 OPTIONAL_ARMS = ["raw_prompting"]
 # The same LLM without the control layer, with free and schema-constrained decoding.
 PROMPTING_ARMS = ["full", "raw_prompting", "structured_output"]
+# Second provider, reference configuration only (Claude Haiku 5.5 refused most requests
+# under the control layer and completed one dataset, so it is reported separately).
+CLAUDE_ARMS = ["backend_claude_haiku_4_5", "backend_claude_sonnet_4_6", "backend_claude_sonnet_5_5"]
+CLAUDE_PROMPTING_ARMS = ["raw_prompting_claude_haiku_5_5", "structured_output_claude_haiku_5_5"]
 
 
 def completed_arms(summary: pd.DataFrame) -> list[str]:
@@ -277,6 +286,9 @@ SHORT_ARM = {
     "backend_gpt_4_1_mini": "GPT-4.1 mini",
     "backend_gpt_4o": "GPT-4o",
     "backend_gpt_4_1": "GPT-4.1",
+    "backend_claude_haiku_4_5": "Claude Haiku 4.5",
+    "backend_claude_sonnet_4_6": "Claude Sonnet 4.6",
+    "backend_claude_sonnet_5_5": "Claude Sonnet 5.5",
 }
 NON_LLM = {"smote", "ctgan", "tvae"}
 C_REF, C_LLM, C_BASE, C_BACK = "#1f4e79", "#7fb3d5", "#e67e22", "#2e8b57"
@@ -785,7 +797,7 @@ def main():
     print_style()
     summary = pd.read_csv(RUN / "ablation_summary.csv")
     valid = completed_arms(summary)
-    expected = set(ARCH_ARMS + BACKEND_ARMS + BASELINE_ARMS + PROMPTING_ARMS)
+    expected = set(ARCH_ARMS + BACKEND_ARMS + BASELINE_ARMS + PROMPTING_ARMS + CLAUDE_ARMS + CLAUDE_PROMPTING_ARMS)
     missing = expected - set(valid)
     if missing:
         raise RuntimeError(f"Required complete arms missing: {sorted(missing)}")
@@ -807,7 +819,8 @@ def main():
     architecture_ranks = {}
     rank_rows = []
     for family, arms in (("architecture", ARCH_ARMS), ("backend", BACKEND_ARMS),
-                         ("baseline", BASELINE_ARMS), ("prompting", PROMPTING_ARMS)):
+                         ("baseline", BASELINE_ARMS), ("prompting", PROMPTING_ARMS),
+                         ("claude", CLAUDE_ARMS), ("all_llms", BACKEND_ARMS + CLAUDE_ARMS)):
         for metric in ("accuracy", "f1"):
             ranks, omnibus, comparisons = rank_and_test(summary, arms, metric, family)
             omnibus_rows.append(omnibus)

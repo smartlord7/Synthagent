@@ -42,7 +42,7 @@
 | 38 | Federado | Preparar o leitor bem antes. | Introduzido no 1.º parágrafo (cada instalação aprende com os seus dados), no 4.º (cada instalação corre o sistema localmente) e nas contribuições (padrão de implementação); a Secção III-E remete para a introdução. |
 | 39 | "tudo é R" | Confuso. | Rótulos R removidos de todo o artigo. |
 | 40 | "We use healthcare data because…" | Era na intro; aqui só "escolhemos X datasets públicos". | Motivação na introdução; aqui fica "Six public classification datasets were selected". |
-| 41 | 14 configurações | O que são? O que é "completed"? | Nova Tabela V com as configurações por grupo e finalidade (agora 17, com os structured outputs, a reexecução com registo e o range enforcement); "completed" definido como os seis datasets × dez repetições. |
+| 41 | 14 configurações | O que são? O que é "completed"? | Nova Tabela V com as configurações por grupo e finalidade (agora 22, com os structured outputs, a reexecução com registo, o range enforcement e os modelos Claude); "completed" definido como os seis datasets × dez repetições. |
 | 42 | "reference Synthagent" | O que é esta baseline? | Definida: SYNTHAGENT com as definições por omissão e o GPT-4o mini; todas as outras configurações diferem dela num único aspeto. |
 | 43 | Leitura dos resultados | Muito difícil de ler. | Cada RQ abre com a resposta numa frase; o texto foi reduzido para cerca de metade e os números ficam nas tabelas. |
 | 44 | Agradecimentos: uso de LLMs | Adicionar texto. | Adicionada uma secção curta de reconhecimento do uso de IA a seguir aos agradecimentos. |
@@ -56,3 +56,4 @@
 | Reexecução da referência com registo por pedido: quinta execução do mesmo pipeline; o noise floor de utilidade passa a 0,7 pp | Tabela VII, Secção IV |
 | Range enforcement (valores cortados aos intervalos observados): JSD 0,9 pontos mais baixo, sem ganho de utilidade | Tabela VII, Secção V-A |
 | Testes de Friedman refeitos com as novas configurações | Secção V-A, Figuras 4 e 7 |
+| Segundo fornecedor (Anthropic): Claude Haiku 4.5, Sonnet 4.6 e Sonnet 5.5 na configuração de referência, todos com os datasets completos; Claude Sonnet 4.6 dá a maior fidelidade (79,07) e o maior ganho de F1 (+2,39 pp). Prompting direto e structured outputs repetidos com Claude Haiku 5.5 (67,1% e 82,9% dos registos). Claude Haiku 5.5 recusou imitar os registos de doentes sob a control layer (39 de 60 repetições) e é reportado à parte | Resumo, introdução, Tabelas V, X e XII, Secções V-A e V-D, limitações, conclusão |

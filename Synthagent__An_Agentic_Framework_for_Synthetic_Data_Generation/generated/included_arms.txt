@@ -1,3 +1,6 @@
+backend_claude_haiku_4_5
+backend_claude_sonnet_4_6
+backend_claude_sonnet_5_5
 backend_gpt_4_1
 backend_gpt_4_1_mini
 backend_gpt_4o
@@ -10,8 +13,10 @@ no_post_processing
 no_rule_injection
 ponder_strategy
 raw_prompting
+raw_prompting_claude_haiku_5_5
 smote
 strategy_dense
 strategy_diverse
 structured_output
+structured_output_claude_haiku_5_5
 tvae
