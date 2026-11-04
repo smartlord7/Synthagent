@@ -256,6 +256,55 @@ def rank_and_test(df: pd.DataFrame, arms: list[str], metric: str, family: str):
     return avg_ranks, omnibus, comparisons
 
 
+def division_level_tests(arms: list[str], family: str):
+    """Sensitivity analysis: the same tests with every division as a block.
+
+    All arms share the divisions (random_state = 42 + division), so the 60
+    dataset-division pairs are matched.  Divisions of one dataset overlap in
+    their records, so these blocks are not independent and the dataset-level
+    tests remain the primary analysis.  XGBoost on liver disease is masked as
+    in mask_unrun_cells.
+    """
+    omnibus, comparisons = [], []
+    for metric in ("accuracy", "f1"):
+        aug, delta = {}, {}
+        for arm in arms:
+            a_vals, d_vals = [], []
+            for dataset in DATASET_LABELS:
+                fold = pd.read_csv(RUN / arm / f"{Path(dataset).stem}_per_fold.csv")
+                models = [m for m in MODELS
+                          if not (m == "xgb" and dataset == "indian_liver_patient_dataset.csv")]
+                a = fold[[f"{m}_{metric}_augmented" for m in models]].mean(axis=1)
+                r = fold[[f"{m}_{metric}_original" for m in models]].mean(axis=1)
+                a_vals.extend(a)
+                d_vals.extend(a - r)
+            aug[arm], delta[arm] = a_vals, d_vals
+        aug, delta = pd.DataFrame(aug).dropna(), pd.DataFrame(delta)
+        delta = delta.loc[aug.index]
+        ranks = np.vstack([rankdata(-row, method="average") for row in aug.to_numpy()])
+        avg = pd.Series(ranks.mean(axis=0), index=arms).sort_values()
+        stat, p = friedmanchisquare(*(aug[a].to_numpy() for a in arms))
+        best = avg.index[0]
+        omnibus.append({"family": family, "metric": metric, "n_blocks": len(aug),
+                        "n_arms": len(arms), "friedman_chi2": float(stat),
+                        "friedman_p": float(p), "best": best})
+        rows, raw = [], []
+        for arm in avg.index[1:]:
+            diff = aug[best] - aug[arm]
+            w, pr = wilcoxon(diff, alternative="two-sided", zero_method="wilcox", method="auto")
+            raw.append(float(pr))
+            rows.append({"family": family, "metric": metric, "best": best, "comparison": arm,
+                         "best_mean_delta_pp": 100 * delta[best].mean(),
+                         "comparison_mean_delta_pp": 100 * delta[arm].mean(),
+                         "mean_difference_pp": 100 * diff.mean(),
+                         "median_difference_pp": 100 * diff.median(),
+                         "average_rank": float(avg[arm]), "wilcoxon_w": float(w), "p_raw": float(pr)})
+        for row, ph in zip(rows, holm_adjust(raw)):
+            row["p_holm"] = ph
+        comparisons.extend(rows)
+    return omnibus, comparisons
+
+
 # ---------------------------------------------------------------- print styling
 # Figures are drawn at their printed size (IEEE column 3.5 in, text 7.16 in) and
 # included at 100% scale, so the font sizes below are the sizes on paper.
@@ -830,6 +879,13 @@ def main():
             if family == "architecture":
                 architecture_ranks[metric] = ranks
     pd.DataFrame(omnibus_rows).to_csv(OUT / "friedman_tests.csv", index=False)
+    div_omnibus, div_comparisons = [], []
+    for family, arms in (("backend", BACKEND_ARMS), ("all_llms", BACKEND_ARMS + CLAUDE_ARMS)):
+        o, c = division_level_tests(arms, family)
+        div_omnibus.extend(o)
+        div_comparisons.extend(c)
+    pd.DataFrame(div_omnibus).to_csv(OUT / "friedman_tests_divisions.csv", index=False)
+    pd.DataFrame(div_comparisons).to_csv(OUT / "posthoc_wilcoxon_holm_divisions.csv", index=False)
     pd.DataFrame(comparison_rows).to_csv(OUT / "posthoc_wilcoxon_holm.csv", index=False)
     pd.DataFrame(rank_rows).to_csv(OUT / "average_ranks.csv", index=False)
 
