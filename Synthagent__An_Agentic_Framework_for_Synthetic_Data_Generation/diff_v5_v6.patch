@@ -1,8 +1,8 @@
 diff --git a/tmp/claude-0/-home-user-TabuLLM/177710a6-83c7-584b-8f2f-a9a7012a7684/scratchpad/v5.tex b/main.tex
-index 291f554..c223760 100644
+index 291f554..d06d939 100644
 --- a/tmp/claude-0/-home-user-TabuLLM/177710a6-83c7-584b-8f2f-a9a7012a7684/scratchpad/v5.tex
 +++ b/main.tex
-@@ -44,7 +44,7 @@
+@@ -44,14 +44,15 @@
  
  \begin{document}
  
@@ -11,7 +11,16 @@ index 291f554..c223760 100644
  
  % ORCIDs are entered in the submission system.
  \author{%
-@@ -60,33 +60,39 @@ Pedro Henriques Abreu\textsuperscript{1}}
+ \IEEEauthorblockN{Sancho Amaral Sim\~oes\textsuperscript{1,*},
+ Jo\~ao P. Vilela\textsuperscript{1,2},
+ Pedro Henriques Abreu\textsuperscript{1}}
+-\IEEEauthorblockA{\textsuperscript{1}\textit{CISUC-DEI - FCTUC, University of Coimbra}, Coimbra, Portugal\\
++\IEEEauthorblockA{\textsuperscript{1}\textit{University of Coimbra, CISUC/LASI -- Centre for Informatics and Systems of the University of Coimbra,}\\
++\textit{Department of Informatics Engineering}, Coimbra, Portugal\\
+ \textsuperscript{2}\textit{CRACS/INESCTEC-DCS - FCUP, University of Porto}, Porto, Portugal\\
+ \textsuperscript{*}Corresponding author\\
+ {\small\texttt{sanchosimoes@student.dei.uc.pt}, \texttt{jvilela@fc.up.pt}, \texttt{pha@dei.uc.pt}}}
+@@ -60,33 +61,39 @@ Pedro Henriques Abreu\textsuperscript{1}}
  \maketitle
  
  \begin{abstract}
@@ -60,7 +69,7 @@ index 291f554..c223760 100644
  \begin{itemize}[leftmargin=2.8em,labelsep=.5em,itemsep=1pt]
    \item[\resq{1}] Is there any relationship between the control layer and the reliability of the generated datasets?
    \item[\resq{2}] Are the generated records faithful to the real data without reproducing them?
-@@ -94,9 +100,9 @@ Four main research questions emerged in this work:
+@@ -94,9 +101,9 @@ Four main research questions emerged in this work:
    \item[\resq{4}] How does \system compare with established generation strategies, and how much do its results depend on the LLM?
  \end{itemize}
  
@@ -72,7 +81,7 @@ index 291f554..c223760 100644
  
  \begin{figure}[t]
  \centering
-@@ -109,17 +115,11 @@ The remainder of the paper is organized as follows. Section~\ref{sec:related} pr
+@@ -109,17 +116,11 @@ The remainder of the paper is organized as follows. Section~\ref{sec:related} pr
  \section{Background Knowledge}
  \label{sec:related}
  %======================================================================
@@ -93,7 +102,7 @@ index 291f554..c223760 100644
  \label{tab:positioning}
  \footnotesize
  \setlength{\tabcolsep}{3pt}
-@@ -127,39 +127,34 @@ Most of the previously mentioned generators were designed and benchmarked on dat
+@@ -127,39 +128,34 @@ Most of the previously mentioned generators were designed and benchmarked on dat
  \toprule
  Family & How records are produced & Main limitation in small data & \begin{tabular}[c]{@{}c@{}}No training on\\target data\end{tabular} & \begin{tabular}[c]{@{}c@{}}Exact\\size\end{tabular} & \begin{tabular}[c]{@{}c@{}}Columns and\\types checked\end{tabular} & \begin{tabular}[c]{@{}c@{}}Cost\\recorded\end{tabular} \\
  \midrule
@@ -146,7 +155,7 @@ index 291f554..c223760 100644
  
  \begin{figure*}[t]
  \centering
-@@ -168,21 +163,43 @@ The objectives in Equation~\eqref{eq:multiobjective} can conflict: records close
+@@ -168,21 +164,43 @@ The objectives in Equation~\eqref{eq:multiobjective} can conflict: records close
  \label{fig:architecture}
  \end{figure*}
  
@@ -197,7 +206,7 @@ index 291f554..c223760 100644
  
  \begin{table*}[t]
  \centering
-@@ -205,78 +222,59 @@ Global statistics & No separately computed means, quantiles, correlations or cla
+@@ -205,78 +223,59 @@ Global statistics & No separately computed means, quantiles, correlations or cla
  \end{tabular}
  \end{table*}
  
@@ -301,7 +310,7 @@ index 291f554..c223760 100644
  
  
  
-@@ -291,14 +289,15 @@ preferably under secure aggregation~\cite{bonawitz2017secure}. The weights count
+@@ -291,14 +290,15 @@ preferably under secure aggregation~\cite{bonawitz2017secure}. The weights count
  \end{minipage}
  \end{figure*}
  
@@ -319,7 +328,7 @@ index 291f554..c223760 100644
  
  \begin{table}[t]
  \centering
-@@ -322,19 +321,35 @@ Parkinson's & 195 & 22 & 2 & 48 (24.6) & 1,851 & 11.9 \\
+@@ -322,19 +322,35 @@ Parkinson's & 195 & 22 & 2 & 48 (24.6) & 1,851 & 11.9 \\
  \end{table}
  
  \subsection{Protocol}
@@ -362,7 +371,7 @@ index 291f554..c223760 100644
  \begin{equation}
  \begin{aligned}
  F_{\mathrm{JSD}}&=100\Bigl(1-\tfrac{1}{|\mathcal{J}|}
-@@ -343,84 +358,84 @@ F_{\mathrm{corr}}&=100\bigl(1-\operatorname{mean}|\Sigma_D-\Sigma_G|\bigr),
+@@ -343,84 +359,84 @@ F_{\mathrm{corr}}&=100\bigl(1-\operatorname{mean}|\Sigma_D-\Sigma_G|\bigr),
  \end{aligned}
  \label{eq:fidelity}
  \end{equation}
@@ -478,7 +487,7 @@ index 291f554..c223760 100644
  \begin{figure}[t]
  \centering
  \assetfigure{\columnwidth}{generated/architecture_ranks.pdf}
-@@ -428,13 +443,11 @@ Against this floor, the design choices have small effects. Dense context stays i
+@@ -428,13 +444,11 @@ Against this floor, the design choices have small effects. Dense context stays i
  \label{fig:ranks}
  \end{figure}
  
@@ -494,7 +503,7 @@ index 291f554..c223760 100644
  
  \begin{table}[t]
  \centering
-@@ -444,7 +457,7 @@ Table~\ref{tab:full} reports the reference configuration per dataset. Marginal f
+@@ -444,7 +458,7 @@ Table~\ref{tab:full} reports the reference configuration per dataset. Marginal f
  \setlength{\tabcolsep}{2.2pt}
  \begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}lrrrrrrrr@{}}
  \toprule
@@ -503,7 +512,7 @@ index 291f554..c223760 100644
  \cmidrule(lr){2-5}\cmidrule(lr){6-7}\cmidrule(l){8-9}
  Dataset & JSD & Corr. & C2ST & AUC & Real & Aug. & Acc. & F1 \\
  \midrule
-@@ -460,23 +473,19 @@ Mean & 72.7 & 72.6 & 0.878 & 0.526 & 75.4 & 74.2 & $-1.19$ & $-0.14$ \\
+@@ -460,23 +474,19 @@ Mean & 72.7 & 72.6 & 0.878 & 0.526 & 75.4 & 74.2 & $-1.19$ & $-0.14$ \\
  \end{tabular*}
  \end{table}
  
@@ -529,7 +538,7 @@ index 291f554..c223760 100644
  \begin{figure*}[t]
  \centering
  \assetfigure{\textwidth}{generated/utility_heatmap.pdf}
-@@ -487,19 +496,17 @@ Against this background, the effect of synthetic records depends on both the dat
+@@ -487,19 +497,17 @@ Against this background, the effect of synthetic records depends on both the dat
  \begin{figure}[t]
  \centering
  \assetfigure{\columnwidth}{generated/augmentation_uncertainty.pdf}
@@ -552,7 +561,7 @@ index 291f554..c223760 100644
  \label{tab:backend}
  \footnotesize
  \setlength{\tabcolsep}{3pt}
-@@ -507,10 +514,14 @@ The choice of LLM is the only factor whose effect exceeds the noise floor (Table
+@@ -507,10 +515,14 @@ The choice of LLM is the only factor whose effect exceeds the noise floor (Table
  \toprule
  LLM & JSD & Corr. & $\Delta$Acc. & $\Delta$F1 & Sec. & Tokens \\
  \midrule
@@ -570,7 +579,7 @@ index 291f554..c223760 100644
  \bottomrule
  \end{tabular*}
  \end{table}
-@@ -518,15 +529,15 @@ GPT-4.1 & \best{75.72} & 63.30 & $-0.44$ & \best{$+1.09$} & 201.7 & 80,652 \\
+@@ -518,15 +530,15 @@ GPT-4.1 & \best{75.72} & 63.30 & $-0.44$ & \best{$+1.09$} & 201.7 & 80,652 \\
  \begin{figure}[t]
  \centering
  \assetfigure{\columnwidth}{generated/quality_cost_frontier.pdf}
@@ -589,7 +598,7 @@ index 291f554..c223760 100644
  \label{tab:generators}
  \scriptsize
  \setlength{\tabcolsep}{1.5pt}
-@@ -544,11 +555,11 @@ TVAE & 71.9 & \best{85.6} & 0.868 & 0.515 & 75.6 & \best{$-0.09$} & $-0.21$ & 5.
+@@ -544,11 +556,11 @@ TVAE & 71.9 & \best{85.6} & 0.868 & 0.515 & 75.6 & \best{$-0.09$} & $-0.21$ & 5.
  \par\vspace{2pt}\raggedright\scriptsize $^{\dagger}$Emits only non-majority records, so its C2ST is not comparable.
  \end{table}
  
@@ -603,7 +612,7 @@ index 291f554..c223760 100644
  \label{tab:robust}
  \scriptsize
  \setlength{\tabcolsep}{1pt}
-@@ -557,7 +568,8 @@ Average changes, however, hide how much each generator can harm an individual da
+@@ -557,7 +569,8 @@ Average changes, however, hide how much each generator can harm an individual da
  Generator & Heart d. & Breast & Heart f. & Diab. & Liver & Park. & Mean & Worst \\
  \midrule
  \textsc{SA}, 4o mini & $-0.97$ & $-0.62$ & $-1.00$ & $+2.39$ & $+0.13$ & $-0.77$ & $-0.14$ & $-1.00$ \\
@@ -613,7 +622,7 @@ index 291f554..c223760 100644
  SMOTE & $-1.50$ & $-0.53$ & $+10.91$ & $+4.11$ & $-8.20$ & $-2.83$ & $+0.33$ & $-8.20$ \\
  CTGAN & $-2.30$ & $-2.00$ & $-10.65$ & $-4.22$ & $-0.65$ & $-0.38$ & $-3.37$ & $-10.65$ \\
  TVAE & $-0.73$ & $-0.88$ & $-2.86$ & $+0.89$ & $+2.21$ & $+0.10$ & $-0.21$ & $-2.86$ \\
-@@ -565,31 +577,32 @@ TVAE & $-0.73$ & $-0.88$ & $-2.86$ & $+0.89$ & $+2.21$ & $+0.10$ & $-0.21$ & $-2
+@@ -565,31 +578,32 @@ TVAE & $-0.73$ & $-0.88$ & $-2.86$ & $+0.89$ & $+2.21$ & $+0.10$ & $-0.21$ & $-2
  \end{tabular*}
  \end{table}
  

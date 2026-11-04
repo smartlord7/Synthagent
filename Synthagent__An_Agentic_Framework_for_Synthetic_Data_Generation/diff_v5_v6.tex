@@ -1,7 +1,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %DIF LATEXDIFF DIFFERENCE FILE
 %DIF DEL /tmp/claude-0/-home-user-TabuLLM/177710a6-83c7-584b-8f2f-a9a7012a7684/scratchpad/v5.tex   Wed Nov  4 20:53:39 2026
-%DIF ADD main.tex                                                                                  Wed Nov  4 22:54:47 2026
+%DIF ADD main.tex                                                                                  Wed Nov  4 23:14:36 2026
 % ICDE 2027 research paper (Round 2: submission due 11 November 2026).
 % Format rules from the call for papers (https://icde2027.github.io/):
 %   * IEEE conference template, PDF only.
@@ -136,11 +136,17 @@
 \IEEEauthorblockN{Sancho Amaral Sim\~oes\textsuperscript{1,*},
 Jo\~ao P. Vilela\textsuperscript{1,2},
 Pedro Henriques Abreu\textsuperscript{1}}
-\IEEEauthorblockA{\textsuperscript{1}\textit{CISUC-DEI - FCTUC, University of Coimbra}, Coimbra, Portugal\\
+\DIFdelbegin %DIFDELCMD < \IEEEauthorblockA{\textsuperscript{1}\textit{CISUC-DEI - FCTUC, University of Coimbra}, Coimbra, Portugal\\
+%DIFDELCMD < \textsuperscript{2}\textit{CRACS/INESCTEC-DCS - FCUP, University of Porto}, Porto, Portugal\\
+%DIFDELCMD < \textsuperscript{*}Corresponding author\\
+%DIFDELCMD < {\small\texttt{sanchosimoes@student.dei.uc.pt}, \texttt{jvilela@fc.up.pt}, \texttt{pha@dei.uc.pt}}}
+%DIFDELCMD < %%%
+\DIFdelend \DIFaddbegin \IEEEauthorblockA{\textsuperscript{1}\textit{University of Coimbra, CISUC/LASI -- Centre for Informatics and Systems of the University of Coimbra,}\\
+\textit{Department of Informatics Engineering}, Coimbra, Portugal\\
 \textsuperscript{2}\textit{CRACS/INESCTEC-DCS - FCUP, University of Porto}, Porto, Portugal\\
 \textsuperscript{*}Corresponding author\\
 {\small\texttt{sanchosimoes@student.dei.uc.pt}, \texttt{jvilela@fc.up.pt}, \texttt{pha@dei.uc.pt}}}
-}
+\DIFaddend }
 
 \maketitle
 
@@ -1071,8 +1077,8 @@ TVAE & 71.9 & \best{85.6} & 0.868 & 0.515 & 75.6 & \best{$-0.09$} & $-0.21$ & 5.
 
 %DIFDELCMD < \noindent%%%
 \textit{\DIFdel{Answer to RQ4.}} %DIFAUXCMD
-\DIFdel{The LLM is the main lever on quality and utility. With GPT-4.1, }%DIFDELCMD < \system %%%
-\DIFdel{gives the largest and most consistent F1 gain of the five generators, at a higher cost than the established generators and without a significant advantage across six datasets. }\DIFdelend \DIFaddbegin \DIFadd{), so }\DIFaddend TVAE remains a cheap option for accuracy \DIFdelbegin \DIFdel{, }\DIFdelend and SMOTE for a known rare positive class.
+\DIFdel{The LLM is the main lever on quality and utility. With GPT-4.1}\DIFdelend \DIFaddbegin \DIFadd{)}\DIFaddend , \DIFdelbegin %DIFDELCMD < \system %%%
+\DIFdel{gives the largest and most consistent F1 gain of the five generators, at a higher cost than the established generators and without a significant advantage across six datasets. }\DIFdelend \DIFaddbegin \DIFadd{so }\DIFaddend TVAE remains a cheap option for accuracy \DIFdelbegin \DIFdel{, }\DIFdelend and SMOTE for a known rare positive class.
 
 \DIFaddbegin \begin{table}[t]
 \centering
