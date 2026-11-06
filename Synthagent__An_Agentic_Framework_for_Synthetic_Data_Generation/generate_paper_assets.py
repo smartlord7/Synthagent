@@ -845,6 +845,9 @@ def full_cell_tests():
 def main():
     print_style()
     summary = pd.read_csv(RUN / "ablation_summary.csv")
+    # This script covers the original six datasets; generate_extended_assets.py covers
+    # the ten-dataset comparison and the sensitivity study.
+    summary = summary[summary.dataset.isin(DATASET_LABELS)].copy()
     valid = completed_arms(summary)
     expected = set(ARCH_ARMS + BACKEND_ARMS + BASELINE_ARMS + PROMPTING_ARMS + CLAUDE_ARMS + CLAUDE_PROMPTING_ARMS)
     missing = expected - set(valid)

@@ -1,0 +1,3 @@
+family,metric,n_blocks,n_arms,friedman_chi2,friedman_p,best
+sensitivity,accuracy,6,6,1.5238095238095184,0.9103059549409962,ctx_10
+sensitivity,f1,6,6,7.047619047619037,0.217122842288934,ctx_10
