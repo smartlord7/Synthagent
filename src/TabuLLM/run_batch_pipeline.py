@@ -185,6 +185,24 @@ DATASET_REGISTRY: dict[str, dict] = {
         "target": "status",
         "ml": _ALL_MODELS,
     },
+    # Four further UCI datasets (smaller, missing values, mixed types, imbalance), with the
+    # target recoded to 0/1 (1 = disease or death) and binary categories coded as 0/1.
+    "breast_cancer_coimbra.csv": {
+        "target": "Classification",
+        "ml": _ALL_MODELS,
+    },
+    "hepatitis.csv": {
+        "target": "Class",
+        "ml": _ALL_MODELS,
+    },
+    "chronic_kidney_disease.csv": {
+        "target": "class",
+        "ml": _ALL_MODELS,
+    },
+    "thoracic_surgery.csv": {
+        "target": "Risk1Yr",
+        "ml": _ALL_MODELS,
+    },
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -267,6 +285,14 @@ ABLATION_ARMS: dict[str, dict] = {
     # Structured-output baseline: direct prompting with schema-constrained decoding
     # (OpenAI response_format json_schema, strict), no repair, correction or top-up.
     "structured_output":  {"structured_output": True},
+    # Sensitivity of the reference configuration to its fixed parameters, one at a time:
+    # context sample rho (default 20%), batch size b (default 30), temperature (default 0.3).
+    "ctx_10":             {"ctx_size_pct": 10},
+    "ctx_40":             {"ctx_size_pct": 40},
+    "batch_15":           {"chunk_size": 15},
+    "batch_60":           {"chunk_size": 60},
+    "temp_0":             {"temperature": 0.0},
+    "temp_10":            {"temperature": 1.0},
 }
 
 # Special arms that don't fit the simple "config override on the same LLM" mold and get

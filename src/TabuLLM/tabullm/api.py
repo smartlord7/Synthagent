@@ -141,6 +141,7 @@ class TabuLLM:
         enforce_boundaries: bool = False,
         structured_output: bool = False,
         temperature: float = 0.3,
+        chunk_size: int = 30,
         resume_fold_results: Optional[dict] = None,
         on_fold_done: Optional[Callable[[int, dict], None]] = None,
     ) -> dict:
@@ -175,6 +176,7 @@ class TabuLLM:
                 but the endpoint constrains decoding to a JSON schema built from the
                 real columns and types (OpenAI response_format json_schema). Default False.
             temperature (float): LLM sampling temperature for generation. Default 0.3.
+            chunk_size (int): Records requested per LLM call (batch size b). Default 30.
                 See ponder_hyperparameters() for an LLM-recommended alternative.
             resume_fold_results (dict | None): {fold_num: fold_result} for folds already
                 computed by a prior interrupted call -- those folds are reused as-is instead
@@ -210,6 +212,7 @@ class TabuLLM:
             "enforce_boundaries": enforce_boundaries,
             "structured_output": structured_output,
             "temperature": temperature,
+            "chunk_size": chunk_size,
             "ml_config": {"selected_models": ml_models, "params": {}},
             "na_strategy": na_strategy,
             "instructions": "",
