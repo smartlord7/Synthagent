@@ -1,0 +1,30 @@
+# Exact versions used for the experiments of the Synthagent paper (Python 3.13.16, Linux).
+# Install with: pip install -r requirements-lock.txt
+anthropic==2.4.0
+arfpy==0.1.1
+ctgan==0.13.0
+dash-bootstrap-components==2.0.4
+dash==4.5.0
+diskcache==5.6.3
+fpdf2==2.9.0
+google-generativeai==0.8.6
+imbalanced-learn==0.14.2
+Jinja2==3.1.6
+kaleido==1.5.0
+matplotlib==3.11.2
+multiprocess==0.70.19
+numpy==2.5.3
+pandas==2.3.3
+plotly==7.1.0
+pydantic==2.13.5
+python-dotenv==1.2.3
+rdt==2.1.0
+reportlab==5.0.1
+scikit-learn==1.9.1
+scipy==1.18.1
+seaborn==0.13.2
+simsimd==6.5.16
+SQLAlchemy==2.1.6
+torch==2.15.0
+ucimlrepo==0.0.7
+xgboost==3.4.1
