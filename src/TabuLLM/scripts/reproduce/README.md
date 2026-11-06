@@ -49,6 +49,8 @@ command is repeated. Common settings: ten repetitions, N equal to the training s
 | `results/claude/sonnet46_newdata` | anthropic / claude-sonnet-4-6 | `full` | four new |
 | `results/gpu_baselines` | (no LLM, GPU) | `tabddpm,great,bayesian_network` | all ten (see `scripts/gpu_baselines/`) |
 
+When several runs share a machine, set `OMP_NUM_THREADS=1` (and `MKL_NUM_THREADS`, `OPENBLAS_NUM_THREADS`) so that the classifiers and generators of one run do not take every core.
+
 Example (one sensitivity run):
 
 ```bash
