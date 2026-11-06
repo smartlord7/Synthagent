@@ -797,6 +797,21 @@ def _save_fold_result(
     entry["unit_config"] = unit_config
     entry["folds"][str(fold_num)] = _json_safe(fold_result)
     _save_checkpoint(run_dir, checkpoint)
+    _save_synthetic_records(run_dir, key, fold_num, fold_result)
+
+
+def _save_synthetic_records(run_dir: str, key: str, fold_num: int, fold_result: dict) -> None:
+    """
+    Writes the synthetic records of one fold to {run_dir}/synthetic/{arm}/{dataset}_fold{n}.csv,
+    so that every generated dataset can be inspected and re-evaluated without calling the LLM
+    again (the checkpoint keeps them only until the unit completes).
+    """
+    rows = (fold_result or {}).get("synthetic_data") or []
+    arm, _, filename = key.partition("::") if "::" in key else ("batch", "", key)
+    out_dir = os.path.join(run_dir, "synthetic", arm)
+    os.makedirs(out_dir, exist_ok=True)
+    path = os.path.join(out_dir, f"{os.path.splitext(filename)[0]}_fold{fold_num}.csv")
+    pd.DataFrame(rows).drop(columns=["_fold_id"], errors="ignore").to_csv(path, index=False)
 
 
 def _resume_fold_results(checkpoint: dict, key: str, expected_unit_config: dict) -> "dict[int, dict]":
