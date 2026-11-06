@@ -156,29 +156,61 @@ def generator_comparison():
     pd.DataFrame(tests).to_csv(gpa.OUT / "friedman10.csv", index=False)
     pd.DataFrame(comps).to_csv(gpa.OUT / "posthoc10.csv", index=False)
 
-    best = {c: (table[c].max() if c in ("JSD", "dAcc", "dF1", "dF1_median", "worst") else table[c].min())
-            for c in ("JSD", "C2ST", "dAcc", "dF1", "dF1_median", "worst", "losses")}
-    best["AUC"] = table["AUC"].sub(0.5).abs().min()
+    # Table rows: fidelity and privacy means; utility as median +- SD over datasets and the
+    # share of datasets on which the F1 change is positive.
+    table["dAcc_sd"] = [100 * df[df.arm == a]["mean_accuracy_delta"].std() for a in table.arm]
+    table["dAcc_median"] = [100 * df[df.arm == a]["mean_accuracy_delta"].median() for a in table.arm]
+    table["dF1_sd"] = [100 * df[df.arm == a]["mean_f1_delta"].std() for a in table.arm]
+    table["improved_pct"] = [100 * (df[df.arm == a]["mean_f1_delta"] > 0).mean() for a in table.arm]
+    table.to_csv(gpa.OUT / "generators10.csv", index=False)
+    best = {"JSD": table.JSD.max(), "C2ST": table.C2ST.sub(0.5).abs().min(), "AUC": table.AUC.sub(0.5).abs().min(),
+            "acc": table.dAcc_median.max(), "f1": table.dF1_median.max(), "imp": table.improved_pct.max()}
 
-    def fmt(v, c, spec):
-        if pd.isna(v):
-            return "--"
-        s = format(v, spec)
-        if c in ("dAcc", "dF1", "dF1_median", "worst"):
-            s = f"${'+' if v > 0 else ''}{s}$".replace("$-", "$-")
-        hit = abs(v - 0.5) == best["AUC"] if c == "AUC" else v == best[c]
-        return f"\\best{{{s}}}" if hit else s
+    def b(text, hit):
+        return f"\\best{{{text}}}" if hit else text
+
+    def ms(m, sd):
+        return f"${m:+.2f}\\pm{sd:.2f}$"
 
     lines = []
     for r in table.itertuples():
         cells = [r.Generator,
-                 fmt(r.JSD, "JSD", ".1f"), fmt(r.C2ST, "C2ST", ".3f"), fmt(r.AUC, "AUC", ".3f"),
-                 fmt(r.dAcc, "dAcc", ".2f"), fmt(r.dF1, "dF1", ".2f"), fmt(r.dF1_median, "dF1_median", ".2f"),
-                 fmt(r.worst, "worst", ".2f"), fmt(r.losses, "losses", "d"),
-                 "--" if pd.isna(r.delivered_new4) else f"{r.delivered_new4:.1f}"]
+                 b(f"{r.JSD:.1f}", r.JSD == best["JSD"]),
+                 b(f"{r.C2ST:.3f}", abs(r.C2ST - 0.5) == best["C2ST"]),
+                 b(f"{r.AUC:.3f}", abs(r.AUC - 0.5) == best["AUC"]),
+                 b(ms(r.dAcc_median, r.dAcc_sd), r.dAcc_median == best["acc"]),
+                 b(ms(r.dF1_median, r.dF1_sd), r.dF1_median == best["f1"]),
+                 b(f"{r.improved_pct:.0f}", r.improved_pct == best["imp"])]
         lines.append(" & ".join(cells) + " \\\\")
     (gpa.OUT / "generators10.tex").write_text("\n".join(lines) + "\n", encoding="utf-8")
     return table, pd.DataFrame(tests), pd.DataFrame(comps)
+
+
+def radar(per_dataset):
+    """F1 change per dataset for a few representative generators, as a radar chart."""
+    import matplotlib.pyplot as plt
+    gpa.print_style()
+    show = [("Synthagent, Sonnet 4.6", gpa.C_REF), ("Synthagent, GPT-4o mini", gpa.C_LLM),
+            ("CLLM", "#8e44ad"), ("SMOTE", gpa.C_BASE), ("CART", "#2e8b57")]
+    data = pd.DataFrame(per_dataset)
+    labels = list(data.index)
+    angles = np.linspace(0, 2 * np.pi, len(labels), endpoint=False).tolist()
+    angles += angles[:1]
+    fig, ax = plt.subplots(figsize=(gpa.COL_W, 2.9), subplot_kw={"polar": True})
+    for name, color in show:
+        values = data[name].tolist()
+        ax.plot(angles, values + values[:1], color=color, lw=1.2, label=name)
+    ax.plot(np.linspace(0, 2 * np.pi, 200), np.zeros(200), color="0.3", lw=0.8, ls="--")
+    ax.set_xticks(angles[:-1], [l.replace(" (Coimbra)", " (C.)") for l in labels], fontsize=6)
+    ax.set_ylim(-12, 15)
+    ax.set_yticks([-10, -5, 0, 5, 10], ["-10", "-5", "0", "5", "10"], fontsize=5.5)
+    ax.set_rlabel_position(90)
+    ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.08), ncol=3, frameon=False, fontsize=5.8,
+              handlelength=1.4, columnspacing=0.8)
+    fig.subplots_adjust(left=0.08, right=0.92, top=0.93, bottom=0.2)
+    fig.savefig(gpa.OUT / "radar_f1.pdf", bbox_inches="tight", pad_inches=0.02)
+    fig.savefig(gpa.OUT / "radar_f1.png", dpi=220, bbox_inches="tight", pad_inches=0.02)
+    plt.close(fig)
 
 
 def sensitivity():
@@ -215,6 +247,7 @@ def sensitivity():
 def main():
     print(dataset_table().round(1).to_string(index=False))
     t, f, c = generator_comparison()
+    radar(pd.read_csv(gpa.OUT / "generators10_f1.csv", index_col=0))
     print(t.round(2).to_string(index=False)); print(f.to_string(index=False))
     print(c[c.p_holm < 0.05].to_string(index=False))
     s, sf = sensitivity()
