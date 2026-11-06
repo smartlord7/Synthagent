@@ -22,7 +22,7 @@
    \draw[sgray!70] (\c*0.3,-\r*0.2) rectangle ++(0.3,-0.2);}}
 \fill[sgray!30] (0,0) rectangle (1.5,-0.2); \draw[sgray!70] (0,0) rectangle (1.5,-0.2);
 \node[font=\sffamily\bfseries\scriptsize,text=sgray,anchor=south] at (0.75,0.02) {Real split $D^{\mathrm{tr}}$};
-\node[font=\sffamily\tiny,text=sblue,align=center,anchor=north] at (0.75,-1.65) {shaded: 20\% pool $\mathcal{P}$};
+\node[font=\sffamily\tiny,text=sblue,align=center,anchor=north] at (0.75,-1.65) {shaded: pool $\mathcal{P}$ of $\rho|D|$ records};
 \draw[flow] (1.55,-0.8) -- (2.4,-0.8);
 
 % profile card
@@ -37,7 +37,7 @@
   \fill[sorange!35] (1.6,0) rectangle (2.2,-0.38); \node at (1.9,-0.19) {\tiny $O_t$};
   \draw[sgray] (0,0) rectangle (2.6,-0.38);
   \draw[red!70!black,thick] (2.2,0.08) -- (2.2,-0.46);
-  \node[font=\tiny,text=red!70!black,anchor=north] at (2.2,-0.46) {$0.85W$};
+  \node[font=\tiny,text=red!70!black,anchor=north] at (2.2,-0.46) {$\omega W$};
   \node[font=\tiny,anchor=north west,align=left] at (-0.05,-0.62)
      {strategy: random,\\dense or diverse;\\rotate $\mathcal{P}$ per chunk};
 \end{scope}
@@ -46,7 +46,7 @@
 \node[anchor=north west,draw=sgray!60,fill=white,rounded corners=1pt,align=left,font=\ttfamily\tiny,inner sep=2pt]
   at (6.15,-0.45)
   {\{"cols":["age","sex",..],\\ \ "data":[[63,1,233.0,..],\\ \hphantom{\ "data":[}[41,0,204.0,..],\\ \hphantom{\ "data":[}..]\}};
-\node[font=\tiny,anchor=north west,align=left] at (6.1,-1.55) {$Y_t\sim\pi_\phi(\cdot\mid z_t)$, JSON only,\\ $q_t\le30$ rows per request};
+\node[font=\tiny,anchor=north west,align=left] at (6.1,-1.55) {$Y_t\sim\pi_\phi(\cdot\mid z_t)$, JSON only,\\ $q_t\le b$ rows per request};
 
 %======================== 3 verifier ====================
 \node[gate,minimum width=10mm] (g1) at (10.25,-0.95) {Parse\\JSON};
@@ -79,10 +79,10 @@
 \node[lab=sorange,anchor=south] at (9.4,0.6) {parse error: focused repair};
 % violations -> grouped feedback
 \draw[fail] (g3.north) -- (13.0,1.15) -- (8.05,1.15) -- (8.05,0);
-\node[lab=sorange,anchor=south] at (10.55,1.15) {rule violations: grouped field feedback, $\le$2 rounds};
+\node[lab=sorange,anchor=south] at (10.55,1.15) {rule violations: grouped field feedback, $\le c$ rounds};
 % residual -> top-up
 \draw[fail] (16.95,0) -- (16.95,1.7) -- (7.55,1.7) -- (7.55,0);
-\node[lab=sorange,anchor=south] at (12.1,1.7) {$r_t>0$: request exactly $q_t=\min(30,r_t)$ more records; $\le$50 rounds, stop after 5 empty};
+\node[lab=sorange,anchor=south] at (12.1,1.7) {$r_t>0$: request exactly $q_t=\min(b,r_t)$ more records; $\le t_{\max}$ rounds, stop after $u_{\max}$ empty};
 % overflow -> shrink context (below)
 \draw[fail] (6.6,-2.2) -- (6.6,-2.55) -- (4.6,-2.55) -- (4.6,-2.2);
 \node[lab=sorange,anchor=north,align=center] at (5.6,-2.58) {context overflow (HTTP 400/422):\\shrink $C_t$ by 40\%, at most 3 times};

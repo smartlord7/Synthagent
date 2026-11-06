@@ -2,7 +2,7 @@
 
 Ficheiros: `20261102-synthagent_revised_draft_v5 - jpv up to section 3.pdf` (27 comentários do JPV, lidos por cima dos do PHA) e `20261105-synthagent_revised_draft_v6 - jpv sections 3 - 4.pdf` (37 comentários). O JPV não chegou aos resultados.
 
-Estado face à v6 atual: **R** = já resolvido na v6; **P** = correção pequena; **G** = trabalho maior; **C** = em conflito com um pedido do PHA; **N** = proposta de não alterar (com razão).
+**Endereçados na v7** (`synthagent_revised_draft_v7.pdf`, diff em `diff_v6_v7.pdf`); o estudo de sensibilidade e novos datasets ficam pendentes de decisão. Estado face à v6: **R** = já resolvido na v6; **P** = correção pequena; **G** = trabalho maior; **C** = em conflito com um pedido do PHA; **N** = proposta de não alterar (com razão).
 
 ## v5 (resumo, introdução, antiga Secção III)
 
