@@ -590,8 +590,11 @@ def run_smote_dataset_benchmark(args):
             logger.info(f"[DATA] [{filename} | Fold {fold_num}] ({label}) Split Complete: Train={len(df_train_orig)}, Test={len(df_test_orig)}")
 
             gen_start_time = time.time()
-            if target_col and method == "smote":
-                generated_df = generate_smote_rows(df_train_orig, target_col, categorical_cols, random_state=42 + fold_num)
+            if target_col and method in ("smote", "adasyn", "borderline_smote"):
+                generated_df = generate_smote_rows(df_train_orig, target_col, categorical_cols, random_state=42 + fold_num, method=method)
+            elif target_col and method in ("cart", "arf", "tabddpm", "great"):
+                from services.other_baselines import GENERATORS
+                generated_df = GENERATORS[method](df_train_orig, target_col, categorical_cols, random_state=42 + fold_num)
             elif target_col and method == "gaussian_copula":
                 from services.deep_baselines import generate_gaussian_copula_rows
                 generated_df = generate_gaussian_copula_rows(df_train_orig, target_col, categorical_cols, random_state=42 + fold_num)
