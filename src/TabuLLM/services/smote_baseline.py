@@ -28,7 +28,7 @@ def impute_for_baseline(df: pd.DataFrame) -> pd.DataFrame:
     return out
 
 
-def generate_smote_rows(df_train: pd.DataFrame, target_col: str, categorical_cols: list, random_state: int) -> pd.DataFrame:
+def generate_smote_rows(df_train: pd.DataFrame, target_col: str, categorical_cols: list, random_state: int, method: str = "smote") -> pd.DataFrame:
     """
     Runs SMOTENC (when `categorical_cols` is non-empty) or plain SMOTE on df_train,
     balancing the minority class(es) of `target_col` up to the majority count, and
@@ -40,7 +40,7 @@ def generate_smote_rows(df_train: pd.DataFrame, target_col: str, categorical_col
     any k_neighbors >= 1. Missing feature values are imputed first (impute_for_baseline),
     since imblearn rejects NaN.
     """
-    from imblearn.over_sampling import SMOTE, SMOTENC
+    from imblearn.over_sampling import SMOTE, SMOTENC, ADASYN, BorderlineSMOTE
 
     if target_col not in df_train.columns or df_train.empty:
         return pd.DataFrame(columns=df_train.columns)
@@ -71,7 +71,13 @@ def generate_smote_rows(df_train: pd.DataFrame, target_col: str, categorical_col
     cat_indices = [feature_cols.index(c) for c in categorical_cols if c in feature_cols]
 
     try:
-        if cat_indices:
+        if method == "adasyn":
+            # ADASYN and Borderline-SMOTE have no categorical variant; the categoricals are
+            # integer codes here and are rounded back to valid codes below.
+            sampler = ADASYN(n_neighbors=k_neighbors, random_state=random_state)
+        elif method == "borderline_smote":
+            sampler = BorderlineSMOTE(k_neighbors=k_neighbors, random_state=random_state)
+        elif cat_indices:
             sampler = SMOTENC(categorical_features=cat_indices, k_neighbors=k_neighbors, random_state=random_state)
         else:
             sampler = SMOTE(k_neighbors=k_neighbors, random_state=random_state)

@@ -19,3 +19,4 @@ ucimlrepo
 xgboost
 ctgan>=0.12
 anthropic>=0.75
+arfpy

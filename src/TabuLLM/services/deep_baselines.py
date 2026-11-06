@@ -68,3 +68,48 @@ def generate_deep_rows(
         elif len(observed) and np.allclose(observed, observed.round()):
             synth[col] = pd.to_numeric(synth[col], errors="coerce").round()
     return synth[list(df_train.columns)]
+
+
+def generate_gaussian_copula_rows(
+    df_train: pd.DataFrame,
+    target_col: str,
+    categorical_cols: list,
+    random_state: int,
+    n_rows: "int | None" = None,
+) -> pd.DataFrame:
+    """
+    Gaussian copula baseline: every column is mapped to normal scores through its
+    empirical distribution, the correlation of the scores is estimated, new scores are
+    sampled from that multivariate normal and mapped back through the empirical
+    quantiles of each column. Discrete and integer columns keep their observed values.
+    """
+    from scipy.stats import norm, rankdata
+
+    if df_train.empty:
+        return pd.DataFrame(columns=df_train.columns)
+    data = impute_for_baseline(df_train.dropna(subset=[target_col]) if target_col else df_train)
+    data = data.apply(pd.to_numeric, errors="coerce")
+    data = data.fillna(data.median(numeric_only=True))
+    n_rows = int(n_rows or len(df_train))
+    rng = np.random.default_rng(random_state)
+
+    scores = np.column_stack([norm.ppf(rankdata(data[c]) / (len(data) + 1)) for c in data.columns])
+    corr = np.corrcoef(scores, rowvar=False)
+    corr = np.nan_to_num(corr, nan=0.0)
+    np.fill_diagonal(corr, 1.0)
+    w, v = np.linalg.eigh(corr)                       # repair to positive semi-definite
+    corr = (v * np.clip(w, 1e-6, None)) @ v.T
+    z = rng.multivariate_normal(np.zeros(len(data.columns)), corr, size=n_rows)
+    u = norm.cdf(z)
+
+    discrete = set(_discrete_columns(data, target_col, categorical_cols))
+    synth = {}
+    for j, col in enumerate(data.columns):
+        values = np.sort(data[col].to_numpy())
+        if col in discrete:
+            synth[col] = values[np.minimum((u[:, j] * len(values)).astype(int), len(values) - 1)]
+        else:
+            synth[col] = np.quantile(values, u[:, j])
+            if np.allclose(values, values.round()):
+                synth[col] = np.round(synth[col])
+    return pd.DataFrame(synth)[list(df_train.columns)]
