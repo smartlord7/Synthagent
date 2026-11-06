@@ -9606,6 +9606,1054 @@
             "generation_seconds": 0.03908586502075195
           },
           "fold_seconds": 218.18251085281372
+        },
+        "5": {
+          "Synthetic Fidelity (JSD)": 73,
+          "Correlation Stability": 71,
+          "Distribution Consistency": 71,
+          "Entropy Preservation": 52,
+          "Mean Z Score Drift": 0.37856250571370353,
+          "Categorical Fidelity": 0,
+          "Privacy Risk": 20,
+          "Data Density": 100.0,
+          "Coverage Score": 60,
+          "Feature Accuracy": 72,
+          "Novelty Score": 0.4943646366251732,
+          "Gen Synthetic Fidelity (JSD)": 73,
+          "Gen Correlation Stability": 71,
+          "Gen Distribution Consistency": 71,
+          "Gen Entropy Preservation": 52,
+          "Gen Mean Z Score Drift": 0.37856250571370353,
+          "Gen Categorical Fidelity": 0,
+          "Gen Privacy Risk": 20,
+          "Gen Data Density": 100.0,
+          "Gen Coverage Score": 60,
+          "Gen Feature Accuracy": 72,
+          "Gen Novelty Score": 0.4943646366251732,
+          "fidelity_by_class": {
+            "minority_label": "0",
+            "majority_label": "1",
+            "minority": {
+              "Synthetic Fidelity (JSD)": 68,
+              "Correlation Stability": 74,
+              "Distribution Consistency": 69,
+              "Entropy Preservation": 71,
+              "Mean Z Score Drift": 0.13649698481775202,
+              "Categorical Fidelity": 0,
+              "Privacy Risk": 13,
+              "Data Density": 100.0,
+              "Coverage Score": 60,
+              "Feature Accuracy": 91,
+              "Novelty Score": 0.5036902736285828
+            }
+          },
+          "Gen C2ST Accuracy": 0.8484848484848485,
+          "Gen MIA Attack AUC": 0.48686594202898553,
+          "Gen Valid Rows": 100.0,
+          "ml_eval": {
+            "rf": {
+              "original": {
+                "accuracy": 0.6666666666666666,
+                "f1": 0.6923076923076923
+              },
+              "generated": null,
+              "generated_metadata": null,
+              "augmented": {
+                "accuracy": 0.6666666666666666,
+                "f1": 0.6666666666666666
+              },
+              "augmented_metadata": {
+                "model_type": "rf",
+                "params": {
+                  "bootstrap": true,
+                  "ccp_alpha": 0.0,
+                  "class_weight": null,
+                  "criterion": "gini",
+                  "max_depth": 6,
+                  "max_features": "sqrt",
+                  "max_leaf_nodes": null,
+                  "max_samples": null,
+                  "min_impurity_decrease": 0.0,
+                  "min_samples_leaf": 1,
+                  "min_samples_split": 2,
+                  "min_weight_fraction_leaf": 0.0,
+                  "monotonic_cst": null,
+                  "n_estimators": 50,
+                  "n_jobs": null,
+                  "oob_score": false,
+                  "random_state": null,
+                  "verbose": 0,
+                  "warm_start": false
+                },
+                "feature_importances": [
+                  0.10997477145041401,
+                  0.1423627775221712,
+                  0.21515940975604408,
+                  0.09336140990618175,
+                  0.0850607420267478,
+                  0.07850288736838723,
+                  0.05196886474533798,
+                  0.16294886389792335,
+                  0.060660273326792635
+                ],
+                "feature_names": [
+                  "Age",
+                  "BMI",
+                  "Glucose",
+                  "Insulin",
+                  "HOMA",
+                  "Leptin",
+                  "Adiponectin",
+                  "Resistin",
+                  "MCP.1"
+                ]
+              },
+              "task_type": "classification",
+              "error": "Single class in train"
+            },
+            "lr": {
+              "original": {
+                "accuracy": 0.625,
+                "f1": 0.5714285714285714
+              },
+              "generated": null,
+              "generated_metadata": null,
+              "augmented": {
+                "accuracy": 0.625,
+                "f1": 0.5263157894736842
+              },
+              "augmented_metadata": {
+                "model_type": "lr",
+                "params": {
+                  "C": 1.0,
+                  "class_weight": null,
+                  "dual": false,
+                  "fit_intercept": true,
+                  "intercept_scaling": 1,
+                  "l1_ratio": 0.0,
+                  "max_iter": 100,
+                  "n_jobs": null,
+                  "penalty": "deprecated",
+                  "random_state": null,
+                  "solver": "lbfgs",
+                  "tol": 0.0001,
+                  "verbose": 0,
+                  "warm_start": false
+                }
+              },
+              "task_type": "classification",
+              "error": "Single class in train"
+            },
+            "xgb": {
+              "original": {
+                "accuracy": 0.7083333333333334,
+                "f1": 0.72
+              },
+              "generated": null,
+              "generated_metadata": null,
+              "augmented": {
+                "accuracy": 0.6666666666666666,
+                "f1": 0.6666666666666666
+              },
+              "augmented_metadata": {
+                "model_type": "xgb",
+                "params": {
+                  "objective": "binary:logistic",
+                  "base_score": null,
+                  "booster": null,
+                  "callbacks": null,
+                  "colsample_bylevel": null,
+                  "colsample_bynode": null,
+                  "colsample_bytree": null,
+                  "device": null,
+                  "early_stopping_rounds": null,
+                  "enable_categorical": true,
+                  "eval_metric": null,
+                  "feature_types": null,
+                  "feature_weights": null,
+                  "gamma": null,
+                  "grow_policy": null,
+                  "importance_type": null,
+                  "interaction_constraints": null,
+                  "learning_rate": null,
+                  "max_bin": null,
+                  "max_cat_threshold": null,
+                  "max_cat_to_onehot": null,
+                  "max_delta_step": null,
+                  "max_depth": 3,
+                  "max_leaves": null,
+                  "min_child_weight": null,
+                  "missing": NaN,
+                  "monotone_constraints": null,
+                  "multi_strategy": null,
+                  "n_estimators": 50,
+                  "n_jobs": null,
+                  "num_parallel_tree": null,
+                  "random_state": null,
+                  "reg_alpha": null,
+                  "reg_lambda": null,
+                  "sampling_method": null,
+                  "scale_pos_weight": null,
+                  "subsample": null,
+                  "tree_method": null,
+                  "validate_parameters": null,
+                  "verbosity": null
+                },
+                "feature_importances": [
+                  0.10504279285669327,
+                  0.18347492814064026,
+                  0.264573872089386,
+                  0.03542761877179146,
+                  0.07129230350255966,
+                  0.08522826433181763,
+                  0.03929011896252632,
+                  0.1638580709695816,
+                  0.05181208625435829
+                ],
+                "feature_names": [
+                  "Age",
+                  "BMI",
+                  "Glucose",
+                  "Insulin",
+                  "HOMA",
+                  "Leptin",
+                  "Adiponectin",
+                  "Resistin",
+                  "MCP.1"
+                ]
+              },
+              "task_type": "classification",
+              "error": "Single class in train"
+            },
+            "nb": {
+              "original": {
+                "accuracy": 0.8333333333333334,
+                "f1": 0.7777777777777778
+              },
+              "generated": null,
+              "generated_metadata": null,
+              "augmented": {
+                "accuracy": 0.8333333333333334,
+                "f1": 0.7777777777777778
+              },
+              "augmented_metadata": {
+                "model_type": "nb",
+                "params": {
+                  "priors": null,
+                  "var_smoothing": 1e-09
+                }
+              },
+              "task_type": "classification",
+              "error": "Single class in train"
+            },
+            "dt": {
+              "original": {
+                "accuracy": 0.5416666666666666,
+                "f1": 0.5925925925925926
+              },
+              "generated": null,
+              "generated_metadata": null,
+              "augmented": {
+                "accuracy": 0.75,
+                "f1": 0.75
+              },
+              "augmented_metadata": {
+                "model_type": "dt",
+                "params": {
+                  "ccp_alpha": 0.0,
+                  "class_weight": null,
+                  "criterion": "gini",
+                  "max_depth": 6,
+                  "max_features": null,
+                  "max_leaf_nodes": null,
+                  "min_impurity_decrease": 0.0,
+                  "min_samples_leaf": 1,
+                  "min_samples_split": 2,
+                  "min_weight_fraction_leaf": 0.0,
+                  "monotonic_cst": null,
+                  "random_state": null,
+                  "splitter": "best"
+                },
+                "feature_importances": [
+                  0.08011520908153617,
+                  0.21935223410109972,
+                  0.3675674159490961,
+                  0.09923901426398653,
+                  0.0,
+                  0.03364779874213837,
+                  0.047580663117797774,
+                  0.12496764759168671,
+                  0.027530017152658653
+                ],
+                "feature_names": [
+                  "Age",
+                  "BMI",
+                  "Glucose",
+                  "Insulin",
+                  "HOMA",
+                  "Leptin",
+                  "Adiponectin",
+                  "Resistin",
+                  "MCP.1"
+                ]
+              },
+              "task_type": "classification",
+              "error": "Single class in train"
+            },
+            "gb": {
+              "original": {
+                "accuracy": 0.625,
+                "f1": 0.64
+              },
+              "generated": null,
+              "generated_metadata": null,
+              "augmented": {
+                "accuracy": 0.75,
+                "f1": 0.7272727272727273
+              },
+              "augmented_metadata": {
+                "model_type": "gb",
+                "params": {
+                  "ccp_alpha": 0.0,
+                  "criterion": "deprecated",
+                  "init": null,
+                  "learning_rate": 0.1,
+                  "loss": "log_loss",
+                  "max_depth": 3,
+                  "max_features": null,
+                  "max_leaf_nodes": null,
+                  "min_impurity_decrease": 0.0,
+                  "min_samples_leaf": 1,
+                  "min_samples_split": 2,
+                  "min_weight_fraction_leaf": 0.0,
+                  "n_estimators": 50,
+                  "n_iter_no_change": null,
+                  "random_state": null,
+                  "subsample": 1.0,
+                  "tol": 0.0001,
+                  "validation_fraction": 0.1,
+                  "verbose": 0,
+                  "warm_start": false
+                },
+                "feature_importances": [
+                  0.08319808330616923,
+                  0.2421872750851909,
+                  0.2879076883915885,
+                  0.03287960490344109,
+                  0.04481621664753268,
+                  0.06845569232930525,
+                  0.03889309392920283,
+                  0.1810753020733546,
+                  0.020587043334214954
+                ],
+                "feature_names": [
+                  "Age",
+                  "BMI",
+                  "Glucose",
+                  "Insulin",
+                  "HOMA",
+                  "Leptin",
+                  "Adiponectin",
+                  "Resistin",
+                  "MCP.1"
+                ]
+              },
+              "task_type": "classification",
+              "error": "Single class in train"
+            },
+            "ab": {
+              "original": {
+                "accuracy": 0.6666666666666666,
+                "f1": 0.6666666666666666
+              },
+              "generated": null,
+              "generated_metadata": null,
+              "augmented": {
+                "accuracy": 0.7083333333333334,
+                "f1": 0.6666666666666666
+              },
+              "augmented_metadata": {
+                "model_type": "ab",
+                "params": {
+                  "estimator": null,
+                  "learning_rate": 1.0,
+                  "n_estimators": 50,
+                  "random_state": null
+                },
+                "feature_importances": [
+                  0.17883313038905826,
+                  0.14803787425217976,
+                  0.1956499192306195,
+                  0.07259363836254241,
+                  0.075215226465216,
+                  0.04279253945741646,
+                  0.08410129760276437,
+                  0.14705717274463231,
+                  0.05571920149557069
+                ],
+                "feature_names": [
+                  "Age",
+                  "BMI",
+                  "Glucose",
+                  "Insulin",
+                  "HOMA",
+                  "Leptin",
+                  "Adiponectin",
+                  "Resistin",
+                  "MCP.1"
+                ]
+              },
+              "task_type": "classification",
+              "error": "Single class in train"
+            },
+            "knn": {
+              "original": {
+                "accuracy": 0.4583333333333333,
+                "f1": 0.6060606060606061
+              },
+              "generated": null,
+              "generated_metadata": null,
+              "augmented": {
+                "accuracy": 0.5833333333333334,
+                "f1": 0.5
+              },
+              "augmented_metadata": {
+                "model_type": "knn",
+                "params": {
+                  "algorithm": "auto",
+                  "leaf_size": 30,
+                  "metric": "minkowski",
+                  "metric_params": null,
+                  "n_jobs": null,
+                  "n_neighbors": 10,
+                  "p": 2,
+                  "weights": "uniform"
+                }
+              },
+              "task_type": "classification",
+              "error": "Single class in train"
+            },
+            "mlp": {
+              "original": {
+                "accuracy": 0.4166666666666667,
+                "f1": 0.5882352941176471
+              },
+              "generated": null,
+              "generated_metadata": null,
+              "augmented": {
+                "accuracy": 0.2916666666666667,
+                "f1": 0.45161290322580644
+              },
+              "augmented_metadata": {
+                "model_type": "mlp",
+                "params": {
+                  "activation": "relu",
+                  "alpha": 0.0001,
+                  "batch_size": "auto",
+                  "beta_1": 0.9,
+                  "beta_2": 0.999,
+                  "early_stopping": false,
+                  "epsilon": 1e-08,
+                  "hidden_layer_sizes": [
+                    32
+                  ],
+                  "learning_rate": "constant",
+                  "learning_rate_init": 0.001,
+                  "max_fun": 15000,
+                  "max_iter": 5000,
+                  "momentum": 0.9,
+                  "n_iter_no_change": 10,
+                  "nesterovs_momentum": true,
+                  "power_t": 0.5,
+                  "random_state": null,
+                  "shuffle": true,
+                  "solver": "adam",
+                  "tol": 0.0001,
+                  "validation_fraction": 0.1,
+                  "verbose": false,
+                  "warm_start": false
+                },
+                "loss_curve": [
+                  17.988056099978007,
+                  17.93250205673336,
+                  17.862662568708686,
+                  17.7541513316128,
+                  17.59001619180142,
+                  17.409737517336968,
+                  17.21254586758173,
+                  16.994551744997374,
+                  16.722156941426874,
+                  16.412504339273585,
+                  16.042077243718527,
+                  15.615455135492107,
+                  15.149327596096448,
+                  14.626773736180496,
+                  14.00168919479259,
+                  13.367917302643706,
+                  12.710280469424452,
+                  11.931822554501641,
+                  10.986031365736249,
+                  10.001751962706528,
+                  8.937784963447273,
+                  7.892822556552182,
+                  6.93605782132686,
+                  6.099762637706968,
+                  5.44835656361875,
+                  4.991210513564718,
+                  4.72204055034821,
+                  4.649890912864249,
+                  4.768178981594957,
+                  5.022015907960124,
+                  5.310570095959495,
+                  5.610121362716908,
+                  5.861069616427778,
+                  6.027098740575304,
+                  6.09495227410901,
+                  6.066056673093137,
+                  5.9552605789543955,
+                  5.775743920114811,
+                  5.538753915704957
+                ]
+              },
+              "task_type": "classification",
+              "error": "Single class in train"
+            },
+            "svm": {
+              "original": {
+                "accuracy": 0.4166666666666667,
+                "f1": 0.5882352941176471
+              },
+              "generated": null,
+              "generated_metadata": null,
+              "augmented": {
+                "accuracy": 0.3333333333333333,
+                "f1": 0.38461538461538464
+              },
+              "augmented_metadata": {
+                "model_type": "svm",
+                "params": {
+                  "C": 1.0,
+                  "break_ties": false,
+                  "cache_size": 200,
+                  "class_weight": null,
+                  "coef0": 0.0,
+                  "decision_function_shape": "ovr",
+                  "degree": 3,
+                  "gamma": "scale",
+                  "kernel": "rbf",
+                  "max_iter": -1,
+                  "probability": "deprecated",
+                  "random_state": null,
+                  "shrinking": true,
+                  "tol": 0.001,
+                  "verbose": false
+                }
+              },
+              "task_type": "classification",
+              "error": "Single class in train"
+            }
+          },
+          "synthetic_data": [
+            {
+              "Age": 64,
+              "BMI": 36.44591184406379,
+              "Glucose": 101,
+              "Insulin": 14.661249818685002,
+              "HOMA": 3.66076774609106,
+              "Leptin": 71.9359783704494,
+              "Adiponectin": 7.256018436639927,
+              "Resistin": 21.280027798369186,
+              "MCP.1": 867.1589263900048,
+              "Classification": 0,
+              "_fold_id": 5
+            },
+            {
+              "Age": 57,
+              "BMI": 30.73200642507885,
+              "Glucose": 82,
+              "Insulin": 13.804193016291759,
+              "HOMA": 2.8714243350051802,
+              "Leptin": 27.563968477549615,
+              "Adiponectin": 6.401803062550575,
+              "Resistin": 12.689853948862691,
+              "MCP.1": 453.247059131485,
+              "Classification": 0,
+              "_fold_id": 5
+            },
+            {
+              "Age": 69,
+              "BMI": 24.20287923388651,
+              "Glucose": 90,
+              "Insulin": 5.018800843927261,
+              "HOMA": 1.1185498135595067,
+              "Leptin": 19.703070394201376,
+              "Adiponectin": 8.20852468810428,
+              "Resistin": 11.818429397523614,
+              "MCP.1": 340.09990549097404,
+              "Classification": 0,
+              "_fold_id": 5
+            },
+            {
+              "Age": 35,
+              "BMI": 29.671647692478643,
+              "Glucose": 86,
+              "Insulin": 4.404608470392853,
+              "HOMA": 0.9379646282384683,
+              "Leptin": 19.515012175625877,
+              "Adiponectin": 8.291569663789971,
+              "Resistin": 8.01715680336984,
+              "MCP.1": 546.648016269611,
+              "Classification": 0,
+              "_fold_id": 5
+            },
+            {
+              "Age": 74,
+              "BMI": 29.593139555945257,
+              "Glucose": 82,
+              "Insulin": 5.154334504999311,
+              "HOMA": 1.0533510584831658,
+              "Leptin": 26.273503170316317,
+              "Adiponectin": 6.794398586200533,
+              "Resistin": 7.162281855863368,
+              "MCP.1": 686.8826877593228,
+              "Classification": 0,
+              "_fold_id": 5
+            },
+            {
+              "Age": 70,
+              "BMI": 22.988407096865252,
+              "Glucose": 82,
+              "Insulin": 4.880620839270337,
+              "HOMA": 0.9983903668116703,
+              "Leptin": 17.40216583654834,
+              "Adiponectin": 12.58020362665192,
+              "Resistin": 6.929719772236902,
+              "MCP.1": 317.92340890619954,
+              "Classification": 0,
+              "_fold_id": 5
+            },
+            {
+              "Age": 52,
+              "BMI": 23.566120955134945,
+              "Glucose": 85,
+              "Insulin": 3.728631709108145,
+              "HOMA": 0.7935493016747457,
+              "Leptin": 26.161258870711915,
+              "Adiponectin": 29.807273527691677,
+              "Resistin": 4.237121103584271,
+              "MCP.1": 200.97465464328215,
+              "Classification": 0,
+              "_fold_id": 5
+            },
+            {
+              "Age": 70,
+              "BMI": 27.039935852958987,
+              "Glucose": 89,
+              "Insulin": 5.180860674395749,
+              "HOMA": 1.1486575027919776,
+              "Leptin": 14.194996462542472,
+              "Adiponectin": 7.138894437144539,
+              "Resistin": 11.044411912202792,
+              "MCP.1": 347.3205087173244,
+              "Classification": 0,
+              "_fold_id": 5
+            },
+            {
+              "Age": 74,
+              "BMI": 23.433079517213844,
+              "Glucose": 83,
+              "Insulin": 4.973790737813497,
+              "HOMA": 1.0244067226926932,
+              "Leptin": 17.03664593651391,
+              "Adiponectin": 11.588516381759176,
+              "Resistin": 7.305408131086061,
+              "MCP.1": 316.10651478431384,
+              "Classification": 0,
+              "_fold_id": 5
+            },
+            {
+              "Age": 68,
+              "BMI": 22.98220396005173,
+              "Glucose": 82,
+              "Insulin": 4.842427239747087,
+              "HOMA": 0.9901238540149957,
+              "Leptin": 17.549401719629266,
+              "Adiponectin": 13.115933549820847,
+              "Resistin": 6.84326133749245,
+              "MCP.1": 317.720832181118,
+              "Classification": 0,
+              "_fold_id": 5
+            },
+            {
+              "Age": 71,
+              "BMI": 32.395682976652246,
+              "Glucose": 98,
+              "Insulin": 12.504221960954384,
+              "HOMA": 3.0953060516608497,
+              "Leptin": 57.51901427817133,
+              "Adiponectin": 6.852032043775353,
+              "Resistin": 19.352146197849848,
+              "MCP.1": 841.9569700518169,
+              "Classification": 0,
+              "_fold_id": 5
+            },
+            {
+              "Age": 75,
+              "BMI": 27.20052379556989,
+              "Glucose": 93,
+              "Insulin": 14.023523619083637,
+              "HOMA": 3.2509833557219068,
+              "Leptin": 35.75742689172228,
+              "Adiponectin": 9.344818583970426,
+              "Resistin": 8.41120587896419,
+              "MCP.1": 377.00787536129207,
+              "Classification": 0,
+              "_fold_id": 5
+            },
+            {
+              "Age": 49,
+              "BMI": 22.84199725340905,
+              "Glucose": 84,
+              "Insulin": 3.3234034012463693,
+              "HOMA": 0.6975966533369137,
+              "Leptin": 26.391650256587315,
+              "Adiponectin": 33.688160868298894,
+              "Resistin": 3.8047924342575508,
+              "MCP.1": 196.6120328353533,
+              "Classification": 0,
+              "_fold_id": 5
+            },
+            {
+              "Age": 56,
+              "BMI": 30.946168625845452,
+              "Glucose": 82,
+              "Insulin": 4.240288540742269,
+              "HOMA": 0.8642328072130311,
+              "Leptin": 23.214271674675885,
+              "Adiponectin": 5.720762724984857,
+              "Resistin": 7.288499987203872,
+              "MCP.1": 664.7616246098942,
+              "Classification": 0,
+              "_fold_id": 5
+            },
+            {
+              "Age": 58,
+              "BMI": 22.01659077112704,
+              "Glucose": 89,
+              "Insulin": 3.0839946362631823,
+              "HOMA": 0.6845544322915513,
+              "Leptin": 16.736110119922287,
+              "Adiponectin": 25.667181600985206,
+              "Resistin": 4.645032951081892,
+              "MCP.1": 167.1967552628285,
+              "Classification": 0,
+              "_fold_id": 5
+            }
+          ],
+          "context_data": [],
+          "test_data": [
+            {
+              "Age": 77,
+              "BMI": 35.58792924,
+              "Glucose": 76,
+              "Insulin": 3.881,
+              "HOMA": 0.727558133,
+              "Leptin": 21.7863,
+              "Adiponectin": 8.12555,
+              "Resistin": 17.2615,
+              "MCP.1": 618.272,
+              "Classification": 0
+            },
+            {
+              "Age": 48,
+              "BMI": 28.125,
+              "Glucose": 90,
+              "Insulin": 2.54,
+              "HOMA": 0.56388,
+              "Leptin": 15.5325,
+              "Adiponectin": 10.22231,
+              "Resistin": 16.11032,
+              "MCP.1": 1698.44,
+              "Classification": 1
+            },
+            {
+              "Age": 58,
+              "BMI": 29.15451895,
+              "Glucose": 139,
+              "Insulin": 16.582,
+              "HOMA": 5.685415067,
+              "Leptin": 22.8884,
+              "Adiponectin": 10.26266,
+              "Resistin": 13.97399,
+              "MCP.1": 923.886,
+              "Classification": 1
+            },
+            {
+              "Age": 68,
+              "BMI": 21.36752137,
+              "Glucose": 77,
+              "Insulin": 3.226,
+              "HOMA": 0.612724933,
+              "Leptin": 9.8827,
+              "Adiponectin": 7.16956,
+              "Resistin": 12.766,
+              "MCP.1": 928.22,
+              "Classification": 0
+            },
+            {
+              "Age": 71,
+              "BMI": 27.91551882,
+              "Glucose": 104,
+              "Insulin": 18.2,
+              "HOMA": 4.668906667,
+              "Leptin": 53.4997,
+              "Adiponectin": 1.65602,
+              "Resistin": 49.24184,
+              "MCP.1": 256.001,
+              "Classification": 1
+            },
+            {
+              "Age": 48,
+              "BMI": 23.5,
+              "Glucose": 70,
+              "Insulin": 2.707,
+              "HOMA": 0.467408667,
+              "Leptin": 8.8071,
+              "Adiponectin": 9.7024,
+              "Resistin": 7.99585,
+              "MCP.1": 417.114,
+              "Classification": 0
+            },
+            {
+              "Age": 69,
+              "BMI": 35.09270153,
+              "Glucose": 101,
+              "Insulin": 5.646,
+              "HOMA": 1.4066068,
+              "Leptin": 83.4821,
+              "Adiponectin": 6.796985,
+              "Resistin": 82.1,
+              "MCP.1": 263.499,
+              "Classification": 0
+            },
+            {
+              "Age": 49,
+              "BMI": 22.85445769,
+              "Glucose": 92,
+              "Insulin": 3.226,
+              "HOMA": 0.732086933,
+              "Leptin": 6.8317,
+              "Adiponectin": 13.67975,
+              "Resistin": 10.3176,
+              "MCP.1": 530.41,
+              "Classification": 0
+            },
+            {
+              "Age": 85,
+              "BMI": 26.6,
+              "Glucose": 96,
+              "Insulin": 4.462,
+              "HOMA": 1.0566016,
+              "Leptin": 7.85,
+              "Adiponectin": 7.9317,
+              "Resistin": 9.6135,
+              "MCP.1": 232.006,
+              "Classification": 0
+            },
+            {
+              "Age": 34,
+              "BMI": 21.47,
+              "Glucose": 78,
+              "Insulin": 3.469,
+              "HOMA": 0.6674356,
+              "Leptin": 14.57,
+              "Adiponectin": 13.11,
+              "Resistin": 6.92,
+              "MCP.1": 354.6,
+              "Classification": 0
+            },
+            {
+              "Age": 64,
+              "BMI": 34.5297228,
+              "Glucose": 95,
+              "Insulin": 4.427,
+              "HOMA": 1.037393667,
+              "Leptin": 21.2117,
+              "Adiponectin": 5.46262,
+              "Resistin": 6.70188,
+              "MCP.1": 252.449,
+              "Classification": 0
+            },
+            {
+              "Age": 71,
+              "BMI": 30.3,
+              "Glucose": 102,
+              "Insulin": 8.34,
+              "HOMA": 2.098344,
+              "Leptin": 56.502,
+              "Adiponectin": 8.13,
+              "Resistin": 4.2989,
+              "MCP.1": 200.976,
+              "Classification": 0
+            },
+            {
+              "Age": 55,
+              "BMI": 31.97501487,
+              "Glucose": 92,
+              "Insulin": 16.635,
+              "HOMA": 3.775036,
+              "Leptin": 37.2234,
+              "Adiponectin": 11.018455,
+              "Resistin": 7.16514,
+              "MCP.1": 483.377,
+              "Classification": 1
+            },
+            {
+              "Age": 43,
+              "BMI": 26.5625,
+              "Glucose": 101,
+              "Insulin": 10.555,
+              "HOMA": 2.629602333,
+              "Leptin": 9.8,
+              "Adiponectin": 6.420295,
+              "Resistin": 16.1,
+              "MCP.1": 806.724,
+              "Classification": 1
+            },
+            {
+              "Age": 60,
+              "BMI": 31.23140988,
+              "Glucose": 131,
+              "Insulin": 30.13,
+              "HOMA": 9.736007333,
+              "Leptin": 37.843,
+              "Adiponectin": 8.40443,
+              "Resistin": 11.50005,
+              "MCP.1": 396.021,
+              "Classification": 1
+            },
+            {
+              "Age": 29,
+              "BMI": 32.27078777,
+              "Glucose": 84,
+              "Insulin": 5.81,
+              "HOMA": 1.203832,
+              "Leptin": 45.6196,
+              "Adiponectin": 6.209635,
+              "Resistin": 24.6033,
+              "MCP.1": 904.981,
+              "Classification": 0
+            },
+            {
+              "Age": 29,
+              "BMI": 23.01,
+              "Glucose": 82,
+              "Insulin": 5.663,
+              "HOMA": 1.145436133,
+              "Leptin": 35.59,
+              "Adiponectin": 26.72,
+              "Resistin": 4.58,
+              "MCP.1": 174.8,
+              "Classification": 0
+            },
+            {
+              "Age": 38,
+              "BMI": 23.34,
+              "Glucose": 75,
+              "Insulin": 5.782,
+              "HOMA": 1.06967,
+              "Leptin": 15.26,
+              "Adiponectin": 17.95,
+              "Resistin": 9.35,
+              "MCP.1": 165.02,
+              "Classification": 0
+            },
+            {
+              "Age": 48,
+              "BMI": 32.46191136,
+              "Glucose": 99,
+              "Insulin": 28.677,
+              "HOMA": 7.0029234,
+              "Leptin": 46.076,
+              "Adiponectin": 21.57,
+              "Resistin": 10.15726,
+              "MCP.1": 738.034,
+              "Classification": 1
+            },
+            {
+              "Age": 73,
+              "BMI": 37.109375,
+              "Glucose": 134,
+              "Insulin": 5.636,
+              "HOMA": 1.862885867,
+              "Leptin": 41.4064,
+              "Adiponectin": 3.335665,
+              "Resistin": 6.89235,
+              "MCP.1": 788.902,
+              "Classification": 1
+            },
+            {
+              "Age": 83,
+              "BMI": 20.69049454,
+              "Glucose": 92,
+              "Insulin": 3.115,
+              "HOMA": 0.706897333,
+              "Leptin": 8.8438,
+              "Adiponectin": 5.429285,
+              "Resistin": 4.06405,
+              "MCP.1": 468.786,
+              "Classification": 0
+            },
+            {
+              "Age": 82,
+              "BMI": 31.21748179,
+              "Glucose": 100,
+              "Insulin": 18.077,
+              "HOMA": 4.458993333,
+              "Leptin": 31.6453,
+              "Adiponectin": 9.92365,
+              "Resistin": 19.94687,
+              "MCP.1": 994.316,
+              "Classification": 1
+            },
+            {
+              "Age": 38,
+              "BMI": 22.4996371,
+              "Glucose": 95,
+              "Insulin": 5.261,
+              "HOMA": 1.232827667,
+              "Leptin": 8.438,
+              "Adiponectin": 4.77192,
+              "Resistin": 15.73606,
+              "MCP.1": 199.055,
+              "Classification": 1
+            },
+            {
+              "Age": 75,
+              "BMI": 25.7,
+              "Glucose": 94,
+              "Insulin": 8.079,
+              "HOMA": 1.8732508,
+              "Leptin": 65.926,
+              "Adiponectin": 3.74122,
+              "Resistin": 4.49685,
+              "MCP.1": 206.802,
+              "Classification": 0
+            }
+          ],
+          "train_non_ctx_data": [],
+          "ctx_size_pct": 0,
+          "gen_size_pct": 100,
+          "join_context": false,
+          "generation_stats": {
+            "prompt_tokens": 0,
+            "candidates_tokens": 0,
+            "total_tokens": 0,
+            "rule_violations": 0,
+            "repair_attempts": 0,
+            "generation_seconds": 0.06199169158935547
+          },
+          "fold_seconds": 227.90170049667358
         }
       }
     }
