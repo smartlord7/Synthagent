@@ -11,9 +11,28 @@ from services.deep_baselines import _discrete_columns
 from utils.logging_config import logger
 
 
-def _prepare(df_train, target_col):
+def _encode(df_train, target_col):
+    """Imputes, then codes every text column as integers; returns the data and the codes."""
     data = impute_for_baseline(df_train.dropna(subset=[target_col]) if target_col else df_train)
-    return data.apply(pd.to_numeric, errors="coerce").fillna(0)
+    codes = {}
+    for col in data.columns:
+        if not pd.api.types.is_numeric_dtype(data[col]):
+            values, uniques = pd.factorize(data[col])
+            data[col] = values
+            codes[col] = uniques
+    return data.apply(pd.to_numeric, errors="coerce").fillna(0), codes
+
+
+def _decode(synth, codes):
+    """Maps integer codes of text columns back to their labels."""
+    for col, uniques in codes.items():
+        idx = pd.to_numeric(synth[col], errors="coerce").round().clip(0, len(uniques) - 1)
+        synth[col] = [uniques[int(i)] if pd.notna(i) else uniques[0] for i in idx]
+    return synth
+
+
+def _prepare(df_train, target_col):
+    return _encode(df_train, target_col)[0]
 
 
 def _restore_integers(synth, data):
@@ -35,7 +54,7 @@ def generate_cart_rows(df_train, target_col, categorical_cols, random_state, n_r
 
     if df_train.empty:
         return pd.DataFrame(columns=df_train.columns)
-    data = _prepare(df_train, target_col)
+    data, codes = _encode(df_train, target_col)
     n_rows = int(n_rows or len(data))
     rng = np.random.default_rng(random_state)
     discrete = set(_discrete_columns(data, target_col, categorical_cols))
@@ -52,7 +71,7 @@ def generate_cart_rows(df_train, target_col, categorical_cols, random_state, n_r
         synth_leaf = tree.apply(synth[prev].to_numpy())
         pools = {leaf: data[col].to_numpy()[real_leaf == leaf] for leaf in np.unique(real_leaf)}
         synth[col] = [rng.choice(pools[leaf]) for leaf in synth_leaf]
-    return synth[list(df_train.columns)]
+    return _decode(synth, codes)[list(df_train.columns)]
 
 
 def generate_arf_rows(df_train, target_col, categorical_cols, random_state, n_rows=None):
@@ -63,7 +82,7 @@ def generate_arf_rows(df_train, target_col, categorical_cols, random_state, n_ro
 
     if df_train.empty:
         return pd.DataFrame(columns=df_train.columns)
-    data = _prepare(df_train, target_col)
+    data, codes = _encode(df_train, target_col)
     discrete = _discrete_columns(data, target_col, categorical_cols)
     frame = data.copy()
     for col in discrete:
@@ -79,7 +98,7 @@ def generate_arf_rows(df_train, target_col, categorical_cols, random_state, n_ro
         return pd.DataFrame(columns=df_train.columns)
     for col in discrete:
         synth[col] = pd.to_numeric(synth[col].astype(str), errors="coerce")
-    return _restore_integers(synth, data)[list(df_train.columns)]
+    return _decode(_restore_integers(synth, data), codes)[list(df_train.columns)]
 
 
 def generate_tabddpm_rows(df_train, target_col, categorical_cols, random_state, n_rows=None):
@@ -87,7 +106,7 @@ def generate_tabddpm_rows(df_train, target_col, categorical_cols, random_state, 
     from synthcity.plugins import Plugins
     from synthcity.plugins.core.dataloader import GenericDataLoader
 
-    data = _prepare(df_train, target_col)
+    data, codes = _encode(df_train, target_col)
     n_rows = int(n_rows or len(data))
     try:
         model = Plugins().get("ddpm", random_state=random_state)
@@ -96,14 +115,14 @@ def generate_tabddpm_rows(df_train, target_col, categorical_cols, random_state, 
     except Exception as e:
         logger.warning(f"TabDDPM failed ({e}); skipping.")
         return pd.DataFrame(columns=df_train.columns)
-    return _restore_integers(synth, data)[list(df_train.columns)]
+    return _decode(_restore_integers(synth, data), codes)[list(df_train.columns)]
 
 
 def generate_great_rows(df_train, target_col, categorical_cols, random_state, n_rows=None, epochs=100):
     """GReaT (Borisov et al., ICLR 2023) with distilgpt2, be_great defaults apart from epochs. Meant for a GPU."""
     from be_great import GReaT
 
-    data = _prepare(df_train, target_col)
+    data, codes = _encode(df_train, target_col)
     n_rows = int(n_rows or len(data))
     try:
         model = GReaT(llm="distilgpt2", epochs=epochs, batch_size=32)
@@ -112,7 +131,7 @@ def generate_great_rows(df_train, target_col, categorical_cols, random_state, n_
     except Exception as e:
         logger.warning(f"GReaT failed ({e}); skipping.")
         return pd.DataFrame(columns=df_train.columns)
-    return _restore_integers(synth.apply(pd.to_numeric, errors="coerce"), data)[list(df_train.columns)]
+    return _decode(_restore_integers(synth.apply(pd.to_numeric, errors="coerce"), data), codes)[list(df_train.columns)]
 
 
 def generate_bayesian_network_rows(df_train, target_col, categorical_cols, random_state, n_rows=None):
@@ -120,7 +139,7 @@ def generate_bayesian_network_rows(df_train, target_col, categorical_cols, rando
     from synthcity.plugins import Plugins
     from synthcity.plugins.core.dataloader import GenericDataLoader
 
-    data = _prepare(df_train, target_col)
+    data, codes = _encode(df_train, target_col)
     n_rows = int(n_rows or len(data))
     try:
         model = Plugins().get("bayesian_network", random_state=random_state)
@@ -129,7 +148,7 @@ def generate_bayesian_network_rows(df_train, target_col, categorical_cols, rando
     except Exception as e:
         logger.warning(f"Bayesian network failed ({e}); skipping.")
         return pd.DataFrame(columns=df_train.columns)
-    return _restore_integers(synth, data)[list(df_train.columns)]
+    return _decode(_restore_integers(synth, data), codes)[list(df_train.columns)]
 
 
 GENERATORS = {
