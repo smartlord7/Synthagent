@@ -592,7 +592,7 @@ def run_smote_dataset_benchmark(args):
             gen_start_time = time.time()
             if target_col and method in ("smote", "adasyn", "borderline_smote"):
                 generated_df = generate_smote_rows(df_train_orig, target_col, categorical_cols, random_state=42 + fold_num, method=method)
-            elif target_col and method in ("cart", "arf", "tabddpm", "great"):
+            elif target_col and method in ("cart", "arf", "tabddpm", "great", "bayesian_network"):
                 from services.other_baselines import GENERATORS
                 generated_df = GENERATORS[method](df_train_orig, target_col, categorical_cols, random_state=42 + fold_num)
             elif target_col and method == "gaussian_copula":

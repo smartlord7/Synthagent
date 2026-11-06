@@ -310,7 +310,7 @@ ABLATION_ARMS: dict[str, dict] = {
 # Non-LLM generators; "tabddpm" and "great" are meant for a GPU machine (see
 # scripts/gpu_baselines/README.md).
 BASELINE_GENERATORS = ["smote", "adasyn", "borderline_smote", "ctgan", "tvae", "gaussian_copula",
-                       "cart", "arf", "tabddpm", "great"]
+                       "cart", "arf", "tabddpm", "great", "bayesian_network"]
 SPECIAL_ARMS = BASELINE_GENERATORS + ["ponder_strategy"]
 BASELINE_ARMS = set(BASELINE_GENERATORS)
 

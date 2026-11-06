@@ -115,9 +115,27 @@ def generate_great_rows(df_train, target_col, categorical_cols, random_state, n_
     return _restore_integers(synth.apply(pd.to_numeric, errors="coerce"), data)[list(df_train.columns)]
 
 
+def generate_bayesian_network_rows(df_train, target_col, categorical_cols, random_state, n_rows=None):
+    """Bayesian network through synthcity's "bayesian_network" plugin, library defaults."""
+    from synthcity.plugins import Plugins
+    from synthcity.plugins.core.dataloader import GenericDataLoader
+
+    data = _prepare(df_train, target_col)
+    n_rows = int(n_rows or len(data))
+    try:
+        model = Plugins().get("bayesian_network", random_state=random_state)
+        model.fit(GenericDataLoader(data, target_column=target_col))
+        synth = model.generate(count=n_rows).dataframe()
+    except Exception as e:
+        logger.warning(f"Bayesian network failed ({e}); skipping.")
+        return pd.DataFrame(columns=df_train.columns)
+    return _restore_integers(synth, data)[list(df_train.columns)]
+
+
 GENERATORS = {
     "cart": generate_cart_rows,
     "arf": generate_arf_rows,
     "tabddpm": generate_tabddpm_rows,
     "great": generate_great_rows,
+    "bayesian_network": generate_bayesian_network_rows,
 }
