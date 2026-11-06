@@ -142,6 +142,7 @@ class TabuLLM:
         structured_output: bool = False,
         temperature: float = 0.3,
         chunk_size: int = 30,
+        cllm_curation: bool = False,
         resume_fold_results: Optional[dict] = None,
         on_fold_done: Optional[Callable[[int, dict], None]] = None,
     ) -> dict:
@@ -213,6 +214,7 @@ class TabuLLM:
             "structured_output": structured_output,
             "temperature": temperature,
             "chunk_size": chunk_size,
+            "cllm_curation": cllm_curation,
             "ml_config": {"selected_models": ml_models, "params": {}},
             "na_strategy": na_strategy,
             "instructions": "",

@@ -244,6 +244,7 @@ def run_single_dataset_benchmark(args):
     enforce_boundaries = config.get("enforce_boundaries", False)
     inject_inferred_rules = bool(config.get("inject_inferred_rules", True))
     structured_output = bool(config.get("structured_output", False))
+    cllm_curation = bool(config.get("cllm_curation", False))
     # The structured-output baseline is the no-controller path with schema-constrained decoding.
     raw_prompting = bool(config.get("raw_prompting", False)) or structured_output
     apply_post_processing = bool(config.get("apply_post_processing", True)) and not raw_prompting
@@ -394,6 +395,10 @@ def run_single_dataset_benchmark(args):
                         )
                     generated_rows, type_errors = _align_raw_rows(generated_rows, df_orig_all)
                     result_bundle.setdefault("stats", {})["type_errors"] = type_errors
+                    if cllm_curation and targets:
+                        from services.cllm_curation import curate
+                        generated_rows, cllm_stats = curate(generated_rows, df_train_orig, targets[0], random_state=42 + fold_num)
+                        result_bundle.setdefault("stats", {}).update(cllm_stats)
                 generation_stats = {**result_bundle.get("stats", {}), "generation_seconds": generation_seconds}
                 test_data_list = df_test_orig.to_dict('records')
                 
@@ -587,6 +592,9 @@ def run_smote_dataset_benchmark(args):
             gen_start_time = time.time()
             if target_col and method == "smote":
                 generated_df = generate_smote_rows(df_train_orig, target_col, categorical_cols, random_state=42 + fold_num)
+            elif target_col and method == "gaussian_copula":
+                from services.deep_baselines import generate_gaussian_copula_rows
+                generated_df = generate_gaussian_copula_rows(df_train_orig, target_col, categorical_cols, random_state=42 + fold_num)
             elif target_col:
                 generated_df = generate_deep_rows(df_train_orig, target_col, categorical_cols, random_state=42 + fold_num, method=method)
             else:

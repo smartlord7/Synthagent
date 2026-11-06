@@ -293,6 +293,9 @@ ABLATION_ARMS: dict[str, dict] = {
     "batch_60":           {"chunk_size": 60},
     "temp_0":             {"temperature": 0.0},
     "temp_10":            {"temperature": 1.0},
+    # CLLM-style baseline: direct prompting followed by the learning-dynamics curation of
+    # Seedat et al. (services/cllm_curation.py), which discards hard and ambiguous records.
+    "cllm":               {"raw_prompting": True, "cllm_curation": True},
 }
 
 # Special arms that don't fit the simple "config override on the same LLM" mold and get
@@ -304,8 +307,8 @@ ABLATION_ARMS: dict[str, dict] = {
 #                        Ponder call) instead of the fixed PIPELINE defaults.
 #   entries discovered by _discover_model_sweep_arms() -- same pipeline, a different LLM
 #   backend, one arm per OTHER model currently loaded on the server (see below).
-SPECIAL_ARMS = ["smote", "ctgan", "tvae", "ponder_strategy"]
-BASELINE_ARMS = {"smote", "ctgan", "tvae"}
+SPECIAL_ARMS = ["smote", "ctgan", "tvae", "gaussian_copula", "ponder_strategy"]
+BASELINE_ARMS = {"smote", "ctgan", "tvae", "gaussian_copula"}
 
 
 def _slugify_model_id(model_id: str) -> str:
