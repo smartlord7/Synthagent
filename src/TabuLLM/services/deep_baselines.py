@@ -87,9 +87,8 @@ def generate_gaussian_copula_rows(
 
     if df_train.empty:
         return pd.DataFrame(columns=df_train.columns)
-    data = impute_for_baseline(df_train.dropna(subset=[target_col]) if target_col else df_train)
-    data = data.apply(pd.to_numeric, errors="coerce")
-    data = data.fillna(data.median(numeric_only=True))
+    from services.other_baselines import _encode, _decode
+    data, codes = _encode(df_train, target_col)
     n_rows = int(n_rows or len(df_train))
     rng = np.random.default_rng(random_state)
 
@@ -112,4 +111,4 @@ def generate_gaussian_copula_rows(
             synth[col] = np.quantile(values, u[:, j])
             if np.allclose(values, values.round()):
                 synth[col] = np.round(synth[col])
-    return pd.DataFrame(synth)[list(df_train.columns)]
+    return _decode(pd.DataFrame(synth), codes)[list(df_train.columns)]
