@@ -187,7 +187,7 @@ def generator_comparison():
 
 
 def radar(per_dataset):
-    """F1 change per dataset for a few representative generators, as a radar chart."""
+    """F1 change per dataset for a few representative generators, as a radar chart (symmetric log radius)."""
     import matplotlib.pyplot as plt
     gpa.print_style()
     show = [("Synthagent, Sonnet 4.6", gpa.C_REF), ("Synthagent, GPT-4o mini", gpa.C_LLM),
@@ -196,14 +196,21 @@ def radar(per_dataset):
     labels = list(data.index)
     angles = np.linspace(0, 2 * np.pi, len(labels), endpoint=False).tolist()
     angles += angles[:1]
+    # Symmetric log radius: linear within +-1 pp and logarithmic beyond, so the small
+    # differences near zero, where most generators lie, are spread out and outliers compressed.
+    def r(x):
+        x = np.asarray(x, dtype=float)
+        return np.sign(x) * np.log10(1 + np.abs(x)) - np.sign(-12) * np.log10(13)
+    markers = ["o", "s", "^", "D", "v"]
     fig, ax = plt.subplots(figsize=(gpa.COL_W, 2.9), subplot_kw={"polar": True})
-    for name, color in show:
+    for (name, color), m in zip(show, markers):
         values = data[name].tolist()
-        ax.plot(angles, values + values[:1], color=color, lw=1.2, label=name)
-    ax.plot(np.linspace(0, 2 * np.pi, 200), np.zeros(200), color="0.3", lw=0.8, ls="--")
+        ax.plot(angles, r(values + values[:1]), color=color, lw=1.2, marker=m, ms=2.4, label=name)
+    ax.plot(np.linspace(0, 2 * np.pi, 200), np.full(200, r(0)), color="0.3", lw=0.8, ls="--")
     ax.set_xticks(angles[:-1], [l.replace(" (Coimbra)", " (C.)") for l in labels], fontsize=6)
-    ax.set_ylim(-12, 15)
-    ax.set_yticks([-10, -5, 0, 5, 10], ["-10", "-5", "0", "5", "10"], fontsize=5.5)
+    ax.set_ylim(0, r(15))
+    ticks = [-10, -3, -1, 0, 1, 3, 10]
+    ax.set_yticks(r(ticks), [f"{t:+d}" if t else "0" for t in ticks], fontsize=5.5)
     ax.set_rlabel_position(90)
     ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.08), ncol=3, frameon=False, fontsize=5.8,
               handlelength=1.4, columnspacing=0.8)
