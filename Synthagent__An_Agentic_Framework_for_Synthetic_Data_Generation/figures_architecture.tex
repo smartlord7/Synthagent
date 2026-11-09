@@ -50,7 +50,7 @@
 
 %======================== 3 verifier ====================
 \node[gate,minimum width=10mm] (g1) at (10.25,-0.95) {Parse\\JSON};
-\node[gate,minimum width=12mm] (g2) at (11.6,-0.95)  {Bridge to\\schema $S$};
+\node[gate,minimum width=12mm] (g2) at (11.6,-0.95)  {Map to\\schema $S$};
 \node[gate,minimum width=12mm] (g3) at (13.0,-0.95)  {Validate\\$V_{S,R}$};
 \draw[flow] (g1)--(g2); \draw[flow] (g2)--(g3);
 \draw[flow] (8.9,-0.95) -- (g1.west);
@@ -79,7 +79,7 @@
 \node[lab=sorange,anchor=south] at (9.4,0.6) {parse error: focused repair};
 % violations -> grouped feedback
 \draw[fail] (g3.north) -- (13.0,1.15) -- (8.05,1.15) -- (8.05,0);
-\node[lab=sorange,anchor=south] at (10.55,1.15) {rule violations: grouped field feedback, $\le c$ rounds};
+\node[lab=sorange,anchor=south] at (10.55,1.15) {type violations: correction, $\le c$ rounds};
 % residual -> top-up
 \draw[fail] (16.95,0) -- (16.95,1.7) -- (7.55,1.7) -- (7.55,0);
 \node[lab=sorange,anchor=south] at (12.1,1.7) {$r_t>0$: request exactly $q_t=\min(b,r_t)$ more records; $\le t_{\max}$ rounds, stop after $u_{\max}$ empty};
