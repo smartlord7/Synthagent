@@ -207,11 +207,19 @@ def radar(per_dataset):
         values = data[name].tolist()
         ax.plot(angles, r(values + values[:1]), color=color, lw=1.2, marker=m, ms=2.4, label=name)
     ax.plot(np.linspace(0, 2 * np.pi, 200), np.full(200, r(0)), color="0.3", lw=0.8, ls="--")
-    ax.set_xticks(angles[:-1], [l.replace(" (Coimbra)", " (C.)") for l in labels], fontsize=6)
     ax.set_ylim(0, r(15))
+    # dataset names just outside the outer ring, aligned away from the centre so no spoke crosses them
+    ax.set_xticks(angles[:-1], [""] * len(labels))
+    for ang, lab in zip(angles[:-1], labels):
+        c, s_ = np.cos(ang), np.sin(ang)
+        ha = "left" if c > 0.1 else "right" if c < -0.1 else "center"
+        va = "bottom" if s_ > 0.1 else "top" if s_ < -0.1 else "center"
+        ax.text(ang, r(15) * 1.04, lab.replace(" (Coimbra)", " (C.)"), fontsize=6, ha=ha, va=va)
     ticks = [-10, -3, -1, 0, 1, 3, 10]
     ax.set_yticks(r(ticks), [f"{t:+d}" if t else "0" for t in ticks], fontsize=5.5)
     ax.set_rlabel_position(90)
+    for t in ax.get_yticklabels():
+        t.set_bbox(dict(facecolor="white", edgecolor="none", pad=0.3, alpha=0.8))
     ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.08), ncol=3, frameon=False, fontsize=5.8,
               handlelength=1.4, columnspacing=0.8)
     fig.subplots_adjust(left=0.08, right=0.92, top=0.93, bottom=0.2)
