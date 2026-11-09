@@ -1,5 +1,5 @@
 diff --git a/tmp/claude-0/-home-user-TabuLLM/177710a6-83c7-584b-8f2f-a9a7012a7684/scratchpad/v8.tex b/main.tex
-index c06b5a1..df25792 100644
+index c06b5a1..a68a802 100644
 --- a/tmp/claude-0/-home-user-TabuLLM/177710a6-83c7-584b-8f2f-a9a7012a7684/scratchpad/v8.tex
 +++ b/main.tex
 @@ -24,6 +24,7 @@
@@ -34,7 +34,7 @@ index c06b5a1..df25792 100644
  \end{abstract}
  
  \begin{IEEEkeywords}
-@@ -72,45 +73,45 @@ small data, synthetic data generation, large language models, healthcare
+@@ -72,45 +73,44 @@ small data, synthetic data generation, large language models, healthcare
  \section{Introduction}
  \label{sec:intro}
  %======================================================================
@@ -52,7 +52,7 @@ index c06b5a1..df25792 100644
  \label{eq:multiobjective}
  \end{equation}
 -The constraint follows the data-quality dimensions of completeness and conformity~\cite{wang1996beyond,batini2009methodologies}, and the objectives are the utility, fidelity and privacy on which synthetic data are evaluated~\cite{qian2023synthcity,lautrup2025syntheval}, together with cost: $\Delta U$ is the change in classifier performance when $G_\theta$ is added to $D$, $L_{\mathrm{fid}}$ the divergence between the real and synthetic distributions, $L_{\mathrm{priv}}$ the success of a membership-inference attack, and $\kappa$ the number of tokens processed; Section~\ref{sec:setup} defines how each is measured. The objectives are kept separate rather than combined with weights, because the right trade-off depends on the use of the data.
-+$\mathcal{F}(S,N)$ encodes two integrity constraints, the requested number of records and the columns and types of the real data~\cite{wang1996beyond,batini2009methodologies}, and the objectives are the utility, fidelity and privacy on which synthetic data are evaluated~\cite{qian2023synthcity,lautrup2025syntheval}, together with cost: $\Delta U$ is the change in classifier performance when $G_\theta$ is added to $D$, $L_{\mathrm{fid}}$ the divergence between the real and synthetic distributions, $L_{\mathrm{priv}}$ the success of a membership-inference attack, and $\kappa$ the number of tokens processed; Section~\ref{sec:setup} defines how each is measured. The objectives are kept separate rather than combined with weights, because the right trade-off depends on how the data are used.
++$\mathcal{F}(S,N)$ encodes two integrity constraints, the requested number of records and the columns and types of the real data~\cite{wang1996beyond,batini2009methodologies}, and the objectives are the utility, fidelity and privacy on which synthetic data are evaluated~\cite{qian2023synthcity,lautrup2025syntheval}, together with cost: $\Delta U$ is the change in classifier performance when $G_\theta$ is added to $D$, $L_{\mathrm{fid}}$ the divergence between the real and synthetic distributions, $L_{\mathrm{priv}}$ the success of a membership-inference attack, and $\kappa$ the number of tokens processed; Section~\ref{sec:setup} defines how each is measured. The objectives are kept separate rather than combined with weights, because the right trade-off depends on how the data are used; \system satisfies the constraint by construction and is compared with other generators on the objectives.
  
 -Currently, deep generators~\cite{xu2019ctgan,kotelnikov2023tabddpm,zhang2024tabsyn} and language models fine-tuned on the target data~\cite{borisov2023great,solatorio2023realtabformer} must be trained on the scarce records, and they were designed and evaluated on datasets with tens of thousands of records. Approaches that prompt an LLM directly, such as CLLM~\cite{seedat2024cllm} and EPIC~\cite{kim2024epic}, avoid training, but they focus on the design of the prompt and on the selection of the generated records; they do not ensure that the output has the configured number of records and the correct columns and types, and they do not report its cost. Constrained decoding, now offered by LLM providers, fixes the format of each response but not the size of the dataset. Finally, generators are usually compared on the result of a single run, which is unreliable in small data. A small test set amplifies chance: with 40 test records, one misclassified record changes accuracy by 2.5 percentage points, and the randomness of the data split and of the LLM's sampling makes two runs of the same generator differ by amounts comparable to the differences being compared.
 +Deep generators~\cite{xu2019ctgan,kotelnikov2023tabddpm,zhang2024tabsyn} and language models fine-tuned on the target data~\cite{borisov2023great,solatorio2023realtabformer} must be trained on the scarce records and were designed and evaluated on datasets with tens of thousands of records. Approaches that prompt an LLM directly, such as CLLM~\cite{seedat2024cllm} and EPIC~\cite{kim2024epic}, avoid training, but they focus on prompt design and on selecting the generated records; they do not ensure that the output has the configured number of records and the correct columns and types, and they do not report its cost. Constrained decoding, now offered by LLM providers, fixes the format of each response but not the number of records. Finally, generators are usually compared on a single run, which is unreliable in small data. With 40 test records, one misclassified record changes accuracy by 2.5 percentage points, so two runs of the same generator can differ as much as two generators.
@@ -64,8 +64,8 @@ index c06b5a1..df25792 100644
 +Our contributions are:
  \begin{itemize}[leftmargin=*,itemsep=1pt]
 -  \item \system, an SDG system for small healthcare datasets that requires no training on the target data and whose control layer enforces completeness and conformity by construction: it delivers the configured number of records with the columns and types of the real data, together with an audit trail of every request and its cost;
+-  \item a deployment pattern in which each healthcare facility runs \system locally and only model updates are shared, so that no record leaves the facility;
 +  \item \system, an SDG system for small healthcare datasets that requires no training on the target data and whose control layer enforces integrity by construction: it delivers the configured number of records with the columns and types of the real data, with an audit trail of every request and its cost;
-   \item a deployment pattern in which each healthcare facility runs \system locally and only model updates are shared, so that no record leaves the facility;
    \item an open-source implementation that works with OpenAI-compatible and Anthropic LLM endpoints, including locally served models.
  \end{itemize}
  
@@ -93,7 +93,7 @@ index c06b5a1..df25792 100644
  \label{fig:teaser}
  \end{figure}
  
-@@ -118,7 +119,7 @@ The remainder of the paper is organized as follows. Section~\ref{sec:related} pr
+@@ -118,7 +118,7 @@ The remainder of the paper is organized as follows. Section~\ref{sec:related} pr
  \section{Background Knowledge}
  \label{sec:related}
  %======================================================================
@@ -102,7 +102,7 @@ index c06b5a1..df25792 100644
  
  \begin{table*}[!t]
  \centering
-@@ -128,38 +129,38 @@ In this section, the families of methods for synthetic data generation (SDG) of
+@@ -128,38 +128,38 @@ In this section, the families of methods for synthetic data generation (SDG) of
  \setlength{\tabcolsep}{3pt}
  \begin{tabular}{@{}p{.15\textwidth}p{.23\textwidth}p{.27\textwidth}cccc@{}}
  \toprule
@@ -150,7 +150,7 @@ index c06b5a1..df25792 100644
  
  \begin{figure*}[t]
  \centering
-@@ -212,7 +213,7 @@ k_t&=\max\{k:T(C_{t,k})\leq\omega W\},
+@@ -212,7 +212,7 @@ k_t&=\max\{k:T(C_{t,k})\leq\omega W\},
  where $\operatorname{Select}_s$ draws the sample with strategy $s$, $T$ estimates the length in tokens of a prompt with $k$ records, and $\operatorname{Slice}_t$ rotates through the sample, so that successive requests see different patients. If the provider still rejects a request as too long, the budgeter shows fewer records and retries. Besides the default random strategy, \emph{dense} prefers records with fewer missing values, and \emph{diverse} selects the records closest to the centres of $k$-means clusters. Neither strategy is class-stratified, a limitation discussed in Section~\ref{sec:discussion}.
  
  \subsection{LLM Proposal and Prompts (2)}
@@ -159,12 +159,12 @@ index c06b5a1..df25792 100644
  
  \begin{table*}[t]
  \centering
-@@ -275,18 +276,18 @@ Empty-answer limit $u_{\max}$ & 5 & Five consecutive empty answers indicate a pr
+@@ -275,18 +275,18 @@ Empty-answer limit $u_{\max}$ & 5 & Five consecutive empty answers indicate a pr
  \section{Deployment Across Healthcare Facilities}
  \label{sec:deployment}
  %======================================================================
 -As discussed in Section~\ref{sec:intro}, healthcare facilities often cannot pool their records~\cite{rieke2020digitalhealth,sheller2020medicine}, and \system was designed for this setting. Because the control layer needs only a local dataset, its schema and an inference endpoint, each healthcare facility of a network can run it inside its own infrastructure. Consider $K$ healthcare facilities, each holding a small dataset $D_k$ for the same prediction task, with different case mix, coding practice and class prevalence. Each healthcare facility runs \system locally and trains on its real and synthetic records,
-+Healthcare facilities often cannot pool their records (Section~\ref{sec:intro})~\cite{rieke2020digitalhealth,sheller2020medicine}, and \system was designed for this setting. Because the control layer needs only a local dataset, its schema and an inference endpoint, each facility of a network can run it inside its own infrastructure. Consider $K$ healthcare facilities, each holding a small dataset $D_k$ for the same prediction task, with different case mix, coding practice and class prevalence. Each facility runs \system locally and trains on its real and synthetic records,
++This section outlines a deployment design, which this paper does not evaluate. Healthcare facilities often cannot pool their records (Section~\ref{sec:intro})~\cite{rieke2020digitalhealth,sheller2020medicine}, and \system was designed for this setting. Because the control layer needs only a local dataset, its schema and an inference endpoint, each facility of a network can run it inside its own infrastructure. Consider $K$ healthcare facilities, each holding a small dataset $D_k$ for the same prediction task, with different case mix, coding practice and class prevalence. Each facility runs \system locally and trains on its real and synthetic records,
  \begin{equation}
  G_k=\mathcal{A}(D_k,S_k,N_k),\qquad
  \Delta w_k=\mathcal{U}(w_t,D_k\cup G_k),
@@ -181,7 +181,7 @@ index c06b5a1..df25792 100644
  
  
  
-@@ -296,7 +297,7 @@ preferably under secure aggregation~\cite{bonawitz2017secure}. The weights count
+@@ -296,7 +296,7 @@ preferably under secure aggregation~\cite{bonawitz2017secure}. The weights count
  \resizebox{\linewidth}{!}{\input{figures_federated.tex}}
  \end{minipage}\hfill
  \begin{minipage}[c]{0.37\textwidth}
@@ -190,7 +190,7 @@ index c06b5a1..df25792 100644
  \label{fig:federated}
  \end{minipage}
  \end{figure*}
-@@ -306,10 +307,10 @@ preferably under secure aggregation~\cite{bonawitz2017secure}. The weights count
+@@ -306,10 +306,10 @@ preferably under secure aggregation~\cite{bonawitz2017secure}. The weights count
  \section{Experimental Setup}
  \label{sec:setup}
  %======================================================================
@@ -203,7 +203,7 @@ index c06b5a1..df25792 100644
  
  \begin{table}[t]
  \centering
-@@ -337,14 +338,14 @@ Thoracic surgery & 470 & 16 & 2 & 70 (14.9) & 1,606 & 4.3 \\
+@@ -337,14 +337,14 @@ Thoracic surgery & 470 & 16 & 2 & 70 (14.9) & 1,606 & 4.3 \\
  \end{table}
  
  \subsection{Protocol}
@@ -212,7 +212,7 @@ index c06b5a1..df25792 100644
  
  \subsection{Configurations}
 -Table~\ref{tab:configs} lists the 34 configurations. A configuration is included in the analysis only if it completed all its datasets and ten repetitions. The \emph{reference} configuration is \system with its default settings and GPT-4o mini, the least expensive LLM; every other configuration differs from it in one respect. The \emph{direct-prompting} baseline uses the same LLM, prompts and context, but none of the control layer, the \emph{structured-output} baseline adds to it the provider's strict JSON-schema mode, which constrains decoding to the column names, numerical types and observed categories of the real data, and the \emph{CLLM} baseline follows direct prompting with the curation step of CLLM~\cite{seedat2024cllm}, which keeps only the records that an XGBoost model trained on the real data learns with confidence of at least 0.75 and aleatoric uncertainty of at most 0.2 (the Data-IQ criteria~\cite{seedat2022dataiq}). Eight control-layer variants change one component or repeat the reference run, and three LLM variants replace GPT-4o mini, forming a $2\times2$ design that crosses model generation (4o versus 4.1) with model size (mini versus full). A second provider, Anthropic, adds three LLMs under the reference configuration, Claude Haiku 4.5, Claude Sonnet 4.6 and Claude Sonnet 5.5, and repeats both baselines with Claude Haiku 5.5, whose reference run is reported separately in Section~\ref{sec:rq1}. The Claude models run without extended reasoning and at their default temperature, which the newest of them do not allow to be changed, whereas the OpenAI models use the temperature of Table~\ref{tab:params}. Token counts are compared only within a provider, because the tokenizers differ. Six sensitivity variants change one parameter of Table~\ref{tab:params} at a time. Eight established generators cover the other families, all with the default settings of their reference implementations and the same divisions: oversampling (SMOTE~\cite{chawla2002smote}, ADASYN~\cite{he2008adasyn}, Borderline-SMOTE~\cite{han2005borderline}), statistical (a Gaussian copula~\cite{patki2016sdv}), tree-based (sequential CART synthesis~\cite{nowok2016synthpop} and adversarial random forests, ARF~\cite{watson2023arf}) and deep (CTGAN and TVAE~\cite{xu2019ctgan}). In total, the configurations give 2,600 dataset--configuration repetitions and up to 78,000 classifier fits.
-+Table~\ref{tab:configs} lists the 36 configurations. A configuration is included in the analysis only if it completed all its datasets and ten repetitions. The \emph{reference} configuration is \system with its default settings and GPT-4o mini, the least expensive LLM; every other configuration differs from it in one respect. The \emph{direct-prompting} baseline uses the same LLM, prompts and context, but none of the control layer. The \emph{structured-output} baseline adds to it the provider's strict JSON-schema mode, which constrains decoding to the column names, numerical types and observed categories of the real data. The \emph{CLLM} baseline follows direct prompting with the curation step of CLLM~\cite{seedat2024cllm}, which keeps only the records that an XGBoost model trained on the real data learns with confidence of at least 0.75 and aleatoric uncertainty of at most 0.2 (the Data-IQ criteria~\cite{seedat2022dataiq}). Eight control-layer variants change one component or repeat the reference run, and three LLM variants replace GPT-4o mini, forming a $2\times2$ design that crosses model generation (4o versus 4.1) with model size (mini versus full). A second provider, Anthropic, adds three LLMs under the reference configuration, Claude Haiku 4.5, Claude Sonnet 4.6 and Claude Sonnet 5.5, and repeats both baselines with Claude Haiku 5.5, whose reference run is reported separately in Section~\ref{sec:rq1}. The Claude models run without extended reasoning and at their default temperature, which the newest of them do not allow to be changed, whereas the OpenAI models use the temperature of Table~\ref{tab:params}. Token counts are compared only within a provider, because the tokenizers differ. Six sensitivity variants change one parameter of Table~\ref{tab:params} at a time. Ten established generators cover the other families, all with the default settings of their reference implementations and the same divisions: oversampling (SMOTE~\cite{chawla2002smote}, ADASYN~\cite{he2008adasyn}, Borderline-SMOTE~\cite{han2005borderline}), statistical (a Gaussian copula~\cite{patki2016sdv} and a discrete Bayesian network learned by hill climbing~\cite{zhang2014privbayes}), tree-based (sequential CART synthesis~\cite{nowok2016synthpop} and adversarial random forests, ARF~\cite{watson2023arf}) and deep (CTGAN, TVAE~\cite{xu2019ctgan} and TabDDPM~\cite{kotelnikov2023tabddpm}). In total, the configurations give 2,800 dataset-configuration repetitions and up to 84,000 classifier fits.
++Table~\ref{tab:configs} lists the 36 configurations. A configuration is included in the analysis only if it completed all its datasets and ten repetitions. The \emph{reference} configuration is \system with its default settings and GPT-4o mini, the least expensive LLM; every other configuration differs from it in one respect. The \emph{direct-prompting} baseline uses the same LLM, prompts and context, but none of the control layer. The \emph{structured-output} baseline adds to it the provider's strict JSON-schema mode, which constrains decoding to the column names, numerical types and observed categories of the real data. The \emph{CLLM} baseline follows direct prompting with the curation step of CLLM~\cite{seedat2024cllm}, which keeps only the records that an XGBoost model trained on the real data learns with confidence of at least 0.75 and aleatoric uncertainty of at most 0.2 (the Data-IQ criteria~\cite{seedat2022dataiq}). Eight control-layer variants change one component or repeat the reference run, and three LLM variants replace GPT-4o mini, forming a $2\times2$ design that crosses model generation (4o versus 4.1) with model size (mini versus full). A second provider, Anthropic, adds three LLMs under the reference configuration, Claude Haiku 4.5, Claude Sonnet 4.6 and Claude Sonnet 5.5, and repeats both baselines with Claude Haiku 5.5, used for the baselines only because its \system run did not complete (Section~\ref{sec:rq1}). The Claude models run without extended reasoning and at their default temperature, which the newest of them do not allow to be changed, whereas the OpenAI models use the temperature of Table~\ref{tab:params}. Token counts are compared only within a provider, because the tokenizers differ. Six sensitivity variants change one parameter of Table~\ref{tab:params} at a time. Ten established generators cover the other families, all with the default settings of their reference implementations and the same divisions: oversampling (SMOTE~\cite{chawla2002smote}, ADASYN~\cite{he2008adasyn}, Borderline-SMOTE~\cite{han2005borderline}), statistical (a Gaussian copula~\cite{patki2016sdv} and a discrete Bayesian network learned by hill climbing~\cite{zhang2014privbayes}), tree-based (sequential CART synthesis~\cite{nowok2016synthpop} and adversarial random forests, ARF~\cite{watson2023arf}) and deep (CTGAN, TVAE~\cite{xu2019ctgan} and TabDDPM~\cite{kotelnikov2023tabddpm}). In total, the configurations give 2,800 dataset-configuration repetitions and up to 84,000 classifier fits.
  
  \begin{table}[t]
  \centering
@@ -221,7 +221,7 @@ index c06b5a1..df25792 100644
  \label{tab:configs}
  \footnotesize
  \setlength{\tabcolsep}{2pt}
-@@ -352,23 +353,23 @@ Table~\ref{tab:configs} lists the 34 configurations. A configuration is included
+@@ -352,23 +352,23 @@ Table~\ref{tab:configs} lists the 34 configurations. A configuration is included
  \toprule
  Group & Configurations & No. & Purpose \\
  \midrule
@@ -250,7 +250,7 @@ index c06b5a1..df25792 100644
  \begin{equation}
  \begin{aligned}
  F_{\mathrm{JSD}}&=100\Bigl(1-\tfrac{1}{|\mathcal{J}|}
-@@ -377,7 +378,7 @@ F_{\mathrm{corr}}&=100\bigl(1-\operatorname{mean}|\Sigma_D-\Sigma_G|\bigr),
+@@ -377,7 +377,7 @@ F_{\mathrm{corr}}&=100\bigl(1-\operatorname{mean}|\Sigma_D-\Sigma_G|\bigr),
  \end{aligned}
  \label{eq:fidelity}
  \end{equation}
@@ -259,7 +259,7 @@ index c06b5a1..df25792 100644
  \begin{equation}
  \Delta m_{d,c,h}=m\bigl(D_{d,h}\cup G_{d,h};\,c\bigr)-m\bigl(D_{d,h};\,c\bigr),
  \label{eq:utility}
-@@ -385,97 +386,73 @@ where $D_{\mathrm{JS}}$ is the Jensen--Shannon divergence between real and synth
+@@ -385,97 +385,73 @@ where $D_{\mathrm{JS}}$ is the Jensen--Shannon divergence between real and synth
  with both models scored on the same test set. We use binary F1 for the binary tasks and class-weighted F1 for heart disease, and report changes in percentage points (pp).
  
  \subsection{Statistical Analysis}
@@ -321,9 +321,9 @@ index c06b5a1..df25792 100644
 +%======================================================================
 +\subsection{RQ1: Control Layer and Integrity}
 +\label{sec:rq1}
-+\textbf{Finding~1.} The control layer ensures integrity: without it, every run of the same LLM missed or added records; with it, no logged run had an integrity violation, at 1.9\% more tokens and with unchanged fidelity. Figure~\ref{fig:delivery} shows the records delivered per dataset. On the six original datasets, direct prompting delivered 87.6\% of the configured records, fell short in 50 of 60 runs and overshot in the other 10, and lost an entire batch to each of ten malformed responses. Fidelity, privacy and utility were the same for both configurations (JSD 72.7; attack AUC 0.517 versus 0.526; F1 change $-0.04$ versus $-0.14$ pp, within the noise floor below), so the difference lies in the integrity of the dataset.
++\textbf{Finding~1.} The control layer ensures integrity: without it, every run of the same LLM missed or added records; with it, no logged run had an integrity violation, at 1.9\% more tokens in total and with unchanged fidelity. Figure~\ref{fig:delivery} shows the records delivered per dataset. On the six original datasets, direct prompting delivered 87.6\% of the configured records, fell short in 50 of 60 runs and overshot in the other 10, and lost an entire batch to each of ten malformed responses. Fidelity, privacy and utility were the same for both configurations (JSD 72.7; attack AUC 0.517 versus 0.526; F1 change $-0.04$ versus $-0.14$ pp, within the noise floor below), so the difference lies in the integrity of the dataset.
 +
-+Structured outputs, the providers' option to force every response into a fixed format, do not replace the control layer (Figure~\ref{fig:delivery}). Every response had the declared columns and types, but the LLM returned on average 77.7\% of the configured records and never the full dataset, at 21\% more tokens than \system. Forcing the format also weakened the relationships between features (correlation fidelity 63.0 versus 72.6) and made the records easier to tell from real ones (C2ST 0.943 versus 0.878), while utility did not differ (Friedman $p=.311$ for F1). A fixed format therefore guarantees the shape of each record, but not the number of records, which is what the completion loop provides. The same holds for the second provider: with Claude Haiku 5.5, direct prompting delivered 67.1\% of the configured records, with 294 malformed responses, and structured outputs 82.9\%. Under the control layer, the same model declined in plain text to imitate the patient records in 39 of the 60 repetitions of a first pass; \system logged each refusal instead of returning a smaller dataset, but finished only heart failure, so this run is not included in the comparisons.
++Structured outputs, the providers' option to force every response into a fixed format, do not replace the control layer (Figure~\ref{fig:delivery}). Every response had the declared columns and types, but the LLM returned on average 77.7\% of the configured records and never the full dataset, at 21\% more tokens in total than \system. Forcing the format also weakened the relationships between features (correlation fidelity 63.0 versus 72.6) and made the records easier to tell from real ones (C2ST 0.943 versus 0.878), while utility did not differ (Friedman $p=.311$ for F1). A fixed format therefore guarantees the shape of each record, but not the number of records, which is what the completion loop provides. The same holds for the second provider: with Claude Haiku 5.5, direct prompting delivered 67.1\% of the configured records, with 294 malformed responses, and structured outputs 82.9\%. Under the control layer, the same model declined in plain text to imitate the patient records in 39 of the 60 repetitions of a first pass; \system logged each refusal instead of returning a smaller dataset, but finished only heart failure, so this run is not included in the comparisons.
 +
 +\begin{figure}[t]
 +\centering
@@ -386,7 +386,7 @@ index c06b5a1..df25792 100644
  \subsection{RQ2: Fidelity and Privacy}
  \label{sec:rq2}
 -The generated records follow the real distributions reasonably well without revealing the real records, but they remain distinguishable from them (Table~\ref{tab:full}). Fidelity averages 72.7 out of 100, from 65.2 on the five-class heart-disease dataset, the furthest below its required sample size, to 80.2 on diabetes, the closest to it. The membership-inference attack stays near chance (AUC 0.526 on average, at most 0.567), which is a diagnostic for one attack rather than a formal guarantee. The C2ST accuracy of 0.878 shows that a classifier can still separate real from synthetic records, so the synthetic records complement real ones rather than replace them.
-+\textbf{Finding~2.} The generated records follow the real distributions reasonably well without revealing the real records, but they remain distinguishable from them (Table~\ref{tab:full}). Fidelity averages 72.7 out of 100, from 65.2 on heart disease, the furthest below its required sample size, to 80.2 on diabetes, the closest. The membership-inference attack stays near chance (AUC 0.526 on average, at most 0.567), which is a diagnostic for one attack rather than a formal guarantee. The records are also not interpolations of training patients: 7.8\% are near-copies, against 17-19\% for the oversampling methods. A classifier can still separate real from synthetic records (C2ST 0.878), so synthetic records complement real ones rather than replace them.
++\textbf{Finding~2.} The generated records follow the real distributions reasonably well without revealing the real records, but they remain distinguishable from them (Table~\ref{tab:full}). Fidelity averages 72.7 out of 100, from 65.2 on heart disease, the furthest below its required sample size, to 80.2 on diabetes, the closest. The membership-inference attack stays near chance (AUC 0.526 on average, at most 0.567), which is a diagnostic for one attack rather than a formal guarantee. The records are also not interpolations of training patients: 7.8\% are near-copies, against 17-19\% for the oversampling methods and comparable to the 1-8\% of the statistical, tree-based and deep generators. A classifier can still separate real from synthetic records (C2ST 0.878), so synthetic records complement real ones rather than replace them.
  
  \begin{table}[t]
  \centering
@@ -395,7 +395,7 @@ index c06b5a1..df25792 100644
  \label{tab:full}
  \footnotesize
  \setlength{\tabcolsep}{2.2pt}
-@@ -499,24 +476,53 @@ Mean & 72.7 & 72.6 & 0.878 & 0.526 & 75.4 & 74.2 & $-1.19$ & $-0.14$ \\
+@@ -499,24 +475,53 @@ Mean & 72.7 & 72.6 & 0.878 & 0.526 & 75.4 & 74.2 & $-1.19$ & $-0.14$ \\
  
  \subsection{RQ3: Utility for Classifiers Trained on Small Data}
  \label{sec:rq3}
@@ -452,7 +452,7 @@ index c06b5a1..df25792 100644
  \label{tab:generators}
  \footnotesize
  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}lrrrrrr@{}}
-@@ -535,48 +541,25 @@ SMOTE & 65.8 & 0.830 & 0.524 & $-2.25\pm7.46$ & $-1.01\pm7.43$ & 40 \\
+@@ -535,48 +540,25 @@ SMOTE & 65.8 & 0.830 & 0.524 & $-2.25\pm7.46$ & $-1.01\pm7.43$ & 40 \\
  ADASYN & 61.9 & 0.851 & 0.518 & $-3.08\pm7.00$ & $-0.95\pm7.23$ & 40 \\
  Borderline-SMOTE & 65.2 & 0.862 & 0.519 & $-2.76\pm6.87$ & $-1.20\pm7.25$ & 40 \\
  Gaussian copula & 85.2 & 0.541 & 0.522 & $-0.26\pm1.31$ & $-0.49\pm1.10$ & 30 \\
@@ -507,7 +507,7 @@ index c06b5a1..df25792 100644
  
  
  
-@@ -584,22 +567,22 @@ Over the ten datasets (Table~\ref{tab:generators}, Figure~\ref{fig:radar}), no g
+@@ -584,22 +566,22 @@ Over the ten datasets (Table~\ref{tab:generators}, Figure~\ref{fig:radar}), no g
  \section{Discussion and Limitations}
  \label{sec:discussion}
  %======================================================================
