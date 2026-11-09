@@ -8,6 +8,7 @@ backend_gpt_4_1_mini
 backend_gpt_4o
 batch_15
 batch_60
+bayesian_network
 borderline_smote
 boundaries
 cart

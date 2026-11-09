@@ -1,3 +1,3 @@
 family,metric,n_blocks,n_arms,friedman_chi2,friedman_p,best
-generators10,accuracy,10,14,46.209507042253506,1.3128500459385618e-05,cllm
-generators10,f1,10,14,22.925714285714264,0.042576440913164634,backend_claude_sonnet_4_6
+generators10,accuracy,10,15,47.7421777221527,1.4501813064237814e-05,cllm
+generators10,f1,10,15,25.840000000000032,0.027125598696721123,backend_claude_sonnet_4_6

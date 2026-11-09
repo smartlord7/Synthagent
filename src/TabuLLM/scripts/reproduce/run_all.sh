@@ -31,4 +31,5 @@ run openai gpt-4o-mini gaussian_copula $NEW results/copula_new
 run openai gpt-4o-mini adasyn,borderline_smote,cart,arf $OLD results/cpu_old
 run openai gpt-4o-mini adasyn,borderline_smote,cart,arf $NEW results/cpu_new
 run anthropic claude-sonnet-4-6 full $NEW results/claude/sonnet46_newdata
-# GPU machine only: run openai gpt-4o-mini tabddpm,great,bayesian_network $OLD,$NEW results/gpu_baselines
+run openai gpt-4o-mini bayesian_network $OLD,$NEW results/bn_all
+# GPU machine only: run openai gpt-4o-mini tabddpm,great $OLD,$NEW results/gpu_baselines
