@@ -1,8 +1,29 @@
 diff --git a/tmp/claude-0/-home-user-TabuLLM/177710a6-83c7-584b-8f2f-a9a7012a7684/scratchpad/v8.tex b/main.tex
-index c06b5a1..e9a8e70 100644
+index c06b5a1..f011cef 100644
 --- a/tmp/claude-0/-home-user-TabuLLM/177710a6-83c7-584b-8f2f-a9a7012a7684/scratchpad/v8.tex
 +++ b/main.tex
-@@ -61,7 +61,7 @@ Pedro Henriques Abreu\textsuperscript{1}}
+@@ -24,6 +24,7 @@
+ \usepackage{algorithm}
+ \usepackage{algpseudocode}
+ \usepackage[hidelinks]{hyperref}
++\usepackage{orcidlink}
+ 
+ \definecolor{sblue}{HTML}{2B6CB0}
+ \definecolor{sgreen}{HTML}{2F855A}
+@@ -48,9 +49,9 @@
+ 
+ % ORCIDs are entered in the submission system.
+ \author{%
+-\IEEEauthorblockN{Sancho Amaral Sim\~oes\textsuperscript{1,*},
+-Jo\~ao P. Vilela\textsuperscript{1,2},
+-Pedro Henriques Abreu\textsuperscript{1}}
++\IEEEauthorblockN{Sancho Amaral Sim\~oes\textsuperscript{1,*}\,\orcidlink{0000-0001-6013-4754},
++Jo\~ao P. Vilela\textsuperscript{1,2}\,\orcidlink{0000-0001-5805-1351},
++Pedro Henriques Abreu\textsuperscript{1}\,\orcidlink{0000-0002-9278-8194}}
+ \IEEEauthorblockA{\textsuperscript{1}\textit{University of Coimbra, CISUC/LASI -- Centre for Informatics and Systems of the University of Coimbra,}\\
+ \textit{Department of Informatics Engineering}, Coimbra, Portugal\\
+ \textsuperscript{2}\textit{CRACS/INESCTEC-DCS - FCUP, University of Porto}, Porto, Portugal\\
+@@ -61,7 +62,7 @@ Pedro Henriques Abreu\textsuperscript{1}}
  \maketitle
  
  \begin{abstract}
@@ -11,7 +32,7 @@ index c06b5a1..e9a8e70 100644
  \end{abstract}
  
  \begin{IEEEkeywords}
-@@ -74,7 +74,7 @@ small data, synthetic data generation, large language models, healthcare
+@@ -74,7 +75,7 @@ small data, synthetic data generation, large language models, healthcare
  %======================================================================
  Many prediction tasks in healthcare, such as diagnosing a disease or anticipating an adverse outcome, suffer from a lack of data. A rare disease may have only a few dozen diagnosed cases, a study conducted in a single healthcare facility is limited to the patients it can recruit, and labelling records often requires expert review. Data sharing between facilities could increase the number of records, but it is frequently restricted by privacy regulations~\cite{rieke2020digitalhealth}, so each facility often has to learn from its own data. In our work we refer to such datasets as \emph{small data}: datasets whose number of records is too low to train a reliable prediction model, a limit that depends on the number of features, the number of classes and the frequency of the outcome~\cite{riley2019binary}. A common way to mitigate small data, and a lack of data more generally, is synthetic data generation (SDG), which adds artificial records that follow the distribution of the real ones to the training set~\cite{qian2023synthcity}. This paper focuses on SDG for prediction tasks on small healthcare datasets.
  
@@ -20,7 +41,7 @@ index c06b5a1..e9a8e70 100644
  
  One problem that stands out is therefore how to obtain from an LLM a synthetic dataset with the configured number of records, the columns and types of the real data and a known cost, so that it can be used to improve the classifiers trained on small data. Formally, given the training records $D$ of a small dataset, their columns and types $S$ and the configured number of synthetic records $N$, a configuration $\theta$ of the generator produces a synthetic dataset $G_\theta$. The goal is to find a configuration whose dataset belongs to the set $\mathcal{F}(S,N)$ of datasets with exactly $N$ records that conform to $S$ and that maximizes the gain in classifier performance $\Delta U$, while keeping the distance from the real distribution $L_{\mathrm{fid}}$, the privacy risk $L_{\mathrm{priv}}$ and the cost $\kappa$ low:
  \begin{equation}
-@@ -82,28 +82,28 @@ One problem that stands out is therefore how to obtain from an LLM a synthetic d
+@@ -82,28 +83,28 @@ One problem that stands out is therefore how to obtain from an LLM a synthetic d
  \bigl(-\Delta U,\;L_{\mathrm{fid}},\;L_{\mathrm{priv}},\;\kappa\bigr)(\theta).
  \label{eq:multiobjective}
  \end{equation}
@@ -56,7 +77,7 @@ index c06b5a1..e9a8e70 100644
  
  The remainder of the paper is organized as follows. Section~\ref{sec:related} presents the background knowledge, Section~\ref{sec:system} describes \system and Section~\ref{sec:deployment} its deployment across healthcare facilities. Section~\ref{sec:setup} presents the experimental setup, Section~\ref{sec:results} reports the results, Section~\ref{sec:discussion} discusses their implications and limitations, and Section~\ref{sec:conclusion} concludes the paper.
  
-@@ -145,13 +145,13 @@ Prompted LLMs, constrained decoding~\cite{willard2023outlines,geng2023grammar} &
+@@ -145,13 +146,13 @@ Prompted LLMs, constrained decoding~\cite{willard2023outlines,geng2023grammar} &
  Tabular SDG methods fall into four families, which differ in how they produce new records. \emph{Interpolation and statistical methods} derive new records directly from the real ones or from a simple probabilistic model of them: SMOTE places a new minority-class record on the line segment between two neighbouring records of that class~\cite{chawla2002smote}, and Bayesian networks estimate the dependencies between features and sample new records from them~\cite{zhang2014privbayes}. \emph{Deep generative models} train a neural network to approximate the joint distribution of the features and then sample from it: CTGAN trains a generator against a discriminator, TVAE learns a compressed representation of the records~\cite{xu2019ctgan}, and diffusion models such as TabDDPM, CoDi and TabSyn learn to reverse a gradual corruption of the records~\cite{kotelnikov2023tabddpm,lee2023codi,zhang2024tabsyn}; relational and cross-silo variants extend these models to several tables or institutions~\cite{fan2020relational,shankar2024silofuse}. \emph{Fine-tuned language models} write each record as a sentence, fine-tune a language model on these sentences and generate new ones, as in GReaT~\cite{borisov2023great}, REaLTabFormer~\cite{solatorio2023realtabformer} and TabLoft~\cite{chen2026tabloft}. \emph{Prompted LLMs} place a few real records in the prompt of a pre-trained LLM and ask it for new ones, without any training, as in CLLM~\cite{seedat2024cllm} and EPIC~\cite{kim2024epic}.
  
  \subsection{Synthetic Data Generation in Small Data}
@@ -73,7 +94,7 @@ index c06b5a1..e9a8e70 100644
  
  %======================================================================
  \section{The \system System}
-@@ -340,11 +340,11 @@ Thoracic surgery & 470 & 16 & 2 & 70 (14.9) & 1,606 & 4.3 \\
+@@ -340,11 +341,11 @@ Thoracic surgery & 470 & 16 & 2 & 70 (14.9) & 1,606 & 4.3 \\
  Measuring whether synthetic records help a classifier requires real records that the generator has never seen. Each dataset is therefore divided into a training set, given to the generator, and a test set of 20\% of the records, used only to score classifiers. Because a test set of 24 to 154 records makes a single division unreliable, the division is repeated ten times with different random seeds, and means and standard deviations are reported. In each repetition, the number of synthetic records $N$ equals the number of training records, so augmentation doubles the training set; because records are requested in batches of at most $b=30$, a generator that falls short does so on small requests, not because $N$ is large. Ten classifiers covering the main model families are trained: logistic regression (LR), support vector machine (SVM), $k$-nearest neighbours ($k$NN), Gaussian naive Bayes (NB), decision tree (DT), random forest (RF), gradient boosting (GB), AdaBoost, XGBoost and a multilayer perceptron (MLP). Using several families avoids conclusions tied to one learner, since interpolated records can help a nearest-neighbour classifier and harm a boosted ensemble. Each classifier is trained in three setups, (1) on real records only, (2) on synthetic records only and (3) on real plus synthetic records, and all three are scored on the same test set. XGBoost failed on liver disease in every repetition because it requires classes coded from 0, whereas this dataset codes them as $\{1,2\}$, so 99 of the 100 classifier--dataset combinations are reported.
  
  \subsection{Configurations}
@@ -87,7 +108,7 @@ index c06b5a1..e9a8e70 100644
  \label{tab:configs}
  \footnotesize
  \setlength{\tabcolsep}{2pt}
-@@ -358,9 +358,9 @@ Repeated runs (RQ1) & No type rules; no post-processing; no context join; logged
+@@ -358,9 +359,9 @@ Repeated runs (RQ1) & No type rules; no post-processing; no context join; logged
  Design choices (RQ1) & Dense context; diverse context; LLM-chosen settings; range enforcement & 4 & Effect of context selection, of letting the LLM set $\rho$ and the temperature, and of clipping values to the observed ranges \\
  Sensitivity (RQ1) & $\rho$ of 10\% and 40\%; $b$ of 15 and 60; temperature 0 and 1.0 & 6 & Effect of each fixed parameter \\
  LLM variants (RQ4) & GPT-4.1 mini; GPT-4o; GPT-4.1$^{\ast}$; Claude Haiku 4.5; Claude Sonnet 4.6$^{\ast}$; Claude Sonnet 5.5 & 6 & Effect of model generation, size and provider \\
@@ -99,7 +120,7 @@ index c06b5a1..e9a8e70 100644
  \bottomrule
  \end{tabular}
  \end{table}
-@@ -368,7 +368,7 @@ Total & & 34 & \\
+@@ -368,7 +369,7 @@ Total & & 34 & \\
  Three of the control-layer variants change nothing in this setting: with no user rules, disabling post-processing removes a step that does nothing, the context-join option affects only a legacy fidelity score, and disabling type rules cannot change the output because the validator never found a type violation with GPT-4o mini. Together with the reference and a rerun of it that only adds per-request logging, they are five independent runs of the same pipeline, and their spread estimates the variation between repeated runs, which we call the \emph{noise floor}: a difference between two configurations that is smaller than this spread is not evidence of an effect.
  
  \subsection{Measures}
@@ -108,7 +129,7 @@ index c06b5a1..e9a8e70 100644
  \begin{equation}
  \begin{aligned}
  F_{\mathrm{JSD}}&=100\Bigl(1-\tfrac{1}{|\mathcal{J}|}
-@@ -390,88 +390,43 @@ Repetitions and classifiers are not independent datasets, so they are averaged w
+@@ -390,88 +391,43 @@ Repetitions and classifiers are not independent datasets, so they are averaged w
  \chi^2_F=\frac{12M}{Q(Q+1)}\sum_{a=1}^{Q}\bar{\mathrm{rk}}_a^{\,2}-3M(Q+1),
  \label{eq:friedman}
  \end{equation}
@@ -215,7 +236,7 @@ index c06b5a1..e9a8e70 100644
  
  \begin{table}[t]
  \centering
-@@ -499,7 +454,7 @@ Mean & 72.7 & 72.6 & 0.878 & 0.526 & 75.4 & 74.2 & $-1.19$ & $-0.14$ \\
+@@ -499,7 +455,7 @@ Mean & 72.7 & 72.6 & 0.878 & 0.526 & 75.4 & 74.2 & $-1.19$ & $-0.14$ \\
  
  \subsection{RQ3: Utility for Classifiers Trained on Small Data}
  \label{sec:rq3}
@@ -224,7 +245,7 @@ index c06b5a1..e9a8e70 100644
  
  
  
-@@ -512,11 +467,18 @@ The generated records help the classifiers that fail on the minority class and s
+@@ -512,11 +468,18 @@ The generated records help the classifiers that fail on the minority class and s
  
  
  
@@ -244,7 +265,7 @@ index c06b5a1..e9a8e70 100644
  \label{tab:generators}
  \footnotesize
  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}lrrrrrr@{}}
-@@ -535,6 +497,7 @@ SMOTE & 65.8 & 0.830 & 0.524 & $-2.25\pm7.46$ & $-1.01\pm7.43$ & 40 \\
+@@ -535,6 +498,7 @@ SMOTE & 65.8 & 0.830 & 0.524 & $-2.25\pm7.46$ & $-1.01\pm7.43$ & 40 \\
  ADASYN & 61.9 & 0.851 & 0.518 & $-3.08\pm7.00$ & $-0.95\pm7.23$ & 40 \\
  Borderline-SMOTE & 65.2 & 0.862 & 0.519 & $-2.76\pm6.87$ & $-1.20\pm7.25$ & 40 \\
  Gaussian copula & 85.2 & 0.541 & 0.522 & $-0.26\pm1.31$ & $-0.49\pm1.10$ & 30 \\
@@ -252,7 +273,7 @@ index c06b5a1..e9a8e70 100644
  CART & \best{86.0} & \best{0.465} & 0.565 & $-0.17\pm0.66$ & $+0.11\pm0.82$ & \best{80} \\
  ARF & 85.0 & 0.697 & 0.532 & $-0.37\pm1.41$ & $-0.53\pm2.27$ & 40 \\
  CTGAN & 79.2 & 0.917 & \best{0.500} & $-1.41\pm2.05$ & $-2.15\pm3.01$ & 0 \\
-@@ -543,11 +506,11 @@ TVAE & 67.7 & 0.866 & 0.515 & $-0.22\pm1.27$ & $-0.20\pm1.80$ & 50 \\
+@@ -543,11 +507,11 @@ TVAE & 67.7 & 0.866 & 0.515 & $-0.22\pm1.27$ & $-0.20\pm1.80$ & 50 \\
  \end{tabular*}
  \end{table*}
  
@@ -266,7 +287,7 @@ index c06b5a1..e9a8e70 100644
  \label{tab:backend}
  \footnotesize
  \setlength{\tabcolsep}{3pt}
-@@ -569,14 +532,9 @@ Claude Sonnet 5.5 & 79.00 & 63.78 & $+0.10$ & $+1.62$ & 205.5 & 86,074 \\
+@@ -569,14 +533,9 @@ Claude Sonnet 5.5 & 79.00 & 63.78 & $+0.10$ & $+1.62$ & 205.5 & 86,074 \\
  
  
  
@@ -283,7 +304,7 @@ index c06b5a1..e9a8e70 100644
  
  
  
-@@ -584,17 +542,17 @@ Over the ten datasets (Table~\ref{tab:generators}, Figure~\ref{fig:radar}), no g
+@@ -584,17 +543,17 @@ Over the ten datasets (Table~\ref{tab:generators}, Figure~\ref{fig:radar}), no g
  \section{Discussion and Limitations}
  \label{sec:discussion}
  %======================================================================
