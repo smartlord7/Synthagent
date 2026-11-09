@@ -30,6 +30,7 @@ strategy_dense
 strategy_diverse
 structured_output
 structured_output_claude_haiku_5_5
+tabddpm
 temp_0
 temp_10
 tvae

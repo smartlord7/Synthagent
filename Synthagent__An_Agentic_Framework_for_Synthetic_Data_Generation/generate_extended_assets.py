@@ -196,7 +196,7 @@ def radar(per_dataset):
     ref = "Synthagent, Sonnet 4.6"
     panels = [
         ("LLM-based", ["Synthagent, GPT-4.1", "Synthagent, GPT-4o mini", "Direct prompting", "Structured outputs"]),
-        ("Curation and deep", ["CLLM", "CTGAN", "TVAE"]),
+        ("Curation and deep", ["CLLM", "CTGAN", "TVAE", "TabDDPM"]),
         ("Oversampling", ["SMOTE", "ADASYN", "Borderline-SMOTE"]),
         ("Statistical and tree-based", ["Gaussian copula", "Bayesian network", "CART", "ARF"]),
     ]

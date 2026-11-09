@@ -36,7 +36,7 @@ SOURCES = [
     # Bayesian network (pgmpy, CPU) on all ten datasets
     ("results/bn_all", "bayesian_network", "bayesian_network"),
     # GPU machine (merged only once pushed)
-    *[("results/gpu_baselines", a, a) for a in ("tabddpm", "great")],
+    ("results/gpu_baselines", "tabddpm", "tabddpm"),
 ]
 
 
