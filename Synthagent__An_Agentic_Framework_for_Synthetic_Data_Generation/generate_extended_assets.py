@@ -293,7 +293,7 @@ def delivery_figure():
     ax.axhline(100, color="#1f3b73", lw=1.6, zorder=1)
     logged = s[s.arm.isin(syn)].groupby("dataset")["pct"].agg(["min", "max", "count"]).reindex(order)
     ax.plot(x[logged["count"].notna().values], logged["min"].dropna(), "o", color="#1f3b73", ms=3.2, zorder=3,
-            label="Synthagent (all logged runs)")
+            label="Synthagent (logged runs)")
     for k, (arm, label, color, m) in enumerate(arms):
         g = s[s.arm == arm].set_index("dataset")["pct"].reindex(order)
         ax.plot(x + (k - 1) * 0.18, g.values, m, color=color, ms=3, mfc="white" if k == 2 else color,
@@ -303,7 +303,7 @@ def delivery_figure():
     ax.set_ylim(55, 108)
     ax.tick_params(axis="y", labelsize=6)
     ax.grid(axis="y", lw=0.3, alpha=0.6)
-    ax.legend(fontsize=5.5, ncol=2, loc="lower left", frameon=False, handletextpad=0.3, columnspacing=0.8)
+    ax.legend(fontsize=5.5, ncol=4, loc="lower center", bbox_to_anchor=(0.5, 1.0), frameon=False, handletextpad=0.3, columnspacing=0.8)
     for sp in ("top", "right"):
         ax.spines[sp].set_visible(False)
     fig.savefig(gpa.OUT / "delivery.pdf", bbox_inches="tight", pad_inches=0.02)

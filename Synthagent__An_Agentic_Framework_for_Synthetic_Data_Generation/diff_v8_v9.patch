@@ -1,5 +1,5 @@
 diff --git a/tmp/claude-0/-home-user-TabuLLM/177710a6-83c7-584b-8f2f-a9a7012a7684/scratchpad/v8.tex b/main.tex
-index c06b5a1..4ed720e 100644
+index c06b5a1..b107177 100644
 --- a/tmp/claude-0/-home-user-TabuLLM/177710a6-83c7-584b-8f2f-a9a7012a7684/scratchpad/v8.tex
 +++ b/main.tex
 @@ -24,6 +24,7 @@
@@ -10,6 +10,15 @@ index c06b5a1..4ed720e 100644
  
  \definecolor{sblue}{HTML}{2B6CB0}
  \definecolor{sgreen}{HTML}{2F855A}
+@@ -31,7 +32,7 @@
+ \definecolor{sgray}{HTML}{4A5568}
+ \definecolor{spurple}{HTML}{6B46C1}
+ \newcommand{\system}{\textsc{Synthagent}\xspace}
+-\newcommand{\best}[1]{\textbf{#1}}
++\newcommand{\best}[1]{\textbf{\boldmath #1}}
+ \newcommand{\sd}[1]{\,{\tiny$\pm$#1}}
+ \newcommand{\resq}[1]{\textbf{RQ#1}}
+ 
 @@ -48,10 +49,10 @@
  
  % ORCIDs are entered in the submission system.
@@ -289,31 +298,30 @@ index c06b5a1..4ed720e 100644
 +\caption{Results at a glance over the ten datasets: ranges over the three LLMs of \system, the three other LLM-based generators and the ten established generators. Only \system has no integrity violations, and it reaches the largest median F1 gain.}
 +\label{tab:glance}
  \scriptsize
--\setlength{\tabcolsep}{1.5pt}
+ \setlength{\tabcolsep}{1.5pt}
 -\begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}lrrrrrrr@{}}
-+\setlength{\tabcolsep}{2pt}
 +\begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}lccc@{}}
  \toprule
 -& & \multicolumn{3}{c}{Direct prompting} & \multicolumn{2}{c}{Structured} & \system \\
 -\cmidrule(lr){3-5}\cmidrule(lr){6-7}\cmidrule(l){8-8}
 -Dataset & $N$ & Deliv. (\%) & Malf. & $\Delta$F1 & Deliv. & $\Delta$F1 & $\Delta$F1 \\
-+& \system & Other LLM-based & Established \\
- \midrule
+-\midrule
 -Heart disease & 242 & 93.5 (91.7--94.6) & 0 & \best{$-0.15$} & 82.1 & $-0.88$ & $-0.97$ \\
 -Breast cancer & 455 & 64.0 (56.9--69.0) & 8 & $-0.78$ & 63.9 & $-0.97$ & \best{$-0.62$} \\
 -Heart failure & 239 & 94.5 (93.3--95.8) & 0 & $+0.26$ & 79.3 & \best{$+2.65$} & $-1.00$ \\
 -Diabetes & 614 & 102.2 (101.3--103.4) & 0 & $+2.23$ & 93.2 & \best{$+2.90$} & $+2.39$ \\
 -Liver disease & 466 & 93.8 (92.7--95.5) & 0 & $+0.12$ & 76.8 & $-0.71$ & \best{$+0.13$} \\
 -Parkinson's & 156 & 77.3 (62.2--87.8) & 2 & $-1.94$ & 70.8 & \best{$-0.73$} & $-0.77$ \\
--\midrule
++& \system & Other LLM & Established \\
+ \midrule
 -Mean & & 87.6 & 10 & $-0.04$ & 77.7 & \best{$+0.38$} & $-0.14$ \\
-+Integrity violations & none & 13-22\% of records missing & no LLM \\
++Integrity violations & none & 13-22\% missing & no LLM \\
 +Malformed responses & repaired & batches lost & - \\
-+Near-copies of real records (\%) & 6-9 & 4-7 & 1-19 \\
-+Membership-attack AUC & 0.51-0.52 & 0.51-0.52 & 0.50-0.57 \\
++Near-copies (\%) & 6-9 & 4-7 & 1-19 \\
++Attack AUC & 0.51-0.52 & 0.51-0.52 & 0.50-0.57 \\
 +Fidelity (JSD) & 72-77 & 66-72 & 62-86 \\
-+Median F1 change (pp) & $-0.69$ to \best{$+1.43$} & $-0.68$ to $+0.24$ & $-2.15$ to $+0.11$ \\
-+Tokens per delivered record & $-17\%$ vs.\ direct & - & no LLM \\
++Median $\Delta$F1 (pp) & $-0.69$ to \best{$+1.43$} & $-0.68$ to $+0.24$ & $-2.15$ to $+0.11$ \\
++Tokens per record & $-17\%$ vs.\ direct & - & no LLM \\
  \bottomrule
  \end{tabular*}
  \end{table}
@@ -322,9 +330,11 @@ index c06b5a1..4ed720e 100644
 +\subsection{RQ1: Control Layer and Integrity}
 +\label{sec:rq1}
 +\textbf{Finding~1.} The control layer ensures integrity: without it, every run of the same LLM missed or added records; with it, no logged run had an integrity violation, at 1.9\% more tokens in total and with unchanged fidelity. Figure~\ref{fig:delivery} shows the records delivered per dataset. On the six original datasets, direct prompting delivered 87.6\% of the configured records, fell short in 50 of 60 runs and overshot in the other 10, and lost an entire batch to each of ten malformed responses. Fidelity, privacy and utility were the same for both configurations (JSD 72.7; attack AUC 0.517 versus 0.526; F1 change $-0.04$ versus $-0.14$ pp, within the noise floor below), so the difference lies in the integrity of the dataset.
-+
+ 
+-These comparisons isolate what the control layer contributes, because the LLM, the prompts and the context are the same in each pair. Its contribution is reliability, at no cost in utility: with GPT-4o mini on the ten datasets, \system delivered every configured record against 86\% for direct prompting and 78\% for structured outputs, and turned malformed responses into records instead of losing them, while the F1 change of the two did not differ (median difference $+0.08$ pp, Wilcoxon $p=.92$). The gains in utility therefore come from the LLM that the control layer makes usable, which is why they grow with stronger LLMs (Section~\ref{sec:rq4}), and not from the checks themselves, none of whose variants changed utility (below).
 +Structured outputs, the providers' option to force every response into a fixed format, do not replace the control layer (Figure~\ref{fig:delivery}). Every response had the declared columns and types, but the LLM returned on average 77.7\% of the configured records and never the full dataset, at 21\% more tokens in total than \system. Forcing the format also weakened the relationships between features (correlation fidelity 63.0 versus 72.6) and made the records easier to tell from real ones (C2ST 0.943 versus 0.878), while utility did not differ (Friedman $p=.311$ for F1). A fixed format therefore guarantees the shape of each record, but not the number of records, which is what the completion loop provides. The same holds for the second provider: with Claude Haiku 5.5, direct prompting delivered 67.1\% of the configured records, with 294 malformed responses, and structured outputs 82.9\%. Under the control layer, the same model refused to imitate patient records in 39 of 60 repetitions; \system logged each refusal, but the run finished only heart failure and is excluded.
-+
+ 
+-The design choices inside the control layer matter much less than the control layer itself (Table~\ref{tab:ablation}). The five repeated runs of the same pipeline differ by up to 0.5 JSD points, 2 correlation points and 0.7 pp of utility, which is the noise floor. Dense context stays inside it; diverse context slightly improves fidelity (JSD 73.27, correlation 73.72) at the cost of a slightly higher attack AUC (0.544); letting the LLM choose its own settings changes nothing but costs 57\% more tokens; and clipping values to the observed ranges lowers JSD by 0.9 points, just beyond the noise floor, without improving utility. The Friedman tests find no difference in utility between the variants ($p=.843$ for accuracy, $p=.872$ for F1). The parameters of Table~\ref{tab:params} behave the same way: changing the context sample, the batch size or the temperature leaves utility within the noise floor ($p=.986$ and $p=.178$), but it changes cost and fidelity. Halving the context sample saves 27\% of the tokens and doubling the batch size 39\%, at slightly lower correlation fidelity, whereas smaller batches cost 73\% more. A temperature of 1.0 is the one change with a large effect: it raises JSD by 3.2 points and correlation fidelity by 8.7 points and makes the records harder to detect (C2ST 0.799 against 0.878), at no cost in utility, privacy or tokens, which suggests that the default of 0.3 is too conservative for fidelity.
 +\begin{figure}[t]
 +\centering
 +\assetfigure{\columnwidth}{generated/delivery.pdf}
@@ -332,13 +342,11 @@ index c06b5a1..4ed720e 100644
 +\label{fig:delivery}
 +\end{figure}
  
--These comparisons isolate what the control layer contributes, because the LLM, the prompts and the context are the same in each pair. Its contribution is reliability, at no cost in utility: with GPT-4o mini on the ten datasets, \system delivered every configured record against 86\% for direct prompting and 78\% for structured outputs, and turned malformed responses into records instead of losing them, while the F1 change of the two did not differ (median difference $+0.08$ pp, Wilcoxon $p=.92$). The gains in utility therefore come from the LLM that the control layer makes usable, which is why they grow with stronger LLMs (Section~\ref{sec:rq4}), and not from the checks themselves, none of whose variants changed utility (below).
-+These comparisons isolate the control layer's contribution, because the LLM, prompts and context are the same in each pair. Its contribution is integrity, at no cost in utility: with GPT-4o mini, \system had no integrity violation in any logged run, while direct prompting missed 13\% of the records and structured outputs 22\% over ten datasets, and turned malformed responses into records instead of losing them, while the F1 change of the two did not differ (median difference $+0.08$ pp, Wilcoxon $p=.92$). On the 40 paired runs with logged counts, the difference in integrity is significant (exact McNemar test, $p<10^{-11}$), and \system needed 17\% fewer tokens per delivered record than direct prompting and 40\% fewer than structured outputs (Wilcoxon $p<10^{-6}$), because the baselines pay for records they lose. The results therefore come from the two together: integrity is due to the control layer, which achieved it with every LLM whose run completed while no LLM achieved it alone, and the utility gains come from the LLM's knowledge, which the control layer turns into a usable dataset (Section~\ref{sec:rq4}).
- 
--The design choices inside the control layer matter much less than the control layer itself (Table~\ref{tab:ablation}). The five repeated runs of the same pipeline differ by up to 0.5 JSD points, 2 correlation points and 0.7 pp of utility, which is the noise floor. Dense context stays inside it; diverse context slightly improves fidelity (JSD 73.27, correlation 73.72) at the cost of a slightly higher attack AUC (0.544); letting the LLM choose its own settings changes nothing but costs 57\% more tokens; and clipping values to the observed ranges lowers JSD by 0.9 points, just beyond the noise floor, without improving utility. The Friedman tests find no difference in utility between the variants ($p=.843$ for accuracy, $p=.872$ for F1). The parameters of Table~\ref{tab:params} behave the same way: changing the context sample, the batch size or the temperature leaves utility within the noise floor ($p=.986$ and $p=.178$), but it changes cost and fidelity. Halving the context sample saves 27\% of the tokens and doubling the batch size 39\%, at slightly lower correlation fidelity, whereas smaller batches cost 73\% more. A temperature of 1.0 is the one change with a large effect: it raises JSD by 3.2 points and correlation fidelity by 8.7 points and makes the records harder to detect (C2ST 0.799 against 0.878), at no cost in utility, privacy or tokens, which suggests that the default of 0.3 is too conservative for fidelity.
-+The design choices inside the control layer matter much less than the control layer itself (Figure~\ref{fig:ablation}). The five repeated runs of the same pipeline differ by up to 0.5 JSD points, 2 correlation points and 0.7 pp of utility, which is the noise floor. Dense context stays inside it; diverse context slightly improves fidelity at a slightly higher attack AUC (0.544); LLM-chosen settings cost 57\% more tokens; and range enforcement lowers JSD fidelity by 0.9 points. The Friedman tests find no difference in utility between the variants ($p=.843$ for accuracy, $p=.872$ for F1). The parameters of Table~\ref{tab:params} behave the same way: changing the context sample, the batch size or the temperature leaves utility within the noise floor ($p=.986$ accuracy, $p=.178$ F1), but it changes cost and fidelity. Halving the context sample saves 27\% of the tokens and doubling the batch size 39\%, whereas smaller batches cost 73\% more. A temperature of 1.0 raises JSD fidelity by 3.2 points and correlation fidelity by 8.7 points (C2ST 0.799 against 0.878) at no cost in utility, privacy or tokens, so the default of 0.3 is conservative for fidelity.
- 
 -\begin{table*}[t]
++These comparisons isolate the control layer's contribution, because the LLM, prompts and context are the same in each pair. Its contribution is integrity, at no cost in utility: with GPT-4o mini, \system had no integrity violation in any logged run, while direct prompting missed 13\% of the records and structured outputs 22\% over ten datasets, and turned malformed responses into records instead of losing them, while the F1 change of the two did not differ (median difference $+0.08$ pp, Wilcoxon $p=.92$). On the 40 paired runs with logged counts, the difference in integrity is significant (exact McNemar test, $p<10^{-11}$), and \system needed 17\% fewer tokens per delivered record than direct prompting and 40\% fewer than structured outputs (Wilcoxon $p<10^{-6}$), because the baselines pay for records they lose. The results therefore come from the two together: integrity is due to the control layer, which achieved it with every LLM whose run completed while no LLM achieved it alone, and the utility gains come from the LLM's knowledge, which the control layer turns into a usable dataset (Section~\ref{sec:rq4}).
++
++The design choices inside the control layer matter much less than the control layer itself (Figure~\ref{fig:ablation}). The five repeated runs of the same pipeline differ by up to 0.5 JSD points, 2 correlation points and 0.7 pp of utility, which is the noise floor. Dense context stays inside it; diverse context slightly improves fidelity at a slightly higher attack AUC (0.544); LLM-chosen settings cost 57\% more tokens; and range enforcement lowers JSD fidelity by 0.9 points. The Friedman tests find no difference in utility between the variants ($p=.843$ for accuracy, $p=.872$ for F1). The parameters of Table~\ref{tab:params} behave the same way: changing the context sample, the batch size or the temperature leaves utility within the noise floor ($p=.986$ accuracy, $p=.178$ F1), but it changes cost and fidelity. Halving the context sample saves 27\% of the tokens and doubling the batch size 39\%, whereas smaller batches cost 73\% more. A temperature of 1.0 raises JSD fidelity by 3.2 points and correlation fidelity by 8.7 points (C2ST 0.799 against 0.878) at no cost in utility, privacy or tokens, so the default of 0.3 is conservative for fidelity.
++
 +\begin{figure*}[t]
  \centering
 -\caption{Control-layer variants and sensitivity study (RQ1), all with GPT-4o mini on the six original datasets. The first five rows run the same pipeline and define the noise floor. Seconds and tokens are means per repetition. Bold: best value among the LLM configurations; lower is better for C2ST, for the distance of the attack AUC from 0.5, and for cost.}

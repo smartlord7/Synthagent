@@ -32,7 +32,7 @@
 \definecolor{sgray}{HTML}{4A5568}
 \definecolor{spurple}{HTML}{6B46C1}
 \newcommand{\system}{\textsc{Synthagent}\xspace}
-\newcommand{\best}[1]{\textbf{#1}}
+\newcommand{\best}[1]{\textbf{\boldmath #1}}
 \newcommand{\sd}[1]{\,{\tiny$\pm$#1}}
 \newcommand{\resq}[1]{\textbf{RQ#1}}
 
@@ -400,18 +400,18 @@ where $\bar{\mathrm{rk}}_a$ is the average rank of configuration $a$ over $M$ da
 \caption{Results at a glance over the ten datasets: ranges over the three LLMs of \system, the three other LLM-based generators and the ten established generators. Only \system has no integrity violations, and it reaches the largest median F1 gain.}
 \label{tab:glance}
 \scriptsize
-\setlength{\tabcolsep}{2pt}
+\setlength{\tabcolsep}{1.5pt}
 \begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}lccc@{}}
 \toprule
-& \system & Other LLM-based & Established \\
+& \system & Other LLM & Established \\
 \midrule
-Integrity violations & none & 13-22\% of records missing & no LLM \\
+Integrity violations & none & 13-22\% missing & no LLM \\
 Malformed responses & repaired & batches lost & - \\
-Near-copies of real records (\%) & 6-9 & 4-7 & 1-19 \\
-Membership-attack AUC & 0.51-0.52 & 0.51-0.52 & 0.50-0.57 \\
+Near-copies (\%) & 6-9 & 4-7 & 1-19 \\
+Attack AUC & 0.51-0.52 & 0.51-0.52 & 0.50-0.57 \\
 Fidelity (JSD) & 72-77 & 66-72 & 62-86 \\
-Median F1 change (pp) & $-0.69$ to \best{$+1.43$} & $-0.68$ to $+0.24$ & $-2.15$ to $+0.11$ \\
-Tokens per delivered record & $-17\%$ vs.\ direct & - & no LLM \\
+Median $\Delta$F1 (pp) & $-0.69$ to \best{$+1.43$} & $-0.68$ to $+0.24$ & $-2.15$ to $+0.11$ \\
+Tokens per record & $-17\%$ vs.\ direct & - & no LLM \\
 \bottomrule
 \end{tabular*}
 \end{table}
