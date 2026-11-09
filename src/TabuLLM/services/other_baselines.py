@@ -134,20 +134,62 @@ def generate_great_rows(df_train, target_col, categorical_cols, random_state, n_
     return _decode(_restore_integers(synth.apply(pd.to_numeric, errors="coerce"), data), codes)[list(df_train.columns)]
 
 
-def generate_bayesian_network_rows(df_train, target_col, categorical_cols, random_state, n_rows=None):
-    """Bayesian network through synthcity's "bayesian_network" plugin, library defaults."""
-    from synthcity.plugins import Plugins
-    from synthcity.plugins.core.dataloader import GenericDataLoader
+def generate_bayesian_network_rows(df_train, target_col, categorical_cols, random_state, n_rows=None,
+                                   n_bins=10, max_indegree=3):
+    """
+    Bayesian network, as in synthcity's "bayesian_network" plugin but with pgmpy directly
+    (no GPU, no synthcity): numerical columns are discretized into quantile bins, the
+    structure is learned by hill climbing on the BIC score with at most `max_indegree`
+    parents per column, the conditional tables are fitted with a BDeu prior, records are
+    sampled forward, and each bin is mapped back to a real value drawn from the training
+    records in that bin.
+    """
+    import logging
+    try:  # pgmpy >= 1.1 moved these classes
+        from pgmpy.causal_discovery import HillClimbSearch
+    except ImportError:
+        from pgmpy.estimators import HillClimbSearch
+    try:
+        from pgmpy.parameter_estimator import DiscreteBayesianEstimator
+        bdeu = DiscreteBayesianEstimator(prior_type="BDeu")
+    except ImportError:
+        from pgmpy.estimators import BayesianEstimator as bdeu
+    from pgmpy.models import DiscreteBayesianNetwork
+    from pgmpy.sampling import BayesianModelSampling
 
+    logging.getLogger("pgmpy").setLevel(logging.ERROR)
     data, codes = _encode(df_train, target_col)
     n_rows = int(n_rows or len(data))
+    rng = np.random.default_rng(random_state)
+    discrete = set(_discrete_columns(data, target_col, categorical_cols)) | set(codes)
+    binned, members = pd.DataFrame(index=data.index), {}
+    for col in data.columns:
+        if col in discrete or data[col].nunique() <= n_bins:
+            binned[col] = data[col].astype(int).astype(str) if np.allclose(data[col], data[col].round()) else data[col].astype(str)
+        else:
+            bins = pd.qcut(data[col], q=n_bins, duplicates="drop")
+            binned[col] = bins.cat.codes.astype(str)
+            members[col] = {str(k): data[col][bins.cat.codes == k].to_numpy() for k in range(len(bins.cat.categories))}
     try:
-        model = Plugins().get("bayesian_network", random_state=random_state)
-        model.fit(GenericDataLoader(data, target_column=target_col))
-        synth = model.generate(count=n_rows).dataframe()
+        try:  # pgmpy >= 1.1: scikit-learn style
+            dag = HillClimbSearch(scoring_method="bic-d", max_indegree=max_indegree, return_type="dag",
+                                  show_progress=False).fit(binned).causal_graph_
+        except TypeError:
+            dag = HillClimbSearch(binned).estimate(scoring_method="bic-d", max_indegree=max_indegree, show_progress=False)
+        model = DiscreteBayesianNetwork(dag.edges())
+        model.add_nodes_from(binned.columns)
+        model.fit(binned, estimator=bdeu)
+        sample = BayesianModelSampling(model).forward_sample(size=n_rows, seed=random_state, show_progress=False)
     except Exception as e:
         logger.warning(f"Bayesian network failed ({e}); skipping.")
         return pd.DataFrame(columns=df_train.columns)
+    synth = pd.DataFrame(index=range(n_rows))
+    for col in data.columns:
+        values = sample[col].astype(str).to_numpy()
+        if col in members:
+            synth[col] = [rng.choice(members[col][v]) for v in values]
+        else:
+            synth[col] = pd.to_numeric(values, errors="coerce")
     return _decode(_restore_integers(synth, data), codes)[list(df_train.columns)]
 
 

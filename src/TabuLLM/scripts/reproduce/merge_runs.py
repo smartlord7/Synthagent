@@ -33,8 +33,10 @@ SOURCES = [
     ("results/copula_old", "gaussian_copula", "gaussian_copula"),
     ("results/copula_new", "gaussian_copula", "gaussian_copula"),
     *[(f"results/cpu_{p}", a, a) for p in ("old", "new") for a in ("adasyn", "borderline_smote", "cart", "arf")],
+    # Bayesian network (pgmpy, CPU) on all ten datasets
+    ("results/bn_all", "bayesian_network", "bayesian_network"),
     # GPU machine (merged only once pushed)
-    *[("results/gpu_baselines", a, a) for a in ("tabddpm", "great", "bayesian_network")],
+    *[("results/gpu_baselines", a, a) for a in ("tabddpm", "great")],
 ]
 
 
