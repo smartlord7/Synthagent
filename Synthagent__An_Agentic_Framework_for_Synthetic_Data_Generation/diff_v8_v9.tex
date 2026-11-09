@@ -1,7 +1,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %DIF LATEXDIFF DIFFERENCE FILE
 %DIF DEL /tmp/claude-0/-home-user-TabuLLM/177710a6-83c7-584b-8f2f-a9a7012a7684/scratchpad/v8.tex   Mon Nov  9 13:18:31 2026
-%DIF ADD main.tex                                                                                  Mon Nov  9 22:38:37 2026
+%DIF ADD main.tex                                                                                  Mon Nov  9 22:43:01 2026
 % ICDE 2027 research paper (Round 2: submission due 11 November 2026).
 % Format rules from the call for papers (https://icde2027.github.io/):
 %   * IEEE conference template, PDF only.
@@ -491,7 +491,7 @@ F_{\mathrm{corr}}&=100\bigl(1-\operatorname{mean}|\Sigma_D-\Sigma_G|\bigr),
 \label{eq:fidelity}
 \end{equation}
 where $D_{\mathrm{JS}}$ is the Jensen--Shannon divergence between real and synthetic distributions of a feature and $\Sigma_D$, $\Sigma_G$ are the correlation matrices; both scores equal 100 for identical distributions. A classifier two-sample test (C2ST)~\cite{lopezpaz2017c2st} trains a random forest to separate real from synthetic records; an accuracy close to 0.5 means that they are hard to tell apart. \DIFdelbegin \DIFdel{For the established generators and direct prompting we also report the percentage of }\emph{\DIFdel{valid}} %DIFAUXCMD
-\DIFdel{records, whose values lie in the observed ranges and categories and are integers where the real feature is, a stricter criterion than the column-and-type checks of the control layer. }\DIFdelend \emph{Privacy} is measured by a membership-inference attack that scores each real record by its distance to the nearest synthetic record and reports the ROC AUC between training and test records, where 0.5 is chance. \emph{Utility} is the paired change, for metric $m\in\{\mathrm{accuracy},\mathrm{F1}\}$, dataset $d$, classifier $c$ and repetition $h$,
+\DIFdel{records, whose values lie in the observed ranges and categories and are integers where the real feature is, a stricter criterion than the column-and-type checks of the control layer. }\DIFdelend \emph{Privacy} is measured by a membership-inference attack that scores each real record by its distance to the nearest synthetic record and reports the ROC AUC between training and test records, where 0.5 is chance\DIFaddbegin \DIFadd{, and by the share of }\emph{\DIFadd{near-copies}}\DIFadd{, synthetic records within 0.05 of a real record after min--max scaling}\DIFaddend . \emph{Utility} is the paired change, for metric $m\in\{\mathrm{accuracy},\mathrm{F1}\}$, dataset $d$, classifier $c$ and repetition $h$,
 \begin{equation}
 \Delta m_{d,c,h}=m\bigl(D_{d,h}\cup G_{d,h};\,c\bigr)-m\bigl(D_{d,h};\,c\bigr),
 \label{eq:utility}
@@ -603,7 +603,7 @@ The corrections are what allow a less disciplined LLM to be used. GPT-4o mini pr
 
 \subsection{RQ2: Fidelity and Privacy}
 \label{sec:rq2}
-\DIFaddbegin \textbf{\DIFadd{Finding~2.}} \DIFaddend The generated records follow the real distributions reasonably well without revealing the real records, but they remain distinguishable from them (Table~\ref{tab:full}). Fidelity averages 72.7 out of 100, from 65.2 on \DIFdelbegin \DIFdel{the five-class heart-disease dataset}\DIFdelend \DIFaddbegin \DIFadd{heart disease}\DIFaddend , the furthest below its required sample size, to 80.2 on diabetes, the closest\DIFdelbegin \DIFdel{to it}\DIFdelend . The membership-inference attack stays near chance (AUC 0.526 on average, at most 0.567), which is a diagnostic for one attack rather than a formal guarantee. The \DIFdelbegin \DIFdel{C2ST accuracy of 0.878 shows that a }\DIFdelend \DIFaddbegin \DIFadd{records are also not interpolations of training patients: 7.8\% lie within a small distance of a real record (0.05 after min--max scaling), against 17--19\% for the oversampling methods. A }\DIFaddend classifier can still separate real from synthetic records \DIFdelbegin \DIFdel{, so the }\DIFdelend \DIFaddbegin \DIFadd{(C2ST 0.878), so }\DIFaddend synthetic records complement real ones rather than replace them.
+\DIFaddbegin \textbf{\DIFadd{Finding~2.}} \DIFaddend The generated records follow the real distributions reasonably well without revealing the real records, but they remain distinguishable from them (Table~\ref{tab:full}). Fidelity averages 72.7 out of 100, from 65.2 on \DIFdelbegin \DIFdel{the five-class heart-disease dataset}\DIFdelend \DIFaddbegin \DIFadd{heart disease}\DIFaddend , the furthest below its required sample size, to 80.2 on diabetes, the closest\DIFdelbegin \DIFdel{to it}\DIFdelend . The membership-inference attack stays near chance (AUC 0.526 on average, at most 0.567), which is a diagnostic for one attack rather than a formal guarantee. The \DIFdelbegin \DIFdel{C2ST accuracy of 0.878 shows that a }\DIFdelend \DIFaddbegin \DIFadd{records are also not interpolations of training patients: 7.8\% are near-copies, against 17--19\% for the oversampling methods. A }\DIFaddend classifier can still separate real from synthetic records \DIFdelbegin \DIFdel{, so the }\DIFdelend \DIFaddbegin \DIFadd{(C2ST 0.878), so }\DIFaddend synthetic records complement real ones rather than replace them.
 
 \begin{table}[t]
 \centering
