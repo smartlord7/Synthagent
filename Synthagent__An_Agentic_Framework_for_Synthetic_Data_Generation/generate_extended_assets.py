@@ -276,10 +276,106 @@ def sensitivity():
     return table, pd.DataFrame(tests)
 
 
+def delivery_figure():
+    """RQ1: records delivered as a percentage of the configured number, per dataset."""
+    import matplotlib.pyplot as plt
+    gpa.print_style()
+    arms = [("raw_prompting", "Direct prompting", "#e69f00", "o"),
+            ("structured_output", "Structured outputs", "#cc79a7", "s"),
+            ("cllm", "CLLM", "#56b4e9", "^")]
+    syn = ["full", "backend_gpt_4_1", "backend_claude_sonnet_4_6"]
+    s = pd.read_csv(gpa.RUN / "ablation_summary.csv")
+    s = s[s.dataset.isin(ALL10)]
+    s["pct"] = 100 * s["gen_stats_delivered_rows_mean"] / s["gen_stats_requested_rows_mean"]
+    order = list(ALL10)
+    x = np.arange(len(order))
+    fig, ax = plt.subplots(figsize=(gpa.COL_W, 1.9))
+    ax.axhline(100, color="#1f3b73", lw=1.6, zorder=1)
+    logged = s[s.arm.isin(syn)].groupby("dataset")["pct"].agg(["min", "max", "count"]).reindex(order)
+    ax.plot(x[logged["count"].notna().values], logged["min"].dropna(), "o", color="#1f3b73", ms=3.2, zorder=3,
+            label="Synthagent (all logged runs)")
+    for k, (arm, label, color, m) in enumerate(arms):
+        g = s[s.arm == arm].set_index("dataset")["pct"].reindex(order)
+        ax.plot(x + (k - 1) * 0.18, g.values, m, color=color, ms=3, mfc="white" if k == 2 else color,
+                mew=0.9, label=label, zorder=2)
+    ax.set_xticks(x, [ALL10[d].replace(" (Coimbra)", " (C.)") for d in order], rotation=40, ha="right", fontsize=6)
+    ax.set_ylabel("Records delivered (%)", fontsize=6.5)
+    ax.set_ylim(55, 108)
+    ax.tick_params(axis="y", labelsize=6)
+    ax.grid(axis="y", lw=0.3, alpha=0.6)
+    ax.legend(fontsize=5.5, ncol=2, loc="lower left", frameon=False, handletextpad=0.3, columnspacing=0.8)
+    for sp in ("top", "right"):
+        ax.spines[sp].set_visible(False)
+    fig.savefig(gpa.OUT / "delivery.pdf", bbox_inches="tight", pad_inches=0.02)
+    fig.savefig(gpa.OUT / "delivery.png", dpi=220, bbox_inches="tight", pad_inches=0.02)
+    plt.close(fig)
+
+
+def ablation_figure():
+    """RQ1: control-layer variants and sensitivity study as differences from the reference,
+    against the noise floor: the reference +- the spread of five runs of the same pipeline."""
+    import matplotlib.pyplot as plt
+    gpa.print_style()
+    a = pd.read_csv(gpa.OUT / "ablation_summary.csv").set_index("Configuration")
+    z = pd.read_csv(gpa.OUT / "sensitivity.csv").set_index("arm")
+    a = a.rename(columns={"Corr.": "Corr", "$\\Delta$F1 (pp)": "dF1"})
+    cols = ["JSD", "Corr", "dF1", "Tokens"]
+    noise = [("Synthagent", "Reference"), ("No inferred type rules", "No type rules"),
+             ("No post-processing", "No post-processing"), ("No context join", "No context join"),
+             ("Logged rerun", "Logged rerun")]
+    design = [("Dense context", "Dense context"), ("Diverse context", "Diverse context"),
+              ("LLM-selected hyperparameters", "LLM-chosen settings"), ("Range enforcement", "Range enforcement")]
+    sens = [("ctx_10", "Context $\\rho=10\\%$"), ("ctx_40", "Context $\\rho=40\\%$"), ("batch_15", "Batch $b=15$"),
+            ("batch_60", "Batch $b=60$"), ("temp_0", "Temperature 0"), ("temp_10", "Temperature 1.0")]
+    rows = []
+    for key, lab in noise + design:
+        r = a.loc[key]
+        rows.append((lab, r["JSD"], r["Corr"], r["dF1"], r["Tokens"] / 1000))
+    for key, lab in sens:
+        r = z.loc[key]
+        rows.append((lab, r["JSD"], r["Corr"], r["dF1"], r["tokens"] / 1000))
+    df = pd.DataFrame(rows, columns=["label"] + cols)
+    groups = [0] * len(noise) + [1] * len(design) + [2] * len(sens)
+    y = []
+    pos = 0
+    for i, g in enumerate(groups):
+        if i and g != groups[i - 1]:
+            pos += 0.7
+        y.append(pos)
+        pos += 1
+    y = -np.array(y)
+    band = df.iloc[:len(noise)][cols]
+    titles = {"JSD": "Fidelity (JSD)", "Corr": "Correlation fidelity", "dF1": "F1 change (pp)", "Tokens": "Tokens (thousands)"}
+    fig, axes = plt.subplots(1, 4, figsize=(gpa.TEXT_W, 2.2), sharey=True)
+    for ax, c in zip(axes, cols):
+        # noise floor: the reference value +- the spread of five runs of the same pipeline
+        spread = band[c].max() - band[c].min()
+        lo, hi = df[c].iloc[0] - spread, df[c].iloc[0] + spread
+        ax.axvspan(lo, hi, color="0.88", lw=0, zorder=0)
+        ax.axvline(df[c].iloc[0], color="#1f3b73", lw=0.8, zorder=1)
+        out = (df[c] < lo) | (df[c] > hi)
+        ax.scatter(df[c][~out], y[~out.values], s=10, color="0.55", zorder=2)
+        ax.scatter(df[c][out], y[out.values], s=14, color="#d55e00", zorder=3)
+        ax.set_title(titles[c], fontsize=6.5)
+        ax.tick_params(labelsize=5.5)
+        ax.grid(axis="x", lw=0.3, alpha=0.6)
+        for sp in ("top", "right"):
+            ax.spines[sp].set_visible(False)
+    axes[0].set_yticks(y, df["label"], fontsize=5.8)
+    for ax in axes[1:]:
+        ax.tick_params(axis="y", length=0)
+    fig.subplots_adjust(wspace=0.12)
+    fig.savefig(gpa.OUT / "ablation_effects.pdf", bbox_inches="tight", pad_inches=0.02)
+    fig.savefig(gpa.OUT / "ablation_effects.png", dpi=220, bbox_inches="tight", pad_inches=0.02)
+    plt.close(fig)
+
+
 def main():
     print(dataset_table().round(1).to_string(index=False))
     t, f, c = generator_comparison()
     radar(pd.read_csv(gpa.OUT / "generators10_f1.csv", index_col=0))
+    delivery_figure()
+    ablation_figure()
     print(t.round(2).to_string(index=False)); print(f.to_string(index=False))
     print(c[c.p_holm < 0.05].to_string(index=False))
     s, sf = sensitivity()
