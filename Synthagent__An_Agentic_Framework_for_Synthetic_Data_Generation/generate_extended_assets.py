@@ -187,42 +187,59 @@ def generator_comparison():
 
 
 def radar(per_dataset):
-    """F1 change per dataset for a few representative generators, as a radar chart (symmetric log radius)."""
+    """F1 change per dataset as four radar panels, one per group of generators, each against
+    Synthagent with Claude Sonnet 4.6. The radius is symmetric-logarithmic: linear within
+    +-1 pp and logarithmic beyond, so the small differences near zero are spread out."""
     import matplotlib.pyplot as plt
     gpa.print_style()
-    show = [("Synthagent, Sonnet 4.6", gpa.C_REF), ("Synthagent, GPT-4o mini", gpa.C_LLM),
-            ("CLLM", "#8e44ad"), ("SMOTE", gpa.C_BASE), ("CART", "#2e8b57")]
     data = pd.DataFrame(per_dataset)
+    ref = "Synthagent, Sonnet 4.6"
+    panels = [
+        ("LLM-based", ["Synthagent, GPT-4.1", "Synthagent, GPT-4o mini", "Direct prompting", "Structured outputs"]),
+        ("Curation and deep", ["CLLM", "CTGAN", "TVAE"]),
+        ("Oversampling", ["SMOTE", "ADASYN", "Borderline-SMOTE"]),
+        ("Statistical and tree-based", ["Gaussian copula", "Bayesian network", "CART", "ARF"]),
+    ]
+    colors = ["#e69f00", "#56b4e9", "#009e73", "#cc79a7"]
+    markers = ["s", "^", "D", "v"]
+    short = {"Heart disease": "Heart d.", "Breast cancer": "Breast c.", "Heart failure": "Heart fail.",
+             "Diabetes": "Diabetes", "Liver disease": "Liver", "Parkinson's": "Parkinson",
+             "Breast cancer (Coimbra)": "Breast c. (C.)", "Hepatitis": "Hepatitis",
+             "Kidney disease": "Kidney", "Thoracic surgery": "Thoracic"}
     labels = list(data.index)
     angles = np.linspace(0, 2 * np.pi, len(labels), endpoint=False).tolist()
     angles += angles[:1]
-    # Symmetric log radius: linear within +-1 pp and logarithmic beyond, so the small
-    # differences near zero, where most generators lie, are spread out and outliers compressed.
+    lo, hi = -12, 22
+
     def r(x):
         x = np.asarray(x, dtype=float)
-        return np.sign(x) * np.log10(1 + np.abs(x)) - np.sign(-12) * np.log10(13)
-    markers = ["o", "s", "^", "D", "v"]
-    fig, ax = plt.subplots(figsize=(gpa.COL_W, 2.9), subplot_kw={"polar": True})
-    for (name, color), m in zip(show, markers):
-        values = data[name].tolist()
-        ax.plot(angles, r(values + values[:1]), color=color, lw=1.2, marker=m, ms=2.4, label=name)
-    ax.plot(np.linspace(0, 2 * np.pi, 200), np.full(200, r(0)), color="0.3", lw=0.8, ls="--")
-    ax.set_ylim(0, r(15))
-    # dataset names just outside the outer ring, aligned away from the centre so no spoke crosses them
-    ax.set_xticks(angles[:-1], [""] * len(labels))
-    for ang, lab in zip(angles[:-1], labels):
-        c, s_ = np.cos(ang), np.sin(ang)
-        ha = "left" if c > 0.1 else "right" if c < -0.1 else "center"
-        va = "bottom" if s_ > 0.1 else "top" if s_ < -0.1 else "center"
-        ax.text(ang, r(15) * 1.04, lab.replace(" (Coimbra)", " (C.)"), fontsize=6, ha=ha, va=va)
-    ticks = [-10, -3, -1, 0, 1, 3, 10]
-    ax.set_yticks(r(ticks), [f"{t:+d}" if t else "0" for t in ticks], fontsize=5.5)
-    ax.set_rlabel_position(90)
-    for t in ax.get_yticklabels():
-        t.set_bbox(dict(facecolor="white", edgecolor="none", pad=0.3, alpha=0.8))
-    ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.08), ncol=3, frameon=False, fontsize=5.8,
-              handlelength=1.4, columnspacing=0.8)
-    fig.subplots_adjust(left=0.08, right=0.92, top=0.93, bottom=0.2)
+        return np.sign(x) * np.log10(1 + np.abs(x)) + np.log10(1 - lo)
+
+    fig, axes = plt.subplots(1, 4, figsize=(gpa.TEXT_W, 2.25), subplot_kw={"polar": True})
+    for ax, (title, members) in zip(axes, panels):
+        v = data[ref].tolist()
+        ax.plot(angles, r(v + v[:1]), color="#1f3b73", lw=1.6, marker="o", ms=1.8, label="Synthagent, Sonnet 4.6")
+        for name, c, m in zip(members, colors, markers):
+            v = data[name].tolist()
+            ax.plot(angles, r(v + v[:1]), color=c, lw=0.9, marker=m, ms=1.6, label=name)
+        ax.plot(np.linspace(0, 2 * np.pi, 200), np.full(200, r(0)), color="0.2", lw=0.6, ls=(0, (2, 1.5)))
+        ax.set_ylim(0, r(hi))
+        ax.set_xticks(angles[:-1], [""] * len(labels))
+        for ang, lab in zip(angles[:-1], labels):
+            c_, s_ = np.cos(ang), np.sin(ang)
+            ax.text(ang, r(hi) * 1.05, short.get(lab, lab), fontsize=4.6,
+                    ha="left" if c_ > 0.1 else "right" if c_ < -0.1 else "center",
+                    va="bottom" if s_ > 0.1 else "top" if s_ < -0.1 else "center")
+        ticks = [-10, -1, 0, 1, 10]
+        ax.set_yticks(r(ticks), [f"{t:+d}" if t else "0" for t in ticks], fontsize=4.2)
+        ax.set_rlabel_position(90)
+        for t in ax.get_yticklabels():
+            t.set_bbox(dict(facecolor="white", edgecolor="none", pad=0.2, alpha=0.8))
+        ax.grid(lw=0.4)
+        ax.set_title(title, fontsize=6.5, pad=13)
+        ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.1), ncol=1, frameon=False, fontsize=4.6,
+                  handlelength=1.6, labelspacing=0.25)
+    fig.subplots_adjust(left=0.05, right=0.95, top=0.86, bottom=0.27, wspace=0.85)
     fig.savefig(gpa.OUT / "radar_f1.pdf", bbox_inches="tight", pad_inches=0.02)
     fig.savefig(gpa.OUT / "radar_f1.png", dpi=220, bbox_inches="tight", pad_inches=0.02)
     plt.close(fig)
