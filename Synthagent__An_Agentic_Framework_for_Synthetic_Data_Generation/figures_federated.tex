@@ -50,13 +50,13 @@
   % private data
   \tabl{0.25,-1.05}{#3}{sblue!25}{0}
   \node[lab=sgray,anchor=north] at (0.7,-1.05-0.13*#3-0.17) {real $D_#2$};
-  \node[lab=sgray,anchor=north] at (0.7,-1.05-0.13*#3-0.42) {$n_#2=|D_#2|$};
+  \node[lab=sgray,anchor=north] at (0.7,-1.05-0.13*#3-0.42) {$n_#2{=}|D_#2|$};
   % local Synthagent loop
   \fill[sgreen!8,draw=sgreen,rounded corners=3pt,thick] (1.55,-0.9) rectangle (3.95,-3.35);
   \node[ttl=sgreen,anchor=north] at (2.75,-0.95) {\system{} (local)};
   \node[nd=sblue]  (b#2) at (2.05,-1.95) {budget\\$C_t$};
   \node[nd=spurple](l#2) at (3.45,-1.95) {LLM\\$\pi_\phi$};
-  \node[nd=sgreen] (v#2) at (2.75,-2.85) {verify\\$V_{S,R}$};
+  \node[nd=sgreen] (v#2) at (2.75,-2.85) {verify\\$V_S$};
   \draw[flow,bend left=25] (b#2) to (l#2);
   \draw[flow,bend left=25] (l#2) to (v#2);
   \draw[->,thick,sorange,bend left=25] (v#2) to node[lab=sorange,left,pos=.5]{retry} (b#2);

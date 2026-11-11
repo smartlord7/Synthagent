@@ -118,7 +118,7 @@ Section~\ref{sec:related} reviews background, Section~\ref{sec:system} describes
 \section{Background Knowledge}
 \label{sec:related}
 %======================================================================
-This section reviews the families of tabular SDG methods, their limitations when data are small, and the work on validating generated data and evaluating synthetic data on which \system builds.
+To place the problem of Section~\ref{sec:intro} in context, this section reviews the families of tabular SDG methods, their limitations when data are small, and the work on validating generated data and evaluating synthetic data on which \system builds.
 
 \begin{table*}[!t]
 \centering
@@ -157,7 +157,7 @@ Data-preparation studies have shown that a step that looks beneficial can harm d
 \section{The \system System}
 \label{sec:system}
 %======================================================================
-\system meets the constraint of Equation~\eqref{eq:multiobjective}, a synthetic dataset with exactly $N$ records that conform to $S$, by construction rather than by trusting the LLM. This guarantee is the core of the system: the LLM only proposes records; the control layer decides which to accept, asks for corrections or more records, and stops only when $N$ conforming records have been accepted or a stopping limit is reached. The objectives of Equation~\eqref{eq:multiobjective} are left to the LLM's domain knowledge and the real records shown to it; they are measured, not optimized, in Section~\ref{sec:results}. The real dataset is never modified.
+Section~\ref{sec:related} showed that no family both brings knowledge beyond the few real records and guarantees a usable dataset. \system does both. It meets the constraint of Equation~\eqref{eq:multiobjective}, a synthetic dataset with exactly $N$ records that conform to $S$, by construction rather than by trusting the LLM. This guarantee is the core of the system: the LLM only proposes records; the control layer decides which to accept, asks for corrections or more records, and stops only when $N$ conforming records have been accepted or a stopping limit is reached. The objectives of Equation~\eqref{eq:multiobjective} are left to the LLM's domain knowledge and the real records shown to it; they are measured, not optimized, in Section~\ref{sec:results}. The real dataset is never modified.
 
 Figure~\ref{fig:architecture} shows the architecture and Algorithm~\ref{alg:loop} the procedure. A profiling step first infers the columns and their types $S$ from the training records. Each request then passes through four stages: the context budgeter selects the real records shown to the LLM (1), the LLM proposes a batch of records (2), the deterministic verifier parses, maps and validates it (3), and the admitted records are counted against $N$ (4). The run produces two outputs: the synthetic table $G$ and an audit trail of every request. The rest of this section follows this order and ends with the parameters and the reason for each value.
 
@@ -188,7 +188,7 @@ Figure~\ref{fig:architecture} shows the architecture and Algorithm~\ref{alg:loop
 \end{algorithm}
 
 \subsection{Controller State}
-At every step $t$, the control layer keeps an explicit state
+The four stages share one state, the register at the bottom of Figure~\ref{fig:architecture}, which each stage reads and updates. At every step $t$, the control layer keeps
 \begin{equation}
 z_t=(S,\,C_t,\,A_t,\,N-|A_t|,\,B_t,\,E_t),
 \label{eq:state}
@@ -201,7 +201,7 @@ A_{t+1}=A_t\cup K\bigl(V_S\bigl(P_S(Y_t)\bigr)\bigr),
 where $P_S$ parses the batch $Y_t$ and maps its columns to $S$, $V_S$ validates the types, and $K$ returns the records after sending their invalid values back to the LLM for correction, in at most $c$ rounds. Because the state is explicit rather than implied by the conversation history, the number of missing records is always known, and the parser log $E_t$ records every failure for later inspection.
 
 \subsection{Context Budgeter (1)}
-The context budgeter decides which real records the LLM sees. It draws a random sample of $\rho|D|$ training records, between 31 and 123 records in our datasets, written as compact JSON with the feature columns and the class, so that the model sees how features and class co-occur. Because a long prompt can exceed the context window $W$ of the LLM, each request shows as many records of the sample as fit in a share $\omega$ of the window:
+Each request starts with the context budgeter (stage 1; line 4 of Algorithm~\ref{alg:loop}), which decides which real records the LLM sees and sets $C_t$ and $B_t$ in the state. It draws a random sample of $\rho|D|$ training records, between 31 and 123 records in our datasets, written as compact JSON with the feature columns and the class, so that the model sees how features and class co-occur. Because a long prompt can exceed the context window $W$ of the LLM, each request shows as many records of the sample as fit in a share $\omega$ of the window:
 \begin{equation}
 \begin{aligned}
 C_t&=\operatorname{Slice}_{t}\bigl(\operatorname{Select}_{s}(D,\lceil\rho|D|\rceil),k_t\bigr),\\
@@ -212,7 +212,7 @@ k_t&=\max\{k:T(C_{t,k})\leq\omega W\},
 where $\operatorname{Select}_s$ draws the sample with strategy $s$, $C_{t,k}$ are the first $k$ records of that slice, $T$ estimates the length in tokens of a prompt with them, and $\operatorname{Slice}_t$ rotates through the sample, so that successive requests see different patients. If the provider still rejects a request as too long, the budgeter shows fewer records and retries. Besides the default random strategy, \emph{dense} prefers records with fewer missing values, and \emph{diverse} selects the records closest to the centres of $k$-means clusters. Neither strategy is class-stratified, a limitation discussed in Section~\ref{sec:discussion}.
 
 \subsection{LLM Proposal and Prompts (2)}
-The LLM receives the same three-part conversation for every dataset and LLM (Table~\ref{tab:prompt-context}). A first message gives the column names and the sampled records in a compact format, a list of column names followed by one list of values per record. A generation message then asks for an exact number of new records, at most $b$, and states an output contract: JSON only, the same columns in the same order, a value in every cell, raw numbers, and no additional columns. No free-text description of the dataset or of the prediction task is added, so that no dataset receives more prompt engineering than another. The prompts are therefore deliberately simple, and their wording is not part of the contribution: the guarantees come from the stages that check the response.
+With these records, the LLM is asked for a batch $Y_t$ (stage 2; line 5). It receives the same three-part conversation for every dataset and LLM (Table~\ref{tab:prompt-context}). A first message gives the column names and the sampled records in a compact format, a list of column names followed by one list of values per record. A generation message then asks for an exact number of new records, at most $b$, and states an output contract: JSON only, the same columns in the same order, a value in every cell, raw numbers, and no additional columns. No free-text description of the dataset or of the prediction task is added, so that no dataset receives more prompt engineering than another. The prompts are therefore deliberately simple, and their wording is not part of the contribution: the guarantees come from the stages that check the response.
 
 \begin{table*}[t]
 \centering
@@ -236,10 +236,10 @@ Global statistics & No separately computed means, quantiles, correlations or cla
 \end{table*}
 
 \subsection{Deterministic Verifier (3)}
-The verifier turns a response into records that conform to $S$, in three steps. \emph{Parsing} extracts the records with a local parser that removes surrounding text and code fences, deletes trailing commas, inserts missing commas between records and closes a response truncated by the output limit. If parsing still fails, the control layer sends one repair request that quotes the position and the text around the error, at a low temperature so that the repair fixes the syntax without changing the content. \emph{Mapping} assigns the returned values to the columns of $S$: by position when the response has the expected number of columns, and otherwise by matching the returned column names to those of $S$, ignoring case and spacing; an invented column is dropped and a missing one is left empty. \emph{Validation} checks every value against the type that profiling inferred for its column (integer, real or categorical); optional rules can also bound numerical ranges or restrict categories, but they were off in our experiments except in the range-enforcement variant. The invalid values are grouped by column and sent back to the LLM with one example per column, for at most $c$ correction rounds, so that the model corrects only what is wrong instead of regenerating the batch. The three steps escalate from cheap to costly: a defect that the local parser or the mapping can fix costs no request, a syntax error costs one repair request, and only type violations cost correction rounds. In the example of Figure~\ref{fig:teaser}, the parser recovers the 22 records, the mapping drops the invented column \texttt{bmi\_est} and leaves the missing columns empty, the validator flags \texttt{age="sixty"}, and one correction round replaces it with a number; the completion loop then requests the eight missing records. Every step is written to the parser log $E_t$.
+The batch $Y_t$ is text, not yet data. The verifier (stage 3; lines 6-7) turns it into records that conform to $S$, in three steps, and writes every failure to $E_t$. \emph{Parsing} extracts the records with a local parser that removes surrounding text and code fences, deletes trailing commas, inserts missing commas between records and closes a response truncated by the output limit. If parsing still fails, the control layer sends one repair request that quotes the position and the text around the error, at a low temperature so that the repair fixes the syntax without changing the content. \emph{Mapping} assigns the returned values to the columns of $S$: by position when the response has the expected number of columns, and otherwise by matching the returned column names to those of $S$, ignoring case and spacing; an invented column is dropped and a missing one is left empty. \emph{Validation} checks every value against the type that profiling inferred for its column (integer, real or categorical); optional rules can also bound numerical ranges or restrict categories, but they were off in our experiments except in the range-enforcement variant. The invalid values are grouped by column and sent back to the LLM with one example per column, for at most $c$ correction rounds, so that the model corrects only what is wrong instead of regenerating the batch. The three steps escalate from cheap to costly: a defect that the local parser or the mapping can fix costs no request, a syntax error costs one repair request, and only type violations cost correction rounds. In the example of Figure~\ref{fig:teaser}, the parser recovers the 22 records, the mapping drops the invented column \texttt{bmi\_est} and leaves the missing columns empty, the validator flags \texttt{age="sixty"}, and one correction round replaces it with a number; the completion loop then requests the eight missing records. Every step is written to the parser log $E_t$.
 
 \subsection{Admit and Count (4)}
-LLMs often return fewer records than requested. The admitted records are counted against $N$, and after the planned batches the completion loop requests only the missing records,
+Only the records that pass the verifier reach the last stage (stage 4; line 8), which adds them to $A_t$ and decides whether to ask for more. LLMs often return fewer records than requested, so the admitted records are counted against $N$, and after the planned batches the completion loop requests only the missing records,
 \begin{equation}
 r_t=\max(0,N-|A_t|),\qquad q_t=\min(b,r_t),
 \label{eq:residual}
@@ -247,7 +247,7 @@ r_t=\max(0,N-|A_t|),\qquad q_t=\min(b,r_t),
 where $r_t$ is the number of records still missing and $q_t$ the number requested in round $t$, at most the batch size $b$; the loop also truncates any excess. It stops when $N$ records have been accepted, after $t_{\max}$ rounds, or after $u_{\max}$ consecutive empty answers; a run that ends short because the provider keeps failing is recorded as such. The run returns the synthetic table $G$ and an audit trail with the tokens processed, the generation time, the repairs, the violations and the requested and delivered numbers of records, which makes a synthetic dataset inspectable after the fact and gives the cost $\kappa$ in Equation~\eqref{eq:multiobjective} a measured value.
 
 \subsection{Parameters}
-Table~\ref{tab:params} lists the parameters and the values used in the experiments, fixed beforehand from the size of our datasets and the context and output limits of the LLMs rather than tuned on the results; Section~\ref{sec:rq1} examines their effect.
+The parameters introduced with each stage are collected in Table~\ref{tab:params} with the values used in the experiments, fixed beforehand from the size of our datasets and the context and output limits of the LLMs rather than tuned on the results; Section~\ref{sec:rq1} examines their effect.
 
 \begin{table}[t]
 \centering
@@ -255,7 +255,7 @@ Table~\ref{tab:params} lists the parameters and the values used in the experimen
 \label{tab:params}
 \footnotesize
 \setlength{\tabcolsep}{2pt}
-\begin{tabular}{@{}p{.27\columnwidth}p{.15\columnwidth}p{.52\columnwidth}@{}}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{.27\columnwidth}>{\raggedright\arraybackslash}p{.15\columnwidth}>{\raggedright\arraybackslash}p{.52\columnwidth}@{}}
 \toprule
 Parameter & Value & Reason \\
 \midrule
@@ -275,7 +275,7 @@ Empty-answer limit $u_{\max}$ & 5 & Five consecutive empty answers indicate a pr
 \section{Deployment Across Healthcare Facilities}
 \label{sec:deployment}
 %======================================================================
-This section outlines a deployment design, which this paper does not evaluate. Healthcare facilities often cannot pool their records (Section~\ref{sec:intro})~\cite{rieke2020digitalhealth,sheller2020medicine}, and \system was designed for this setting. Because the control layer needs only a local dataset, its schema and an inference endpoint, each facility of a network can run it inside its own infrastructure. Consider $K$ healthcare facilities, each holding a small dataset $D_k$ for the same prediction task, with different case mix, coding practice and class prevalence. Each facility runs \system locally and trains on its real and synthetic records,
+Section~\ref{sec:system} described \system at one facility. Healthcare facilities, however, often cannot pool their records (Section~\ref{sec:intro})~\cite{rieke2020digitalhealth,sheller2020medicine}, so this section outlines how \system can serve several of them, a design this paper does not evaluate. Because the control layer needs only a local dataset, its schema and an inference endpoint, each facility of a network can run it inside its own infrastructure. Consider $K$ healthcare facilities, each holding a small dataset $D_k$ for the same prediction task, with different case mix, coding practice and class prevalence. Each facility runs \system locally and trains on its real and synthetic records,
 \begin{equation}
 G_k=\mathcal{A}(D_k,S_k,N_k),\qquad
 \Delta w_k=\mathcal{U}(w_\tau,D_k\cup G_k),
@@ -290,23 +290,19 @@ where $\mathcal{K}_\tau$ is the set of facilities taking part in round $\tau$, p
 
 
 
-\begin{figure*}[t]
+\begin{figure}[t]
 \centering
-\begin{minipage}[c]{0.6\textwidth}
-\resizebox{\linewidth}{!}{\input{figures_federated.tex}}
-\end{minipage}\hfill
-\begin{minipage}[c]{0.37\textwidth}
+\resizebox{\columnwidth}{!}{\input{figures_federated.tex}}
 \caption{Deployment across healthcare facilities. Each facility runs \system (context selection, a locally served LLM, validation and correction) inside its own infrastructure, then decides with paired local validation whether to use the synthetic records $G_k$ (Facility~1) or to train on real data only (Facility~$K$). Only the model update $\Delta w_k$ and approved aggregate diagnostics leave the facility. The coordinator weights each update by the number of real records $n_k=|D_k|$ (Equation~\eqref{eq:federated-aggregate}), so generating more records gives a facility no extra weight.}
 \label{fig:federated}
-\end{minipage}
-\end{figure*}
+\end{figure}
 
 
 %======================================================================
 \section{Experimental Setup}
 \label{sec:setup}
 %======================================================================
-This section describes the data, protocol, configurations and measures used to answer RQ1 to RQ4.
+Having described the system, we now evaluate it on the four research questions of Section~\ref{sec:intro}. This section describes the data, protocol, configurations and measures used to answer RQ1 to RQ4.
 
 \subsection{Datasets}
 We use ten public classification datasets (Table~\ref{tab:datasets}): six widely used benchmarks, five from the UCI repository~\cite{uciheart,ucibreast,uciheartfailure,uciilpd,uciparkinsons} and the Pima Indians diabetes data~\cite{smith1988diabetes}, and four further UCI datasets that are smaller, have missing values or mixed types, or are imbalanced~\cite{patricio2018coimbra,ucihepatitis,ucickd,zieba2014thoracic}. Each has fewer training records than the minimum sample size recommended for developing a prediction model for its task by the criteria of Riley et al.~\cite{riley2019binary}. Together they span the factors that make small data a challenge for the classifier: 116 to 768 records, 8 to 30 features, two to five classes, a smallest class from 4.3\% to 44.8\% of the records and up to 10.1\% missing values. We keep the original five-class heart-disease target, code the targets of the four further datasets as 0/1 and their binary categories as 0/1, and impute missing values with the mean for numerical and the mode for categorical features, separately within each training and test split. The control-layer variants, the LLM variants and the sensitivity study use the six original datasets; the main configurations and all established generators use all ten.
@@ -348,7 +344,7 @@ Table~\ref{tab:configs} lists the 36 configurations. A configuration is included
 \label{tab:configs}
 \footnotesize
 \setlength{\tabcolsep}{2pt}
-\begin{tabular}{@{}p{.23\columnwidth}p{.31\columnwidth}r@{\hspace{4pt}}p{.33\columnwidth}@{}}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{.23\columnwidth}>{\raggedright\arraybackslash}p{.31\columnwidth}r@{\hspace{4pt}}>{\raggedright\arraybackslash}p{.33\columnwidth}@{}}
 \toprule
 Group & Configurations & No. & Purpose \\
 \midrule
@@ -537,7 +533,7 @@ Over the ten datasets (Table~\ref{tab:glance}, Figure~\ref{fig:radar}), no gener
 \section{Discussion and Limitations}
 \label{sec:discussion}
 %======================================================================
-The results come from the LLM and the control layer together: the LLM brings domain knowledge, and the control layer turns it into a dataset that satisfies its integrity constraints, which no LLM did alone, at almost no extra cost (RQ1). The usefulness is real but bounded (RQ2-RQ4). \system is not the best choice in three situations. With a weak LLM it does not improve utility over direct prompting, and on kidney disease GPT-4o mini lost 10.3 pp of F1 with or without it. When the goal is the closest fit to the real distribution, tree-based and statistical generators are better, at a higher membership-attack risk. When stability matters more than gain, the CLLM filter changes the data least, at the price of missing records; combining it with the control layer is a natural extension. No generator improves every dataset: SDG cannot replace missing patients~\cite[Sec.~2.8]{cover2006elements}. In practice, the LLM matters most, and synthetic records should be checked per classifier.
+We return to the question of Section~\ref{sec:intro}: whether \system makes LLM-based SDG deliver datasets of assured integrity that are useful for small healthcare data. The results come from the LLM and the control layer together: the LLM brings domain knowledge, and the control layer turns it into a dataset that satisfies its integrity constraints, which no LLM did alone, at almost no extra cost (RQ1). The usefulness is real but bounded (RQ2-RQ4). \system is not the best choice in three situations. With a weak LLM it does not improve utility over direct prompting, and on kidney disease GPT-4o mini lost 10.3 pp of F1 with or without it. When the goal is the closest fit to the real distribution, tree-based and statistical generators are better, at a higher membership-attack risk. When stability matters more than gain, the CLLM filter changes the data least, at the price of missing records; combining it with the control layer is a natural extension. No generator improves every dataset: SDG cannot replace missing patients~\cite[Sec.~2.8]{cover2006elements}. In practice, the LLM matters most, and synthetic records should be checked per classifier.
 
 The study has several limitations. Ten datasets (six for the variants) limit the power of the tests, and the divisions are not stratified. The datasets are public, so part of the fidelity may reflect records memorized by the LLMs, which the attack does not test; private data are left for future work. Parkinson's recordings of one subject can fall in both sets. Columns and types are inferred from the full dataset. The parameters in Table~\ref{tab:params} were fixed and not tuned; the sensitivity study varies three of them one at a time, not jointly. The temperature differs between providers, and part of the Claude models' higher fidelity may reflect it (Section~\ref{sec:rq4}). Privacy is measured with one attack, not enforced, and no result establishes differential privacy~\cite{dwork2014dp}. Delivered counts were not logged for the GPT runs of \system on the six original datasets. The CLLM baseline reimplements its curation step rather than running the original code. The corrections were exercised only by GPT-4.1 mini, and records obtained in the last correction round or in the completion loop are not validated again. Context selection is not class-stratified, so a rare class can be missing from a prompt. Local LLMs were not evaluated, and Claude Haiku 5.5's refusals show that a provider's safety behaviour can block generation. The established generators use default settings, and GReaT, which needs a GPU, was not included.
 
