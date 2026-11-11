@@ -38,14 +38,14 @@
   \draw[sgray] (0,0) rectangle (2.6,-0.38);
   \draw[red!70!black,thick] (2.2,0.08) -- (2.2,-0.46);
   \node[font=\sffamily\tiny,text=red!70!black,anchor=north] at (2.2,-0.46) {$\omega W$};
-  \node[font=\sffamily\tiny,anchor=north west,align=left] at (-0.05,-0.62)
+  \node[font=\sffamily\tiny,anchor=north west,align=left,inner sep=1pt] at (-0.02,-0.52)
      {$H$: instructions\\$O_t$: room for the answer\\strategy: random, dense, diverse\\rotate $\mathcal{P}$ across requests};
 \end{scope}
 
 %======================== 2 LLM =========================
 \node[anchor=north west,draw=sgray!60,fill=white,rounded corners=1pt,align=left,font=\ttfamily\tiny,inner sep=2pt]
   at (6.15,-0.45)
-  {\{"cols":["age","sex",..],\\ \ "data":[[63,1,233.0,..],\\ \hphantom{\ "data":[}[41,0,204.0,..],\\ \hphantom{\ "data":[}..]\}};
+  {\{"cols":["age",..],\\ \ "data":[[63,1,233,..],\\ \hphantom{\ "data":[}[41,0,204,..],\\ \hphantom{\ "data":[}..]\}};
 \node[font=\sffamily\tiny,anchor=north west,align=left] at (6.1,-1.55) {$Y_t\sim\pi_\phi(\cdot\mid z_t)$, JSON only,\\ $q_t\le b$ rows per request};
 
 %======================== 3 verifier ====================
