@@ -1,7 +1,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %DIF LATEXDIFF DIFFERENCE FILE
 %DIF DEL /tmp/claude-0/-home-user-TabuLLM/177710a6-83c7-584b-8f2f-a9a7012a7684/scratchpad/v8_sent.tex   Wed Nov 11 13:07:32 2026
-%DIF ADD main.tex                                                                                       Wed Nov 11 13:11:57 2026
+%DIF ADD main.tex                                                                                       Wed Nov 11 13:16:42 2026
 % ICDE 2027 research paper (Round 2: submission due 11 November 2026).
 % Format rules from the call for papers (https://icde2027.github.io/):
 %   * IEEE conference template, PDF only.
@@ -312,7 +312,7 @@ made of the columns and types $S$, the real records $C_t$ currently shown to the
 A_{t+1}=A_t\cup K\bigl(V_S\bigl(P_S(Y_t)\bigr)\bigr),
 \label{eq:acceptance}
 \end{equation}
-where $P_S$ parses the batch $Y_t$ and maps its columns to $S$, $V_S$ validates the types, and $K$ sends the invalid values back to the LLM for correction. Because the state is explicit rather than implied by the conversation history, the number of missing records is always known, and the parser log $E_t$ records every failure for later inspection.
+where $P_S$ parses the batch $Y_t$ and maps its columns to $S$, $V_S$ validates the types, and $K$ \DIFdelbegin \DIFdel{sends the }\DIFdelend \DIFaddbegin \DIFadd{returns the records after sending their }\DIFaddend invalid values back to the LLM for correction\DIFaddbegin \DIFadd{, in at most $c$ rounds}\DIFaddend . Because the state is explicit rather than implied by the conversation history, the number of missing records is always known, and the parser log $E_t$ records every failure for later inspection.
 
 \subsection{Context Budgeter (1)}
 The context budgeter decides which real records the LLM sees. It draws a random sample of $\rho|D|$ training records, between 31 and 123 records in our datasets, written as compact JSON with the feature columns and the class, so that the model sees how features and class co-occur. Because a long prompt can exceed the context window $W$ of the LLM, each request shows as many records of the sample as fit in a share $\omega$ of the window:
@@ -323,7 +323,7 @@ k_t&=\max\{k:T(C_{t,k})\leq\omega W\},
 \end{aligned}
 \label{eq:context}
 \end{equation}
-where $\operatorname{Select}_s$ draws the sample with strategy $s$, $T$ estimates the length in tokens of a prompt with $k$ records, and $\operatorname{Slice}_t$ rotates through the sample, so that successive requests see different patients. If the provider still rejects a request as too long, the budgeter shows fewer records and retries. Besides the default random strategy, \emph{dense} prefers records with fewer missing values, and \emph{diverse} selects the records closest to the centres of $k$-means clusters. Neither strategy is class-stratified, a limitation discussed in Section~\ref{sec:discussion}.
+where $\operatorname{Select}_s$ draws the sample with strategy $s$, \DIFaddbegin \DIFadd{$C_{t,k}$ are the first $k$ records of that slice, }\DIFaddend $T$ estimates the length in tokens of a prompt with \DIFdelbegin \DIFdel{$k$ records}\DIFdelend \DIFaddbegin \DIFadd{them}\DIFaddend , and $\operatorname{Slice}_t$ rotates through the sample, so that successive requests see different patients. If the provider still rejects a request as too long, the budgeter shows fewer records and retries. Besides the default random strategy, \emph{dense} prefers records with fewer missing values, and \emph{diverse} selects the records closest to the centres of $k$-means clusters. Neither strategy is class-stratified, a limitation discussed in Section~\ref{sec:discussion}.
 
 \subsection{LLM Proposal and Prompts (2)}
 The LLM receives the same three-part conversation for every dataset and LLM (Table~\ref{tab:prompt-context}). A first message gives the column names and the sampled records in a compact format, a list of column names followed by one list of values per record. A generation message then asks for an exact number of new records, at most $b$, and states an output contract: JSON only, the same columns in the same order, a value in every cell, raw numbers, and no additional columns. No free-text description of the dataset or of the prediction task is added, so that no dataset receives more prompt engineering than another. The prompts are therefore deliberately simple, and their wording is not part of the contribution: the guarantees come from the stages that check the response.
@@ -358,7 +358,7 @@ LLMs often return fewer records than requested. The admitted records are counted
 r_t=\max(0,N-|A_t|),\qquad q_t=\min(b,r_t),
 \label{eq:residual}
 \end{equation}
-and truncates any excess. It stops when $N$ records have been accepted, after $t_{\max}$ rounds, or after $u_{\max}$ consecutive empty answers; a run that ends short because the provider keeps failing is recorded as such. The run returns the synthetic table $G$ and an audit trail with the tokens processed, the generation time, the repairs, the violations and the requested and delivered numbers of records, which makes a synthetic dataset inspectable after the fact and gives the cost $\kappa$ in Equation~\eqref{eq:multiobjective} a measured value.
+\DIFdelbegin \DIFdel{and }\DIFdelend \DIFaddbegin \DIFadd{where $r_t$ is the number of records still missing and $q_t$ the number requested in round $t$, at most the batch size $b$; the loop also }\DIFaddend truncates any excess. It stops when $N$ records have been accepted, after $t_{\max}$ rounds, or after $u_{\max}$ consecutive empty answers; a run that ends short because the provider keeps failing is recorded as such. The run returns the synthetic table $G$ and an audit trail with the tokens processed, the generation time, the repairs, the violations and the requested and delivered numbers of records, which makes a synthetic dataset inspectable after the fact and gives the cost $\kappa$ in Equation~\eqref{eq:multiobjective} a measured value.
 
 \subsection{Parameters}
 Table~\ref{tab:params} lists the parameters and the values used in the experiments, fixed beforehand from the size of our datasets and the context and output limits of the LLMs rather than tuned on the results; Section~\ref{sec:rq1} examines their effect.
@@ -392,15 +392,15 @@ Empty-answer limit $u_{\max}$ & 5 & Five consecutive empty answers indicate a pr
 This section outlines a deployment design, which this paper does not evaluate. Healthcare facilities often cannot pool their records (Section~\ref{sec:intro})~\cite{rieke2020digitalhealth,sheller2020medicine}, and \system was designed for this setting. Because the control layer needs only a local dataset, its schema and an inference endpoint, each facility of a network can run it inside its own infrastructure. Consider $K$ healthcare facilities, each holding a small dataset $D_k$ for the same prediction task, with different case mix, coding practice and class prevalence. Each facility runs \system locally and trains on its real and synthetic records,
 \begin{equation}
 G_k=\mathcal{A}(D_k,S_k,N_k),\qquad
-\Delta w_k=\mathcal{U}(w_t,D_k\cup G_k),
+\Delta w_k=\mathcal{U}(w\DIFdelbegin \DIFdel{_t}\DIFdelend \DIFaddbegin \DIFadd{_\tau}\DIFaddend ,D_k\cup G_k),
 \label{eq:local-federated}
 \end{equation}
-where $S_k$ are the local columns and types, $N_k$ the local number of synthetic records and $\mathcal{U}$ the local training procedure. Only the model update $\Delta w_k$ and approved aggregate diagnostics leave the facility. A coordinator aggregates the updates as in FedAvg~\cite{mcmahan2017fedavg,kairouz2021federated},
+where \DIFaddbegin \DIFadd{$\mathcal{A}$ denotes }\system\DIFadd{, }\DIFaddend $S_k$ are the local columns and types, $N_k$ the local number of synthetic records\DIFaddbegin \DIFadd{, $w_\tau$ the shared model at aggregation round $\tau$ }\DIFaddend and $\mathcal{U}$ the local training procedure. Only the model update $\Delta w_k$ and approved aggregate diagnostics leave the facility. A coordinator aggregates the updates as in FedAvg~\cite{mcmahan2017fedavg,kairouz2021federated},
 \begin{equation}
-w_{t+1}=w_t+\sum_{k\in\mathcal{K}_t}\frac{n_k}{\sum_{j\in\mathcal{K}_t}n_j}\,\Delta w_k,\qquad n_k=|D_k|,
+w\DIFdelbegin \DIFdel{_{t+1}}\DIFdelend \DIFaddbegin \DIFadd{_{\tau+1}}\DIFaddend =w\DIFdelbegin \DIFdel{_t}\DIFdelend \DIFaddbegin \DIFadd{_\tau}\DIFaddend +\sum\DIFdelbegin \DIFdel{_{k\in\mathcal{K}_t}\frac{n_k}{\sum_{j\in\mathcal{K}_t}n_j}}\DIFdelend \DIFaddbegin \DIFadd{_{k\in\mathcal{K}_\tau}\frac{n_k}{\sum_{j\in\mathcal{K}_\tau}n_j}}\DIFaddend \,\Delta w_k,\qquad n_k=|D_k|,
 \label{eq:federated-aggregate}
 \end{equation}
-preferably under secure aggregation~\cite{bonawitz2017secure}. The weights count \emph{real} records, $|D_k|$ rather than $|D_k\cup G_k|$, so a facility gains no extra weight by generating more records (Figure~\ref{fig:federated}). Unlike SiloFuse, which trains a shared generator across sites~\cite{shankar2024silofuse}, this design needs no generator training across facilities, and each facility can reject its synthetic records when paired local validation shows no gain. The design is not, by itself, a privacy guarantee: with a remote LLM the prompt content leaves the facility, so sensitive deployments need a locally served model or a data-processing agreement, and both synthetic records and model updates can leak information~\cite{chen2024modeltrip}. Our experiments evaluate the generation step one facility at a time, as the next section describes; a multi-facility evaluation is future work.
+\DIFaddbegin \DIFadd{where $\mathcal{K}_\tau$ is the set of facilities taking part in round $\tau$, }\DIFaddend preferably under secure aggregation~\cite{bonawitz2017secure}. The weights count \emph{real} records, $|D_k|$ rather than $|D_k\cup G_k|$, so a facility gains no extra weight by generating more records (Figure~\ref{fig:federated}). Unlike SiloFuse, which trains a shared generator across sites~\cite{shankar2024silofuse}, this design needs no generator training across facilities, and each facility can reject its synthetic records when paired local validation shows no gain. The design is not, by itself, a privacy guarantee: with a remote LLM the prompt content leaves the facility, so sensitive deployments need a locally served model or a data-processing agreement, and both synthetic records and model updates can leak information~\cite{chen2024modeltrip}. Our experiments evaluate the generation step one facility at a time, as the next section describes; a multi-facility evaluation is future work.
 
 
 
@@ -491,12 +491,12 @@ F_{\mathrm{corr}}&=100\bigl(1-\operatorname{mean}|\Sigma_D-\Sigma_G|\bigr),
 \end{aligned}
 \label{eq:fidelity}
 \end{equation}
-where $D_{\mathrm{JS}}$ is the Jensen-Shannon divergence between real and synthetic distributions of a feature and $\Sigma_D$, $\Sigma_G$ are the correlation matrices; both scores equal 100 for identical distributions. A classifier two-sample test (C2ST)~\cite{lopezpaz2017c2st} trains a random forest to separate real from synthetic records; an accuracy close to 0.5 means they are hard to tell apart. \emph{Privacy} is measured by a membership-inference attack that scores each real record by its distance to the nearest synthetic record and reports the ROC AUC between training and test records, where 0.5 is chance, and by the share of \emph{near-copies}, synthetic records within Euclidean distance 0.05 of a real record over the min-max-scaled numerical features (first 200 synthetic records of each run). \emph{Utility} is the paired change, for metric $m\in\{\mathrm{accuracy},\mathrm{F1}\}$, dataset $d$, classifier $c$ and repetition $h$,
+where \DIFaddbegin \DIFadd{$D_j$ and $G_j$ are the values of feature $j$ in the real and synthetic records, }\DIFaddend $D_{\mathrm{JS}}$ is the Jensen-Shannon divergence between \DIFdelbegin \DIFdel{real and synthetic distributionsof a feature }\DIFdelend \DIFaddbegin \DIFadd{their distributions, }\DIFaddend and $\Sigma_D$, $\Sigma_G$ are the correlation matrices; both scores equal 100 for identical distributions. A classifier two-sample test (C2ST)~\cite{lopezpaz2017c2st} trains a random forest to separate real from synthetic records; an accuracy close to 0.5 means they are hard to tell apart. \emph{Privacy} is measured by a membership-inference attack that scores each real record by its distance to the nearest synthetic record and reports the ROC AUC between training and test records, where 0.5 is chance, and by the share of \emph{near-copies}, synthetic records within Euclidean distance 0.05 of a real record over the min-max-scaled numerical features (first 200 synthetic records of each run). \emph{Utility} is the paired change, for metric $m\in\{\mathrm{accuracy},\mathrm{F1}\}$, dataset $d$, classifier $c$ and repetition $h$,
 \begin{equation}
 \Delta m_{d,c,h}=m\bigl(D_{d,h}\cup G_{d,h};\,c\bigr)-m\bigl(D_{d,h};\,c\bigr),
 \label{eq:utility}
 \end{equation}
-with both models scored on the same test set. We use binary F1 for the binary tasks and class-weighted F1 for heart disease, and report changes in percentage points (pp).
+\DIFaddbegin \DIFadd{where $D_{d,h}$ and $G_{d,h}$ are the real training records and the synthetic records of dataset $d$ in repetition $h$, and $m(\cdot;c)$ is the score of classifier $c$ trained on them, }\DIFaddend with both models scored on the same test set. We use binary F1 for the binary tasks and class-weighted F1 for heart disease, and report changes in percentage points (pp).
 
 \subsection{Statistical Analysis}
 Repetitions and classifiers are not independent datasets, so they are averaged within each dataset and the datasets are treated as matched blocks. Configurations are compared with the Friedman test,
