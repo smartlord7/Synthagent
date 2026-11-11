@@ -1,7 +1,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %DIF LATEXDIFF DIFFERENCE FILE
 %DIF DEL /tmp/claude-0/-home-user-TabuLLM/177710a6-83c7-584b-8f2f-a9a7012a7684/scratchpad/v8_sent.tex   Wed Nov 11 13:07:32 2026
-%DIF ADD main.tex                                                                                       Wed Nov 11 13:32:20 2026
+%DIF ADD main.tex                                                                                       Wed Nov 11 13:38:43 2026
 % ICDE 2027 research paper (Round 2: submission due 11 November 2026).
 % Format rules from the call for papers (https://icde2027.github.io/):
 %   * IEEE conference template, PDF only.
@@ -684,7 +684,14 @@ Tokens per record & \best{$-17\%$} vs.\ direct & - & no LLM \\
 \label{fig:radar}
 \end{figure*}
 
-\subsection{RQ4: Comparison with Established Generators and LLMs}
+\DIFaddbegin \begin{figure}[t]
+\centering
+\assetfigure{\columnwidth}{generated/tradeoff.pdf}
+\caption{\system \DIFaddFL{gives the largest utility gain, and the statistical and tree-based generators the highest fidelity (RQ4). Median F1 change against fidelity over the ten datasets, one point per generator; dashed line: no change. The LLM-based baselines use GPT-4o mini.}}
+\label{fig:tradeoff}
+\end{figure}
+
+\DIFaddend \subsection{RQ4: Comparison with Established Generators and LLMs}
 \label{sec:rq4}
 \begin{table}[t]
 \centering
@@ -755,7 +762,7 @@ Claude Sonnet 5.5 & 79.00 & 63.78 & $+0.10$ & $+1.62$ & 205.5 & 86,074 \\
 
 
 
-\DIFaddbegin \DIFadd{From here on, }\system \DIFadd{denotes }\system \DIFadd{with Claude Sonnet 4.6. }\DIFaddend Over the ten datasets (Table~\DIFdelbegin \DIFdel{\ref{tab:generators}}\DIFdelend \DIFaddbegin \DIFadd{\ref{tab:glance}}\DIFaddend , Figure~\ref{fig:radar}), no generator is best on every measure. \DIFaddbegin \system \DIFadd{gives the largest median F1 gain ($+1.43$ pp) and improves F1 on half of the datasets; it is ranked first in F1 (Friedman $p=.004$), and after Holm correction has a higher F1 than TabDDPM on every dataset ($p=.029$). }\DIFaddend The tree-based and statistical generators reproduce the real distributions most closely (\DIFdelbegin \DIFdel{JSD 85.0 to 86.0), and CART 's records are as hard to tell from real ones as real records are (C2ST 0.465), but have the highest attack AUC }\DIFdelend \DIFaddbegin \DIFadd{fidelity 85 to 86), but CART does so by staying close to the real records }\DIFaddend (\DIFaddbegin \DIFadd{attack AUC }\DIFaddend 0.565)\DIFdelbegin \DIFdel{. High }\DIFdelend \DIFaddbegin \DIFadd{, and high }\DIFaddend fidelity does not imply utility: the Bayesian network \DIFdelbegin \DIFdel{matches the copula in fidelity (JSD 85.1) but }\DIFdelend improves F1 on only one dataset. \DIFdelbegin \DIFdel{Oversampling lowers accuracy (median $-2.3$ to $-3.1$ pp) and varies the most in F1 (SD above 7 pp). }%DIFDELCMD < \system %%%
+\DIFaddbegin \DIFadd{From here on, }\system \DIFadd{denotes }\system \DIFadd{with Claude Sonnet 4.6. }\DIFaddend Over the ten datasets (Table~\DIFdelbegin \DIFdel{\ref{tab:generators}, Figure~\ref{fig:radar} }\DIFdelend \DIFaddbegin \DIFadd{\ref{tab:glance}, Figures~\ref{fig:radar} and~\ref{fig:tradeoff}}\DIFaddend ), no generator is best on every measure. \DIFaddbegin \system \DIFadd{gives the largest median F1 gain ($+1.43$ pp) and improves F1 on half of the datasets; it is ranked first in F1 (Friedman $p=.004$), and after Holm correction has a higher F1 than TabDDPM on every dataset ($p=.029$). }\DIFaddend The tree-based and statistical generators reproduce the real distributions most closely (\DIFdelbegin \DIFdel{JSD 85.0 to 86.0), and CART 's records are as hard to tell from real ones as real records are (C2ST 0.465), but have the highest attack AUC }\DIFdelend \DIFaddbegin \DIFadd{fidelity 85 to 86), but CART does so by staying close to the real records }\DIFaddend (\DIFaddbegin \DIFadd{attack AUC }\DIFaddend 0.565)\DIFdelbegin \DIFdel{. High }\DIFdelend \DIFaddbegin \DIFadd{, and high }\DIFaddend fidelity does not imply utility: the Bayesian network \DIFdelbegin \DIFdel{matches the copula in fidelity (JSD 85.1) but }\DIFdelend improves F1 on only one dataset. \DIFdelbegin \DIFdel{Oversampling lowers accuracy (median $-2.3$ to $-3.1$ pp) and varies the most in F1 (SD above 7 pp). }%DIFDELCMD < \system %%%
 \DIFdel{with Claude Sonnet 4.6 gives the largest median F1 gain of all sixteen generators ($+1.43$ pp) and improves F1 on half of the datasets, more often than any other LLM configuration except CLLM. The CLLM filter }\DIFdelend \DIFaddbegin \DIFadd{CLLM }\DIFaddend changes the data least \DIFdelbegin \DIFdel{: it gives the best median accuracy change ($+0.07$ pp) and the smallest variation in F1, }\DIFdelend and improves F1 on 70\% of the datasets, \DIFdelbegin \DIFdel{and CART on 80\%, both with small gains }\DIFdelend \DIFaddbegin \DIFadd{but by little }\DIFaddend ($+0.24$ \DIFdelbegin \DIFdel{and $+0.11$ pp) ; but CLLM missed }\DIFdelend \DIFaddbegin \DIFadd{pp) and with }\DIFaddend 13\% of the \DIFdelbegin \DIFdel{requested records , the shortfall of direct prompting, whose output it filters. The generators differ across the ten datasets (Friedman $p<.001$ for accuracy , $p=.004$ for F1), with }%DIFDELCMD < \system %%%
 \DIFdel{and Claude Sonnet 4.6 ranked first in F1 and CLLM in accuracy; after Holm correction, CLLM has a higher accuracy than SMOTE and Borderline-SMOTE, and }%DIFDELCMD < \system %%%
 \DIFdel{with Sonnet 4.6 a higher accuracy than Borderline-SMOTE, and a higher }\DIFdelend \DIFaddbegin \DIFadd{records missing. Oversampling lowers accuracy and varies the most in }\DIFaddend F1\DIFdelbegin \DIFdel{than TabDDPM on every dataset ($p=.029$)}\DIFdelend \DIFaddbegin \DIFadd{. The best generator therefore depends on the goal, which the next section discusses}\DIFaddend .

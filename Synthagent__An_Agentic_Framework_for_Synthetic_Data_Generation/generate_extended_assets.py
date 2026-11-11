@@ -370,11 +370,59 @@ def ablation_figure():
     plt.close(fig)
 
 
+def tradeoff_figure():
+    """RQ4: fidelity against median F1 change for every generator; Synthagent is the
+    Claude Sonnet 4.6 configuration, the other two Synthagent LLMs are left out."""
+    import matplotlib.pyplot as plt
+    gpa.print_style()
+    t = pd.read_csv(gpa.OUT / "generators10.csv").set_index("arm")
+    fam = {"backend_claude_sonnet_4_6": ("Synthagent", "#1f3b73"),
+           "raw_prompting": ("LLM-based", "#e69f00"), "structured_output": ("LLM-based", "#e69f00"), "cllm": ("LLM-based", "#e69f00"),
+           "smote": ("Oversampling", "#cc79a7"), "adasyn": ("Oversampling", "#cc79a7"), "borderline_smote": ("Oversampling", "#cc79a7"),
+           "gaussian_copula": ("Statistical and tree-based", "#009e73"), "bayesian_network": ("Statistical and tree-based", "#009e73"),
+           "cart": ("Statistical and tree-based", "#009e73"), "arf": ("Statistical and tree-based", "#009e73"),
+           "ctgan": ("Deep", "#56b4e9"), "tvae": ("Deep", "#56b4e9"), "tabddpm": ("Deep", "#56b4e9")}
+    names = {"backend_claude_sonnet_4_6": "Synthagent", "raw_prompting": "Direct", "structured_output": "Structured",
+             "cllm": "CLLM", "smote": "SMOTE", "adasyn": "ADASYN", "borderline_smote": "Borderline",
+             "gaussian_copula": "Copula", "bayesian_network": "Bayes. net.", "cart": "CART", "arf": "ARF",
+             "ctgan": "CTGAN", "tvae": "TVAE", "tabddpm": "TabDDPM"}
+    off = {"backend_claude_sonnet_4_6": (0.6, 0.05, "left"), "raw_prompting": (0.5, 0.06, "left"),
+           "structured_output": (0.5, -0.13, "left"), "cllm": (0.5, 0.05, "left"), "smote": (0.3, 0.17, "left"),
+           "adasyn": (0.0, 0.19, "center"), "borderline_smote": (0.5, -0.15, "left"), "gaussian_copula": (-0.5, 0.06, "right"),
+           "bayesian_network": (-0.5, -0.12, "right"), "cart": (-0.5, 0.06, "right"), "arf": (0.5, -0.17, "left"),
+           "ctgan": (0.5, 0.0, "left"), "tvae": (0.5, 0.05, "left"), "tabddpm": (0.0, -0.19, "center")}
+    fig, ax = plt.subplots(figsize=(gpa.COL_W, 2.3))
+    ax.axhline(0, color="0.5", lw=0.6, ls=(0, (2, 2)), zorder=0)
+    seen = set()
+    for arm, (f, c) in fam.items():
+        x, y = t.loc[arm, "JSD"], t.loc[arm, "dF1_median"]
+        star = arm == "backend_claude_sonnet_4_6"
+        ax.scatter(x, y, s=70 if star else 22, marker="*" if star else "o", color=c, zorder=3,
+                   edgecolor="white", linewidth=0.4, label=None if f in seen else f)
+        seen.add(f)
+        dx, dy, ha = off[arm]
+        ax.text(x + dx, y + dy, names[arm], fontsize=5.6, ha=ha, va="center",
+                fontweight="bold" if star else "normal", color="#1f3b73" if star else "0.2")
+    ax.set_xlabel("Fidelity (JSD, 0-100)", fontsize=6.5)
+    ax.set_ylabel("Median F1 change (pp)", fontsize=6.5)
+    ax.tick_params(labelsize=6)
+    ax.set_xlim(59, 90); ax.set_ylim(-2.5, 1.8)
+    ax.grid(lw=0.3, alpha=0.5)
+    for sp in ("top", "right"):
+        ax.spines[sp].set_visible(False)
+    ax.legend(fontsize=5.3, loc="lower center", bbox_to_anchor=(0.5, 1.0), ncol=3, frameon=False,
+              handletextpad=0.2, columnspacing=0.8)
+    fig.savefig(gpa.OUT / "tradeoff.pdf", bbox_inches="tight", pad_inches=0.02)
+    fig.savefig(gpa.OUT / "tradeoff.png", dpi=220, bbox_inches="tight", pad_inches=0.02)
+    plt.close(fig)
+
+
 def main():
     print(dataset_table().round(1).to_string(index=False))
     t, f, c = generator_comparison()
     radar(pd.read_csv(gpa.OUT / "generators10_f1.csv", index_col=0))
     delivery_figure()
+    tradeoff_figure()
     ablation_figure()
     print(t.round(2).to_string(index=False)); print(f.to_string(index=False))
     print(c[c.p_holm < 0.05].to_string(index=False))

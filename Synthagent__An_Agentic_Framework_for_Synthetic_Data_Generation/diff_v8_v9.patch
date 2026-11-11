@@ -1,5 +1,5 @@
 diff --git a/tmp/claude-0/-home-user-TabuLLM/177710a6-83c7-584b-8f2f-a9a7012a7684/scratchpad/v8_sent.tex b/main.tex
-index d6da6d2..05f8ff9 100644
+index d6da6d2..2445796 100644
 --- a/tmp/claude-0/-home-user-TabuLLM/177710a6-83c7-584b-8f2f-a9a7012a7684/scratchpad/v8_sent.tex
 +++ b/main.tex
 @@ -62,7 +62,7 @@ Pedro Henriques Abreu\textsuperscript{1}\,\orcidlink{0000-0002-9278-8194}}
@@ -192,6 +192,13 @@ index d6da6d2..05f8ff9 100644
  \toprule
 -Group & Configurations & No. & Purpose \\
 +Group & Configurations & No. \\
++\midrule
++\multicolumn{3}{@{}l}{\textit{Control layer (RQ1)}}\\
++Reference & \system, default settings$^{\ast}$ & 1 \\
++Baselines: no control layer & Direct prompting and structured outputs (GPT-4o mini$^{\ast}$, Claude Haiku 5.5); CLLM$^{\ast}$ & 5 \\
++Repeated runs: noise floor & No type rules; no post-processing; no context join; logged rerun & 4 \\
++Design choices & Dense or diverse context; LLM-chosen settings; range enforcement & 4 \\
++Sensitivity & $\rho$: 10\%, 40\%; $b$: 15, 60; temperature: 0, 1.0 & 6 \\
  \midrule
 -Baselines (RQ1) & Direct prompting and structured outputs, with GPT-4o mini$^{\ast}$ and Claude Haiku 5.5; CLLM$^{\ast}$ & 5 & Same LLM without the control layer: free or schema-constrained decoding, or a curation filter \\
 -Reference & \system, default settings$^{\ast}$ & 1 & Point of comparison for all others \\
@@ -200,18 +207,11 @@ index d6da6d2..05f8ff9 100644
 -Sensitivity (RQ1) & $\rho$ of 10\% and 40\%; $b$ of 15 and 60; temperature 0 and 1.0 & 6 & Effect of each fixed parameter \\
 -LLM variants (RQ4) & GPT-4.1 mini; GPT-4o; GPT-4.1$^{\ast}$; Claude Haiku 4.5; Claude Sonnet 4.6$^{\ast}$; Claude Sonnet 5.5 & 6 & Effect of model generation, size and provider \\
 -Established generators$^{\ast}$ (RQ4) & SMOTE; ADASYN; Borderline-SMOTE; Gaussian copula; Bayesian network; CART; ARF; CTGAN; TVAE; TabDDPM & 10 & Generators fitted to the real records \\
-+\multicolumn{3}{@{}l}{\textit{Control layer (RQ1)}}\\
-+Reference & \system, default settings$^{\ast}$ & 1 \\
-+Baselines: no control layer & Direct prompting and structured outputs (GPT-4o mini$^{\ast}$, Claude Haiku 5.5); CLLM$^{\ast}$ & 5 \\
-+Repeated runs: noise floor & No type rules; no post-processing; no context join; logged rerun & 4 \\
-+Design choices & Dense or diverse context; LLM-chosen settings; range enforcement & 4 \\
-+Sensitivity & $\rho$: 10\%, 40\%; $b$: 15, 60; temperature: 0, 1.0 & 6 \\
- \midrule
--Total & & 36 & \\
 +\multicolumn{3}{@{}l}{\textit{Comparison (RQ4)}}\\
 +LLM variants & GPT-4.1 mini, GPT-4o, GPT-4.1$^{\ast}$; Claude Haiku 4.5, Sonnet 4.6$^{\ast}$, Sonnet 5.5 & 6 \\
 +Established generators$^{\ast}$ & Oversampling: SMOTE, ADASYN, Borderline-SMOTE. Statistical: Gaussian copula, Bayesian network. Tree-based: CART, ARF. Deep: CTGAN, TVAE, TabDDPM & 10 \\
-+\midrule
+ \midrule
+-Total & & 36 & \\
 +Total & & 36 \\
  \bottomrule
  \end{tabular}
@@ -327,7 +327,7 @@ index d6da6d2..05f8ff9 100644
  
  
  
-@@ -491,7 +467,7 @@ Mean & 72.7 & 72.6 & 0.878 & 0.526 & 75.4 & 74.2 & $-1.19$ & $-0.14$ \\
+@@ -491,10 +467,17 @@ Mean & 72.7 & 72.6 & 0.878 & 0.526 & 75.4 & 74.2 & $-1.19$ & $-0.14$ \\
  \begin{figure*}[t]
  \centering
  \assetfigure{\textwidth}{generated/radar_f1.pdf}
@@ -336,7 +336,17 @@ index d6da6d2..05f8ff9 100644
  \label{fig:radar}
  \end{figure*}
  
-@@ -519,44 +495,15 @@ Claude Sonnet 5.5 & 79.00 & 63.78 & $+0.10$ & $+1.62$ & 205.5 & 86,074 \\
++\begin{figure}[t]
++\centering
++\assetfigure{\columnwidth}{generated/tradeoff.pdf}
++\caption{\system gives the largest utility gain, and the statistical and tree-based generators the highest fidelity (RQ4). Median F1 change against fidelity over the ten datasets, one point per generator; dashed line: no change. The LLM-based baselines use GPT-4o mini.}
++\label{fig:tradeoff}
++\end{figure}
++
+ \subsection{RQ4: Comparison with Established Generators and LLMs}
+ \label{sec:rq4}
+ \begin{table}[t]
+@@ -519,44 +502,15 @@ Claude Sonnet 5.5 & 79.00 & 63.78 & $+0.10$ & $+1.62$ & 205.5 & 86,074 \\
  \end{tabular*}
  \end{table}
  
@@ -380,11 +390,11 @@ index d6da6d2..05f8ff9 100644
  
  
 -Over the ten datasets (Table~\ref{tab:generators}, Figure~\ref{fig:radar}), no generator is best on every measure. The tree-based and statistical generators reproduce the real distributions most closely (JSD 85.0 to 86.0), and CART's records are as hard to tell from real ones as real records are (C2ST 0.465), but have the highest attack AUC (0.565). High fidelity does not imply utility: the Bayesian network matches the copula in fidelity (JSD 85.1) but improves F1 on only one dataset. Oversampling lowers accuracy (median $-2.3$ to $-3.1$ pp) and varies the most in F1 (SD above 7 pp). \system with Claude Sonnet 4.6 gives the largest median F1 gain of all sixteen generators ($+1.43$ pp) and improves F1 on half of the datasets, more often than any other LLM configuration except CLLM. The CLLM filter changes the data least: it gives the best median accuracy change ($+0.07$ pp) and the smallest variation in F1, and improves F1 on 70\% of the datasets, and CART on 80\%, both with small gains ($+0.24$ and $+0.11$ pp); but CLLM missed 13\% of the requested records, the shortfall of direct prompting, whose output it filters. The generators differ across the ten datasets (Friedman $p<.001$ for accuracy, $p=.004$ for F1), with \system and Claude Sonnet 4.6 ranked first in F1 and CLLM in accuracy; after Holm correction, CLLM has a higher accuracy than SMOTE and Borderline-SMOTE, and \system with Sonnet 4.6 a higher accuracy than Borderline-SMOTE, and a higher F1 than TabDDPM on every dataset ($p=.029$).
-+From here on, \system denotes \system with Claude Sonnet 4.6. Over the ten datasets (Table~\ref{tab:glance}, Figure~\ref{fig:radar}), no generator is best on every measure. \system gives the largest median F1 gain ($+1.43$ pp) and improves F1 on half of the datasets; it is ranked first in F1 (Friedman $p=.004$), and after Holm correction has a higher F1 than TabDDPM on every dataset ($p=.029$). The tree-based and statistical generators reproduce the real distributions most closely (fidelity 85 to 86), but CART does so by staying close to the real records (attack AUC 0.565), and high fidelity does not imply utility: the Bayesian network improves F1 on only one dataset. CLLM changes the data least and improves F1 on 70\% of the datasets, but by little ($+0.24$ pp) and with 13\% of the records missing. Oversampling lowers accuracy and varies the most in F1. The best generator therefore depends on the goal, which the next section discusses.
++From here on, \system denotes \system with Claude Sonnet 4.6. Over the ten datasets (Table~\ref{tab:glance}, Figures~\ref{fig:radar} and~\ref{fig:tradeoff}), no generator is best on every measure. \system gives the largest median F1 gain ($+1.43$ pp) and improves F1 on half of the datasets; it is ranked first in F1 (Friedman $p=.004$), and after Holm correction has a higher F1 than TabDDPM on every dataset ($p=.029$). The tree-based and statistical generators reproduce the real distributions most closely (fidelity 85 to 86), but CART does so by staying close to the real records (attack AUC 0.565), and high fidelity does not imply utility: the Bayesian network improves F1 on only one dataset. CLLM changes the data least and improves F1 on 70\% of the datasets, but by little ($+0.24$ pp) and with 13\% of the records missing. Oversampling lowers accuracy and varies the most in F1. The best generator therefore depends on the goal, which the next section discusses.
  
  
  
-@@ -566,11 +513,11 @@ Over the ten datasets (Table~\ref{tab:generators}, Figure~\ref{fig:radar}), no g
+@@ -566,11 +520,11 @@ Over the ten datasets (Table~\ref{tab:generators}, Figure~\ref{fig:radar}), no g
  \section{Discussion and Limitations}
  \label{sec:discussion}
  %======================================================================
