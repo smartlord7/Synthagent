@@ -1,8 +1,23 @@
 diff --git a/tmp/claude-0/-home-user-TabuLLM/177710a6-83c7-584b-8f2f-a9a7012a7684/scratchpad/v8_sent.tex b/main.tex
-index d6da6d2..2445796 100644
+index d6da6d2..4afece5 100644
 --- a/tmp/claude-0/-home-user-TabuLLM/177710a6-83c7-584b-8f2f-a9a7012a7684/scratchpad/v8_sent.tex
 +++ b/main.tex
-@@ -62,7 +62,7 @@ Pedro Henriques Abreu\textsuperscript{1}\,\orcidlink{0000-0002-9278-8194}}
+@@ -50,19 +50,19 @@
+ % ORCIDs are entered in the submission system.
+ \author{%
+ \IEEEauthorblockN{Sancho Amaral Sim\~oes\textsuperscript{1,*}\,\orcidlink{0000-0001-6013-4754},
+-Jo\~ao P. Vilela\textsuperscript{1,2}\,\orcidlink{0000-0001-5805-1351},
+-Pedro Henriques Abreu\textsuperscript{1}\,\orcidlink{0000-0002-9278-8194}}
++Pedro Henriques Abreu\textsuperscript{1}\,\orcidlink{0000-0002-9278-8194},
++Jo\~ao P. Vilela\textsuperscript{1,2}\,\orcidlink{0000-0001-5805-1351}}
+ \IEEEauthorblockA{\textsuperscript{1}\textit{University of Coimbra, CISUC/LASI - Centre for Informatics and Systems of the University of Coimbra,}\\
+ \textit{Department of Informatics Engineering}, Coimbra, Portugal\\
+ \textsuperscript{2}\textit{CRACS/INESCTEC-DCS - FCUP, University of Porto}, Porto, Portugal\\
+ \textsuperscript{*}Corresponding author\\
+-{\small\texttt{sanchosimoes@student.dei.uc.pt}, \texttt{jvilela@fc.up.pt}, \texttt{pha@dei.uc.pt}}}
++{\small\texttt{sanchosimoes@student.dei.uc.pt}, \texttt{pha@dei.uc.pt}, \texttt{jvilela@fc.up.pt}}}
+ }
+ 
  \maketitle
  
  \begin{abstract}
