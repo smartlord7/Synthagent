@@ -110,7 +110,7 @@ Section~\ref{sec:related} reviews background, Section~\ref{sec:system} describes
 \begin{figure}[t]
 \centering
 \resizebox{\columnwidth}{!}{\input{figures_teaser.tex}}
-\caption{The problem addressed in this paper, in an illustrative example. Asked for 30 records of a heart-disease dataset, an LLM response (left) can contain too few records, invented or missing features and values of the wrong type. \system (right) validates and corrects every response, so the resulting dataset has no integrity violations, and a log records each correction and its cost.}
+\caption{The problem addressed in this paper, in an illustrative example. Asked for 30 heart-disease records, the LLM (left) returns too few records, an invented column, missing columns and a value of the wrong type. \system (middle) checks and corrects every response and requests the missing records, following the four steps of Figure~\ref{fig:architecture}, and delivers all 30 records with the columns and types of the real data (right).}
 \label{fig:teaser}
 \end{figure}
 

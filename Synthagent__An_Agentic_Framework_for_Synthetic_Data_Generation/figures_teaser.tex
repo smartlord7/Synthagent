@@ -1,34 +1,48 @@
 \begin{tikzpicture}[
   font=\sffamily\scriptsize,
-  >={Latex[length=1.6mm]},
+  >={Latex[length=1.8mm]},
   box/.style={rounded corners=3pt,draw=#1,very thick,fill=#1!6,inner sep=4pt,align=left},
-  bad/.style={text=sorange,font=\sffamily\tiny\bfseries},
 ]
-% ---------------- raw LLM response ----------------
-\node[box=sorange,anchor=north west,text width=4.15cm] (raw) at (0,0) {%
-  \textbf{\textcolor{sorange}{Raw LLM response}}\\[2pt]
+\providecommand{\bad}[1]{\textcolor{sorange}{\textbf{#1}}}
+% ---------------- LLM response ----------------
+\node[box=sorange,anchor=north west,text width=4.3cm] (raw) at (0,0) {%
+  \textbf{\textcolor{sorange}{What the LLM returns}}\\
+  {\tiny asked for 30 heart-disease records}\\[3pt]
   \texttt{\tiny [\{"age":63,"sex":1,"chol":233,..\},}\\
-  \texttt{\tiny \ \{"age":"sixty","sex":0,..\},}\\
-  \texttt{\tiny \ \{"age":41,"bmi\_est":31.2,..\},}\\
-  \texttt{\tiny \ \{"age":57,"chol":192\} ...]}\\[3pt]
-  {\tiny\textcolor{sorange}{\textbullet} 22 of 30 requested records}\\
-  {\tiny\textcolor{sorange}{\textbullet} wrong type: \texttt{age="sixty"}}\\
-  {\tiny\textcolor{sorange}{\textbullet} invented column: \texttt{bmi\_est}}\\
-  {\tiny\textcolor{sorange}{\textbullet} missing columns, cost not recorded}};
+  \texttt{\tiny \ \{"age":\bad{"sixty"},"sex":0,..\},}\\
+  \texttt{\tiny \ \{"age":41,\bad{"bmi\_est"}:31.2,..\},}\\
+  \texttt{\tiny \ \{"age":57,"chol":192\} ...]}\\[4pt]
+  {\tiny\bad{\textbullet} only 22 of the 30 records}\\
+  {\tiny\bad{\textbullet} a value of the wrong type}\\
+  {\tiny\bad{\textbullet} an invented column}\\
+  {\tiny\bad{\textbullet} missing columns}};
 
-% ---------------- controller ----------------
-\node[box=spurple,anchor=north west,text width=1.95cm,align=center] (ctl) at (4.85,-0.55) {%
-  \textbf{\textcolor{spurple}{\system}}\\[2pt]
-  {\tiny parse \& repair\\ map to schema\\ validate types\\ correct fields\\ top up missing records\\ log cost}};
+% ---------------- Synthagent ----------------
+\node[box=spurple,anchor=north west,text width=2.55cm] (ctl) at (4.95,-0.3) {%
+  \textbf{\textcolor{spurple}{\system}}\\[3pt]
+  {\tiny\setlength{\tabcolsep}{0pt}%
+   \begin{tabular}{@{}l@{\hspace{3pt}}p{2.3cm}@{}}
+   \textbf{1} & choose the real records shown\\
+   \textbf{2} & ask the LLM for a batch\\
+   \textbf{3} & parse, map to the real columns, check types, ask for corrections\\
+   \textbf{4} & count and request the 8 missing records\\
+   \end{tabular}}};
 
-% ---------------- admitted table ----------------
-\node[box=sgreen,anchor=north west,text width=2.55cm] (ok) at (7.45,0) {%
-  \textbf{\textcolor{sgreen}{Admitted table}}\\[2pt]
-  {\tiny\textcolor{sgreen}{\checkmark} exactly 30 records}\\
-  {\tiny\textcolor{sgreen}{\checkmark} declared columns only}\\
-  {\tiny\textcolor{sgreen}{\checkmark} declared types}\\[3pt]
-  \textbf{\tiny Audit log}\\
-  {\tiny tokens, time, repairs,\\ violations, requested\\ vs.\ delivered records}};
+% ---------------- delivered table ----------------
+\node[box=sgreen,anchor=north west,text width=2.75cm] (ok) at (8.15,0) {%
+  \textbf{\textcolor{sgreen}{Delivered table}}\\[3pt]
+  {\tiny\setlength{\tabcolsep}{2.5pt}%
+   \begin{tabular}{@{}rrrc@{}}
+   \textbf{age} & \textbf{sex} & \textbf{chol} & \dots\\\hline
+   63 & 1 & 233 & \\
+   \textcolor{sgreen}{\textbf{60}} & 0 & 241 & \\
+   41 & 0 & 204 & \\
+   \multicolumn{4}{@{}l}{\dots\ 30 records}\\
+   \end{tabular}}\\[3pt]
+  {\tiny\textcolor{sgreen}{\checkmark} all 30 records\\
+   \textcolor{sgreen}{\checkmark} only the real columns\\
+   \textcolor{sgreen}{\checkmark} every value of the right type\\
+   \textcolor{sgreen}{\checkmark} a log of every request}};
 
 \draw[->,very thick,sgray] (raw.east |- ctl.west) -- (ctl.west);
 \draw[->,very thick,sgray] (ctl.east) -- (ok.west |- ctl.east);
