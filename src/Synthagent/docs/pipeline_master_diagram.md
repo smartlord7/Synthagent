@@ -1,6 +1,6 @@
-# TabuLLM: The Master Architecture Flow
+# Synthagent: The Master Architecture Flow
 
-This document contains a monolithic, fully connected, end-to-end flowchart of the entire TabuLLM pipeline. It integrates every individual module (from initial multiprocessing ingestion, straight down to final PDF report compilation) into a single continuous visual map.
+This document contains a monolithic, fully connected, end-to-end flowchart of the entire Synthagent pipeline. It integrates every individual module (from initial multiprocessing ingestion, straight down to final PDF report compilation) into a single continuous visual map.
 
 ---
 

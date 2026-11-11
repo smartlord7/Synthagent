@@ -23,9 +23,9 @@ _METRIC_KEYS = [
 ]
 
 
-class TabuLLM:
+class Synthagent:
     """
-    The primary developer interface for TabuLLM.
+    The primary developer interface for Synthagent.
     This class encapsulates data loading, AI-driven insights,
     synthetic data generation, and audit reporting.
     """
@@ -34,7 +34,7 @@ class TabuLLM:
 
     def __init__(self, provider: str = "local", model: str = "google/gemma-3-4b", endpoint_url: Optional[str] = None, api_key: Optional[str] = None):
         """
-        Initialize the TabuLLM engine.
+        Initialize the Synthagent engine.
 
         Args:
             provider (str): LLM provider to use ('local', 'gemini', or 'openai'). Default 'local'.
@@ -491,4 +491,4 @@ class TabuLLM:
 
 
 # Convenience alias
-TabuLLM_Lib = TabuLLM
+Synthagent_Lib = Synthagent

@@ -28,11 +28,11 @@ if __name__ == '__main__':
         logger.info("[SYS] Startup Test Gate ACTIVE. Running Master Suite...")
         tests_passed = run_master_suite()
         if not tests_passed:
-            logger.error("[SYS] Startup aborted. TabuLLM test suite FAILED.")
+            logger.error("[SYS] Startup aborted. Synthagent test suite FAILED.")
             sys.exit(1)
         logger.info("[SYS] Startup Test Gate SUCCESS. Proceeding to launch...")
 
-    logger.info(f"[SYS] Booting TabuLLM Server Instance...")
+    logger.info(f"[SYS] Booting Synthagent Server Instance...")
     logger.info(f"[SYS] Environment: {'Docker' if is_docker else 'Local'} | Host: {host} | Port: {port} | Dash Debug: {debug_mode}")
     
     try:

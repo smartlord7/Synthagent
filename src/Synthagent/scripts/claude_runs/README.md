@@ -12,7 +12,7 @@ Six runs, each in its own results folder under `src/Synthagent/results/claude/`:
 | sonnet55_full | claude-sonnet-5-5 | full |
 
 - `start_claude.sh` starts one supervisor per unfinished run and a pusher (idempotent; safe to re-run after a restart). Needs `TABULLM_ANTHROPIC_API_KEY`.
-- `supervise_claude.sh` resumes a run from its checkpoint until all six datasets are done, then writes `done_<name>` in `$CLAUDE_RUN_STATE` (default `/tmp/tabullm_claude`).
+- `supervise_claude.sh` resumes a run from its checkpoint until all six datasets are done, then writes `done_<name>` in `$CLAUDE_RUN_STATE` (default `/tmp/synthagent_claude`).
 - `pusher_claude.sh` commits and pushes `results/claude` every 30 minutes while runs are active.
 - `cost_claude.py` prints the spend so far and the projected total per run, from the checkpointed token counts.
 - To pause: `touch $CLAUDE_RUN_STATE/pause_claude` and stop the `run_batch_pipeline.py` processes; remove the file and re-run `start_claude.sh` to resume.

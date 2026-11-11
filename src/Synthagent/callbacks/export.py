@@ -59,7 +59,7 @@ def export_augmented_data_pm(n_clicks, row_data, col_defs):
 
     dataset_id = dash.callback_context.triggered_id['index']
     logger.info(f"[UI] Exporting CSV for dataset '{dataset_id}' ({len(df)} rows).")
-    return dcc.send_data_frame(df.to_csv, f"TabuLLM_Export_{dataset_id}.csv", index=False)
+    return dcc.send_data_frame(df.to_csv, f"Synthagent_Export_{dataset_id}.csv", index=False)
 
 
 @app.callback(
@@ -109,7 +109,7 @@ def export_augmented_pdf_pm(n_clicks, orig_data, row_data, description, algo, to
     
     pdf_bytes = generate_benchmark_pdf(report_data)
     logger.info(f"[IO] PDF Audit generated successfully ({len(pdf_bytes)} bytes).")
-    return dcc.send_bytes(bytes(pdf_bytes), f"TabuLLM_Audit_{dataset_id}.pdf")
+    return dcc.send_bytes(bytes(pdf_bytes), f"Synthagent_Audit_{dataset_id}.pdf")
 
 
 # --- TWO-STAGE REPORT GENERATION ---
@@ -592,4 +592,4 @@ def execute_global_report_pm(n_clicks, config_store, meta_store, pipeline_result
         pdf_bytes = generate_benchmark_pdf(report_data)
         # temp_dir is automatically cleaned up here by the TemporaryDirectory context manager
 
-    return dcc.send_bytes(bytes(pdf_bytes), f"TabuLLM_Audit_{datetime.now().strftime('%Y%m%d')}.pdf")
+    return dcc.send_bytes(bytes(pdf_bytes), f"Synthagent_Audit_{datetime.now().strftime('%Y%m%d')}.pdf")

@@ -8,13 +8,13 @@ from unittest.mock import patch, MagicMock
 # Ensure project root is in sys.path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from tabullm import TabuLLM
+from synthagent import Synthagent
 
 class TestLibraryFullPipeline(unittest.TestCase):
     
     def setUp(self):
         os.environ["TABULLM_SYNC_TEST"] = "1"
-        self.lib = TabuLLM(provider="local", model="test-lib-model")
+        self.lib = Synthagent(provider="local", model="test-lib-model")
         # Small dataset for real pipeline execution
         self.df = pd.DataFrame({
             "age": [20, 25, 30, 35, 40, 45, 50, 55, 60, 65],

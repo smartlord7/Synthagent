@@ -1,6 +1,6 @@
 #!/bin/bash
 # supervise_claude.sh NAME MODEL ARM DIR : run one Claude arm until all six datasets are complete.
-NAME=$1; MODEL=$2; ARM=$3; DIR=$4; S=${CLAUDE_RUN_STATE:-/tmp/tabullm_claude}; mkdir -p $S
+NAME=$1; MODEL=$2; ARM=$3; DIR=$4; S=${CLAUDE_RUN_STATE:-/tmp/synthagent_claude}; mkdir -p $S
 exec 9>$S/lock_$NAME; flock -n 9 || exit 0
 [ -f $S/pause_claude ] && exit 0
 cd "$(git -C "$(dirname "$0")" rev-parse --show-toplevel)/src/Synthagent"

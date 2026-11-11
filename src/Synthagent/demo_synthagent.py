@@ -1,14 +1,14 @@
 import pandas as pd
 import os
 import json
-from tabullm import TabuLLM
+from synthagent import Synthagent
 
 def main():
-    print("--- TabuLLM Library: Full-Feature Demo ---")
+    print("--- Synthagent Library: Full-Feature Demo ---")
     
     # 1. Initialize the Library
     # You can specify 'local' (e.g., LM Studio) or 'gemini'
-    lib = TabuLLM(provider="local")
+    lib = Synthagent(provider="local")
     
     # 2. Check Available Models
     try:
@@ -68,7 +68,7 @@ def main():
     print(f"    - ML Benchmarks: {list(fake_results['overall_ml'].keys())}")
 
     # 8. Generate Final Audit Report
-    output_pdf = "tabullm_full_feature_demo.pdf"
+    output_pdf = "synthagent_full_feature_demo.pdf"
     print(f"\n[7] Exporting Professional Audit Report to: {output_pdf}")
     lib.generate_pdf_report(fake_results, output_pdf)
     

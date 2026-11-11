@@ -1,8 +1,8 @@
-# TabuLLM: User Functionality Guide
+# Synthagent: User Functionality Guide
 
-TabuLLM is an enterprise-grade framework designed to procedurally augment undersized, imbalanced, or privacy-restricted tabular datasets. It utilizes Large Language Models (LLMs) to construct high-fidelity synthetic data, rigorously benchmarking its predictive utility via integrated Machine Learning engines.
+Synthagent is an enterprise-grade framework designed to procedurally augment undersized, imbalanced, or privacy-restricted tabular datasets. It utilizes Large Language Models (LLMs) to construct high-fidelity synthetic data, rigorously benchmarking its predictive utility via integrated Machine Learning engines.
 
-Below is an exhaustive index of all tools, controls, and functionalities available to the end-user through the TabuLLM interactive interface.
+Below is an exhaustive index of all tools, controls, and functionalities available to the end-user through the Synthagent interactive interface.
 
 ---
 
@@ -52,7 +52,7 @@ The core generative reactor. Users can granularly control the creativity, bounds
 
 ## 3. Parallel Benchmark Pipeline
 
-Rather than generating data blindly, TabuLLM runs K-Fold Cross Validation testing to prove whether the synthetic data actually improves downstream predictive models.
+Rather than generating data blindly, Synthagent runs K-Fold Cross Validation testing to prove whether the synthetic data actually improves downstream predictive models.
 
 ### Pipeline Configurator
 * **K-Fold Multiplier:** Define how many statistical folds to execute (1-10) to validate variance stability.
@@ -99,7 +99,7 @@ Users can "Inspect" any of the 11 ML models that were run via an interactive mod
 
 ## 6. Executive Reporting Engine
 
-For academic and enterprise sharing, TabuLLM features an offline, mathematically formatted PDF Generation engine.
+For academic and enterprise sharing, Synthagent features an offline, mathematically formatted PDF Generation engine.
 
 * **One-Click Generation:** Compiles all runs, parameters, and datasets active in the UI into a single scientific document.
 * **Executive Summary:** Aggregates a global, cross-dataset statistical summary on the very first page.

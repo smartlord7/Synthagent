@@ -141,7 +141,7 @@ load_dotenv()
 # Make sure the package root is importable regardless of where you call this from
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from tabullm import TabuLLM  # noqa: E402  (after sys.path tweak)
+from synthagent import Synthagent  # noqa: E402  (after sys.path tweak)
 from services.pipeline_manager import (  # noqa: E402
     _paired_pvalue, apply_fdr_correction, run_smote_dataset_benchmark, run_stochasticity_check,
 )
@@ -237,15 +237,15 @@ PIPELINE: dict = {
 }
 
 
-def _make_lib(model_id: str) -> TabuLLM:
+def _make_lib(model_id: str) -> Synthagent:
     """
-    Builds a TabuLLM instance for `model_id` under the configured PIPELINE["provider"].
+    Builds a Synthagent instance for `model_id` under the configured PIPELINE["provider"].
     Centralised so 'endpoint_url' (a 'local'-only setting -- LOCAL_LLM_URL always has a
     default, so passing it unconditionally would wrongly override OpenAIProvider's own
     default base URL) and 'api_key' (an 'openai'-only setting) are only forwarded where
-    they actually apply, instead of repeating that logic at every TabuLLM(...) call site.
+    they actually apply, instead of repeating that logic at every Synthagent(...) call site.
     """
-    return TabuLLM(
+    return Synthagent(
         provider=PIPELINE["provider"],
         model=model_id,
         endpoint_url=PIPELINE["endpoint_url"] if PIPELINE["provider"] == "local" else None,
@@ -253,7 +253,7 @@ def _make_lib(model_id: str) -> TabuLLM:
     )
 
 
-# NOTE: the batch pipeline intentionally never calls TabuLLM.ponder_strategy() — that
+# NOTE: the batch pipeline intentionally never calls Synthagent.ponder_strategy() — that
 # AI-authored augmentation plan is an interactive-UI-only feature (see callbacks/audit.py).
 # The batch harness instead uses a fixed, code-derived generation plan (inferred rules +
 # a one-time dataset audit — see pipeline_manager.run_single_dataset_benchmark) so every
@@ -261,7 +261,7 @@ def _make_lib(model_id: str) -> TabuLLM:
 
 # ─────────────────────────────────────────────────────────────────────────────
 # ABLATION ARMS
-#   Each arm is a set of TabuLLM.augment() kwarg overrides layered on top of the
+#   Each arm is a set of Synthagent.augment() kwarg overrides layered on top of the
 #   PIPELINE defaults above. "full" (no overrides) is the baseline every other
 #   arm is compared against. Running the ablation sweep is exactly "run the
 #   batch pipeline once per arm" — see run_ablation().
@@ -789,7 +789,7 @@ def _save_fold_result(
 ) -> None:
     """
     Persists ONE fold's result the instant it finishes, under checkpoint["in_progress"][key].
-    Called as the on_fold_done callback threaded into TabuLLM.augment() / the SMOTE config
+    Called as the on_fold_done callback threaded into Synthagent.augment() / the SMOTE config
     (see run_batch()/run_ablation()) -- so a crash mid-unit only loses the one fold that was
     still generating, not every fold computed so far in this (arm, dataset) unit.
     """
@@ -905,7 +905,7 @@ def _all_folds_succeeded(results: dict, folds: int, arm_name: str, filename: str
 
 
 def _run_dataset_arm(
-    lib: TabuLLM,
+    lib: Synthagent,
     filename: str,
     ds_cfg: dict,
     out_dir: str,
@@ -918,7 +918,7 @@ def _run_dataset_arm(
 ) -> "dict | None":
     """
     Runs one (dataset, arm) augmentation end to end: loads the CSV, calls the full
-    TabuLLM pipeline, and writes the same JSON/PDF/per-fold-CSV outputs a normal batch
+    Synthagent pipeline, and writes the same JSON/PDF/per-fold-CSV outputs a normal batch
     run would. Used by both run_batch() (single "full" arm) and run_ablation() (looped
     over every arm) — the ablation sweep is exactly N calls to this function with
     different config_overrides, i.e. "running several batch pipelines."
@@ -929,7 +929,7 @@ def _run_dataset_arm(
     ctx_size_pct/strategy/temperature instead of the fixed PIPELINE defaults.
 
     resume_fold_results / on_fold_done: fold-level checkpoint resume support, threaded
-    straight through to TabuLLM.augment() -- see its docstring. Lets the caller (run_batch()/
+    straight through to Synthagent.augment() -- see its docstring. Lets the caller (run_batch()/
     run_ablation()) skip folds already cached from a prior interrupted run and persist each
     newly-computed fold immediately, rather than only after every fold in this unit finishes.
 
@@ -1044,7 +1044,7 @@ def _run_dataset_arm(
 
 
 def _run_smote_arm(
-    lib: TabuLLM,
+    lib: Synthagent,
     filename: str,
     ds_cfg: dict,
     out_dir: str,
@@ -1177,7 +1177,7 @@ def run_batch(resume: "str | None" = None) -> None:
             print(f"  Using first available: {model_to_use}")
 
     _print_separator("═")
-    print(f"  TabuLLM Batch Pipeline  —  {timestamp}")
+    print(f"  Synthagent Batch Pipeline  —  {timestamp}")
     print(f"  Provider : {PIPELINE['provider']}  |  Model : {model_to_use}")
     print(f"  Folds    : {PIPELINE['folds']}  |  Strategy : {PIPELINE['strategy']}")
     print(f"  Datasets : {len(DATASET_REGISTRY)}")
@@ -1280,7 +1280,7 @@ def run_ablation(resume: "str | None" = None) -> None:
     total_units = len(all_arms) * len(dataset_subset)
 
     _print_separator("═")
-    print(f"  TabuLLM Ablation Study  —  {timestamp}")
+    print(f"  Synthagent Ablation Study  —  {timestamp}")
     print(f"  Provider : {PIPELINE['provider']}  |  Model : {model_to_use}")
     print(f"  Folds    : {ablation_folds}  (same rigor as a standalone batch run)")
     print(f"  Arms     : {all_arms}")
@@ -1294,11 +1294,11 @@ def run_ablation(resume: "str | None" = None) -> None:
 
     lib = _make_lib(model_to_use)
 
-    # Cross-model sweep arms each need their own TabuLLM instance (different model id) --
+    # Cross-model sweep arms each need their own Synthagent instance (different model id) --
     # built lazily and cached here so every dataset in that arm reuses the same instance.
-    model_sweep_libs: dict[str, TabuLLM] = {}
+    model_sweep_libs: dict[str, Synthagent] = {}
 
-    def _lib_for_arm(arm_name: str) -> TabuLLM:
+    def _lib_for_arm(arm_name: str) -> Synthagent:
         model_id = model_sweep_arms[arm_name]
         if model_id not in model_sweep_libs:
             model_sweep_libs[model_id] = _make_lib(model_id)
@@ -1511,7 +1511,7 @@ def run_stochasticity_study(resume: "str | None" = None) -> None:
     checkpoint = _load_checkpoint(run_dir)
 
     _print_separator("═")
-    print(f"  TabuLLM Generation-Stochasticity Check  —  {timestamp}")
+    print(f"  Synthagent Generation-Stochasticity Check  —  {timestamp}")
     print(f"  Provider : {PIPELINE['provider']}  |  Model : {model_to_use}")
     print(f"  Repeats  : {repeats}  |  Datasets : {dataset_subset}")
     print(f"  Output   : {run_dir}")
@@ -1614,7 +1614,7 @@ def run_stochasticity_study(resume: "str | None" = None) -> None:
 # ─────────────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="TabuLLM batch pipeline / ablation study runner.")
+    parser = argparse.ArgumentParser(description="Synthagent batch pipeline / ablation study runner.")
     parser.add_argument("--ablation", action="store_true",
                          help="Run the ablation sweep (repeats the full batch pipeline once "
                               "per module combination) instead of a single full-module batch run.")

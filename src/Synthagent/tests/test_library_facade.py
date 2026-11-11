@@ -7,12 +7,12 @@ from unittest.mock import patch, MagicMock
 # Ensure project root is in sys.path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from tabullm import TabuLLM
+from synthagent import Synthagent
 
 class TestLibraryFacade(unittest.TestCase):
     
     def setUp(self):
-        self.lib = TabuLLM(provider="local", model="test-lib-model")
+        self.lib = Synthagent(provider="local", model="test-lib-model")
         self.sample_df = pd.DataFrame({
             "age": [20, 30, 40],
             "income": [2000, 3000, 4000],
@@ -27,7 +27,7 @@ class TestLibraryFacade(unittest.TestCase):
             self.assertEqual(len(df), 3)
             mock_read.assert_called_once()
 
-    @patch('tabullm.api.LocalOpenAIProvider.detect_target_columns')
+    @patch('synthagent.api.LocalOpenAIProvider.detect_target_columns')
     def test_suggest_targets(self, mock_detect):
         """Test target suggestion delegation."""
         mock_detect.return_value = ["target"]
@@ -35,7 +35,7 @@ class TestLibraryFacade(unittest.TestCase):
         self.assertEqual(targets, ["target"])
         mock_detect.assert_called_once()
 
-    @patch('tabullm.api.LocalOpenAIProvider.get_dataset_description')
+    @patch('synthagent.api.LocalOpenAIProvider.get_dataset_description')
     def test_get_insights(self, mock_desc):
         """Test insights generation delegation."""
         mock_desc.return_value = "Insights description"
@@ -43,7 +43,7 @@ class TestLibraryFacade(unittest.TestCase):
         self.assertEqual(res, "Insights description")
         mock_desc.assert_called_once()
 
-    @patch('tabullm.api.PipelineManager.run_pipeline')
+    @patch('synthagent.api.PipelineManager.run_pipeline')
     def test_augment_pipeline(self, mock_pipe):
         """Test the full augmentation pipeline delegation."""
         mock_pipe.return_value = [{"dataset_id": "lib-ds", "avg_fidelity": 0.9, "overall_ml": {}}]
@@ -53,7 +53,7 @@ class TestLibraryFacade(unittest.TestCase):
         self.assertEqual(results["avg_fidelity"], 0.9)
         mock_pipe.assert_called_once()
 
-    @patch('tabullm.api.generate_benchmark_pdf')
+    @patch('synthagent.api.generate_benchmark_pdf')
     def test_generate_pdf_report(self, mock_pdf):
         """Test PDF report generation delegation."""
         mock_pdf.return_value = b"%PDF-1.4 mock content"

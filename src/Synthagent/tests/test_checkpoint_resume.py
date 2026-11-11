@@ -38,7 +38,7 @@ class TestJsonSafe(unittest.TestCase):
 
 class TestCheckpointPersistence(unittest.TestCase):
     def setUp(self):
-        self.run_dir = tempfile.mkdtemp(prefix="tabullm_checkpoint_test_")
+        self.run_dir = tempfile.mkdtemp(prefix="synthagent_checkpoint_test_")
 
     def tearDown(self):
         shutil.rmtree(self.run_dir, ignore_errors=True)
@@ -83,7 +83,7 @@ class TestCheckpointLookup(unittest.TestCase):
     different, non-comparable set of splits."""
 
     def setUp(self):
-        self.run_dir = tempfile.mkdtemp(prefix="tabullm_checkpoint_test_")
+        self.run_dir = tempfile.mkdtemp(prefix="synthagent_checkpoint_test_")
         self.checkpoint = rbp._load_checkpoint(self.run_dir)
         rbp._mark_unit_done(self.run_dir, self.checkpoint, "full::ds.csv",
                              {"dataset": "ds.csv"}, {"acc": [0.1]}, {"folds": 10})
@@ -110,7 +110,7 @@ class TestFoldLevelResume(unittest.TestCase):
     the whole unit does), so a crash mid-unit only loses the one fold in flight."""
 
     def setUp(self):
-        self.run_dir = tempfile.mkdtemp(prefix="tabullm_checkpoint_test_")
+        self.run_dir = tempfile.mkdtemp(prefix="synthagent_checkpoint_test_")
         self.checkpoint = rbp._load_checkpoint(self.run_dir)
 
     def tearDown(self):
@@ -149,7 +149,7 @@ class TestFoldLevelResume(unittest.TestCase):
 
 class TestFindResumableRunDir(unittest.TestCase):
     def setUp(self):
-        self.results_dir = tempfile.mkdtemp(prefix="tabullm_results_test_")
+        self.results_dir = tempfile.mkdtemp(prefix="synthagent_results_test_")
         self._orig_results_dir = rbp.RESULTS_DIR
         rbp.RESULTS_DIR = self.results_dir
 
@@ -190,7 +190,7 @@ class TestFindResumableRunDir(unittest.TestCase):
 
 class TestResolveRunDir(unittest.TestCase):
     def setUp(self):
-        self.results_dir = tempfile.mkdtemp(prefix="tabullm_results_test_")
+        self.results_dir = tempfile.mkdtemp(prefix="synthagent_results_test_")
         self._orig_results_dir = rbp.RESULTS_DIR
         rbp.RESULTS_DIR = self.results_dir
 

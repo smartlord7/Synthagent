@@ -1,7 +1,7 @@
 services:
-  tabullm:
+  synthagent:
     build: .
-    container_name: tabullm_app_dev
+    container_name: synthagent_app_dev
     ports:
       - "8050:8050"
     volumes:

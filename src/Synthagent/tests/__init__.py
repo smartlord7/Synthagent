@@ -1,1 +1,1 @@
-# Unit tests for TabuLLM
+# Unit tests for Synthagent

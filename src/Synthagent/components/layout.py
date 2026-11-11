@@ -53,7 +53,7 @@ def create_layout():
                 html.A(
                     dbc.Row([
                         dbc.Col(html.I(className="bi bi-cpu text-info", style={"fontSize": "1.75rem"})),
-                        dbc.Col(dbc.NavbarBrand("TabuLLM", className="ms-2 fw-bold text-light", style={"fontSize": "1.5rem"}))
+                        dbc.Col(dbc.NavbarBrand("Synthagent", className="ms-2 fw-bold text-light", style={"fontSize": "1.5rem"}))
                     ], align="center", className="g-0"),
                     href="#", style={"textDecoration": "none"}
                 ),

@@ -7,7 +7,7 @@ from dash import DiskcacheManager
 from utils.logging_config import logger
 
 # Diskcache to enable background callbacks (outside project root to avoid reloader)
-cache_path = os.path.join(tempfile.gettempdir(), "tabullm_cache")
+cache_path = os.path.join(tempfile.gettempdir(), "synthagent_cache")
 cache = diskcache.Cache(cache_path)
 background_callback_manager = DiskcacheManager(cache)
 
@@ -17,4 +17,4 @@ app = dash.Dash(
     external_stylesheets=[dbc.themes.DARKLY, dbc.icons.BOOTSTRAP],
     suppress_callback_exceptions=True
 )
-app.title = "TabuLLM"
+app.title = "Synthagent"

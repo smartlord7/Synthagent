@@ -1,6 +1,6 @@
 #!/bin/bash
-# Idempotent: (re)starts any missing Claude supervisor and the pusher. Needs TABULLM_ANTHROPIC_API_KEY. State and logs go to $CLAUDE_RUN_STATE (default /tmp/tabullm_claude).
-S=${CLAUDE_RUN_STATE:-/tmp/tabullm_claude}; mkdir -p $S; D=$(cd "$(dirname "$0")" && pwd); R=results/claude
+# Idempotent: (re)starts any missing Claude supervisor and the pusher. Needs TABULLM_ANTHROPIC_API_KEY. State and logs go to $CLAUDE_RUN_STATE (default /tmp/synthagent_claude).
+S=${CLAUDE_RUN_STATE:-/tmp/synthagent_claude}; mkdir -p $S; D=$(cd "$(dirname "$0")" && pwd); R=results/claude
 [ -n "$TABULLM_ANTHROPIC_API_KEY$ANTHROPIC_API_KEY" ] || { echo "NO TABULLM_ANTHROPIC_API_KEY in this container"; exit 1; }
 [ -f $S/pause_claude ] && { echo "paused (remove $S/pause_claude to resume)"; exit 0; }
 cd "$(git -C "$(dirname "$0")" rev-parse --show-toplevel)/src/Synthagent"; mkdir -p $R

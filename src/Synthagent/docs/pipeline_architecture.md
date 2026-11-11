@@ -1,6 +1,6 @@
-# TabuLLM Pipeline Architecture (Complete System Design)
+# Synthagent Pipeline Architecture (Complete System Design)
 
-This document visualizes the exact, exhaustive data flow, token compression, generation algorithms, error repairing, and machine learning benchmarking steps in the TabuLLM codebase.
+This document visualizes the exact, exhaustive data flow, token compression, generation algorithms, error repairing, and machine learning benchmarking steps in the Synthagent codebase.
 
 ---
 
@@ -185,7 +185,7 @@ sequenceDiagram
 ---
 
 ## 5. Pydantic Hierarchical Guardrail Layer
-Instead of simple heuristics, TabuLLM uses dynamic Pydantic models to categorize and enforce constraints across three layers of strictness.
+Instead of simple heuristics, Synthagent uses dynamic Pydantic models to categorize and enforce constraints across three layers of strictness.
 
 ```mermaid
 graph LR

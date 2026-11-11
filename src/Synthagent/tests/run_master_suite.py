@@ -2,7 +2,7 @@ import unittest
 import sys
 import os
 
-# Ensure the TabuLLM package's root is in sys.path
+# Ensure the Synthagent package's root is in sys.path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from utils.logging_config import logger
@@ -25,9 +25,9 @@ class LoggingTestResult(unittest.TextTestResult):
         logger.error(self._exc_info_to_string(err, test))
 
 def run_master_suite():
-    """Runs all TabuLLM test files and returns True if all pass, False otherwise."""
+    """Runs all Synthagent test files and returns True if all pass, False otherwise."""
     logger.info("="*60)
-    logger.info("TabuLLM MASTER TEST SUITE - Global Validation")
+    logger.info("Synthagent MASTER TEST SUITE - Global Validation")
     logger.info("="*60)
     
     loader = unittest.TestLoader()
@@ -46,7 +46,7 @@ def run_master_suite():
         return False
         
     logger.info("\n" + "="*60)
-    logger.info("SUCCESS: All TabuLLM Functionality Tests Passed.")
+    logger.info("SUCCESS: All Synthagent Functionality Tests Passed.")
     logger.info("="*60)
     return True
 

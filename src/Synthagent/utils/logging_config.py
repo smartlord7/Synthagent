@@ -4,8 +4,8 @@ import tempfile
 
 # Configure logging to both Console and a File (outside project root to avoid reloader)
 def setup_logger():
-    log_path = os.path.join(tempfile.gettempdir(), "debug_tabullm.log")
-    print(f"DEBUG: TabuLLM logging to {log_path}")
+    log_path = os.path.join(tempfile.gettempdir(), "debug_synthagent.log")
+    print(f"DEBUG: Synthagent logging to {log_path}")
     
     logging.basicConfig(
         level=logging.INFO,
@@ -15,6 +15,6 @@ def setup_logger():
             logging.StreamHandler()
         ]
     )
-    return logging.getLogger("TabuLLM")
+    return logging.getLogger("Synthagent")
 
 logger = setup_logger()

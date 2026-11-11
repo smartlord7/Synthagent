@@ -1,4 +1,4 @@
-# TabuLLM: Algorithmic Architecture
+# Synthagent: Algorithmic Architecture
 
 ```mermaid
 graph LR
