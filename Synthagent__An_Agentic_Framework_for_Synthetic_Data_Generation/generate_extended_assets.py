@@ -195,8 +195,8 @@ def radar(per_dataset):
     data = pd.DataFrame(per_dataset)
     ref = "Synthagent (Claude Sonnet 4.6)"
     panels = [
-        ("LLM-based", ["Synthagent (GPT-4.1)", "Synthagent (GPT-4o mini)", "Direct prompting", "Structured outputs"]),
-        ("Curation and deep", ["CLLM", "CTGAN", "TVAE", "TabDDPM"]),
+        ("LLM-based", ["Direct prompting", "Structured outputs", "CLLM"]),
+        ("Deep", ["CTGAN", "TVAE", "TabDDPM"]),
         ("Oversampling", ["SMOTE", "ADASYN", "Borderline-SMOTE"]),
         ("Statistical and tree-based", ["Gaussian copula", "Bayesian network", "CART", "ARF"]),
     ]
@@ -218,7 +218,7 @@ def radar(per_dataset):
     fig, axes = plt.subplots(1, 4, figsize=(gpa.TEXT_W, 2.25), subplot_kw={"polar": True})
     for ax, (title, members) in zip(axes, panels):
         v = data[ref].tolist()
-        ax.plot(angles, r(v + v[:1]), color="#1f3b73", lw=1.6, marker="o", ms=1.8, label="Synthagent (Claude Sonnet 4.6)")
+        ax.plot(angles, r(v + v[:1]), color="#1f3b73", lw=1.6, marker="o", ms=1.8, label="Synthagent")
         for name, c, m in zip(members, colors, markers):
             v = data[name].tolist()
             ax.plot(angles, r(v + v[:1]), color=c, lw=0.9, marker=m, ms=1.6, label=name)
@@ -230,16 +230,16 @@ def radar(per_dataset):
             ax.text(ang, r(hi) * 1.05, short.get(lab, lab), fontsize=4.6,
                     ha="left" if c_ > 0.1 else "right" if c_ < -0.1 else "center",
                     va="bottom" if s_ > 0.1 else "top" if s_ < -0.1 else "center")
-        ticks = [-10, -1, 0, 1, 10]
-        ax.set_yticks(r(ticks), [f"{t:+d}" if t else "0" for t in ticks], fontsize=4.2)
-        ax.set_rlabel_position(90)
+        ticks = [-10, 0, 10]
+        ax.set_yticks(r(ticks), [""] * len(ticks))
+        ax.set_rlabel_position(18)
         for t in ax.get_yticklabels():
             t.set_bbox(dict(facecolor="white", edgecolor="none", pad=0.2, alpha=0.8))
         ax.grid(lw=0.4)
         ax.set_title(title, fontsize=6.5, pad=13)
         ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.1), ncol=1, frameon=False, fontsize=4.6,
                   handlelength=1.6, labelspacing=0.25)
-    fig.subplots_adjust(left=0.05, right=0.95, top=0.86, bottom=0.27, wspace=0.85)
+    fig.subplots_adjust(left=0.08, right=0.94, top=0.86, bottom=0.27, wspace=0.9)
     fig.savefig(gpa.OUT / "radar_f1.pdf", bbox_inches="tight", pad_inches=0.02)
     fig.savefig(gpa.OUT / "radar_f1.png", dpi=220, bbox_inches="tight", pad_inches=0.02)
     plt.close(fig)
