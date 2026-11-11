@@ -1,5 +1,5 @@
 diff --git a/tmp/claude-0/-home-user-TabuLLM/177710a6-83c7-584b-8f2f-a9a7012a7684/scratchpad/v8_sent.tex b/main.tex
-index d6da6d2..246a3a8 100644
+index d6da6d2..63368e9 100644
 --- a/tmp/claude-0/-home-user-TabuLLM/177710a6-83c7-584b-8f2f-a9a7012a7684/scratchpad/v8_sent.tex
 +++ b/main.tex
 @@ -62,7 +62,7 @@ Pedro Henriques Abreu\textsuperscript{1}\,\orcidlink{0000-0002-9278-8194}}
@@ -108,3 +108,12 @@ index d6da6d2..246a3a8 100644
  
  
  
+@@ -570,7 +541,7 @@ The results come from the LLM and the control layer together: the LLM brings dom
+ 
+ The study has several limitations. Ten datasets (six for the variants) limit the power of the tests, and the divisions are not stratified. The datasets are public, so part of the fidelity may reflect records memorized by the LLMs, which the attack does not test; private data are left for future work. Parkinson's recordings of one subject can fall in both sets. Columns and types are inferred from the full dataset. The parameters in Table~\ref{tab:params} were fixed and not tuned; the sensitivity study varies three of them one at a time, not jointly. The temperature differs between providers, and part of the Claude models' higher fidelity may reflect it (Section~\ref{sec:rq4}). Privacy is measured with one attack, not enforced, and no result establishes differential privacy~\cite{dwork2014dp}. Delivered counts were not logged for the GPT runs of \system on the six original datasets. The CLLM baseline reimplements its curation step rather than running the original code. The corrections were exercised only by GPT-4.1 mini, and records obtained in the last correction round or in the completion loop are not validated again. Context selection is not class-stratified, so a rare class can be missing from a prompt. Local LLMs were not evaluated, and Claude Haiku 5.5's refusals show that a provider's safety behaviour can block generation. The established generators use default settings, and GReaT, which needs a GPU, was not included.
+ 
+-Synthetic records must not inform diagnosis without domain review, nor be released on the strength of one attack. The implementation, the experiment runner and the script that regenerates every table and figure are publicly available.\footnote{\url{https://github.com/smartlord7/Synthagent}}
++Synthetic records must not inform diagnosis without domain review, nor be released on the strength of one attack. Everything needed to reproduce the experiments is publicly available: the implementation, the prompts, the configuration and LLM identifier of every run, the dataset preparation, pinned dependencies, the per-run results with the synthetic records saved during the runs, and the scripts that regenerate every table and figure.\footnote{\url{https://github.com/smartlord7/Synthagent}}
+ 
+ %======================================================================
+ \section{Conclusion}
