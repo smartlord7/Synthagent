@@ -202,9 +202,9 @@ def radar(per_dataset):
     ]
     colors = ["#e69f00", "#56b4e9", "#009e73", "#cc79a7"]
     markers = ["s", "^", "D", "v"]
-    short = {"Heart disease": "Heart d.", "Breast cancer": "Breast c.", "Heart failure": "Heart fail.",
-             "Diabetes": "Diabetes", "Liver disease": "Liver", "Parkinson's": "Parkinson",
-             "Breast cancer (Coimbra)": "Breast c. (C.)", "Hepatitis": "Hepatitis",
+    short = {"Heart disease": "Heart dis.", "Breast cancer": "Breast", "Heart failure": "Heart fail.",
+             "Diabetes": "Diabetes", "Liver disease": "Liver", "Parkinson's": "Parkinson's",
+             "Breast cancer (Coimbra)": "Breast (Coimbra)", "Hepatitis": "Hepatitis",
              "Kidney disease": "Kidney", "Thoracic surgery": "Thoracic"}
     labels = list(data.index)
     angles = np.linspace(0, 2 * np.pi, len(labels), endpoint=False).tolist()
@@ -388,9 +388,9 @@ def tradeoff_figure():
              "ctgan": "CTGAN", "tvae": "TVAE", "tabddpm": "TabDDPM"}
     off = {"backend_claude_sonnet_4_6": (0.6, 0.05, "left"), "raw_prompting": (0.5, 0.06, "left"),
            "structured_output": (0.5, -0.13, "left"), "cllm": (0.5, 0.05, "left"), "smote": (0.3, 0.17, "left"),
-           "adasyn": (0.0, 0.19, "center"), "borderline_smote": (0.5, -0.15, "left"), "gaussian_copula": (-0.5, 0.06, "right"),
+           "adasyn": (-0.4, -0.13, "right"), "borderline_smote": (0.5, -0.15, "left"), "gaussian_copula": (-0.5, 0.06, "right"),
            "bayesian_network": (-0.5, -0.12, "right"), "cart": (-0.5, 0.06, "right"), "arf": (0.5, -0.17, "left"),
-           "ctgan": (0.5, 0.0, "left"), "tvae": (0.5, 0.05, "left"), "tabddpm": (0.0, -0.19, "center")}
+           "ctgan": (0.5, 0.0, "left"), "tvae": (0.5, 0.05, "left"), "tabddpm": (0.0, 0.17, "center")}
     fig, ax = plt.subplots(figsize=(gpa.COL_W, 2.3))
     ax.axhline(0, color="0.5", lw=0.6, ls=(0, (2, 2)), zorder=0)
     seen = set()
@@ -406,7 +406,7 @@ def tradeoff_figure():
     ax.set_xlabel("Fidelity (JSD, 0-100)", fontsize=6.5)
     ax.set_ylabel("Median F1 change (pp)", fontsize=6.5)
     ax.tick_params(labelsize=6)
-    ax.set_xlim(59, 90); ax.set_ylim(-2.5, 1.8)
+    ax.set_xlim(57, 90); ax.set_ylim(-2.5, 1.8)
     ax.grid(lw=0.3, alpha=0.5)
     for sp in ("top", "right"):
         ax.spines[sp].set_visible(False)

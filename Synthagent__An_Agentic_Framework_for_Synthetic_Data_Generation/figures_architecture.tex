@@ -27,7 +27,7 @@
 
 % profile card
 \node[pan=sgray,anchor=north west,align=left,inner sep=3pt,font=\sffamily\tiny] (prof) at (-0.05,-2.35)
-  {\textbf{Profiled schema $S$}\\\textbf{and rules $R$}\\[1pt]
+  {\textbf{Columns and}\\\textbf{types $S$}\\[1pt]
    \texttt{age}: int \quad \texttt{sex}: \{0,1\}\\ \texttt{chol}: float \ \texttt{num}: \{0..4\}};
 
 %======================== 1 budgeter ====================
@@ -50,7 +50,7 @@
 
 %======================== 3 verifier ====================
 \node[gate,minimum width=10mm] (g1) at (10.25,-0.95) {Parse\\JSON};
-\node[gate,minimum width=12mm] (g2) at (11.6,-0.95)  {Map to\\schema $S$};
+\node[gate,minimum width=12mm] (g2) at (11.6,-0.95)  {Map to\\columns $S$};
 \node[gate,minimum width=12mm] (g3) at (13.0,-0.95)  {Validate\\$V_S$};
 \draw[flow] (g1)--(g2); \draw[flow] (g2)--(g3);
 \draw[flow] (8.9,-0.95) -- (g1.west);
@@ -64,7 +64,7 @@
   \draw[sgray,|-|] (0,-0.4) -- (2.2,-0.4);
   \node[font=\sffamily\tiny,anchor=north] at (1.1,-0.42) {$N$ requested records};
   \node[font=\sffamily\tiny,anchor=north west,align=left] at (-0.05,-0.75)
-    {$A_{t+1}=A_t\cup{}$\\\hspace*{1.2em}$K(V_S(P_S(Y_t)))$\\excess truncated to $N$};
+    {$A_{t+1}=A_t\cup{}$\\\hspace*{1.2em}$\Gamma(V_S(P_S(Y_t)))$\\excess truncated to $N$};
 \end{scope}
 \draw[flow] (g3.east) -- node[above,font=\sffamily\tiny,text=sgreen]{valid} (14.3,-0.95);
 
@@ -90,7 +90,7 @@
 %======================== state register ================
 \draw[draw=spurple,very thick,fill=spurple!5,rounded corners=3pt] (2.4,-3.15) rectangle (17.2,-3.85);
 \node[font=\sffamily\bfseries\scriptsize,text=spurple,anchor=west] at (2.5,-3.5) {Controller state $z_t$};
-\foreach \lab/\x in {{$S,\,R$}/5.6,{$C_t$}/6.6,{$A_t$}/7.5,{$r_t=N-|A_t|$}/8.9,{$B_t$}/10.3,{$E_t$}/11.2}{
+\foreach \lab/\x in {{$S$}/5.6,{$C_t$}/6.6,{$A_t$}/7.5,{$r_t=N-|A_t|$}/8.9,{$B_t$}/10.3,{$E_t$}/11.2}{
   \node[draw=spurple!70,fill=white,rounded corners=1pt,minimum height=4.5mm,inner sep=2pt,font=\sffamily\tiny] at (\x,-3.5) {\lab};}
 \node[font=\sffamily\tiny,text=spurple,anchor=east,align=right] at (17.1,-3.5) {explicit state, not chat history;\\every transition is logged to $E_t$};
 \draw[st] (prof.south east) ++(0,0.25) to[out=0,in=180] (2.4,-3.5);
