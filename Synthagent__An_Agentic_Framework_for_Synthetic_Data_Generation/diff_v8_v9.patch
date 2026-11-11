@@ -1,5 +1,5 @@
 diff --git a/tmp/claude-0/-home-user/177710a6-83c7-584b-8f2f-a9a7012a7684/scratchpad/v8_sent.tex b/main.tex
-index d6da6d2..9015e8e 100644
+index d6da6d2..6d1a78f 100644
 --- a/tmp/claude-0/-home-user/177710a6-83c7-584b-8f2f-a9a7012a7684/scratchpad/v8_sent.tex
 +++ b/main.tex
 @@ -56,13 +56,13 @@ Pedro Henriques Abreu\textsuperscript{1}\,\orcidlink{0000-0002-9278-8194}}
@@ -399,7 +399,7 @@ index d6da6d2..9015e8e 100644
  
  
  
-@@ -491,10 +467,17 @@ Mean & 72.7 & 72.6 & 0.878 & 0.526 & 75.4 & 74.2 & $-1.19$ & $-0.14$ \\
+@@ -491,15 +467,22 @@ Mean & 72.7 & 72.6 & 0.878 & 0.526 & 75.4 & 74.2 & $-1.19$ & $-0.14$ \\
  \begin{figure*}[t]
  \centering
  \assetfigure{\textwidth}{generated/radar_f1.pdf}
@@ -418,6 +418,12 @@ index d6da6d2..9015e8e 100644
  \subsection{RQ4: Comparison with Established Generators and LLMs}
  \label{sec:rq4}
  \begin{table}[t]
+ \centering
+-\caption{Under the control layer, no LLM produced an integrity violation in any logged run; the Claude models give the highest fidelity and F1 gain (RQ4). Reference configuration; seconds and tokens are means per repetition, tokens comparable only within a provider.}
++\caption{Under the control layer, no LLM produced an integrity violation in any logged run; the Claude models give the highest fidelity and F1 gain (RQ4). Reference configuration; seconds and tokens are means per repetition. Bold: best per column; tokens are compared only within a provider, so the lowest of each is bold.}
+ \label{tab:backend}
+ \footnotesize
+ \setlength{\tabcolsep}{3pt}
 @@ -519,44 +502,15 @@ Claude Sonnet 5.5 & 79.00 & 63.78 & $+0.10$ & $+1.62$ & 205.5 & 86,074 \\
  \end{tabular*}
  \end{table}
