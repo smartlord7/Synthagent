@@ -33,9 +33,9 @@ TARGETS10 = {
     "thoracic_surgery.csv": "Risk1Yr",
 }
 GENERATORS10 = [
-    ("full", "Synthagent, GPT-4o mini"),
-    ("backend_gpt_4_1", "Synthagent, GPT-4.1"),
-    ("backend_claude_sonnet_4_6", "Synthagent, Sonnet 4.6"),
+    ("full", "Synthagent (GPT-4o mini)"),
+    ("backend_gpt_4_1", "Synthagent (GPT-4.1)"),
+    ("backend_claude_sonnet_4_6", "Synthagent (Claude Sonnet 4.6)"),
     ("raw_prompting", "Direct prompting"),
     ("structured_output", "Structured outputs"),
     ("cllm", "CLLM"),
@@ -193,9 +193,9 @@ def radar(per_dataset):
     import matplotlib.pyplot as plt
     gpa.print_style()
     data = pd.DataFrame(per_dataset)
-    ref = "Synthagent, Sonnet 4.6"
+    ref = "Synthagent (Claude Sonnet 4.6)"
     panels = [
-        ("LLM-based", ["Synthagent, GPT-4.1", "Synthagent, GPT-4o mini", "Direct prompting", "Structured outputs"]),
+        ("LLM-based", ["Synthagent (GPT-4.1)", "Synthagent (GPT-4o mini)", "Direct prompting", "Structured outputs"]),
         ("Curation and deep", ["CLLM", "CTGAN", "TVAE", "TabDDPM"]),
         ("Oversampling", ["SMOTE", "ADASYN", "Borderline-SMOTE"]),
         ("Statistical and tree-based", ["Gaussian copula", "Bayesian network", "CART", "ARF"]),
@@ -218,7 +218,7 @@ def radar(per_dataset):
     fig, axes = plt.subplots(1, 4, figsize=(gpa.TEXT_W, 2.25), subplot_kw={"polar": True})
     for ax, (title, members) in zip(axes, panels):
         v = data[ref].tolist()
-        ax.plot(angles, r(v + v[:1]), color="#1f3b73", lw=1.6, marker="o", ms=1.8, label="Synthagent, Sonnet 4.6")
+        ax.plot(angles, r(v + v[:1]), color="#1f3b73", lw=1.6, marker="o", ms=1.8, label="Synthagent (Claude Sonnet 4.6)")
         for name, c, m in zip(members, colors, markers):
             v = data[name].tolist()
             ax.plot(angles, r(v + v[:1]), color=c, lw=0.9, marker=m, ms=1.6, label=name)
