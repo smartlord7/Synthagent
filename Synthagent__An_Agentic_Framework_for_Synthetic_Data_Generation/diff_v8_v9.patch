@@ -1,5 +1,5 @@
 diff --git a/tmp/claude-0/-home-user-TabuLLM/177710a6-83c7-584b-8f2f-a9a7012a7684/scratchpad/v8_sent.tex b/main.tex
-index d6da6d2..dd5b71a 100644
+index d6da6d2..a5fec87 100644
 --- a/tmp/claude-0/-home-user-TabuLLM/177710a6-83c7-584b-8f2f-a9a7012a7684/scratchpad/v8_sent.tex
 +++ b/main.tex
 @@ -62,7 +62,7 @@ Pedro Henriques Abreu\textsuperscript{1}\,\orcidlink{0000-0002-9278-8194}}
@@ -176,16 +176,47 @@ index d6da6d2..dd5b71a 100644
  
  \subsection{Datasets}
  We use ten public classification datasets (Table~\ref{tab:datasets}): six widely used benchmarks, five from the UCI repository~\cite{uciheart,ucibreast,uciheartfailure,uciilpd,uciparkinsons} and the Pima Indians diabetes data~\cite{smith1988diabetes}, and four further UCI datasets that are smaller, have missing values or mixed types, or are imbalanced~\cite{patricio2018coimbra,ucihepatitis,ucickd,zieba2014thoracic}. Each has fewer training records than the minimum sample size recommended for developing a prediction model for its task by the criteria of Riley et al.~\cite{riley2019binary}. Together they span the factors that make small data a challenge for the classifier: 116 to 768 records, 8 to 30 features, two to five classes, a smallest class from 4.3\% to 44.8\% of the records and up to 10.1\% missing values. We keep the original five-class heart-disease target, code the targets of the four further datasets as 0/1 and their binary categories as 0/1, and impute missing values with the mean for numerical and the mode for categorical features, separately within each training and test split. The control-layer variants, the LLM variants and the sensitivity study use the six original datasets; the main configurations and all established generators use all ten.
-@@ -348,7 +344,7 @@ Table~\ref{tab:configs} lists the 36 configurations. A configuration is included
+@@ -344,23 +340,27 @@ Table~\ref{tab:configs} lists the 36 configurations. A configuration is included
+ 
+ \begin{table}[t]
+ \centering
+-\caption{The 36 evaluated configurations. All LLM configurations use GPT-4o mini, except the LLM variants and the baselines repeated with Claude Haiku 5.5. $^{\ast}$Run on all ten datasets; the others on the six original ones.}
++\caption{The 36 evaluated configurations. LLM configurations use GPT-4o mini unless another LLM is named. $^{\ast}$Run on all ten datasets; the others on the six original ones.}
  \label{tab:configs}
  \footnotesize
- \setlength{\tabcolsep}{2pt}
+-\setlength{\tabcolsep}{2pt}
 -\begin{tabular}{@{}p{.23\columnwidth}p{.31\columnwidth}r@{\hspace{4pt}}p{.33\columnwidth}@{}}
-+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{.23\columnwidth}>{\raggedright\arraybackslash}p{.31\columnwidth}r@{\hspace{4pt}}>{\raggedright\arraybackslash}p{.33\columnwidth}@{}}
++\setlength{\tabcolsep}{3pt}
++\renewcommand{\arraystretch}{1.15}
++\begin{tabular}{@{}>{\raggedright\arraybackslash}p{.30\columnwidth}>{\raggedright\arraybackslash}p{.60\columnwidth}r@{}}
  \toprule
- Group & Configurations & No. & Purpose \\
+-Group & Configurations & No. & Purpose \\
++Group & Configurations & No. \\
++\midrule
++\multicolumn{3}{@{}l}{\textit{Control layer (RQ1)}}\\
++Reference & \system, default settings$^{\ast}$ & 1 \\
++Baselines: no control layer & Direct prompting and structured outputs (GPT-4o mini$^{\ast}$, Claude Haiku 5.5); CLLM$^{\ast}$ & 5 \\
++Repeated runs: noise floor & No type rules; no post-processing; no context join; logged rerun & 4 \\
++Design choices & Dense or diverse context; LLM-chosen settings; range enforcement & 4 \\
++Sensitivity & $\rho$: 10\%, 40\%; $b$: 15, 60; temperature: 0, 1.0 & 6 \\
  \midrule
-@@ -377,12 +373,12 @@ F_{\mathrm{corr}}&=100\bigl(1-\operatorname{mean}|\Sigma_D-\Sigma_G|\bigr),
+-Baselines (RQ1) & Direct prompting and structured outputs, with GPT-4o mini$^{\ast}$ and Claude Haiku 5.5; CLLM$^{\ast}$ & 5 & Same LLM without the control layer: free or schema-constrained decoding, or a curation filter \\
+-Reference & \system, default settings$^{\ast}$ & 1 & Point of comparison for all others \\
+-Repeated runs (RQ1) & No type rules; no post-processing; no context join; logged rerun & 4 & Change nothing in this setting; estimate the variation between runs \\
+-Design choices (RQ1) & Dense context; diverse context; LLM-chosen settings; range enforcement & 4 & Effect of context selection, of letting the LLM set $\rho$ and the temperature, and of clipping values to the observed ranges \\
+-Sensitivity (RQ1) & $\rho$ of 10\% and 40\%; $b$ of 15 and 60; temperature 0 and 1.0 & 6 & Effect of each fixed parameter \\
+-LLM variants (RQ4) & GPT-4.1 mini; GPT-4o; GPT-4.1$^{\ast}$; Claude Haiku 4.5; Claude Sonnet 4.6$^{\ast}$; Claude Sonnet 5.5 & 6 & Effect of model generation, size and provider \\
+-Established generators$^{\ast}$ (RQ4) & SMOTE; ADASYN; Borderline-SMOTE; Gaussian copula; Bayesian network; CART; ARF; CTGAN; TVAE; TabDDPM & 10 & Generators fitted to the real records \\
++\multicolumn{3}{@{}l}{\textit{Comparison (RQ4)}}\\
++LLM variants & GPT-4.1 mini, GPT-4o, GPT-4.1$^{\ast}$; Claude Haiku 4.5, Sonnet 4.6$^{\ast}$, Sonnet 5.5 & 6 \\
++Established generators$^{\ast}$ & Oversampling: SMOTE, ADASYN, Borderline-SMOTE. Statistical: Gaussian copula, Bayesian network. Tree-based: CART, ARF. Deep: CTGAN, TVAE, TabDDPM & 10 \\
+ \midrule
+-Total & & 36 & \\
++Total & & 36 \\
+ \bottomrule
+ \end{tabular}
+ \end{table}
+@@ -377,12 +377,12 @@ F_{\mathrm{corr}}&=100\bigl(1-\operatorname{mean}|\Sigma_D-\Sigma_G|\bigr),
  \end{aligned}
  \label{eq:fidelity}
  \end{equation}
@@ -200,7 +231,7 @@ index d6da6d2..dd5b71a 100644
  
  \subsection{Statistical Analysis}
  Repetitions and classifiers are not independent datasets, so they are averaged within each dataset and the datasets are treated as matched blocks. Configurations are compared with the Friedman test,
-@@ -397,7 +393,7 @@ where $\bar{\mathrm{rk}}_a$ is the average rank of configuration $a$ over $M$ da
+@@ -397,7 +397,7 @@ where $\bar{\mathrm{rk}}_a$ is the average rank of configuration $a$ over $M$ da
  \label{sec:results}
  \begin{table}[t]
  \centering
@@ -209,7 +240,7 @@ index d6da6d2..dd5b71a 100644
  \label{tab:glance}
  \scriptsize
  \setlength{\tabcolsep}{1.5pt}
-@@ -405,17 +401,17 @@ where $\bar{\mathrm{rk}}_a$ is the average rank of configuration $a$ over $M$ da
+@@ -405,17 +405,17 @@ where $\bar{\mathrm{rk}}_a$ is the average rank of configuration $a$ over $M$ da
  \toprule
  & \system & Other LLM & Established \\
  \midrule
@@ -231,7 +262,7 @@ index d6da6d2..dd5b71a 100644
  %======================================================================
  \subsection{RQ1: Control Layer and Integrity}
  \label{sec:rq1}
-@@ -426,7 +422,7 @@ Structured outputs, the providers' option to force every response into a fixed f
+@@ -426,7 +426,7 @@ Structured outputs, the providers' option to force every response into a fixed f
  \begin{figure}[t]
  \centering
  \assetfigure{\columnwidth}{generated/delivery.pdf}
@@ -240,7 +271,7 @@ index d6da6d2..dd5b71a 100644
  \label{fig:delivery}
  \end{figure}
  
-@@ -491,7 +487,7 @@ Mean & 72.7 & 72.6 & 0.878 & 0.526 & 75.4 & 74.2 & $-1.19$ & $-0.14$ \\
+@@ -491,7 +491,7 @@ Mean & 72.7 & 72.6 & 0.878 & 0.526 & 75.4 & 74.2 & $-1.19$ & $-0.14$ \\
  \begin{figure*}[t]
  \centering
  \assetfigure{\textwidth}{generated/radar_f1.pdf}
@@ -249,7 +280,7 @@ index d6da6d2..dd5b71a 100644
  \label{fig:radar}
  \end{figure*}
  
-@@ -519,36 +515,7 @@ Claude Sonnet 5.5 & 79.00 & 63.78 & $+0.10$ & $+1.62$ & 205.5 & 86,074 \\
+@@ -519,36 +519,7 @@ Claude Sonnet 5.5 & 79.00 & 63.78 & $+0.10$ & $+1.62$ & 205.5 & 86,074 \\
  \end{tabular*}
  \end{table}
  
@@ -287,7 +318,7 @@ index d6da6d2..dd5b71a 100644
  
  \textbf{Finding~4.} \system achieves the largest median F1 gain among the generators compared, and the LLM is the setting that most changes the results. Among the LLMs (Table~\ref{tab:backend}), the Claude models give the strongest results in our runs: Claude Sonnet 4.6 reaches the highest fidelity (79.07) and the largest gains ($+0.40$ pp of accuracy, $+2.39$ pp of F1), and all three Claude models exceed the best OpenAI model in F1. This comparison is suggestive rather than conclusive, since the Claude models ran at their default temperature and the OpenAI models at 0.3. At list prices, a synthetic dataset costs \$0.02 (GPT-4o mini) to \$0.49 (Claude Sonnet 4.6). Within OpenAI, GPT-4.1 gives the highest fidelity (75.72) and F1 gain ($+1.09$ pp), while the three stronger OpenAI models preserve correlations less well (62.8 to 64.3, against 72.6 for GPT-4o mini). The control layer delivered every dataset with every LLM, and the differences between them are not significant across six datasets ($p=.572$ and $p=.615$ within OpenAI, $p=.377$ over all seven, for accuracy and F1). With the 60 divisions as blocks, the seven LLMs differ ($p\le.002$), and Claude Sonnet 4.6 gives a higher F1 than each of the others after Holm correction ($p\le.039$).
  
-@@ -556,7 +523,7 @@ TabDDPM & 63.6 & 0.883 & 0.525 & $-0.60\pm1.94$ & $-0.90\pm3.13$ & 20 \\
+@@ -556,7 +527,7 @@ TabDDPM & 63.6 & 0.883 & 0.525 & $-0.60\pm1.94$ & $-0.90\pm3.13$ & 20 \\
  
  
  
@@ -296,7 +327,7 @@ index d6da6d2..dd5b71a 100644
  
  
  
-@@ -566,11 +533,11 @@ Over the ten datasets (Table~\ref{tab:generators}, Figure~\ref{fig:radar}), no g
+@@ -566,11 +537,11 @@ Over the ten datasets (Table~\ref{tab:generators}, Figure~\ref{fig:radar}), no g
  \section{Discussion and Limitations}
  \label{sec:discussion}
  %======================================================================

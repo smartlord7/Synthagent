@@ -1,7 +1,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %DIF LATEXDIFF DIFFERENCE FILE
 %DIF DEL /tmp/claude-0/-home-user-TabuLLM/177710a6-83c7-584b-8f2f-a9a7012a7684/scratchpad/v8_sent.tex   Wed Nov 11 13:07:32 2026
-%DIF ADD main.tex                                                                                       Wed Nov 11 13:22:37 2026
+%DIF ADD main.tex                                                                                       Wed Nov 11 13:25:21 2026
 % ICDE 2027 research paper (Round 2: submission due 11 November 2026).
 % Format rules from the call for papers (https://icde2027.github.io/):
 %   * IEEE conference template, PDF only.
@@ -481,11 +481,11 @@ Table~\ref{tab:configs} lists the 36 configurations. A configuration is included
 
 \begin{table}[t]
 \centering
-\caption{The 36 evaluated configurations. All LLM configurations use GPT-4o mini, except the LLM variants and the baselines repeated with Claude Haiku 5.5. $^{\ast}$Run on all ten datasets; the others on the six original ones.}
+\caption{The 36 evaluated configurations. \DIFdelbeginFL \DIFdelFL{All }\DIFdelendFL LLM configurations use GPT-4o mini \DIFdelbeginFL \DIFdelFL{, except the }\DIFdelendFL \DIFaddbeginFL \DIFaddFL{unless another }\DIFaddendFL LLM \DIFdelbeginFL \DIFdelFL{variants and the baselines repeated with Claude Haiku 5.5}\DIFdelendFL \DIFaddbeginFL \DIFaddFL{is named}\DIFaddendFL . $^{\ast}$Run on all ten datasets; the others on the six original ones.}
 \label{tab:configs}
 \footnotesize
-\setlength{\tabcolsep}{2pt}
-\DIFdelbeginFL %DIFDELCMD < \begin{tabular}{@{}p{.23\columnwidth}p{.31\columnwidth}r@{\hspace{4pt}}p{.33\columnwidth}@{}}
+\DIFdelbeginFL %DIFDELCMD < \setlength{\tabcolsep}{2pt}
+%DIFDELCMD < \begin{tabular}{@{}p{.23\columnwidth}p{.31\columnwidth}r@{\hspace{4pt}}p{.33\columnwidth}@{}}
 %DIFDELCMD < \toprule
 %DIFDELCMD < Group & Configurations & No. & Purpose \\
 %DIFDELCMD < \midrule
@@ -501,19 +501,24 @@ Table~\ref{tab:configs} lists the 36 configurations. A configuration is included
 %DIFDELCMD < \bottomrule
 %DIFDELCMD < \end{tabular}
 %DIFDELCMD < %%%
-\DIFdelendFL \DIFaddbeginFL \begin{tabular}{@{}>{\raggedright\arraybackslash}p{.23\columnwidth}>{\raggedright\arraybackslash}p{.31\columnwidth}r@{\hspace{4pt}}>{\raggedright\arraybackslash}p{.33\columnwidth}@{}}
+\DIFdelendFL \DIFaddbeginFL \setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{.30\columnwidth}>{\raggedright\arraybackslash}p{.60\columnwidth}r@{}}
 \toprule
-Group & Configurations & No. & Purpose \\
+Group & Configurations & No. \\
 \midrule
-Baselines (RQ1) & Direct prompting and structured outputs, with GPT-4o mini$^{\ast}$ and Claude Haiku 5.5; CLLM$^{\ast}$ & 5 & Same LLM without the control layer: free or schema-constrained decoding, or a curation filter \\
-Reference & \system, default settings$^{\ast}$ & 1 & Point of comparison for all others \\
-Repeated runs (RQ1) & No type rules; no post-processing; no context join; logged rerun & 4 & Change nothing in this setting; estimate the variation between runs \\
-Design choices (RQ1) & Dense context; diverse context; LLM-chosen settings; range enforcement & 4 & Effect of context selection, of letting the LLM set $\rho$ and the temperature, and of clipping values to the observed ranges \\
-Sensitivity (RQ1) & $\rho$ of 10\% and 40\%; $b$ of 15 and 60; temperature 0 and 1.0 & 6 & Effect of each fixed parameter \\
-LLM variants (RQ4) & GPT-4.1 mini; GPT-4o; GPT-4.1$^{\ast}$; Claude Haiku 4.5; Claude Sonnet 4.6$^{\ast}$; Claude Sonnet 5.5 & 6 & Effect of model generation, size and provider \\
-Established generators$^{\ast}$ (RQ4) & SMOTE; ADASYN; Borderline-SMOTE; Gaussian copula; Bayesian network; CART; ARF; CTGAN; TVAE; TabDDPM & 10 & Generators fitted to the real records \\
+\multicolumn{3}{@{}l}{\textit{Control layer (RQ1)}}\\
+Reference & \system, default settings$^{\ast}$ & 1 \\
+Baselines: no control layer & Direct prompting and structured outputs (GPT-4o mini$^{\ast}$, Claude Haiku 5.5); CLLM$^{\ast}$ & 5 \\
+Repeated runs: noise floor & No type rules; no post-processing; no context join; logged rerun & 4 \\
+Design choices & Dense or diverse context; LLM-chosen settings; range enforcement & 4 \\
+Sensitivity & $\rho$: 10\%, 40\%; $b$: 15, 60; temperature: 0, 1.0 & 6 \\
 \midrule
-Total & & 36 & \\
+\multicolumn{3}{@{}l}{\textit{Comparison (RQ4)}}\\
+LLM variants & GPT-4.1 mini, GPT-4o, GPT-4.1$^{\ast}$; Claude Haiku 4.5, Sonnet 4.6$^{\ast}$, Sonnet 5.5 & 6 \\
+Established generators$^{\ast}$ & Oversampling: SMOTE, ADASYN, Borderline-SMOTE. Statistical: Gaussian copula, Bayesian network. Tree-based: CART, ARF. Deep: CTGAN, TVAE, TabDDPM & 10 \\
+\midrule
+Total & & 36 \\
 \bottomrule
 \end{tabular}
 \DIFaddendFL \end{table}
