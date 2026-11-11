@@ -215,7 +215,7 @@ def radar(per_dataset):
         x = np.asarray(x, dtype=float)
         return np.sign(x) * np.log10(1 + np.abs(x)) + np.log10(1 - lo)
 
-    fig, axes = plt.subplots(1, 4, figsize=(gpa.TEXT_W, 2.25), subplot_kw={"polar": True})
+    fig, axes = plt.subplots(1, 4, figsize=(gpa.TEXT_W, 2.6), subplot_kw={"polar": True})
     for ax, (title, members) in zip(axes, panels):
         v = data[ref].tolist()
         ax.plot(angles, r(v + v[:1]), color="#1f3b73", lw=1.6, marker="o", ms=1.8, label="Synthagent")
