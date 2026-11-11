@@ -20,8 +20,8 @@ from scipy.stats import friedmanchisquare, rankdata, t, wilcoxon
 
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parent
-RUN = REPO / "src" / "TabuLLM" / "results" / "ablation_20260918_114707"
-DATA = REPO / "src" / "TabuLLM" / "data" / "medical"
+RUN = REPO / "src" / "Synthagent" / "results" / "ablation_20260918_114707"
+DATA = REPO / "src" / "Synthagent" / "data" / "medical"
 OUT = HERE / "generated"
 OUT.mkdir(exist_ok=True)
 

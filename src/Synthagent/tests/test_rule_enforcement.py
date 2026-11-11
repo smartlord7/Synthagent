@@ -3,7 +3,7 @@ import os
 import unittest
 from unittest.mock import MagicMock, patch
 
-# Add src/TabuLLM to path
+# Add src/Synthagent to path
 sys.path.append(os.getcwd())
 
 from services.rule_validator import RuleValidator

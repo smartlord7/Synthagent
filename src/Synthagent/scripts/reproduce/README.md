@@ -32,7 +32,7 @@ which rebuilds every table and figure from the committed results.
 
 ## Runs
 
-All commands run from `src/TabuLLM`. A run resumes from its `checkpoint.json` when the same
+All commands run from `src/Synthagent`. A run resumes from its `checkpoint.json` when the same
 command is repeated. Common settings: ten repetitions, N equal to the training size.
 
 | Results folder | Provider / model | `TABULLM_ABLATION_ARMS` | Datasets |

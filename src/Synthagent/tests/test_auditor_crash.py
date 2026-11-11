@@ -3,7 +3,7 @@ import numpy as np
 import sys
 import os
 
-# Add src/TabuLLM to path if running from within test dir
+# Add src/Synthagent to path if running from within test dir
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from services.auditor import auditor

@@ -4,7 +4,7 @@ import json
 import unittest
 from unittest.mock import MagicMock, patch
 
-# Add src/TabuLLM to path
+# Add src/Synthagent to path
 sys.path.append(os.getcwd())
 
 from services.llm_client import LocalOpenAIProvider

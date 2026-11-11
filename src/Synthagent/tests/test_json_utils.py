@@ -3,7 +3,7 @@ import os
 import json
 import unittest
 
-# Add the current directory to path (assuming we run from src/TabuLLM)
+# Add the current directory to path (assuming we run from src/Synthagent)
 sys.path.append(os.getcwd())
 
 from utils.json_utils import robust_json_loads

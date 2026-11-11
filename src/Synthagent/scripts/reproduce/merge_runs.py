@@ -1,7 +1,7 @@
 """
 Merges the separate run folders of the paper into results/ablation_20260918_114707, the
 folder that generate_paper_assets.py reads. Idempotent: rerunning replaces what it merged
-before. Run from src/TabuLLM:
+before. Run from src/Synthagent:
 
     python scripts/reproduce/merge_runs.py
 

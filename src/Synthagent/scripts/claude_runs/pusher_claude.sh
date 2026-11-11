@@ -2,7 +2,7 @@
 cd "$(git -C "$(dirname "$0")" rev-parse --show-toplevel)" || exit 1
 while pgrep -f supervise_claude.sh >/dev/null; do
   sleep 1800
-  git add src/TabuLLM/results/claude >/dev/null 2>&1
+  git add src/Synthagent/results/claude >/dev/null 2>&1
   if ! git diff --cached --quiet; then
     git commit -q -m "Checkpoint partial results of the Claude runs
 

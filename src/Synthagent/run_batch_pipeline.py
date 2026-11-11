@@ -1,7 +1,7 @@
 """
 run_batch_pipeline.py
 ─────────────────────
-Batch runner: runs the full TabuLLM augmentation pipeline over every dataset
+Batch runner: runs the full Synthagent augmentation pipeline over every dataset
 in the configured DATA_DIR, then saves per-dataset JSON metrics + PDF reports
 and a consolidated summary CSV containing ALL fidelity and ML metrics.
 
@@ -32,7 +32,7 @@ This single script has three modes:
 
 Usage
 ─────
-    cd src/TabuLLM
+    cd src/Synthagent
     python run_batch_pipeline.py                               # normal batch run
     python run_batch_pipeline.py --ablation                    # ablation sweep
     python run_batch_pipeline.py --stochasticity               # generation-noise decomposition

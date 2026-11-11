@@ -3,7 +3,7 @@
 NAME=$1; MODEL=$2; ARM=$3; DIR=$4; S=${CLAUDE_RUN_STATE:-/tmp/tabullm_claude}; mkdir -p $S
 exec 9>$S/lock_$NAME; flock -n 9 || exit 0
 [ -f $S/pause_claude ] && exit 0
-cd "$(git -C "$(dirname "$0")" rev-parse --show-toplevel)/src/TabuLLM"
+cd "$(git -C "$(dirname "$0")" rev-parse --show-toplevel)/src/Synthagent"
 done_count() { python3 -I -c "
 import json,sys
 try: c=json.load(open('$DIR/checkpoint.json'))

@@ -1,6 +1,6 @@
 # Claude runs for the Synthagent paper
 
-Six runs, each in its own results folder under `src/TabuLLM/results/claude/`:
+Six runs, each in its own results folder under `src/Synthagent/results/claude/`:
 
 | Name | Model | Arm |
 |---|---|---|

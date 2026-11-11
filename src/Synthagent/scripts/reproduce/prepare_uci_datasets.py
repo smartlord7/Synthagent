@@ -1,6 +1,6 @@
 """
 Downloads the four additional UCI datasets with ucimlrepo and writes them to
-data/medical/ exactly as used in the paper. Run from src/TabuLLM:
+data/medical/ exactly as used in the paper. Run from src/Synthagent:
 
     pip install ucimlrepo
     python scripts/reproduce/prepare_uci_datasets.py

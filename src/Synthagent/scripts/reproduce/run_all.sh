@@ -1,5 +1,5 @@
 #!/bin/bash
-# Runs every experiment of the paper in sequence (see README.md). From src/TabuLLM:
+# Runs every experiment of the paper in sequence (see README.md). From src/Synthagent:
 #   bash scripts/reproduce/run_all.sh
 # Needs OPENAI_API_KEY and TABULLM_ANTHROPIC_API_KEY. Each run resumes if repeated.
 set -e
