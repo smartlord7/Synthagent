@@ -393,7 +393,7 @@ where $\bar{\mathrm{rk}}_a$ is the average rank of configuration $a$ over $M$ da
 \label{sec:results}
 \begin{table}[t]
 \centering
-\caption{Results at a glance over the ten datasets: ranges over the three LLMs of \system, the three other LLM-based generators and the ten established generators. Only \system has no integrity violations, and it reaches the largest median F1 gain.}
+\caption{Results at a glance over the ten datasets: ranges over the three LLMs of \system, the three other LLM-based generators and the ten established generators. Only \system has no integrity violations, and it reaches the largest median F1 gain. Bold: where \system is best.}
 \label{tab:glance}
 \scriptsize
 \setlength{\tabcolsep}{1.5pt}
@@ -401,13 +401,13 @@ where $\bar{\mathrm{rk}}_a$ is the average rank of configuration $a$ over $M$ da
 \toprule
 & \system & Other LLM & Established \\
 \midrule
-Integrity violations & none & 13-22\% missing & no LLM \\
-Malformed responses & repaired & batches lost & - \\
+Integrity violations & \best{none} & 13-22\% missing & no LLM \\
+Malformed responses & \best{repaired} & batches lost & - \\
 Near-copies (\%) & 6-9 & 4-7 & 1-19 \\
 Attack AUC & 0.51-0.52 & 0.51-0.52 & 0.50-0.57 \\
 Fidelity (JSD) & 72-77 & 66-72 & 62-86 \\
 Median $\Delta$F1 (pp) & $-0.69$ to \best{$+1.43$} & $-0.68$ to $+0.24$ & $-2.15$ to $+0.11$ \\
-Tokens per record & $-17\%$ vs.\ direct & - & no LLM \\
+Tokens per record & \best{$-17\%$} vs.\ direct & - & no LLM \\
 \bottomrule
 \end{tabular*}
 \end{table}

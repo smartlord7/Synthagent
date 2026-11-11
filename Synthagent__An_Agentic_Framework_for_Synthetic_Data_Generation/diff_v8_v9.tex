@@ -1,7 +1,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %DIF LATEXDIFF DIFFERENCE FILE
 %DIF DEL /tmp/claude-0/-home-user-TabuLLM/177710a6-83c7-584b-8f2f-a9a7012a7684/scratchpad/v8_sent.tex   Wed Nov 11 13:07:32 2026
-%DIF ADD main.tex                                                                                       Wed Nov 11 13:21:56 2026
+%DIF ADD main.tex                                                                                       Wed Nov 11 13:22:37 2026
 % ICDE 2027 research paper (Round 2: submission due 11 November 2026).
 % Format rules from the call for papers (https://icde2027.github.io/):
 %   * IEEE conference template, PDF only.
@@ -550,24 +550,38 @@ where $\bar{\mathrm{rk}}_a$ is the average rank of configuration $a$ over $M$ da
 \label{sec:results}
 \begin{table}[t]
 \centering
-\caption{Results at a glance over the ten datasets: ranges over the three LLMs of \system, the three other LLM-based generators and the ten established generators. Only \system has no integrity violations, and it reaches the largest median F1 gain.}
+\caption{Results at a glance over the ten datasets: ranges over the three LLMs of \system, the three other LLM-based generators and the ten established generators. Only \system has no integrity violations, and it reaches the largest median F1 gain. \DIFaddbeginFL \DIFaddFL{Bold: where }\system \DIFaddFL{is best.}\DIFaddendFL }
 \label{tab:glance}
 \scriptsize
 \setlength{\tabcolsep}{1.5pt}
-\begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}lccc@{}}
+\DIFdelbeginFL %DIFDELCMD < \begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}lccc@{}}
+%DIFDELCMD < \toprule
+%DIFDELCMD < & \system & Other LLM & Established \\
+%DIFDELCMD < \midrule
+%DIFDELCMD < Integrity violations & none & 13-22\% missing & no LLM \\
+%DIFDELCMD < Malformed responses & repaired & batches lost & - \\
+%DIFDELCMD < Near-copies (\%) & 6-9 & 4-7 & 1-19 \\
+%DIFDELCMD < Attack AUC & 0.51-0.52 & 0.51-0.52 & 0.50-0.57 \\
+%DIFDELCMD < Fidelity (JSD) & 72-77 & 66-72 & 62-86 \\
+%DIFDELCMD < Median $\Delta$F1 (pp) & $-0.69$ to \best{$+1.43$} & $-0.68$ to $+0.24$ & $-2.15$ to $+0.11$ \\
+%DIFDELCMD < Tokens per record & $-17\%$ vs.\ direct & - & no LLM \\
+%DIFDELCMD < \bottomrule
+%DIFDELCMD < \end{tabular*}
+%DIFDELCMD < %%%
+\DIFdelendFL \DIFaddbeginFL \begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}lccc@{}}
 \toprule
 & \system & Other LLM & Established \\
 \midrule
-Integrity violations & none & 13-22\% missing & no LLM \\
-Malformed responses & repaired & batches lost & - \\
+Integrity violations & \best{none} & 13-22\% missing & no LLM \\
+Malformed responses & \best{repaired} & batches lost & - \\
 Near-copies (\%) & 6-9 & 4-7 & 1-19 \\
 Attack AUC & 0.51-0.52 & 0.51-0.52 & 0.50-0.57 \\
 Fidelity (JSD) & 72-77 & 66-72 & 62-86 \\
 Median $\Delta$F1 (pp) & $-0.69$ to \best{$+1.43$} & $-0.68$ to $+0.24$ & $-2.15$ to $+0.11$ \\
-Tokens per record & $-17\%$ vs.\ direct & - & no LLM \\
+Tokens per record & \best{$-17\%$} vs.\ direct & - & no LLM \\
 \bottomrule
 \end{tabular*}
-\end{table}
+\DIFaddendFL \end{table}
 \DIFaddbegin \DIFadd{This section answers the four research questions in turn, and }\DIFaddend Table~\ref{tab:glance} summarizes the results\DIFdelbegin \DIFdel{; the subsections detail them by research question}\DIFdelend \DIFaddbegin \DIFadd{. Section~\ref{sec:rq1} shows that the control layer delivers the requested dataset where the LLM alone does not (Figure~\ref{fig:delivery}) and that its settings change cost and fidelity but not utility (Figure~\ref{fig:ablation}). Section~\ref{sec:rq2} measures how closely the records follow the real data and whether they expose real patients, Section~\ref{sec:rq3} their effect on each classifier (Figure~\ref{fig:heatmap}), and Section~\ref{sec:rq4} compares }\system \DIFadd{with the other generators and LLMs (Figure~\ref{fig:radar})}\DIFaddend .
 %======================================================================
 \subsection{RQ1: Control Layer and Integrity}
